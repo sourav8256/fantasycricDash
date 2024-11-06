@@ -1,0 +1,19 @@
+# Command to get all devices connected on this network
+
+# For Windows:
+arp -a
+
+# For macOS and Linux:
+arp -a
+
+# Note: These commands may require administrative privileges to run.
+# They display the ARP (Address Resolution Protocol) cache, which shows IP and MAC addresses of devices on the local network.
+
+# For a more comprehensive scan on Linux, you can use:
+sudo nmap -sn 192.168.1.0/24
+
+# Replace 192.168.1.0/24 with your network's IP range if different.
+# This requires nmap to be installed (sudo apt-get install nmap on Ubuntu/Debian).
+
+
+

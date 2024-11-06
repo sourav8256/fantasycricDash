@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .todo-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .todo-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .todo-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .todo-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            background-color: #f8f9fa; /* Added background color */
+        }
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+        .todo-input {
+            width: calc(100% - 50px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .todo-button {
+            padding: 10px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .todo-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="todo-container">
+        <h2 class="todo-header">To-Do List</h2>
+        <input type="text" class="todo-input" id="todo-input" placeholder="Add a new task">
+        <input type="number" step="0.1" class="todo-input" id="todo-time" placeholder="Time in hours">
+        <button class="todo-button" onclick="addTodo()">Add</button>
+        <ul class="todo-list" id="todo-list"></ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadTodos);
+
+        function addTodo() {
+            const todoInput = document.getElementById('todo-input');
+            const todoTime = document.getElementById('todo-time');
+            const todoList = document.getElementById('todo-list');
+            const todoText = todoInput.value.trim();
+            const todoHours = parseFloat(todoTime.value.trim());
+
+            if (todoText !== '' && !isNaN(todoHours) && todoHours > 0) {
+                const todoItem = document.createElement('li');
+                todoItem.className = 'todo-item';
+                todoItem.style.height = `${todoHours * 60}px`; // Adjust height based on time in hours
+                todoItem.innerHTML = `
+                    <span>${todoText} (${formatTime(todoHours)})</span>
+                    <button onclick="completeTodo(this)">Complete</button>
+                `;
+                todoList.appendChild(todoItem);
+                saveTodos();
+                todoInput.value = '';
+                todoTime.value = '';
+                updateFirstTaskTimer();
+            }
+        }
+
+        function completeTodo(button) {
+            const todoItem = button.parentElement;
+            const todoHours = parseFloat(todoItem.style.height) / 60;
+            todoItem.remove();
+            saveTodos();
+
+            // Add the time of the completed task to the first task
+            const firstTodoItem = document.querySelector('.todo-item');
+            if (firstTodoItem) {
+                const firstTodoText = firstTodoItem.querySelector('span').textContent;
+                const firstTodoHours = parseFloat(firstTodoItem.style.height) / 60;
+                const newTodoHours = firstTodoHours + todoHours;
+                firstTodoItem.style.height = `${newTodoHours * 60}px`;
+                firstTodoItem.querySelector('span').textContent = firstTodoText.replace(/\(\d+(\.\d+)? hours\)/, `(${formatTime(newTodoHours)})`);
+                saveTodos(); // Save the updated first task
+                updateFirstTaskTimer();
+            }
+        }
+
+        function saveTodos() {
+            const todoList = document.getElementById('todo-list');
+            const todos = [];
+            todoList.querySelectorAll('.todo-item').forEach(item => {
+                const text = item.querySelector('span').textContent;
+                const hours = parseFloat(item.style.height) / 60;
+                todos.push({ text, hours });
+            });
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+
+        function loadTodos() {
+            const todos = JSON.parse(localStorage.getItem('todos')) || [];
+            const todoList = document.getElementById('todo-list');
+            todos.forEach(todo => {
+                const todoItem = document.createElement('li');
+                todoItem.className = 'todo-item';
+                todoItem.style.height = `${todo.hours * 60}px`; // Adjust height based on time in hours
+                todoItem.innerHTML = `
+                    <span>${todo.text}</span>
+                    <button onclick="completeTodo(this)">Complete</button>
+                `;
+                todoList.appendChild(todoItem);
+            });
+            updateFirstTaskTimer();
+        }
+
+        function updateFirstTaskTimer() {
+            const firstTodoItem = document.querySelector('.todo-item');
+            if (firstTodoItem) {
+                const firstTodoText = firstTodoItem.querySelector('span').textContent;
+                const firstTodoHours = parseFloat(firstTodoItem.style.height) / 60;
+                const endTime = Date.now() + firstTodoHours * 60 * 60 * 1000;
+
+                const timerInterval = setInterval(() => {
+                    console.log('Timer update running'); // Log when timer update is running
+                    const timeLeft = endTime - Date.now();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        firstTodoItem.querySelector('span').textContent = firstTodoText.replace(/\(\d+(\.\d+)? hours\)/, `(0h 0m 0s)`);
+                        firstTodoItem.style.height = '0px';
+                    } else {
+                        const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+                        const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+                        const secondsLeft = Math.floor((timeLeft % (60 * 1000)) / 1000);
+                        const timeString = `(${hoursLeft}h ${minutesLeft}m ${secondsLeft}s)`;
+                        console.log(`Setting time: ${timeString}`); // Log the time that is being set
+                        firstTodoItem.querySelector('span').textContent = firstTodoText.replace(/\(\d+h \d+m \d+s\)/, timeString);
+                        firstTodoItem.style.height = `${(timeLeft / (60 * 1000))}px`; // Adjust height based on time left
+                    }
+                }, 1000);
+            }
+        }
+
+        function formatTime(hours) {
+            const h = Math.floor(hours);
+            const m = Math.floor((hours - h) * 60);
+            const s = Math.round(((hours - h) * 60 - m) * 60);
+            return `${h}h ${m}m ${s}s`;
+        }
+    </script>
+</body>
+</html>

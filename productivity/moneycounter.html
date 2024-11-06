@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Counter</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-size: 16px;
+        }
+        @media (max-width: 576px) {
+            body {
+                font-size: 14px;
+            }
+            .container {
+                padding: 10px;
+            }
+            .card {
+                padding: 15px !important;
+            }
+            .money-display {
+                font-size: 3rem !important;
+            }
+            .rupee-symbol {
+                font-size: 2rem !important;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+            .input-group > * {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 5px 0;
+                border-radius: 4px !important;
+            }
+            .btn {
+                width: 100%;
+                margin-top: 5px;
+            }
+        }
+        .money-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #28a745;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            word-break: break-word;
+        }
+        .rupee-symbol {
+            font-size: 3rem;
+            color: #198754;
+        }
+        .card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            border-radius: 10px;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .ledger {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .ledger-item {
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+            text-align: left;
+            word-break: break-word;
+        }
+        .daily-rate {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        input[type="number"] {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-group input {
+            font-size: 1rem;
+            padding: 0.5rem;
+        }
+        .btn {
+            touch-action: manipulation;
+        }
+        .version {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-3 mt-sm-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 text-center">
+                <div class="card p-3 p-sm-5">
+                    <h1 class="mb-4 h2">Money Counter</h1>
+                    <div class="d-flex justify-content-center align-items-center flex-wrap">
+                        <span class="rupee-symbol">₹</span>
+                        <div id="moneyDisplay" class="money-display">0.000</div>
+                    </div>
+                    <div class="input-group mt-3 justify-content-center" style="max-width: 300px; margin: 0 auto;">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" class="form-control" id="rateInput" value="0.00" step="0.01" style="max-width: 100px;" inputmode="decimal">
+                        <span class="input-group-text">per second</span>
+                    </div>
+                    <div class="daily-rate">
+                        ₹<span id="dailyRate">0.0000</span> per month
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control" id="expenseInput" placeholder="Enter amount spent" step="0.01" inputmode="decimal">
+                            <input type="text" class="form-control" id="expenseDescription" placeholder="Description">
+                            <button class="btn btn-danger" type="button" id="deductButton">Deduct Money</button>
+                        </div>
+                    </div>
+
+                    <div class="ledger" id="ledger">
+                        <h5 class="text-start mb-3">Recent Deductions</h5>
+                        <!-- Ledger items will be added here -->
+                    </div>
+                    
+                    <div class="version">v1.0.1</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        let money = parseFloat(localStorage.getItem('money')) || 0;
+        let lastUpdateTime = parseInt(localStorage.getItem('lastUpdateTime')) || Date.now();
+        let ledgerEntries = JSON.parse(localStorage.getItem('ledger')) || [];
+        let RATE_PER_SECOND = parseFloat(localStorage.getItem('rate')) || 0;
+        
+        const moneyDisplay = document.getElementById('moneyDisplay');
+        const expenseInput = document.getElementById('expenseInput');
+        const expenseDescription = document.getElementById('expenseDescription');
+        const deductButton = document.getElementById('deductButton');
+        const ledgerDiv = document.getElementById('ledger');
+        const rateInput = document.getElementById('rateInput');
+        const dailyRateDisplay = document.getElementById('dailyRate');
+
+        // Prevent zoom on input focus for iOS
+        const metas = document.getElementsByTagName('meta');
+        for (let i = 0; i < metas.length; i++) {
+            if (metas[i].name === "viewport") {
+                metas[i].content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0";
+            }
+        }
+
+        function updateDailyRate() {
+            const monthlyRate = RATE_PER_SECOND * 60 * 60 * 24 * 30.44; // Using average month length
+            dailyRateDisplay.textContent = monthlyRate.toFixed(4);
+        }
+
+        rateInput.value = RATE_PER_SECOND;
+        updateDailyRate();
+        
+        rateInput.addEventListener('change', () => {
+            // Calculate earnings with old rate up to this point
+            const currentTime = Date.now();
+            const timeDiffSeconds = Math.floor((currentTime - lastUpdateTime) / 1000);
+            const earnings = timeDiffSeconds * RATE_PER_SECOND;
+            money += earnings;
+            
+            // Update rate and reset time
+            RATE_PER_SECOND = parseFloat(rateInput.value) || 0;
+            lastUpdateTime = currentTime;
+            
+            // Save new state
+            localStorage.setItem('rate', RATE_PER_SECOND.toString());
+            localStorage.setItem('money', money.toString());
+            localStorage.setItem('lastUpdateTime', lastUpdateTime.toString());
+            
+            // Update display
+            moneyDisplay.textContent = money.toFixed(3);
+            updateDailyRate();
+        });
+        
+        function calculateOfflineEarnings() {
+            const currentTime = Date.now();
+            const timeDiffSeconds = Math.floor((currentTime - lastUpdateTime) / 1000);
+            const offlineEarnings = timeDiffSeconds * RATE_PER_SECOND;
+            money += offlineEarnings;
+            lastUpdateTime = currentTime;
+            
+            localStorage.setItem('money', money.toString());
+            localStorage.setItem('lastUpdateTime', lastUpdateTime.toString());
+        }
+
+        function updateLedgerDisplay() {
+            const ledgerContent = ledgerEntries.map(entry => `
+                <div class="ledger-item">
+                    <strong>₹${entry.amount.toFixed(2)}</strong> - ${entry.description}
+                    <small class="text-muted d-block">${new Date(entry.timestamp).toLocaleString()}</small>
+                </div>
+            `).join('');
+            ledgerDiv.innerHTML = '<h5 class="text-start mb-3">Recent Deductions</h5>' + ledgerContent;
+        }
+
+        // Calculate offline earnings when page loads
+        calculateOfflineEarnings();
+        
+        // Initialize displays
+        moneyDisplay.textContent = money.toFixed(3);
+        updateLedgerDisplay();
+
+        function updateMoney() {
+            const currentTime = Date.now();
+            const timeDiffSeconds = Math.floor((currentTime - lastUpdateTime) / 1000);
+            const displayMoney = money + (timeDiffSeconds * RATE_PER_SECOND);
+            moneyDisplay.textContent = displayMoney.toFixed(3);
+        }
+
+        // Handle expense deduction
+        deductButton.addEventListener('click', () => {
+            const expense = parseFloat(expenseInput.value);
+            const description = expenseDescription.value.trim() || 'Unspecified expense';
+            
+            if (!isNaN(expense) && expense > 0) {
+                if (expense <= money) {
+                    money -= expense;
+                    moneyDisplay.textContent = money.toFixed(3);
+                    
+                    // Add to ledger
+                    ledgerEntries.unshift({
+                        amount: expense,
+                        description: description,
+                        timestamp: Date.now()
+                    });
+                    
+                    // Keep only last 5 entries
+                    if (ledgerEntries.length > 5) {
+                        ledgerEntries = ledgerEntries.slice(0, 5);
+                    }
+                    
+                    // Update storage
+                    localStorage.setItem('money', money.toString());
+                    localStorage.setItem('ledger', JSON.stringify(ledgerEntries));
+                    
+                    // Update display
+                    updateLedgerDisplay();
+                    
+                    // Clear inputs
+                    expenseInput.value = '';
+                    expenseDescription.value = '';
+                } else {
+                    alert('Insufficient funds!');
+                }
+            } else {
+                alert('Please enter a valid amount');
+            }
+        });
+
+        // Update money every second
+        setInterval(updateMoney, 1000);
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                calculateOfflineEarnings();
+                moneyDisplay.textContent = money.toFixed(3);
+            }
+        });
+
+        // Handle before unload to save final state
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('money', money.toString());
+            localStorage.setItem('lastUpdateTime', Date.now().toString());
+        });
+    </script>
+</body>
+</html>

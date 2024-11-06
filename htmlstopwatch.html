@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .stopwatch {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .display {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .display-main {
+            font-size: 48px;
+            margin-bottom: 5px;
+        }
+        .display-ms {
+            font-size: 24px;
+            color: #666;
+        }
+        .total-timer .display-main {
+            font-size: 24px;
+        }
+        .total-timer .display-ms {
+            font-size: 12px;
+        }
+        button {
+            font-size: 18px;
+            padding: 12px 24px;
+            margin: 0 8px;
+            cursor: pointer;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .overlay-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .timer-container {
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            gap: 20px;
+        }
+        .date-time {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .date-time h2 {
+            margin-top: 0;
+        }
+        .total-timer, .date-time {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+    </style>
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+</head>
+<body>
+    <div class="timer-container">
+        <div class="stopwatch total-timer">
+            <h2>Total Timer</h2>
+            <div id="displayTotal" class="display">
+                <div class="display-main">00:00:00</div>
+                <div class="display-ms">000</div>
+            </div>
+            <button id="resetTotal">Reset</button>
+            <button id="addManually">Add Manually</button>
+        </div>
+
+        <div class="date-time">
+            <h2>Free Till</h2>
+            <div>
+                <div id="calculatedDateTime" style="display: none;"></div>
+                <div id="rewardTime"></div>
+                <div id="timeLeft"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stopwatch">
+        <div id="display2" class="display">
+            <div class="display-main">00:00:00</div>
+            <div class="display-ms">000</div>
+        </div>
+        <button id="startReset2">Start</button>
+        <button id="cancel2" disabled>Cancel</button>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <!-- <div class="overlay-content">
+            <p>Processing... Please wait.</p>
+        </div> -->
+    </div>
+
+    <script>
+        // Initialize Back4App
+        Parse.initialize("IKmm8MbcH9movBK7et1DrQVyd8nJqfJq8bm548t6", "6Ik3DvMj2RRikc52dWYqt6BJ9qDrjdUWI1nUCS3v");
+        Parse.serverURL = 'https://parseapi.back4app.com/';
+
+        let totalElapsedTime = 0;
+        let rewardTime = 0;
+        let lastResetTime = null;
+        const overlay = document.getElementById('overlay');
+        const calculatedDateTimeElement = document.getElementById('calculatedDateTime');
+        const rewardTimeElement = document.getElementById('rewardTime');
+        const timeLeftElement = document.getElementById('timeLeft');
+
+        function showOverlay() {
+            overlay.style.display = 'flex';
+        }
+
+        function hideOverlay() {
+            overlay.style.display = 'none';
+        }
+
+        // Load total time, reward time, and last reset time from Back4App when the page loads
+        window.onload = async function() {
+            showOverlay();
+            try {
+                await loadTimesFromBack4App();
+            } catch (error) {
+                console.error("Error loading times from Back4App:", error);
+            } finally {
+                hideOverlay();
+            }
+        };
+
+        async function loadTimesFromBack4App() {
+            const TotalTime = Parse.Object.extend("TotalTime");
+            const query = new Parse.Query(TotalTime);
+            const result = await query.first();
+            if (result) {
+                totalElapsedTime = result.get("time");
+                rewardTime = result.get("rewardTime") || 0;
+                lastResetTime = result.get("lastResetTime");
+            } else {
+                const totalTime = new TotalTime();
+                totalTime.set("time", 0);
+                totalTime.set("rewardTime", 0);
+                totalTime.set("lastResetTime", new Date());
+                await totalTime.save();
+                lastResetTime = new Date();
+            }
+        }
+
+        function createStopwatch(displayId, startResetId, cancelId, isTotal = false) {
+            let timer;
+            let isRunning = false;
+            let startTime;
+            let elapsedTime = 0;
+
+            const display = document.getElementById(displayId);
+            const startResetButton = document.getElementById(startResetId);
+            const cancelButton = document.getElementById(cancelId);
+
+            // Load start time from cookie if it exists
+            const savedStartTime = getCookie(`${startResetId}_startTime`);
+            if (savedStartTime) {
+                startTime = parseInt(savedStartTime);
+                isRunning = true;
+                startResetButton.textContent = 'Reset';
+                if (cancelButton) cancelButton.disabled = false;
+                timer = setInterval(() => {
+                    elapsedTime = Date.now() - startTime;
+                    updateDisplay(elapsedTime);
+                }, 10);
+            }
+
+            function updateDisplay(time) {
+                const totalMilliseconds = time;
+                const days = Math.floor(totalMilliseconds / 86400000);
+                const hours = Math.floor((totalMilliseconds % 86400000) / 3600000);
+                const minutes = Math.floor((totalMilliseconds % 3600000) / 60000);
+                const seconds = Math.floor((totalMilliseconds % 60000) / 1000);
+                const milliseconds = totalMilliseconds % 1000;
+
+                let displayMain = '';
+                if (days > 0) {
+                    displayMain += `${days}d `;
+                }
+                displayMain += `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                const displayMs = milliseconds.toString().padStart(3, '0');
+
+                display.querySelector('.display-main').textContent = displayMain;
+                display.querySelector('.display-ms').textContent = displayMs;
+            }
+
+            async function startReset() {
+                if (isRunning) {
+                    clearInterval(timer);
+                    isRunning = false;
+                    
+                    // Add elapsed time to total
+                    if (!isTotal) {
+                        showOverlay();
+                        try {
+                            await loadTimesFromBack4App(); // Fetch the latest total time
+                            totalElapsedTime += elapsedTime;
+                            rewardTime = totalElapsedTime * 3;
+                            await saveTotalTimeToBack4App(totalElapsedTime, rewardTime, lastResetTime);
+                        } catch (error) {
+                            console.error("Error updating times:", error);
+                        } finally {
+                            hideOverlay();
+                        }
+                    }
+                    
+                    // Reset
+                    elapsedTime = 0;
+                    updateDisplay(elapsedTime);
+                    if (startResetId === 'startReset2') {
+                        startResetButton.textContent = 'Start';
+                    }
+                    if (cancelButton) cancelButton.disabled = true;
+                    // Clear the cookie
+                    document.cookie = `${startResetId}_startTime=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                } else {
+                    startTime = Date.now();
+                    timer = setInterval(() => {
+                        elapsedTime = Date.now() - startTime;
+                        updateDisplay(elapsedTime);
+                    }, 10);
+                    isRunning = true;
+                    startResetButton.textContent = 'Reset';
+                    if (cancelButton) cancelButton.disabled = false;
+                    // Save start time in cookie
+                    document.cookie = `${startResetId}_startTime=${startTime}; path=/;`;
+                }
+            }
+
+            function cancel() {
+                clearInterval(timer);
+                isRunning = false;
+                elapsedTime = 0;
+                updateDisplay(elapsedTime);
+                startResetButton.textContent = 'Start';
+                if (cancelButton) cancelButton.disabled = true;
+                // Clear the cookie
+                document.cookie = `${startResetId}_startTime=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            }
+
+            if (startResetButton) {
+                startResetButton.addEventListener('click', startReset);
+            }
+            if (cancelButton) {
+                cancelButton.addEventListener('click', cancel);
+            }
+
+            updateDisplay(elapsedTime);
+
+            return { updateDisplay, startReset };
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        const totalStopwatch = createStopwatch('displayTotal', 'resetTotal', null, true);
+        createStopwatch('display2', 'startReset2', 'cancel2');
+
+        // Update total timer and calculated date/time every 10ms
+        setInterval(() => {
+            totalStopwatch.updateDisplay(totalElapsedTime);
+            updateCalculatedDateTime();
+        }, 10);
+
+        // Add event listener for the total timer reset button
+        document.getElementById('resetTotal').addEventListener('click', async () => {
+            showOverlay();
+            try {
+                await loadTimesFromBack4App(); // Fetch the latest total time before resetting
+                totalStopwatch.startReset();
+                totalElapsedTime = 0;
+                rewardTime = 0;
+                lastResetTime = new Date();
+                await saveTotalTimeToBack4App(totalElapsedTime, rewardTime, lastResetTime);
+            } catch (error) {
+                console.error("Error resetting total timer:", error);
+            } finally {
+                hideOverlay();
+            }
+        });
+
+        // Add event listener for the add manually button
+        document.getElementById('addManually').addEventListener('click', async () => {
+            const timeToAdd = prompt("Enter time to add in minutes:");
+            if (timeToAdd !== null && timeToAdd.trim() !== '' && !isNaN(timeToAdd)) {
+                const timeInMs = parseInt(timeToAdd) * 60000;
+                showOverlay();
+                try {
+                    await loadTimesFromBack4App(); // Fetch the latest total time
+                    totalElapsedTime += timeInMs;
+                    rewardTime = totalElapsedTime * 3;
+                    await saveTotalTimeToBack4App(totalElapsedTime, rewardTime, lastResetTime);
+                } catch (error) {
+                    console.error("Error updating times:", error);
+                } finally {
+                    hideOverlay();
+                }
+            } else if (timeToAdd !== null) {
+                alert("Please enter a valid number of minutes.");
+            }
+        });
+
+        // Function to save total time, reward time, and last reset time to Back4App
+        async function saveTotalTimeToBack4App(time, reward, resetTime) {
+            try {
+                const TotalTime = Parse.Object.extend("TotalTime");
+                const query = new Parse.Query(TotalTime);
+                let totalTime = await query.first();
+                if (!totalTime) {
+                    totalTime = new TotalTime();
+                }
+                totalTime.set("time", time);
+                totalTime.set("rewardTime", reward);
+                totalTime.set("lastResetTime", resetTime);
+                await totalTime.save();
+            } catch (error) {
+                console.error("Error saving times to Back4App:", error);
+            }
+        }
+
+        // Function to update calculated date and time
+        function updateCalculatedDateTime() {
+            const now = new Date();
+            const futureDate = new Date(now.getTime() + rewardTime);
+            const weekdayOptions = { weekday: 'long' };
+            const dateOptions = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric'
+            };
+            const timeOptions = {
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                timeZoneName: 'short'
+            };
+            const weekdayString = futureDate.toLocaleDateString(undefined, weekdayOptions);
+            const dateString = futureDate.toLocaleDateString(undefined, dateOptions);
+            const timeString = futureDate.toLocaleTimeString(undefined, timeOptions);
+            calculatedDateTimeElement.innerHTML = `${weekdayString}<br>${dateString}<br>${timeString}`;
+            
+            // Display reward time
+            const rewardHours = Math.floor(rewardTime / 3600000);
+            const rewardMinutes = Math.floor((rewardTime % 3600000) / 60000);
+            const rewardSeconds = Math.floor((rewardTime % 60000) / 1000);
+            rewardTimeElement.innerHTML = `Reward Time: <br><b style="font-size: 1.2em;">${rewardHours}h ${rewardMinutes}m ${rewardSeconds}s</b>`;
+
+            // Display time left (reward time - time elapsed)
+            const timeElapsed = now - lastResetTime;
+            const timeLeft = rewardTime - timeElapsed;
+            const leftHours = Math.floor(timeLeft / 3600000)+1;
+            const leftMinutes = Math.floor((timeLeft % 3600000) / 60000) + 1;
+            const leftSeconds = Math.floor((timeLeft % 60000) / 1000);
+            timeLeftElement.innerHTML = `Time Left: <br><b style="font-size: 1.2em;">${leftHours}h ${leftMinutes}m ${leftSeconds}s</b>`;
+        }
+    </script>
+</body>
+</html>

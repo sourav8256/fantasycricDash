@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-size: 16px;
+        }
+        .todo-container {
+            max-width: 600px;
+            margin: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .todo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+        .todo-item.completed {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        .todo-input-group {
+            display: flex;
+            margin-top: 20px;
+        }
+        .todo-input-group input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 5px 0 0 5px;
+            border: 1px solid #ced4da;
+        }
+        .todo-input-group button {
+            padding: 10px;
+            border-radius: 0 5px 5px 0;
+            border: 1px solid #ced4da;
+            background-color: #0d6efd;
+            color: #fff;
+        }
+        .todo-wrapper {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            overflow-x: auto;
+        }
+        .add-list-btn {
+            margin: 20px;
+            padding: 10px 20px;
+            background-color: #0d6efd;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="todo-wrapper" id="todo-wrapper">
+        <div class="todo-container" id="todo-container-1">
+            <h1 class="text-center">To-Do List 1</h1>
+            <div id="todo-list-1">
+                <!-- To-Do items will appear here -->
+            </div>
+            <div class="todo-input-group">
+                <input type="text" id="todo-input-1" placeholder="Add a new task..." onkeypress="handleKeyPress(event, 1)">
+                <button onclick="addTodo(1)">Add</button>
+            </div>
+            <h2 class="text-center mt-4">Completed Tasks</h2>
+            <button class="btn btn-secondary mb-3" onclick="toggleCompletedTasks(1)">Show/Hide Completed Tasks</button>
+            <div id="completed-list-1" style="display: none;">
+                <!-- Completed tasks will appear here -->
+            </div>
+        </div>
+
+        <div class="todo-container" id="todo-container-2">
+            <h1 class="text-center">To-Do List 2</h1>
+            <div id="todo-list-2">
+                <!-- To-Do items will appear here -->
+            </div>
+            <div class="todo-input-group">
+                <input type="text" id="todo-input-2" placeholder="Add a new task..." onkeypress="handleKeyPress(event, 2)">
+                <button onclick="addTodo(2)">Add</button>
+            </div>
+            <h2 class="text-center mt-4">Completed Tasks</h2>
+            <button class="btn btn-secondary mb-3" onclick="toggleCompletedTasks(2)">Show/Hide Completed Tasks</button>
+            <div id="completed-list-2" style="display: none;">
+                <!-- Completed tasks will appear here -->
+            </div>
+        </div>
+        <button class="add-list-btn" id="add-list-btn" onclick="addNewList()">Add New List</button>
+    </div>
+
+    <script>
+        let listCount = 5;
+
+        function addTodo(listNumber) {
+            const todoInput = document.getElementById(`todo-input-${listNumber}`);
+            const todoList = document.getElementById(`todo-list-${listNumber}`);
+            const completedList = document.getElementById(`completed-list-${listNumber}`);
+            const task = todoInput.value.trim();
+            if (task) {
+                const todoItem = document.createElement('div');
+                todoItem.classList.add('todo-item');
+                todoItem.innerHTML = `
+                    <span>${task}</span>
+                    <button onclick="toggleComplete(this, ${listNumber})">Complete</button>
+                `;
+                todoList.appendChild(todoItem);
+                saveTodos(listNumber);
+                todoInput.value = '';
+            }
+        }
+
+        function toggleComplete(button, listNumber) {
+            const todoItem = button.parentElement;
+            const todoList = document.getElementById(`todo-list-${listNumber}`);
+            const completedList = document.getElementById(`completed-list-${listNumber}`);
+            todoItem.classList.toggle('completed');
+            if (todoItem.classList.contains('completed')) {
+                button.textContent = 'Undo';
+                completedList.appendChild(todoItem);
+            } else {
+                button.textContent = 'Complete';
+                todoList.appendChild(todoItem);
+            }
+            saveTodos(listNumber);
+        }
+
+        function handleKeyPress(event, listNumber) {
+            if (event.key === 'Enter') {
+                addTodo(listNumber);
+            }
+        }
+
+        function saveTodos(listNumber) {
+            const todoList = document.getElementById(`todo-list-${listNumber}`);
+            const completedList = document.getElementById(`completed-list-${listNumber}`);
+            const todos = [];
+            const completed = [];
+            todoList.querySelectorAll('.todo-item').forEach(item => {
+                todos.push(item.querySelector('span').textContent);
+            });
+            completedList.querySelectorAll('.todo-item').forEach(item => {
+                completed.push(item.querySelector('span').textContent);
+            });
+            localStorage.setItem(`todos-${listNumber}`, JSON.stringify(todos));
+            localStorage.setItem(`completed-${listNumber}`, JSON.stringify(completed));
+        }
+
+        function loadTodos(listNumber) {
+            const todoList = document.getElementById(`todo-list-${listNumber}`);
+            const completedList = document.getElementById(`completed-list-${listNumber}`);
+            const todos = JSON.parse(localStorage.getItem(`todos-${listNumber}`)) || [];
+            const completed = JSON.parse(localStorage.getItem(`completed-${listNumber}`)) || [];
+            todos.forEach(task => {
+                const todoItem = document.createElement('div');
+                todoItem.classList.add('todo-item');
+                todoItem.innerHTML = `
+                    <span>${task}</span>
+                    <button onclick="toggleComplete(this, ${listNumber})">Complete</button>
+                `;
+                todoList.appendChild(todoItem);
+            });
+            completed.forEach(task => {
+                const todoItem = document.createElement('div');
+                todoItem.classList.add('todo-item', 'completed');
+                todoItem.innerHTML = `
+                    <span>${task}</span>
+                    <button onclick="toggleComplete(this, ${listNumber})">Undo</button>
+                `;
+                completedList.appendChild(todoItem);
+            });
+        }
+
+        function toggleCompletedTasks(listNumber) {
+            const completedList = document.getElementById(`completed-list-${listNumber}`);
+            if (completedList.style.display === 'none') {
+                completedList.style.display = 'block';
+            } else {
+                completedList.style.display = 'none';
+            }
+        }
+
+        function addNewList() {
+            listCount++;
+            const todoWrapper = document.getElementById('todo-wrapper');
+            const newListContainer = document.createElement('div');
+            newListContainer.classList.add('todo-container');
+            newListContainer.id = `todo-container-${listCount}`;
+            newListContainer.innerHTML = `
+                <h1 class="text-center">To-Do List ${listCount}</h1>
+                <div id="todo-list-${listCount}">
+                    <!-- To-Do items will appear here -->
+                </div>
+                <div class="todo-input-group">
+                    <input type="text" id="todo-input-${listCount}" placeholder="Add a new task..." onkeypress="handleKeyPress(event, ${listCount})">
+                    <button onclick="addTodo(${listCount})">Add</button>
+                </div>
+                <h2 class="text-center mt-4">Completed Tasks</h2>
+                <button class="btn btn-secondary mb-3" onclick="toggleCompletedTasks(${listCount})">Show/Hide Completed Tasks</button>
+                <div id="completed-list-${listCount}" style="display: none;">
+                    <!-- Completed tasks will appear here -->
+                </div>
+            `;
+            todoWrapper.insertBefore(newListContainer, document.getElementById('add-list-btn'));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let listNumber = 1;
+            while (document.getElementById(`todo-container-${listNumber}`)) {
+                loadTodos(listNumber);
+                listNumber++;
+            }
+        });
+    </script>
+</body>
+</html>

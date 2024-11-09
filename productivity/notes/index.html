@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-size: 16px;
+        }
+        .editor-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .editor {
+            width: 100%;
+            height: 400px;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            background-image: none;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+        .save-btn, .archive-btn, .toggle-archive-btn, .insert-arrow-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .save-btn {
+            background-color: #0d6efd;
+        }
+        .archive-btn {
+            background-color: #6c757d;
+        }
+        .toggle-archive-btn {
+            background-color: #198754;
+        }
+        .insert-arrow-btn {
+            background-color: #6610f2;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: #0d6efd;
+            z-index: 1000;
+            display: none;
+        }
+        .archive-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .archive-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .unarchive-btn {
+            padding: 5px 10px;
+            color: #fff;
+            background-color: #0d6efd;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        @media (max-width: 576px) {
+            .editor-container {
+                margin: 0;
+                padding: 0px;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">Loading...</div>
+    <div class="editor-container">
+        <textarea class="editor" id="editor" placeholder="Write your notes here..."></textarea>
+        <button class="insert-arrow-btn" onclick="insertArrow(); saveNote();">Insert ></button>
+        <button class="save-btn" onclick="saveNote()">Save</button>
+        <br>
+        <button class="archive-btn" onclick="archiveSelectedLine()">Archive Selected Line</button>
+        <button class="toggle-archive-btn" onclick="toggleArchive()">Show Archives</button>
+        <div id="archiveContainer" class="archive-container"></div>
+    </div>
+
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script>
+        // Initialize Parse
+        Parse.initialize("IKmm8MbcH9movBK7et1DrQVyd8nJqfJq8bm548t6", "6Ik3DvMj2RRikc52dWYqt6BJ9qDrjdUWI1nUCS3v");
+        Parse.serverURL = "https://parseapi.back4app.com/";
+
+        let isNoteSaved = false;
+        let isArchiveVisible = false;
+
+        function insertArrow() {
+            const editor = document.getElementById('editor');
+            const cursorPos = editor.selectionStart;
+            const textBefore = editor.value.substring(0, cursorPos);
+            const textAfter = editor.value.substring(cursorPos);
+            editor.value = textBefore + ' > ' + textAfter;
+            editor.selectionStart = cursorPos + 3;
+            editor.selectionEnd = cursorPos + 3;
+            editor.focus();
+            isNoteSaved = false;
+            editor.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
+        }
+
+        function loadNote() {
+            console.log('loadNote function called');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'flex';
+            console.log('Loading overlay displayed');
+
+            const Note = Parse.Object.extend("Note");
+            const query = new Parse.Query(Note);
+            query.descending("createdAt");
+            query.first().then((note) => {
+                if (note) {
+                    document.getElementById('editor').value = note.get("content");
+                    isNoteSaved = true;
+                    document.getElementById('editor').style.backgroundImage = 'none';
+                    console.log('Note loaded successfully:', note);
+                    console.log('Note content:', note.get("content")); 
+                } else {
+                    console.log('No note found');
+                }
+                loadingOverlay.style.display = 'none';
+                console.log('Loading overlay hidden');
+            }, (error) => {
+                console.error('Failed to load note: ' + error.message);
+                loadingOverlay.style.display = 'none';
+                console.log('Loading overlay hidden');
+            });
+        }
+        
+        async function cleanupOldNotes() {
+            const Note = Parse.Object.extend("Note");
+            const query = new Parse.Query(Note);
+            query.descending("createdAt");
+            query.skip(10);
+            const oldNotes = await query.find();
+            
+            if (oldNotes.length > 0) {
+                await Parse.Object.destroyAll(oldNotes);
+                console.log(`Deleted ${oldNotes.length} old notes`);
+            }
+        }
+
+        function saveNote() {
+            console.log('saveNote function called');
+            const noteContent = document.getElementById('editor').value.trim();
+            console.log('Note content:', noteContent);
+            if (noteContent) {
+                const Note = Parse.Object.extend("Note");
+                const note = new Note();
+                note.set("content", noteContent);
+
+                note.save()
+                    .then(async (note) => {
+                        isNoteSaved = true;
+                        document.getElementById('editor').style.backgroundImage = 'none';
+                        console.log('Note saved successfully:', note);
+                        await cleanupOldNotes();
+                    }, (error) => {
+                        console.error('Failed to save note:', error.message);
+                        alert('Failed to save note: ' + error.message);
+                    });
+            } else {
+                console.warn('Attempted to save an empty note.');
+                alert('Please write something before saving.');
+            }
+        }
+
+        async function cleanupOldArchives() {
+            const Archive = Parse.Object.extend("Archive");
+            const query = new Parse.Query(Archive);
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            query.lessThan("createdAt", thirtyDaysAgo);
+            const oldArchives = await query.find();
+            
+            if (oldArchives.length > 0) {
+                await Parse.Object.destroyAll(oldArchives);
+                console.log(`Deleted ${oldArchives.length} old archives`);
+            }
+        }
+
+        async function loadArchives() {
+            await cleanupOldArchives();
+            
+            const Archive = Parse.Object.extend("Archive");
+            const query = new Parse.Query(Archive);
+            query.descending("createdAt");
+            const archives = await query.find();
+            
+            const container = document.getElementById('archiveContainer');
+            container.innerHTML = '';
+            
+            archives.forEach(archive => {
+                const div = document.createElement('div');
+                div.className = 'archive-item';
+                div.innerHTML = `
+                    <span>${archive.get("content")}</span>
+                    <button class="unarchive-btn" onclick="unarchiveLine('${archive.id}', this.parentElement)">Unarchive</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleArchive() {
+            const container = document.getElementById('archiveContainer');
+            isArchiveVisible = !isArchiveVisible;
+            container.style.display = isArchiveVisible ? 'block' : 'none';
+            if (isArchiveVisible) {
+                loadArchives();
+            }
+        }
+
+        async function unarchiveLine(archiveId, element) {
+            try {
+                const Archive = Parse.Object.extend("Archive");
+                const query = new Parse.Query(Archive);
+                const archive = await query.get(archiveId);
+                
+                const content = archive.get("content");
+                const editor = document.getElementById('editor');
+                editor.value = editor.value + (editor.value ? '\n' : '') + content;
+                
+                await archive.destroy();
+                element.remove();
+                
+                isNoteSaved = false;
+                editor.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
+            } catch (error) {
+                console.error('Failed to unarchive line:', error);
+                alert('Failed to unarchive line: ' + error.message);
+            }
+        }
+
+        async function archiveSelectedLine() {
+            const editor = document.getElementById('editor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            
+            // Find the start and end of the current line
+            const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+            const lineEnd = text.indexOf('\n', end);
+            const selectedLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
+            
+            if (selectedLine.trim()) {
+                // Save to Archive class in Parse
+                const Archive = Parse.Object.extend("Archive");
+                const archive = new Archive();
+                archive.set("content", selectedLine.trim());
+                
+                try {
+                    await archive.save();
+                    await cleanupOldArchives();
+                    
+                    // Remove the line from editor
+                    const newText = text.slice(0, lineStart) + text.slice(lineEnd === -1 ? text.length : lineEnd + 1);
+                    editor.value = newText;
+                    isNoteSaved = false;
+                    editor.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
+                    
+                    if (isArchiveVisible) {
+                        loadArchives();
+                    }
+                } catch (error) {
+                    console.error('Failed to archive line:', error);
+                    alert('Failed to archive line: ' + error.message);
+                }
+            } else {
+                alert('Please select a line to archive');
+            }
+        }
+
+        document.getElementById('editor').addEventListener('input', function() {
+            console.log('Input event triggered');
+            isNoteSaved = false;
+            if (!isNoteSaved) {
+                console.log('Note is not saved yet.');
+                this.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
+            }
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (!isNoteSaved) {
+                const confirmationMessage = 'You have unsaved changes. Are you sure you want to leave?';
+                (e || window.event).returnValue = confirmationMessage;
+                return confirmationMessage;
+            }
+        });
+
+        window.onload = loadNote;
+    </script>
+</body>
+</html>

@@ -1,3 +1,6 @@
+
+<!-- V1 only the tags are read no filtering is done -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,35 +9,109 @@
     <title>Notes</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <style>
-        /* Bottom navbar styles */
-        .bottom-navbar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+        body {
+            background-color: #f8f9fa;
+            font-size: 16px;
+        }
+        .editor-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
             background-color: #fff;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            padding: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .editor {
+            width: 100%;
+            height: 400px;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            background-image: none;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+        .save-btn, .archive-btn, .toggle-archive-btn, .insert-arrow-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .save-btn {
+            background-color: #0d6efd;
+        }
+        .archive-btn {
+            background-color: #6c757d;
+        }
+        .toggle-archive-btn {
+            background-color: #198754;
+        }
+        .insert-arrow-btn {
+            background-color: #6610f2;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
             align-items: center;
-        }
-        .nav-link {
-            text-decoration: none;
-            color: #6c757d;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 0.8rem;
-        }
-        .nav-link.active {
-            color: #0d6efd;
-        }
-        .nav-icon {
             font-size: 1.5rem;
-            margin-bottom: 2px;
+            color: #0d6efd;
+            z-index: 1000;
+            display: none;
+        }
+        .archive-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .archive-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .unarchive-btn {
+            padding: 5px 10px;
+            color: #fff;
+            background-color: #0d6efd;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .tags-container {
+            margin-top: 10px;
+            padding: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+        .tag {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 2px;
+            background-color: #e9ecef;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        @media (max-width: 576px) {
+            .editor-container {
+                margin: 0;
+                padding: 0px;
+                border-radius: 0;
+            }
         }
     </style>
 </head>
@@ -42,6 +119,7 @@
     <div class="loading-overlay" id="loadingOverlay">Loading...</div>
     <div class="editor-container">
         <textarea class="editor" id="editor" placeholder="Write your notes here..."></textarea>
+        <div class="tags-container" id="tagsContainer"></div>
         <button class="insert-arrow-btn" onclick="insertArrow(); saveNote();">Insert ></button>
         <button class="save-btn" onclick="saveNote()">Save</button>
         <button class="save-btn" onclick="moveLineUp()">^</button>
@@ -52,8 +130,6 @@
         <div id="archiveContainer" class="archive-container"></div>
     </div>
 
-
-
     <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
     <script>
         // Initialize Parse
@@ -62,11 +138,24 @@
 
         let isNoteSaved = false;
         let isArchiveVisible = false;
-        let visibleContent = '';
 
-        function setUnsaved() {
-            isNoteSaved = false;
-            document.getElementById('editor').style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
+        function updateTags() {
+            const editor = document.getElementById('editor');
+            const tagsContainer = document.getElementById('tagsContainer');
+            const text = editor.value;
+            const tagRegex = /\*\*\*(\s*\w+)/g;
+            const tags = [];
+            let match;
+
+            while ((match = tagRegex.exec(text)) !== null) {
+                tags.push(match[1]);
+            }
+            console.log('Text content:', text);
+            console.log('Found tags:', tags);
+
+            tagsContainer.innerHTML = tags.map(tag => 
+                `<span class="tag">${tag}</span>`
+            ).join('');
         }
 
         function insertArrow() {
@@ -75,11 +164,11 @@
             const textBefore = editor.value.substring(0, cursorPos);
             const textAfter = editor.value.substring(cursorPos);
             editor.value = textBefore + ' > ' + textAfter;
-            visibleContent = editor.value;
             editor.selectionStart = cursorPos + 3;
             editor.selectionEnd = cursorPos + 3;
             editor.focus();
-            setUnsaved();
+            isNoteSaved = false;
+            editor.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
         }
 
         function moveLineUp() {
@@ -106,11 +195,13 @@
                               text.slice(lineEnd === -1 ? text.length : lineEnd);
                 
                 editor.value = newText;
-                visibleContent = newText;
                 editor.selectionStart = prevLineStart;
                 editor.selectionEnd = prevLineStart + currentLine.length;
                 editor.focus();
-                setUnsaved();
+                updateTags();
+                
+                isNoteSaved = false;
+                editor.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
             }
         }
 
@@ -138,11 +229,13 @@
                               text.slice(nextLineEnd === -1 ? text.length : nextLineEnd);
                 
                 editor.value = newText;
-                visibleContent = newText;
                 editor.selectionStart = lineStart + nextLine.length + 1;
                 editor.selectionEnd = lineStart + nextLine.length + 1 + currentLine.length;
                 editor.focus();
-                setUnsaved();
+                updateTags();
+                
+                isNoteSaved = false;
+                editor.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
             }
         }
 
@@ -155,10 +248,11 @@
             query.descending("createdAt");
             query.first().then((note) => {
                 if (note) {
-                    visibleContent = note.get("content");
-                    document.getElementById('editor').value = visibleContent;
+                    document.getElementById('editor').value = note.get("content");
+                    updateTags();
                     isNoteSaved = true;
                     document.getElementById('editor').style.backgroundImage = 'none';
+                } else {
                 }
                 loadingOverlay.style.display = 'none';
             }, (error) => {
@@ -166,7 +260,7 @@
                 loadingOverlay.style.display = 'none';
             });
         }
-
+        
         async function cleanupOldNotes() {
             const Note = Parse.Object.extend("Note");
             const query = new Parse.Query(Note);
@@ -180,13 +274,11 @@
         }
 
         function saveNote() {
-            const content = document.getElementById('editor').value;
-            console.log('Saving content:', content);
-
-            if (content.trim()) {
+            const noteContent = document.getElementById('editor').value.trim();
+            if (noteContent) {
                 const Note = Parse.Object.extend("Note");
                 const note = new Note();
-                note.set("content", content);
+                note.set("content", noteContent);
 
                 note.save()
                     .then(async (note) => {
@@ -256,11 +348,13 @@
                 const content = archive.get("content");
                 const editor = document.getElementById('editor');
                 editor.value = editor.value + (editor.value ? '\n' : '') + content;
-                visibleContent = editor.value;
+                updateTags();
                 
                 await archive.destroy();
                 element.remove();
-                setUnsaved();
+                
+                isNoteSaved = false;
+                editor.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
             } catch (error) {
                 console.error('Failed to unarchive line:', error);
                 alert('Failed to unarchive line: ' + error.message);
@@ -289,9 +383,11 @@
                     await cleanupOldArchives();
                     
                     // Remove the line from editor
-                    editor.value = text.slice(0, lineStart) + text.slice(lineEnd === -1 ? text.length : lineEnd + 1);
-                    visibleContent = editor.value;
-                    setUnsaved();
+                    const newText = text.slice(0, lineStart) + text.slice(lineEnd === -1 ? text.length : lineEnd + 1);
+                    editor.value = newText;
+                    updateTags();
+                    isNoteSaved = false;
+                    editor.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
                     
                     if (isArchiveVisible) {
                         loadArchives();
@@ -306,8 +402,11 @@
         }
 
         document.getElementById('editor').addEventListener('input', function() {
-            setUnsaved();
-            visibleContent = this.value;
+            isNoteSaved = false;
+            if (!isNoteSaved) {
+                this.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 50\'%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23e0e0e0\' font-size=\'20\'%3EUnsaved%3C/text%3E%3C/svg%3E")';
+            }
+            updateTags();
         });
 
         window.addEventListener('beforeunload', function (e) {
@@ -318,13 +417,7 @@
             }
         });
 
-        window.onload = function() {
-            loadNote();
-            // loadBottomNav();
-        };
-
-        // Load bottom navigation from external file
-        
+        window.onload = loadNote;
     </script>
 </body>
 </html>

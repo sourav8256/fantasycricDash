@@ -1,0 +1,309 @@
+<!-- V2 Before fixing timer reset on deduction -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treat Counter</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-size: 16px;
+        }
+        @media (max-width: 576px) {
+            body {
+                font-size: 14px;
+            }
+            .container {
+                padding: 10px;
+            }
+            .card {
+                padding: 15px !important;
+            }
+            .count-display {
+                font-size: 3rem !important;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+            .input-group > * {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 5px 0;
+                border-radius: 4px !important;
+            }
+            .btn {
+                width: 100%;
+                margin-top: 5px;
+            }
+        }
+        .count-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #8b4513;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .card {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .ledger-entry {
+            border-bottom: 1px solid #dee2e6;
+            padding: 10px 0;
+        }
+        .notes-area {
+            width: 100%;
+            min-height: 100px;
+            margin-top: 20px;
+        }
+        .timer-display {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        .progress {
+            height: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="card">
+            <div class="text-center mb-4">
+                <div class="input-group mb-2 justify-content-center">
+                    <input type="text" id="treatName" class="form-control text-center" value="Tea" style="font-size: 1.5rem; font-weight: bold; max-width: 200px;">
+                    <span class="input-group-text" style="font-size: 1.5rem; font-weight: bold;">Counter</span>
+                </div>
+                <div id="countDisplay" class="count-display">0</div>
+                <p class="text-muted">cups today</p>
+            </div>
+
+            <div class="text-center">
+                <div class="mb-3">
+                    <label for="intervalHours" class="form-label">Hours between <span class="treat-text">treats</span>:</label>
+                    <input type="number" id="intervalHours" class="form-control" style="width: 100px; margin: 0 auto;" value="3" min="0.1" max="24" step="0.1">
+                </div>
+                <div id="timerDisplay" class="timer-display">Time until next <span class="treat-text">treat</span>: 3:00:00</div>
+                <div class="progress">
+                    <div id="timerProgress" class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+            
+            <div class="input-group mb-3">
+                <input type="number" id="cupCount" class="form-control" placeholder="Number to remove" min="1" value="1">
+                <input type="text" id="teaDescription" class="form-control" placeholder="Reason for removal (optional)">
+                <button id="addButton" class="btn btn-danger">Remove</button>
+            </div>
+
+            <div class="mt-4">
+                <h4>Recent Entries</h4>
+                <div id="ledger" class="ledger"></div>
+            </div>
+
+            <div class="mt-4">
+                <h4>Notes</h4>
+                <textarea id="notes" class="form-control notes-area" placeholder="Add your notes here..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const countDisplay = document.getElementById('countDisplay');
+        const addButton = document.getElementById('addButton');
+        const teaDescription = document.getElementById('teaDescription');
+        const cupCount = document.getElementById('cupCount');
+        const ledger = document.getElementById('ledger');
+        const notesTextarea = document.getElementById('notes');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerProgress = document.getElementById('timerProgress');
+        const intervalHours = document.getElementById('intervalHours');
+        const treatName = document.getElementById('treatName');
+        const treatTexts = document.querySelectorAll('.treat-text');
+
+        // Load state from localStorage
+        let teaCount = parseInt(localStorage.getItem('teaCount')) || 0;
+        let teaLedgerEntries = JSON.parse(localStorage.getItem('teaLedger')) || [];
+        let lastTeaTime = parseInt(localStorage.getItem('lastTeaTime')) || Date.now();
+        let lastActiveTime = Date.now(); // Track when the page was last active
+        notesTextarea.value = localStorage.getItem('teaNotes') || '';
+        intervalHours.value = localStorage.getItem('intervalHours') || '3';
+        treatName.value = localStorage.getItem('treatName') || 'Tea';
+
+        // Update treat name display
+        function updateTreatName() {
+            document.title = `${treatName.value} Counter`;
+            treatTexts.forEach(el => el.textContent = treatName.value.toLowerCase());
+            localStorage.setItem('treatName', treatName.value);
+        }
+        updateTreatName();
+
+        treatName.addEventListener('input', updateTreatName);
+
+        // Save state to localStorage before unload
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('teaCount', teaCount.toString());
+            localStorage.setItem('teaLedger', JSON.stringify(teaLedgerEntries));
+            localStorage.setItem('lastTeaTime', lastTeaTime.toString());
+            localStorage.setItem('teaNotes', notesTextarea.value);
+            localStorage.setItem('intervalHours', intervalHours.value);
+            localStorage.setItem('treatName', treatName.value);
+        });
+
+        function updateDisplay() {
+            countDisplay.textContent = teaCount;
+        }
+
+        function updateTimer() {
+            const now = Date.now();
+            const intervalMs = parseFloat(intervalHours.value) * 60 * 60 * 1000;
+            const timeSinceLastTea = now - lastTeaTime;
+            const timeLeft = Math.max(0, intervalMs - timeSinceLastTea);
+            
+            const hours = Math.floor(timeLeft / (60 * 60 * 1000));
+            const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+            const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
+            
+            timerDisplay.textContent = `Time until next ${treatName.value.toLowerCase()}: ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            const progressPercent = (timeLeft / intervalMs) * 100;
+            timerProgress.style.width = `${progressPercent}%`;
+        }
+
+        function updateLedgerDisplay() {
+            ledger.innerHTML = teaLedgerEntries.map(entry => `
+                <div class="ledger-entry">
+                    <div class="d-flex justify-content-between">
+                        <span>${entry.description || 'No reason provided'} (${entry.count} ${entry.count === 1 ? treatName.value.toLowerCase() : treatName.value.toLowerCase() + 's'})</span>
+                        <small class="text-muted">${new Date(entry.timestamp).toLocaleTimeString()}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function checkTeaInterval() {
+            const now = Date.now();
+            const intervalMs = parseFloat(intervalHours.value) * 60 * 60 * 1000;
+            
+            // Calculate how many intervals have passed since last tea
+            const missedIntervals = Math.floor((now - lastTeaTime) / intervalMs);
+            
+            if (missedIntervals > 0) {
+                // Add entries for missed intervals
+                for (let i = 0; i < missedIntervals; i++) {
+                    const timestamp = lastTeaTime + (i + 1) * intervalMs;
+                    teaCount++;
+                    teaLedgerEntries.unshift({
+                        description: 'Automatic entry (missed while inactive)',
+                        count: 1,
+                        timestamp: timestamp
+                    });
+                }
+                
+                if (teaLedgerEntries.length > 10) {
+                    teaLedgerEntries = teaLedgerEntries.slice(0, 10);
+                }
+                
+                lastTeaTime = lastTeaTime + (missedIntervals * intervalMs);
+                localStorage.setItem('teaCount', teaCount.toString());
+                localStorage.setItem('teaLedger', JSON.stringify(teaLedgerEntries));
+                localStorage.setItem('lastTeaTime', lastTeaTime.toString());
+                
+                updateDisplay();
+                updateLedgerDisplay();
+            }
+            updateTimer();
+        }
+
+        intervalHours.addEventListener('change', () => {
+            localStorage.setItem('intervalHours', intervalHours.value);
+            updateTimer();
+        });
+
+        addButton.addEventListener('click', () => {
+            const count = parseInt(cupCount.value) || 1;
+            if (count > teaCount) {
+                alert(`Cannot remove more ${treatName.value.toLowerCase()}s than available!`);
+                return;
+            }
+            
+            teaCount -= count;
+            const description = teaDescription.value.trim();
+            const now = Date.now();
+            
+            teaLedgerEntries.unshift({
+                description: description || 'No reason provided',
+                count: -count
+            });
+            
+            if (teaLedgerEntries.length > 10) {
+                teaLedgerEntries = teaLedgerEntries.slice(0, 10);
+            }
+            
+            lastTeaTime = now;
+            localStorage.setItem('teaCount', teaCount.toString());
+            localStorage.setItem('teaLedger', JSON.stringify(teaLedgerEntries));
+            localStorage.setItem('lastTeaTime', lastTeaTime.toString());
+            
+            updateDisplay();
+            updateLedgerDisplay();
+            updateTimer();
+            
+            teaDescription.value = '';
+            cupCount.value = '1';
+        });
+
+        notesTextarea.addEventListener('input', () => {
+            localStorage.setItem('teaNotes', notesTextarea.value);
+        });
+
+        // Reset counter at midnight
+        function checkForNewDay() {
+            const lastDate = localStorage.getItem('lastTeaDate');
+            const today = new Date().toLocaleDateString();
+            
+            if (lastDate !== today) {
+                teaCount = 0;
+                teaLedgerEntries = [];
+                lastTeaTime = Date.now();
+                localStorage.setItem('teaCount', '0');
+                localStorage.setItem('teaLedger', JSON.stringify([]));
+                localStorage.setItem('lastTeaDate', today);
+                localStorage.setItem('lastTeaTime', lastTeaTime.toString());
+                updateDisplay();
+                updateLedgerDisplay();
+                updateTimer();
+            }
+        }
+
+        // Check for new day and missed intervals on page load and visibility change
+        checkForNewDay();
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                const now = Date.now();
+                const timeSinceLastActive = now - lastActiveTime;
+                if (timeSinceLastActive > 1000) { // Only check if more than 1 second has passed
+                    checkForNewDay();
+                    checkTeaInterval();
+                }
+                lastActiveTime = now;
+            }
+        });
+
+        // Check tea interval every second for smoother timer updates
+        setInterval(checkTeaInterval, 1000);
+
+        // Initial display updates
+        updateDisplay();
+        updateLedgerDisplay();
+        updateTimer();
+        checkTeaInterval();
+    </script>
+</body>
+</html>

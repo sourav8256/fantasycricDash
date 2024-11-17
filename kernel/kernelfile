@@ -1,0 +1,69 @@
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/keyboard.h>
+#include <linux/input.h>
+#include <linux/fb.h>
+#include <linux/string.h>
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Kernel Developer");
+MODULE_DESCRIPTION("Keyboard display module");
+
+static struct notifier_block keyboard_nb;
+static struct fb_info *info;
+static char key_str[2] = {0};
+
+static void write_to_screen(const char *str) {
+    struct fb_fillrect rect;
+    
+    // Clear previous content
+    memset(info->screen_base, 0, info->fix.smem_len);
+    
+    // Setup rectangle parameters for drawing
+    rect.dx = 10;
+    rect.dy = 10;
+    rect.width = 8 * strlen(str);  // Assume 8 pixels per character
+    rect.height = 16;              // Character height
+    rect.color = 0xFFFF;           // White color
+    rect.rop = ROP_COPY;
+    
+    // Draw the text
+    info->fbops->fb_fillrect(info, &rect);
+    memcpy(info->screen_base + (rect.dy * info->fix.line_length) + rect.dx, 
+           str, strlen(str));
+}
+
+static int keyboard_notify(struct notifier_block *nb, unsigned long code, void *_param) {
+    struct keyboard_notifier_param *param = _param;
+    
+    if (code == KBD_KEYCODE && param->down) {
+        key_str[0] = param->value;
+        write_to_screen(key_str);
+        printk(KERN_INFO "Key pressed: %d\n", param->value);
+    }
+    
+    return NOTIFY_OK;
+}
+
+static int __init keyboard_reader_init(void) {
+    keyboard_nb.notifier_call = keyboard_notify;
+    register_keyboard_notifier(&keyboard_nb);
+    
+    // Get the primary framebuffer
+    info = registered_fb[0];
+    if (!info) {
+        printk(KERN_ERR "Could not get framebuffer\n");
+        return -ENODEV;
+    }
+    
+    printk(KERN_INFO "Keyboard display module loaded\n");
+    return 0;
+}
+
+static void __exit keyboard_reader_exit(void) {
+    unregister_keyboard_notifier(&keyboard_nb);
+    printk(KERN_INFO "Keyboard display module unloaded\n");
+}
+
+module_init(keyboard_reader_init);
+module_exit(keyboard_reader_exit);

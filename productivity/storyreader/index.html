@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Reader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-size: 16px;
+            padding: 20px;
+            padding-bottom: 70px;
+        }
+        .reader-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .story-display {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin: 20px 0;
+            min-height: 260px;
+        }
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #0d6efd;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .nav-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .page-info {
+            text-align: center;
+            color: #6c757d;
+            margin: 10px 0;
+        }
+        #addStoryBtn {
+            margin: 20px 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="reader-container">
+        <h2 class="mb-4">Story Reader</h2>
+        <button id="addStoryBtn" class="btn btn-primary" onclick="showTextInput()">Add Story Text</button>
+        <div id="storyDisplay" class="story-display"></div>
+        <div class="page-info">
+            Page <span id="currentPage">0</span> of <span id="totalPages">0</span>
+        </div>
+        <div class="navigation-buttons">
+            <button id="prevBtn" class="nav-btn" onclick="previousPage()" disabled>Previous Page</button>
+            <button id="nextBtn" class="nav-btn" onclick="nextPage()" disabled>Next Page</button>
+        </div>
+    </div>
+
+    <!-- Load Bottom Navigation Bar -->
+    <nav class="bottom-navbar" id="bottomNav"></nav>
+
+    <script>
+        let storyLines = [];
+        let currentPage = 0;
+        const linesPerPage = 2;
+
+        // Load saved story on page load
+        window.onload = function() {
+            const savedStory = localStorage.getItem('storyLines');
+            const savedPage = localStorage.getItem('currentPage');
+            if (savedStory) {
+                storyLines = JSON.parse(savedStory);
+                currentPage = savedPage ? parseInt(savedPage) : 0;
+                updateDisplay();
+            }
+        };
+
+        function showTextInput() {
+            const text = prompt("Please paste or type your story text:");
+            if (text) {
+                storyLines = text.split('\n');
+                currentPage = 0;
+                // Save to localStorage
+                localStorage.setItem('storyLines', JSON.stringify(storyLines));
+                localStorage.setItem('currentPage', currentPage);
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            const startIndex = currentPage * linesPerPage;
+            const endIndex = startIndex + linesPerPage;
+            const currentLines = storyLines.slice(startIndex, endIndex);
+            
+            document.getElementById('storyDisplay').innerHTML = currentLines.join('<br>');
+            
+            const totalPages = Math.ceil(storyLines.length / linesPerPage);
+            document.getElementById('currentPage').textContent = totalPages > 0 ? currentPage + 1 : 0;
+            document.getElementById('totalPages').textContent = totalPages;
+            
+            document.getElementById('prevBtn').disabled = currentPage === 0;
+            document.getElementById('nextBtn').disabled = endIndex >= storyLines.length;
+            
+            // Save current page to localStorage
+            localStorage.setItem('currentPage', currentPage);
+        }
+
+        function previousPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                updateDisplay();
+            }
+        }
+
+        function nextPage() {
+            if ((currentPage + 1) * linesPerPage < storyLines.length) {
+                currentPage++;
+                updateDisplay();
+            }
+        }
+
+        // Load bottom navigation from external file
+        async function loadBottomNav() {
+            const response = await fetch('../bottomnav.html');
+            const html = await response.text();
+            document.getElementById('bottomNav').innerHTML = html;
+        }
+
+        // Call the function to load the bottom navigation
+        // loadBottomNav();
+    </script>
+</body>
+</html>

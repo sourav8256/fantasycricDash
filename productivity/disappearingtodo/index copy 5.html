@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disappearing Todo List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .todo-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .todo-item {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .todo-item.fading {
+            animation: fadeOut 1s ease-in-out;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .todo-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+        }
+        .delete-btn {
+            padding: 2px 8px;
+            margin-left: 10px;
+        }
+        .time-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .time-btn {
+            flex: 1;
+            min-width: 100px;
+        }
+        .timer-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+        }
+        .progress {
+            flex-grow: 1;
+            height: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="todo-container">
+        <h2 class="text-center mb-4">Disappearing Todo List</h2>
+        
+        <form id="todoForm" class="mb-4">
+            <div class="mb-3">
+                <input type="text" class="form-control" id="todoInput" placeholder="Enter task" required>
+            </div>
+            <div class="time-buttons mb-3">
+                <button type="button" class="btn btn-outline-primary time-btn" data-time="21600">6 hours</button>
+                <button type="button" class="btn btn-outline-primary time-btn" data-time="43200">12 hours</button>
+                <button type="button" class="btn btn-outline-primary time-btn" data-time="64800">18 hours</button>
+                <button type="button" class="btn btn-outline-primary time-btn" data-time="86400">24 hours</button>
+            </div>
+            <button type="submit" class="btn btn-primary w-100" id="addButton" disabled>Add Task</button>
+        </form>
+
+        <div id="todoList"></div>
+    </div>
+
+    <script>
+        const todoForm = document.getElementById('todoForm');
+        const todoInput = document.getElementById('todoInput');
+        const todoList = document.getElementById('todoList');
+        const addButton = document.getElementById('addButton');
+        const timeButtons = document.querySelectorAll('.time-btn');
+
+        let todos = [];
+        let selectedTime = null;
+
+        timeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                timeButtons.forEach(b => b.classList.remove('active', 'btn-primary'));
+                btn.classList.add('active', 'btn-primary');
+                selectedTime = parseInt(btn.dataset.time);
+                addButton.disabled = !todoInput.value;
+            });
+        });
+
+        todoInput.addEventListener('input', () => {
+            addButton.disabled = !todoInput.value || !selectedTime;
+        });
+
+        // Load saved todos on page load
+        window.addEventListener('load', function() {
+            const savedTodos = localStorage.getItem('todos');
+            if (savedTodos) {
+                todos = JSON.parse(savedTodos);
+                todos.forEach(todo => {
+                    const timeElapsed = Math.floor((Date.now() - todo.startTime) / 1000);
+                    const remainingTime = todo.duration - timeElapsed;
+                    
+                    if (remainingTime > 0) {
+                        createTodoItem(todo.task, remainingTime, todo.startTime, todo.duration);
+                    }
+                });
+            }
+        });
+
+        // Save state before page unload
+        window.onbeforeunload = function() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        };
+
+        function removeTodoItem(todoItem, startTime) {
+            todoItem.classList.add('fading');
+            setTimeout(() => {
+                todoList.removeChild(todoItem);
+                todos = todos.filter(t => t.startTime !== startTime);
+            }, 1000);
+        }
+
+        function createTodoItem(task, secondsLeft, startTime, totalDuration) {
+            const todoItem = document.createElement('div');
+            todoItem.className = 'todo-item';
+            
+            const todoContent = document.createElement('div');
+            todoContent.className = 'todo-content';
+            
+            const taskText = document.createElement('span');
+            taskText.textContent = task;
+            
+            const timerContainer = document.createElement('div');
+            timerContainer.className = 'timer-container';
+            
+            const timeLeft = document.createElement('span');
+            timeLeft.style.minWidth = '80px';
+            
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress';
+            const progressBarInner = document.createElement('div');
+            progressBarInner.className = 'progress-bar';
+            progressBarInner.style.width = '100%';
+            progressBar.appendChild(progressBarInner);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-danger btn-sm delete-btn';
+            deleteBtn.textContent = '×';
+            deleteBtn.onclick = () => removeTodoItem(todoItem, startTime);
+            
+            timerContainer.appendChild(timeLeft);
+            timerContainer.appendChild(progressBar);
+            todoContent.appendChild(taskText);
+            todoContent.appendChild(timerContainer);
+            todoItem.appendChild(todoContent);
+            todoItem.appendChild(deleteBtn);
+            todoList.appendChild(todoItem);
+            
+            const timer = setInterval(() => {
+                secondsLeft--;
+                const hours = Math.floor(secondsLeft / 3600);
+                const minutes = Math.floor((secondsLeft % 3600) / 60);
+                const seconds = secondsLeft % 60;
+                timeLeft.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const progress = (secondsLeft / totalDuration) * 100;
+                progressBarInner.style.width = `${progress}%`;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(timer);
+                    removeTodoItem(todoItem, startTime);
+                }
+            }, 1000);
+        }
+
+        todoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedTime) return;
+
+            const task = todoInput.value;
+            const duration = selectedTime;
+            const startTime = Date.now();
+            
+            todos.push({
+                task: task,
+                duration: duration,
+                startTime: startTime
+            });
+
+            createTodoItem(task, duration, startTime, duration);
+            
+            todoForm.reset();
+            timeButtons.forEach(btn => btn.classList.remove('active', 'btn-primary'));
+            selectedTime = null;
+            addButton.disabled = true;
+        });
+    </script>
+</body>
+</html>

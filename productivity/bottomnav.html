@@ -1,0 +1,45 @@
+    <style>
+        .bottom-navbar {
+            position: fixed;
+            bottom: 50px;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .nav-link {
+            text-decoration: none;
+            color: #6c757d;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        .nav-link.active {
+            color: #0d6efd;
+        }
+        .nav-icon {
+            font-size: 1.5rem;
+            margin-bottom: 2px;
+        }
+    </style>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-navbar">
+        <a href="../moneycounter/moneycounter.html" class="nav-link">
+            <span class="nav-icon">💰</span>
+            <span>Money Counter</span>
+        </a>
+        <a href="../habittracker/index.html" onerror="this.href='../habittracker/index.html'" class="nav-link active">
+            <span class="nav-icon">✓</span>
+            <span>Habits</span>
+        </a>
+        <a href="../notes/index.html" onerror="this.href='../notes/index.html'" class="nav-link active">
+            <span class="notes-icon">✏️</span>
+            <span>Notes</span>
+        </a>
+    </nav>

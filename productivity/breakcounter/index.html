@@ -1,0 +1,273 @@
+<!-- Break Counter - Track your break time -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Break Counter</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-size: 16px;
+        }
+        @media (max-width: 576px) {
+            body {
+                font-size: 14px;
+            }
+            .container {
+                padding: 10px;
+            }
+            .card {
+                padding: 15px !important;
+            }
+            .time-display {
+                font-size: 3rem !important;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+            .input-group > * {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 5px 0;
+                border-radius: 4px !important;
+            }
+            .btn {
+                width: 100%;
+                margin-top: 5px;
+            }
+        }
+        .time-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #28a745;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            word-break: break-word;
+        }
+        .card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            border-radius: 10px;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .ledger {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .ledger-item {
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+            text-align: left;
+            word-break: break-word;
+        }
+        .daily-rate {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        input[type="number"] {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-group input {
+            font-size: 1rem;
+            padding: 0.5rem;
+        }
+        .btn {
+            touch-action: manipulation;
+        }
+        .version {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-3 mt-sm-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 text-center">
+                <div class="card p-3 p-sm-5">
+                    <h1 class="mb-4 h2">Break Counter</h1>
+                    <div class="d-flex justify-content-center align-items-center flex-wrap">
+                        <div id="timeDisplay" class="time-display">0:00:00</div>
+                    </div>
+                    <div class="input-group mt-3 justify-content-center" style="max-width: 300px; margin: 0 auto;">
+                        <input type="number" class="form-control" id="rateInput" value="60" step="1" style="max-width: 100px;" inputmode="decimal">
+                        <span class="input-group-text">seconds per minute</span>
+                    </div>
+                    <div class="daily-rate">
+                        <span id="dailyRate">0</span> hours per day
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="input-group mb-3">
+                            <input type="number" class="form-control" id="breakInput" placeholder="Enter break duration" step="1" inputmode="decimal">
+                            <input type="text" class="form-control" id="breakDescription" placeholder="Description">
+                            <button class="btn btn-danger" type="button" id="addButton">Deduct Break</button>
+                        </div>
+                    </div>
+
+                    <div class="ledger" id="ledger">
+                        <h5 class="text-start mb-3">Recent Breaks</h5>
+                        <!-- Ledger items will be added here -->
+                    </div>
+                    
+                    <div class="version">v1.0.0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Text box at the bottom -->
+    <div class="container mt-3">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8">
+                <textarea class="form-control" rows="3" id="notes" placeholder="Enter your notes here..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        let breakTotalSeconds = parseInt(localStorage.getItem('breakTotalSeconds')) || 0;
+        let breakLastUpdateTime = parseInt(localStorage.getItem('breakLastUpdateTime')) || Date.now();
+        let breakLedgerEntries = JSON.parse(localStorage.getItem('breakLedger')) || [];
+        let BREAK_SECONDS_PER_MINUTE = (parseInt(localStorage.getItem('breakRate')) || 60);
+        let breakNotes = localStorage.getItem('breakNotes') || '';
+        
+        const timeDisplay = document.getElementById('timeDisplay');
+        const breakInput = document.getElementById('breakInput');
+        const breakDescription = document.getElementById('breakDescription');
+        const addButton = document.getElementById('addButton');
+        const ledgerDiv = document.getElementById('ledger');
+        const rateInput = document.getElementById('rateInput');
+        const dailyRateDisplay = document.getElementById('dailyRate');
+        const notesTextarea = document.getElementById('notes');
+
+        function formatTime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateDailyRate() {
+            const dailyHours = (BREAK_SECONDS_PER_MINUTE * 24) / 60;
+            dailyRateDisplay.textContent = dailyHours.toFixed(1);
+        }
+
+        rateInput.value = BREAK_SECONDS_PER_MINUTE;
+        updateDailyRate();
+        
+        rateInput.addEventListener('change', () => {
+            const currentTime = Date.now();
+            const timeDiffSeconds = Math.floor((currentTime - breakLastUpdateTime) / 1000);
+            breakTotalSeconds += timeDiffSeconds;
+            
+            BREAK_SECONDS_PER_MINUTE = parseInt(rateInput.value) || 60;
+            breakLastUpdateTime = currentTime;
+            
+            localStorage.setItem('breakRate', BREAK_SECONDS_PER_MINUTE.toString());
+            localStorage.setItem('breakTotalSeconds', breakTotalSeconds.toString());
+            localStorage.setItem('breakLastUpdateTime', breakLastUpdateTime.toString());
+            
+            timeDisplay.textContent = formatTime(breakTotalSeconds);
+            updateDailyRate();
+        });
+        
+        function calculateOfflineTime() {
+            const currentTime = Date.now();
+            const timeDiffSeconds = Math.floor((currentTime - breakLastUpdateTime) / 1000);
+            const adjustedSeconds = Math.floor(timeDiffSeconds * (BREAK_SECONDS_PER_MINUTE / 60));
+            breakTotalSeconds += adjustedSeconds;
+            breakLastUpdateTime = currentTime;
+            
+            localStorage.setItem('breakTotalSeconds', breakTotalSeconds.toString());
+            localStorage.setItem('breakLastUpdateTime', breakLastUpdateTime.toString());
+        }
+
+        function updateLedgerDisplay() {
+            const ledgerContent = breakLedgerEntries.map(entry => `
+                <div class="ledger-item">
+                    <strong>${formatTime(entry.duration)}</strong> - ${entry.description}
+                    <small class="text-muted d-block">${new Date(entry.timestamp).toLocaleString()}</small>
+                </div>
+            `).join('');
+            ledgerDiv.innerHTML = '<h5 class="text-start mb-3">Recent Breaks</h5>' + ledgerContent;
+        }
+
+        calculateOfflineTime();
+        timeDisplay.textContent = formatTime(breakTotalSeconds);
+        updateLedgerDisplay();
+        notesTextarea.value = breakNotes;
+
+        function updateTime() {
+            const currentTime = Date.now();
+            const timeDiffSeconds = Math.floor((currentTime - breakLastUpdateTime) / 1000);
+            const adjustedSeconds = Math.floor(timeDiffSeconds * (BREAK_SECONDS_PER_MINUTE / 60));
+            const displaySeconds = breakTotalSeconds + adjustedSeconds;
+            timeDisplay.textContent = formatTime(displaySeconds);
+        }
+
+        addButton.addEventListener('click', () => {
+            const breakDuration = parseInt(breakInput.value) * 60; // Convert minutes to seconds
+            const description = breakDescription.value.trim() || 'Unspecified break';
+            
+            if (!isNaN(breakDuration) && breakDuration > 0) {
+                breakTotalSeconds = Math.max(0, breakTotalSeconds - breakDuration); // Prevent negative values
+                timeDisplay.textContent = formatTime(breakTotalSeconds);
+                
+                breakLedgerEntries.unshift({
+                    duration: breakDuration,
+                    description: description,
+                    timestamp: Date.now()
+                });
+                
+                if (breakLedgerEntries.length > 10) {
+                    breakLedgerEntries = breakLedgerEntries.slice(0, 10);
+                }
+                
+                localStorage.setItem('breakTotalSeconds', breakTotalSeconds.toString());
+                localStorage.setItem('breakLedger', JSON.stringify(breakLedgerEntries));
+                
+                updateLedgerDisplay();
+                
+                breakInput.value = '';
+                breakDescription.value = '';
+            } else {
+                alert('Please enter a valid duration');
+            }
+        });
+
+        setInterval(updateTime, 1000);
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                calculateOfflineTime();
+                timeDisplay.textContent = formatTime(breakTotalSeconds);
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('breakTotalSeconds', breakTotalSeconds.toString());
+            localStorage.setItem('breakLastUpdateTime', Date.now().toString());
+            localStorage.setItem('breakNotes', notesTextarea.value);
+        });
+
+        notesTextarea.addEventListener('input', () => {
+            localStorage.setItem('breakNotes', notesTextarea.value);
+        });
+    </script>
+</body>
+</html>

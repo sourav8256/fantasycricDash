@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15-Minute Memory Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .game-container {
+            text-align: center;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 90%;
+            width: 600px;
+        }
+        .timer {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            color: #0d6efd;
+        }
+        .status {
+            margin: 1rem 0;
+            font-size: 1.2rem;
+        }
+        .score {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+        }
+        .btn-tap {
+            font-size: 1.2rem;
+            padding: 1rem 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="mb-4">Memory Timer</h1>
+        <div class="timer" id="timer">15:00</div>
+        <div class="status" id="status">Tap when you think 15 minutes have passed!</div>
+        <div class="score" id="score">High Score: 0</div>
+        <div class="score" id="recent-score">Recent: 0/10</div>
+        <button class="btn btn-primary btn-tap" id="tapButton" onclick="checkTiming()">TAP!</button>
+    </div>
+
+    <script>
+        let startTime = null;
+        let highScore = parseInt(localStorage.getItem('memoryGameHighScore')) || 0;
+        let isRunning = false;
+        let recentResults = JSON.parse(localStorage.getItem('memoryGameRecentResults')) || [];
+        let timerInterval;
+
+        function updateTimer() {
+            if (!startTime || !isRunning) return;
+            
+            const currentTime = new Date();
+            const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
+            const minutes = Math.floor(elapsedSeconds / 60);
+            const seconds = elapsedSeconds % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Load saved state on page load
+        window.onload = function() {
+            const savedStartTime = localStorage.getItem('memoryGameStartTime');
+            const savedIsRunning = localStorage.getItem('memoryGameIsRunning') === 'true';
+            
+            if (savedStartTime && savedIsRunning) {
+                startTime = new Date(parseInt(savedStartTime));
+                isRunning = true;
+                document.getElementById('status').textContent = 'Timer is running...';
+                document.getElementById('tapButton').classList.remove('btn-primary');
+                document.getElementById('tapButton').classList.add('btn-success');
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+            
+            const currentCorrect = recentResults.filter(x => x).length;
+            document.getElementById('score').textContent = `High Score: ${highScore}`;
+            document.getElementById('recent-score').textContent = `Recent: ${currentCorrect}/10`;
+            document.getElementById('tapButton').textContent = isRunning ? 'TAP!' : 'Start Timer';
+        };
+
+        function startTimer() {
+            startTime = new Date();
+            isRunning = true;
+            document.getElementById('status').textContent = 'Timer is running...';
+            document.getElementById('tapButton').classList.remove('btn-primary');
+            document.getElementById('tapButton').classList.add('btn-success');
+            
+            // Save state
+            localStorage.setItem('memoryGameStartTime', startTime.getTime());
+            localStorage.setItem('memoryGameIsRunning', 'true');
+
+            // Start the timer update
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function checkTiming() {
+            if (!isRunning) {
+                startTimer();
+                return;
+            }
+
+            // Clear existing timer interval
+            clearInterval(timerInterval);
+
+            const currentTime = new Date();
+            const elapsedMinutes = (currentTime - startTime) / (1000 * 60);
+            const targetMinutes = 15;
+            const buffer = 3;
+
+            const isCorrect = elapsedMinutes >= targetMinutes - buffer && elapsedMinutes <= targetMinutes + buffer;
+
+            if (isCorrect) {
+                document.getElementById('status').textContent = 'Perfect! Within the 3-minute buffer!';
+                document.getElementById('status').style.color = 'green';
+                startTimer(); // Only restart timer if correct
+            } else {
+                document.getElementById('status').textContent = `Too ${elapsedMinutes < targetMinutes ? 'early' : 'late'}! Try again.`;
+                document.getElementById('status').style.color = 'red';
+                // Don't restart timer, let them try again with current timer
+                timerInterval = setInterval(updateTimer, 1000); // Resume the timer
+            }
+
+            // Update recent results
+            recentResults.push(isCorrect);
+            if (recentResults.length > 10) {
+                recentResults.shift();
+            }
+
+            // Update high score
+            const currentCorrect = recentResults.filter(x => x).length;
+            if (currentCorrect > highScore) {
+                highScore = currentCorrect;
+                localStorage.setItem('memoryGameHighScore', highScore);
+            }
+
+            // Save recent results and update display
+            localStorage.setItem('memoryGameRecentResults', JSON.stringify(recentResults));
+            document.getElementById('score').textContent = `High Score: ${highScore}`;
+            document.getElementById('recent-score').textContent = `Recent: ${currentCorrect}/10`;
+        }
+
+        // Start the game
+        document.getElementById('tapButton').textContent = isRunning ? 'TAP!' : 'Start Timer';
+    </script>
+</body>
+</html>

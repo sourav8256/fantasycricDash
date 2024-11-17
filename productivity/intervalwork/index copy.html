@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interval Work</title>
+    <style>
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            display: flex;
+            gap: 5px;
+        }
+
+        .progress-segment {
+            flex: 1;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            transition: background-color 0.3s;
+        }
+
+        .progress-segment.active {
+            background-color: #0d6efd;
+        }
+
+        .progress-segment.completed {
+            background-color: #198754;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .control-btn {
+            padding: 5px 15px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .control-btn:hover {
+            background-color: #0b5ed7;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-container" id="progressBar">
+        <!-- 8 segments for 2 hours total -->
+        <div class="progress-segment"></div>
+        <div class="progress-segment"></div>
+        <div class="progress-segment"></div>
+        <div class="progress-segment"></div>
+        <div class="progress-segment"></div>
+        <div class="progress-segment"></div>
+        <div class="progress-segment"></div>
+        <div class="progress-segment"></div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" onclick="decreaseProgress()">-</button>
+        <button class="control-btn" onclick="increaseProgress()">+</button>
+    </div>
+
+    <script>
+        let currentSegment = parseInt(localStorage.getItem('currentSegment')) || 0;
+        const segments = document.querySelectorAll('.progress-segment');
+        
+        function updateProgress() {
+            // Reset all segments
+            segments.forEach(segment => {
+                segment.classList.remove('active', 'completed');
+            });
+            
+            // Update completed segments
+            for(let i = 0; i < currentSegment; i++) {
+                segments[i].classList.add('completed');
+            }
+            
+            // Show current active segment
+            if(currentSegment < segments.length) {
+                segments[currentSegment].classList.add('active');
+            }
+
+            // Save state
+            localStorage.setItem('currentSegment', currentSegment);
+        }
+
+        function increaseProgress() {
+            if(currentSegment < segments.length) {
+                currentSegment++;
+                updateProgress();
+            }
+        }
+
+        function decreaseProgress() {
+            if(currentSegment > 0) {
+                currentSegment--;
+                updateProgress();
+            }
+        }
+
+        // Update progress every 15 minutes (900000 ms)
+        setInterval(() => {
+            if(currentSegment < segments.length) {
+                currentSegment++;
+                updateProgress();
+            }
+        }, 900000);
+
+        // Initialize progress bar
+        updateProgress();
+    </script>
+</body>
+</html>

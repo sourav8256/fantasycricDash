@@ -89,7 +89,7 @@
         const segments = document.querySelectorAll('.progress-segment');
         let timerStart = parseInt(localStorage.getItem('timerStart')) || null; // Retrieve timerStart from localStorage
         // const INTERVAL_TIME = 900000; // 15 minutes in milliseconds
-        const INTERVAL_TIME = 3000; // 15 minutes in milliseconds
+        const INTERVAL_TIME = 900000; // 15 minutes in milliseconds
         let bufferTime = parseInt(localStorage.getItem('bufferTime')) || 0; // Retrieve bufferTime from localStorage
         
         console.log('Timer Start from localStorage:', timerStart);

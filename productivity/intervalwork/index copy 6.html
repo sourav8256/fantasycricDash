@@ -61,44 +61,9 @@
             font-size: 16px;
             color: #6c757d;
         }
-
-        .interval-settings {
-            text-align: center;
-            margin: 20px auto;
-            max-width: 300px;
-        }
-
-        .interval-settings input {
-            width: 60px;
-            padding: 5px;
-            margin: 0 10px;
-        }
-
-        #saveInterval {
-            display: none;
-            padding: 5px 15px;
-            font-size: 14px;
-            cursor: pointer;
-            border: none;
-            border-radius: 3px;
-            background-color: #0d6efd;
-            color: white;
-            margin-left: 10px;
-        }
-
-        #saveInterval:hover {
-            background-color: #0b5ed7;
-        }
     </style>
 </head>
 <body>
-    <div class="interval-settings">
-        <label>Interval (minutes): 
-            <input type="number" id="intervalInput" min="1" value="15">
-        </label>
-        <button id="saveInterval">Save</button>
-    </div>
-
     <div class="progress-container" id="progressBar">
         <!-- 8 segments for 2 hours total -->
         <div class="progress-segment progress-segment-timer"></div>
@@ -123,33 +88,9 @@
         let currentSegment = 8; // Start with all segments
         const segments = document.querySelectorAll('.progress-segment');
         let timerStart = parseInt(localStorage.getItem('timerStart')) || null; // Retrieve timerStart from localStorage
-        let INTERVAL_TIME = parseInt(localStorage.getItem('intervalTime')) || 900000; // 15 minutes in milliseconds by default
+        // const INTERVAL_TIME = 900000; // 15 minutes in milliseconds
+        const INTERVAL_TIME = 900000; // 15 minutes in milliseconds
         let bufferTime = parseInt(localStorage.getItem('bufferTime')) || 0; // Retrieve bufferTime from localStorage
-        
-        // Set initial interval input value
-        document.getElementById('intervalInput').value = INTERVAL_TIME / 60000;
-
-        const saveIntervalBtn = document.getElementById('saveInterval');
-        const intervalInput = document.getElementById('intervalInput');
-
-        // Add event listener for interval changes
-        intervalInput.addEventListener('input', (e) => {
-            const newMinutes = parseInt(e.target.value);
-            if (newMinutes > 0) {
-                saveIntervalBtn.style.display = 'inline-block';
-            }
-        });
-
-        saveIntervalBtn.addEventListener('click', () => {
-            const newMinutes = parseInt(intervalInput.value);
-            if (newMinutes > 0) {
-                INTERVAL_TIME = newMinutes * 60000;
-                localStorage.setItem('intervalTime', INTERVAL_TIME);
-                timerStart = Date.now(); // Reset timer when interval changes
-                updateProgress();
-                saveIntervalBtn.style.display = 'none';
-            }
-        });
         
         console.log('Timer Start from localStorage:', timerStart);
         console.log('Buffer Time from localStorage:', bufferTime);
@@ -209,11 +150,13 @@
             // Update buffer time display
             document.getElementById('bufferDisplay').textContent = formatBufferTime(bufferTime);
 
-            const elapsed = Date.now() - timerStart;
-            const remainingTime = INTERVAL_TIME - elapsed; // Calculate remaining time
-            const remainingMinutes = Math.floor(remainingTime / 60000); // Convert to minutes
-            const remainingSeconds = Math.floor((remainingTime % 60000) / 1000); // Convert to seconds
-            document.getElementById('timerDisplay').textContent = `Time Left: ${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`; // Update display
+
+                const elapsed = Date.now() - timerStart;
+                const remainingTime = INTERVAL_TIME - elapsed; // Calculate remaining time
+                const remainingMinutes = Math.floor(remainingTime / 60000); // Convert to minutes
+                const remainingSeconds = Math.floor((remainingTime % 60000) / 1000); // Convert to seconds
+                document.getElementById('timerDisplay').textContent = `Time Left: ${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`; // Update display
+           
 
             // Save state
             localStorage.setItem('currentSegment', currentSegment);

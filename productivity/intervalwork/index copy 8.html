@@ -138,29 +138,30 @@
         const bufferIntervalInput = document.getElementById('bufferIntervalInput');
         bufferIntervalInput.value = BUFFER_INTERVAL / 60000; // Set initial buffer interval input value
 
-        // Add event listeners for both interval changes
-        intervalInput.addEventListener('input', showSaveButton);
-        bufferIntervalInput.addEventListener('input', showSaveButton);
-
-        function showSaveButton() {
-            const intervalValue = parseInt(intervalInput.value);
-            const bufferValue = parseInt(bufferIntervalInput.value);
-            if (intervalValue > 0 && bufferValue > 0) {
+        // Add event listener for interval changes
+        intervalInput.addEventListener('input', (e) => {
+            const newMinutes = parseInt(e.target.value);
+            if (newMinutes > 0) {
                 saveIntervalBtn.style.display = 'inline-block';
             }
-        }
+        });
 
         saveIntervalBtn.addEventListener('click', () => {
             const newMinutes = parseInt(intervalInput.value);
-            const newBufferMinutes = parseInt(bufferIntervalInput.value);
-            if (newMinutes > 0 && newBufferMinutes > 0) {
+            if (newMinutes > 0) {
                 INTERVAL_TIME = newMinutes * 60000;
-                BUFFER_INTERVAL = newBufferMinutes * 60000;
                 localStorage.setItem('intervalTime', INTERVAL_TIME);
-                localStorage.setItem('bufferInterval', BUFFER_INTERVAL);
                 timerStart = Date.now(); // Reset timer when interval changes
                 updateProgress();
                 saveIntervalBtn.style.display = 'none';
+            }
+        });
+
+        bufferIntervalInput.addEventListener('input', (e) => {
+            const newMinutes = parseInt(e.target.value);
+            if (newMinutes > 0) {
+                BUFFER_INTERVAL = newMinutes * 60000; // Update BUFFER_INTERVAL
+                localStorage.setItem('bufferInterval', BUFFER_INTERVAL); // Save to localStorage
             }
         });
         

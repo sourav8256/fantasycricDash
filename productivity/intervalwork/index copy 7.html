@@ -96,10 +96,6 @@
         <label>Interval (minutes): 
             <input type="number" id="intervalInput" min="1" value="15">
         </label>
-        <br><br>
-        <label>Buffer Interval (minutes): 
-            <input type="number" id="bufferIntervalInput" min="1" value="5">
-        </label>
         <button id="saveInterval">Save</button>
     </div>
 
@@ -129,35 +125,26 @@
         let timerStart = parseInt(localStorage.getItem('timerStart')) || null; // Retrieve timerStart from localStorage
         let INTERVAL_TIME = parseInt(localStorage.getItem('intervalTime')) || 900000; // 15 minutes in milliseconds by default
         let bufferTime = parseInt(localStorage.getItem('bufferTime')) || 0; // Retrieve bufferTime from localStorage
-        let BUFFER_INTERVAL = parseInt(localStorage.getItem('bufferInterval')) || 300000; // 5 minutes in milliseconds by default
+        
         // Set initial interval input value
         document.getElementById('intervalInput').value = INTERVAL_TIME / 60000;
 
         const saveIntervalBtn = document.getElementById('saveInterval');
         const intervalInput = document.getElementById('intervalInput');
-        const bufferIntervalInput = document.getElementById('bufferIntervalInput');
-        bufferIntervalInput.value = BUFFER_INTERVAL / 60000; // Set initial buffer interval input value
 
-        // Add event listeners for both interval changes
-        intervalInput.addEventListener('input', showSaveButton);
-        bufferIntervalInput.addEventListener('input', showSaveButton);
-
-        function showSaveButton() {
-            const intervalValue = parseInt(intervalInput.value);
-            const bufferValue = parseInt(bufferIntervalInput.value);
-            if (intervalValue > 0 && bufferValue > 0) {
+        // Add event listener for interval changes
+        intervalInput.addEventListener('input', (e) => {
+            const newMinutes = parseInt(e.target.value);
+            if (newMinutes > 0) {
                 saveIntervalBtn.style.display = 'inline-block';
             }
-        }
+        });
 
         saveIntervalBtn.addEventListener('click', () => {
             const newMinutes = parseInt(intervalInput.value);
-            const newBufferMinutes = parseInt(bufferIntervalInput.value);
-            if (newMinutes > 0 && newBufferMinutes > 0) {
+            if (newMinutes > 0) {
                 INTERVAL_TIME = newMinutes * 60000;
-                BUFFER_INTERVAL = newBufferMinutes * 60000;
                 localStorage.setItem('intervalTime', INTERVAL_TIME);
-                localStorage.setItem('bufferInterval', BUFFER_INTERVAL);
                 timerStart = Date.now(); // Reset timer when interval changes
                 updateProgress();
                 saveIntervalBtn.style.display = 'none';
@@ -242,7 +229,7 @@
                 if (currentSegment === 1) {
                     timerStart = Date.now();
                 }
-                bufferTime += BUFFER_INTERVAL; // Add buffer time when increasing progress
+                bufferTime += INTERVAL_TIME; // Add buffer time when increasing progress
                 updateProgress();
             }
         }
@@ -250,7 +237,7 @@
         function decreaseProgress() {
             if(currentSegment > 0) {
                 currentSegment--;
-                bufferTime = Math.max(0, bufferTime - BUFFER_INTERVAL); // Reduce buffer time when decreasing progress
+                bufferTime = Math.max(0, bufferTime - INTERVAL_TIME); // Reduce buffer time when decreasing progress
                 timerStart = Date.now();
                 updateProgress();
             }

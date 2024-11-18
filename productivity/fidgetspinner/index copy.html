@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaking Tank Timer</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .tank-container {
+            width: 100px;
+            height: 300px;
+            border: 4px solid #333;
+            border-radius: 8px;
+            position: relative;
+            background: white;
+            margin-bottom: 20px;
+        }
+
+        .water {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(180deg, #4fa8e0 0%, #2980b9 100%);
+            transition: height 0.1s linear;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .refill-btn {
+            width: 120px;
+            height: 120px;
+            font-size: 18px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .refill-btn:hover {
+            background-color: #3498db;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="tank-container">
+        <div class="water" id="water"></div>
+    </div>
+    <button class="refill-btn" onclick="refillTank()">Refill</button>
+
+    <script>
+        let waterLevel = parseFloat(localStorage.getItem('waterLevel')) || 100;
+        let timer;
+        let lastUpdateTime = parseInt(localStorage.getItem('lastUpdateTime')) || Date.now();
+        const DRAIN_TIME_SECONDS = 30; // Global variable to control drain time
+
+        function startDraining() {
+            // Calculate water level based on time elapsed since last update
+            const currentTime = Date.now();
+            const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
+            waterLevel = Math.max(0, waterLevel - (elapsedSeconds * (100 / DRAIN_TIME_SECONDS))); 
+            
+            updateWaterLevel();
+            lastUpdateTime = currentTime;
+            localStorage.setItem('lastUpdateTime', lastUpdateTime);
+
+            clearInterval(timer);
+            timer = setInterval(() => {
+                waterLevel -= (100 / (DRAIN_TIME_SECONDS * 10)); // Drain over DRAIN_TIME_SECONDS (10 updates per second)
+                if (waterLevel <= 0) {
+                    waterLevel = 0;
+                    clearInterval(timer);
+                }
+                updateWaterLevel();
+            }, 100);
+        }
+
+        function updateWaterLevel() {
+            const waterElement = document.getElementById('water');
+            waterElement.style.height = waterLevel + '%';
+            localStorage.setItem('waterLevel', waterLevel);
+        }
+
+        function refillTank() {
+            clearInterval(timer);
+            waterLevel = 100;
+            lastUpdateTime = Date.now();
+            localStorage.setItem('lastUpdateTime', lastUpdateTime);
+            updateWaterLevel();
+            startDraining();
+        }
+
+        // Initialize water level and start draining when page loads
+        updateWaterLevel();
+        startDraining();
+
+        // Save state when page is hidden/closed
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                localStorage.setItem('waterLevel', waterLevel);
+                localStorage.setItem('lastUpdateTime', lastUpdateTime);
+            }
+        });
+    </script>
+</body>
+</html>

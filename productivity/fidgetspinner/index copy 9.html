@@ -135,7 +135,7 @@
         let timer;
         let lastUpdateTime = parseInt(localStorage.getItem('lastUpdateTime')) || Date.now();
         let DRAIN_TIME_SECONDS = parseInt(localStorage.getItem('drainTimeMinutes')) * 60 || 30 * 60; // Default 30 minutes
-        let isOnBreak = localStorage.getItem('isOnBreak') === 'true';
+        let isOnBreak = false;
 
         function formatTimeLeft(seconds) {
             if (seconds <= 0) return "00:00:00";
@@ -170,6 +170,8 @@
         }
 
         function startDraining() {
+            if (isOnBreak) return;
+            
             // Calculate water level based on time elapsed since last update
             const currentTime = Date.now();
             const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
@@ -202,16 +204,15 @@
             clearInterval(timer);
             waterLevel = 100;
             lastUpdateTime = Date.now();
-            isOnBreak = isBreak;
             localStorage.setItem('lastUpdateTime', lastUpdateTime);
-            localStorage.setItem('isOnBreak', isBreak);
             updateWaterLevel();
             updateTimeLeft();
             
-            const waterElement = document.getElementById('water');
             if (isBreak) {
+                const waterElement = document.getElementById('water');
                 waterElement.style.background = 'linear-gradient(180deg, #ffa500 0%, #ff8c00 100%)';
             } else {
+                const waterElement = document.getElementById('water');
                 waterElement.style.background = 'linear-gradient(180deg, #4fa8e0 0%, #2980b9 100%)';
             }
             
@@ -221,11 +222,6 @@
         // Initialize water level and start draining when page loads
         updateWaterLevel();
         updateTimeLeft();
-        // Set initial water color based on break state
-        const waterElement = document.getElementById('water');
-        if (isOnBreak) {
-            waterElement.style.background = 'linear-gradient(180deg, #ffa500 0%, #ff8c00 100%)';
-        }
         startDraining();
 
         // Set active button for current drain time
@@ -246,15 +242,17 @@
                 localStorage.setItem('waterLevel', waterLevel);
                 localStorage.setItem('lastUpdateTime', lastUpdateTime);
             } else {
-                // Recalculate water level when the page is visible again
-                const currentTime = Date.now();
-                const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
-                waterLevel = Math.max(0, waterLevel - (elapsedSeconds * (100 / DRAIN_TIME_SECONDS))); 
-                updateWaterLevel();
-                updateTimeLeft();
-                lastUpdateTime = currentTime; // Update last update time
-                localStorage.setItem('lastUpdateTime', lastUpdateTime);
-                startDraining(); // Restart draining
+                if (!isOnBreak) {
+                    // Recalculate water level when the page is visible again
+                    const currentTime = Date.now();
+                    const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
+                    waterLevel = Math.max(0, waterLevel - (elapsedSeconds * (100 / DRAIN_TIME_SECONDS))); 
+                    updateWaterLevel();
+                    updateTimeLeft();
+                    lastUpdateTime = currentTime; // Update last update time
+                    localStorage.setItem('lastUpdateTime', lastUpdateTime);
+                    startDraining(); // Restart draining
+                }
             }
         });
     </script>

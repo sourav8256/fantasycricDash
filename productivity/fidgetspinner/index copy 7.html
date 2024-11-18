@@ -53,27 +53,6 @@
             transform: scale(1.05);
         }
 
-        .break-btn {
-            width: 80px;
-            height: 80px;
-            font-size: 14px;
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            position: absolute;
-            right: 20px;
-            bottom: 20px;
-        }
-
-        .break-btn:hover {
-            background-color: #c0392b;
-            transform: scale(1.05);
-        }
-
         .time-options {
             display: flex;
             gap: 10px;
@@ -128,14 +107,12 @@
         <div class="water" id="water"></div>
     </div>
     <button class="refill-btn" onclick="refillTank()">Refill</button>
-    <button class="break-btn" onclick="refillTank(true)">Break</button>
 
     <script>
         let waterLevel = parseFloat(localStorage.getItem('waterLevel')) || 100;
         let timer;
         let lastUpdateTime = parseInt(localStorage.getItem('lastUpdateTime')) || Date.now();
         let DRAIN_TIME_SECONDS = parseInt(localStorage.getItem('drainTimeMinutes')) * 60 || 30 * 60; // Default 30 minutes
-        let isOnBreak = localStorage.getItem('isOnBreak') === 'true';
 
         function formatTimeLeft(seconds) {
             if (seconds <= 0) return "00:00:00";
@@ -198,34 +175,19 @@
             localStorage.setItem('waterLevel', waterLevel);
         }
 
-        function refillTank(isBreak = false) {
+        function refillTank() {
             clearInterval(timer);
             waterLevel = 100;
             lastUpdateTime = Date.now();
-            isOnBreak = isBreak;
             localStorage.setItem('lastUpdateTime', lastUpdateTime);
-            localStorage.setItem('isOnBreak', isBreak);
             updateWaterLevel();
             updateTimeLeft();
-            
-            const waterElement = document.getElementById('water');
-            if (isBreak) {
-                waterElement.style.background = 'linear-gradient(180deg, #ffa500 0%, #ff8c00 100%)';
-            } else {
-                waterElement.style.background = 'linear-gradient(180deg, #4fa8e0 0%, #2980b9 100%)';
-            }
-            
             startDraining();
         }
 
         // Initialize water level and start draining when page loads
         updateWaterLevel();
         updateTimeLeft();
-        // Set initial water color based on break state
-        const waterElement = document.getElementById('water');
-        if (isOnBreak) {
-            waterElement.style.background = 'linear-gradient(180deg, #ffa500 0%, #ff8c00 100%)';
-        }
         startDraining();
 
         // Set active button for current drain time

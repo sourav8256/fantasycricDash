@@ -81,14 +81,6 @@
             background-color: #2980b9;
             color: white;
         }
-
-        .time-left {
-            font-size: 24px;
-            color: #2980b9;
-            margin: 20px 0;
-            font-weight: bold;
-            font-family: monospace;
-        }
     </style>
 </head>
 <body>
@@ -102,7 +94,6 @@
         <button class="time-btn" onclick="setDrainTime(720)">12hr</button>
         <button class="time-btn" onclick="setDrainTime(1440)">24hr</button>
     </div>
-    <div class="time-left" id="timeLeft"></div>
     <div class="tank-container">
         <div class="water" id="water"></div>
     </div>
@@ -114,21 +105,6 @@
         let lastUpdateTime = parseInt(localStorage.getItem('lastUpdateTime')) || Date.now();
         let DRAIN_TIME_SECONDS = parseInt(localStorage.getItem('drainTimeMinutes')) * 60 || 30 * 60; // Default 30 minutes
 
-        function formatTimeLeft(seconds) {
-            if (seconds <= 0) return "00:00:00";
-            seconds = Math.floor(seconds);
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const remainingSeconds = seconds % 60;
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-        }
-
-        function updateTimeLeft() {
-            const timeLeftElement = document.getElementById('timeLeft');
-            const remainingSeconds = (DRAIN_TIME_SECONDS * waterLevel) / 100;
-            timeLeftElement.textContent = formatTimeLeft(remainingSeconds);
-        }
-
         function setDrainTime(minutes) {
             DRAIN_TIME_SECONDS = minutes * 60;
             localStorage.setItem('drainTimeMinutes', minutes);
@@ -137,7 +113,7 @@
             document.querySelectorAll('.time-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.textContent.includes(minutes.toString()) || 
-                    (minutes >= 60 && btn.textContent === (minutes/60).toString() + 'hr')) {
+                    (minutes >= 60 && btn.textContent.includes((minutes/60).toString() + 'hr'))) {
                     btn.classList.add('active');
                 }
             });
@@ -153,7 +129,6 @@
             waterLevel = Math.max(0, waterLevel - (elapsedSeconds * (100 / DRAIN_TIME_SECONDS))); 
             
             updateWaterLevel();
-            updateTimeLeft();
             lastUpdateTime = currentTime;
             localStorage.setItem('lastUpdateTime', lastUpdateTime);
 
@@ -165,7 +140,6 @@
                     clearInterval(timer);
                 }
                 updateWaterLevel();
-                updateTimeLeft();
             }, 100);
         }
 
@@ -181,13 +155,11 @@
             lastUpdateTime = Date.now();
             localStorage.setItem('lastUpdateTime', lastUpdateTime);
             updateWaterLevel();
-            updateTimeLeft();
             startDraining();
         }
 
         // Initialize water level and start draining when page loads
         updateWaterLevel();
-        updateTimeLeft();
         startDraining();
 
         // Set active button for current drain time
@@ -195,7 +167,7 @@
             const minutes = DRAIN_TIME_SECONDS / 60;
             document.querySelectorAll('.time-btn').forEach(btn => {
                 if (btn.textContent.includes(minutes.toString()) || 
-                    (minutes >= 60 && btn.textContent === (minutes/60).toString() + 'hr')) {
+                    (minutes >= 60 && btn.textContent.includes((minutes/60).toString() + 'hr'))) {
                     btn.classList.add('active');
                 }
             });
@@ -213,7 +185,6 @@
                 const elapsedSeconds = (currentTime - lastUpdateTime) / 1000;
                 waterLevel = Math.max(0, waterLevel - (elapsedSeconds * (100 / DRAIN_TIME_SECONDS))); 
                 updateWaterLevel();
-                updateTimeLeft();
                 lastUpdateTime = currentTime; // Update last update time
                 localStorage.setItem('lastUpdateTime', lastUpdateTime);
                 startDraining(); // Restart draining

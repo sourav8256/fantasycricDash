@@ -137,7 +137,7 @@
             document.querySelectorAll('.time-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.textContent.includes(minutes.toString()) || 
-                    (minutes >= 60 && btn.textContent === (minutes/60).toString() + 'hr')) {
+                    (minutes >= 60 && btn.textContent.includes((minutes/60).toString() + 'hr'))) {
                     btn.classList.add('active');
                 }
             });
@@ -195,7 +195,7 @@
             const minutes = DRAIN_TIME_SECONDS / 60;
             document.querySelectorAll('.time-btn').forEach(btn => {
                 if (btn.textContent.includes(minutes.toString()) || 
-                    (minutes >= 60 && btn.textContent === (minutes/60).toString() + 'hr')) {
+                    (minutes >= 60 && btn.textContent.includes((minutes/60).toString() + 'hr'))) {
                     btn.classList.add('active');
                 }
             });

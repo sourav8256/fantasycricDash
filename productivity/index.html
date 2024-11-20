@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .sidebar {
-            height: 100vh;
+            height: 100%;
             width: 250px;
             position: fixed;
             top: 0;
@@ -15,7 +15,10 @@
             background-color: #343a40;
             padding-top: 20px;
             transition: 0.3s;
-            overflow-y: auto; /* Make sidebar scrollable */
+            overflow-y: scroll; /* Change to scroll */
+            -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+            overscroll-behavior: contain; /* Prevent scroll chaining */
+            max-height: 100vh; /* Ensure it doesn't exceed viewport height */
         }
 
         .sidebar.active {

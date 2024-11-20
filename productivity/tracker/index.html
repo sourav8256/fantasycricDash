@@ -216,10 +216,15 @@
                 const li = document.createElement('li');
                 li.className = 'note-item';
                 li.onclick = () => openNoteEditor(note.id);
+                
+                // Preserve line breaks in preview
+                const previewLines = note.text.split('\n').slice(-2);
+                const previewText = previewLines.join('\n');
+                
                 li.innerHTML = `
                     <div>
                         <h3>${note.title}</h3>
-                        <p>${note.text.split('\n').slice(-2).join('\n')}</p>
+                        <p style="white-space: pre-line">${previewText}</p>
                         <small>${note.date}</small>
                     </div>
                     <button class="delete-btn" onclick="deleteNote(${note.id}, event)">${DELETE_TEXT}</button>

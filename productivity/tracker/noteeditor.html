@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Note</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .note-title-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1.2em;
+        }
+
+        .note-content {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .save-btn, .cancel-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .save-btn {
+            background-color: #2980b9;
+            color: white;
+        }
+
+        .cancel-btn {
+            background-color: #95a5a6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Note</h1>
+        <input type="text" id="noteTitle" class="note-title-input" placeholder="Note Title">
+        <textarea id="noteContent" class="note-content" placeholder="Note Content"></textarea>
+        <div class="button-group">
+            <button class="cancel-btn" onclick="window.history.back()">Cancel</button>
+            <button class="save-btn" onclick="saveNote()">Save</button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'tracker-notes';
+        let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        let noteId = new URLSearchParams(window.location.search).get('id');
+
+        // Load note data when page loads
+        window.onload = function() {
+            if (noteId) {
+                const note = notes.find(n => n.id === parseInt(noteId));
+                if (note) {
+                    document.getElementById('noteTitle').value = note.title;
+                    const contentElement = document.getElementById('noteContent');
+                    contentElement.value = note.text;
+                    // Scroll textarea to bottom
+                    contentElement.scrollTop = contentElement.scrollHeight;
+                }
+            }
+        };
+
+        function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+
+            if (!title || !content) {
+                alert('Both title and content are required');
+                return;
+            }
+
+            if (noteId) {
+                const noteIndex = notes.findIndex(n => n.id === parseInt(noteId));
+                if (noteIndex !== -1) {
+                    notes[noteIndex] = {
+                        ...notes[noteIndex],
+                        title: title,
+                        text: content,
+                        date: new Date().toLocaleString()
+                    };
+                }
+            }
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

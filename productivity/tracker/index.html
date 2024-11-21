@@ -127,17 +127,22 @@
         <ul class="note-list" id="noteList"></ul>
     </div>
 
-    <button class="fab" onclick="openModal()">+</button>
+    <button class="fab" onclick="UIManager.openModal()">+</button>
     <div class="modal" id="noteModal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <span class="close-modal" onclick="UIManager.closeModal()">&times;</span>
             <input type="text" class="note-title-input" placeholder="Enter note title..." style="width: 100%; box-sizing: border-box; margin-bottom: 10px;" />
             <textarea class="note-input" placeholder="Enter your note here..." rows="4" style="width: 100%; box-sizing: border-box; display: block; margin-bottom: 10px;"></textarea>
-            <button class="add-btn" onclick="addNote()">Add Note</button>
+            <button class="add-btn" onclick="noteManager.addNote()">Add Note</button>
         </div>
     </div>
 
     <script>
+        // Parse initialization
+        const APP_ID = "IKmm8MbcH9movBK7et1DrQVyd8nJqfJq8bm548t6";
+        const JS_KEY = "6Ik3DvMj2RRikc52dWYqt6BJ9qDrjdUWI1nUCS3v";
+        const SERVER_URL = "https://parseapi.back4app.com/";
+
         // Global string constants
         const STORAGE_KEY = 'tracker-notes';
         const NOTE_PLACEHOLDER = 'Enter your note here...';
@@ -149,106 +154,168 @@
 
         let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-        function openModal() {
-            document.getElementById('noteModal').style.display = 'block';
-            document.querySelector('.note-title-input').focus();
-        }
+        class UIManager {
+            static openModal() {
+                document.getElementById('noteModal').style.display = 'block';
+                document.querySelector('.note-title-input').focus();
+            }
 
-        function closeModal() {
-            document.getElementById('noteModal').style.display = 'none';
-            document.querySelector('.note-title-input').value = '';
-            document.querySelector('.note-input').value = '';
-        }
+            static closeModal() {
+                document.getElementById('noteModal').style.display = 'none';
+                document.querySelector('.note-title-input').value = '';
+                document.querySelector('.note-input').value = '';
+            }
 
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('noteModal');
-            if (event.target === modal) {
-                closeModal();
+            static handleOutsideClick(event) {
+                const modal = document.getElementById('noteModal');
+                if (event.target === modal) {
+                    this.closeModal();
+                }
+            }
+
+            static renderNotes() {
+                const noteList = document.getElementById('noteList');
+                noteList.innerHTML = '';
+                
+                notes.forEach(note => {
+                    const li = document.createElement('li');
+                    li.className = 'note-item';
+                    li.onclick = () => noteManager.openNoteEditor(note.id);
+                    
+                    const previewLines = note.text.split('\n').slice(-2);
+                    const previewText = previewLines.join('\n');
+                    
+                    li.innerHTML = `
+                        <div>
+                            <h3>${note.title}</h3>
+                            <p style="white-space: pre-line">${previewText}</p>
+                            <small>${note.date}</small>
+                        </div>
+                        <button class="delete-btn" onclick="noteManager.deleteNote(${note.id}, event)">${DELETE_TEXT}</button>
+                    `;
+                    noteList.appendChild(li);
+                });
+            }
+
+            static initializeUI() {
+                document.querySelector('h1').textContent = NOTES_TITLE;
+                document.querySelector('.note-input').placeholder = NOTE_PLACEHOLDER;
+                document.querySelector('.note-title-input').placeholder = TITLE_PLACEHOLDER;
+                document.querySelector('.add-btn').textContent = ADD_NOTE_TEXT;
+
+                document.querySelector('.note-input').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        noteManager.addNote();
+                    }
+                });
+
+                window.onclick = (event) => this.handleOutsideClick(event);
             }
         }
 
-        function addNote() {
-            const titleInput = document.querySelector('.note-title-input');
-            const noteInput = document.querySelector('.note-input');
-            const titleText = titleInput.value.trim();
-            const noteText = noteInput.value.trim() || " ";
+        class NotesManagerDb {
+            static saveNotesToDb(note) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+                
+                const Note = Parse.Object.extend("Note");
+                const parseNote = new Note();
+                
+                parseNote.save({
+                    noteId: note.id,
+                    title: note.title, 
+                    text: note.text,
+                    date: note.date
+                }).then(() => {
+                    console.log("Note saved successfully to Parse");
+                }).catch(error => {
+                    console.error("Error saving note to Parse:", error);
+                });
+            }
             
-            if (titleText && noteText) {
-                const note = {
-                    id: Date.now(),
-                    title: titleText,
-                    text: noteText,
-                    date: new Date().toLocaleString()
-                };
+            static deleteNoteFromDb(noteId) {
+                const Note = Parse.Object.extend("Note");
+                const query = new Parse.Query(Note);
                 
-                notes.push(note);
-                saveNotes();
-                renderNotes();
-                closeModal();
-            } else {
-                console.log('Note text is required');
+                query.equalTo("noteId", noteId);
+                query.find().then((results) => {
+                    if (results.length > 0) {
+                        return Parse.Object.destroyAll(results);
+                    }
+                }).then(() => {
+                    console.log("Note deleted successfully from Parse");
+                }).catch(error => {
+                    console.error("Error deleting note from Parse:", error);
+                });
+            }
+
+            static saveAllNotesToDb(notes) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+                
+                const Note = Parse.Object.extend("Note");
+                const query = new Parse.Query(Note);
+                
+                query.find().then((results) => {
+                    return Parse.Object.destroyAll(results);
+                }).then(() => {
+                    const savePromises = notes.map(note => {
+                        const parseNote = new Note();
+                        return parseNote.save({
+                            noteId: note.id,
+                            title: note.title,
+                            text: note.text, 
+                            date: note.date
+                        });
+                    });
+                    
+                    return Promise.all(savePromises);
+                }).then(() => {
+                    console.log("All notes saved successfully to Parse");
+                }).catch(error => {
+                    console.error("Error saving notes to Parse:", error);
+                });
             }
         }
 
-        function deleteNote(id, event) {
-            event.stopPropagation(); // Prevent note opening when deleting
-            if (confirm(DELETE_CONFIRM_MESSAGE)) {
-                notes = notes.filter(note => note.id !== id);
-                saveNotes();
-                renderNotes();
+        class NoteManager {
+            addNote() {
+                const titleInput = document.querySelector('.note-title-input');
+                const noteInput = document.querySelector('.note-input');
+                const titleText = titleInput.value.trim();
+                const noteText = noteInput.value.trim() || " ";
+                
+                if (titleText && noteText) {
+                    const note = {
+                        id: Date.now(),
+                        title: titleText,
+                        text: noteText,
+                        date: new Date().toLocaleString()
+                    };
+                    
+                    notes.push(note);
+                    NotesManager.saveNotesToDb(note);
+                    UIManager.renderNotes();
+                    UIManager.closeModal();
+                } else {
+                    console.log('Note text is required');
+                }
+            }
+
+            deleteNote(id, event) {
+                event.stopPropagation();
+                NotesManagerDb.deleteNoteFromDb(id);
+                UIManager.renderNotes();
+            }
+
+            openNoteEditor(id) {
+                window.location.href = `noteeditor.html?id=${id}`;
             }
         }
 
-        function openNoteEditor(id) {
-            window.location.href = `noteeditor.html?id=${id}`;
-        }
-
-        function saveNotes() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-        }
-
-        function renderNotes() {
-            const noteList = document.getElementById('noteList');
-            noteList.innerHTML = '';
-            
-            notes.forEach(note => {
-                const li = document.createElement('li');
-                li.className = 'note-item';
-                li.onclick = () => openNoteEditor(note.id);
-                
-                // Preserve line breaks in preview
-                const previewLines = note.text.split('\n').slice(-2);
-                const previewText = previewLines.join('\n');
-                
-                li.innerHTML = `
-                    <div>
-                        <h3>${note.title}</h3>
-                        <p style="white-space: pre-line">${previewText}</p>
-                        <small>${note.date}</small>
-                    </div>
-                    <button class="delete-btn" onclick="deleteNote(${note.id}, event)">${DELETE_TEXT}</button>
-                `;
-                noteList.appendChild(li);
-            });
-        }
-
-        // Initial render
-        renderNotes();
-
-        // Update static elements with constants
-        document.querySelector('h1').textContent = NOTES_TITLE;
-        document.querySelector('.note-input').placeholder = NOTE_PLACEHOLDER;
-        document.querySelector('.note-title-input').placeholder = TITLE_PLACEHOLDER;
-        document.querySelector('.add-btn').textContent = ADD_NOTE_TEXT;
-
-        // Add note on Enter key press
-        document.querySelector('.note-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                addNote();
-            }
-        });
+        // Initialize
+        const noteManager = new NoteManager();
+        UIManager.initializeUI();
+        UIManager.renderNotes();
     </script>
 </body>
 </html>

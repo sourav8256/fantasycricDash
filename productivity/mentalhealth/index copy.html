@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Raising Logger</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .log-btn {
+            background-color: #2980b9;
+            color: white;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        .log-history {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .log-entry {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        .stats {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .time-since {
+            font-size: 1.2em;
+            margin: 10px 0;
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Voice Raising Logger</h1>
+        
+        <button class="log-btn" onclick="logEntry()">Log Voice Raising</button>
+
+        <div class="time-since" id="timeSince"></div>
+        <div class="stats" id="stats"></div>
+        <div class="log-history" id="logHistory"></div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'voice-raising-logs';
+        let logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        let timeSinceInterval;
+
+        function cleanOldLogs() {
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            logs = logs.filter(entry => new Date(entry.id) > sevenDaysAgo);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+        }
+
+        function calculateAverageTimeBetweenLogs() {
+            if (logs.length < 2) return null;
+            
+            let totalDiff = 0;
+            for (let i = 0; i < logs.length - 1; i++) {
+                const timeDiff = logs[i].id - logs[i + 1].id;
+                totalDiff += timeDiff;
+            }
+            
+            const avgMilliseconds = totalDiff / (logs.length - 1);
+            const avgHours = avgMilliseconds / (1000 * 60 * 60);
+            return avgHours;
+        }
+
+        function formatTime(milliseconds) {
+            if (milliseconds === null) return 'Not enough data';
+            
+            const seconds = Math.floor((milliseconds / 1000) % 60);
+            const minutes = Math.floor((milliseconds / (1000 * 60)) % 60);
+            const hours = Math.floor((milliseconds / (1000 * 60 * 60)) % 24);
+            const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
+            
+            const parts = [];
+            if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+            if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
+            if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
+            if (seconds > 0) parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
+            
+            return parts.join(', ') || '0 seconds';
+        }
+
+        function updateTimeSince() {
+            const timeSinceDiv = document.getElementById('timeSince');
+            if (logs.length === 0) {
+                timeSinceDiv.textContent = 'No logs yet';
+                return;
+            }
+
+            const lastLog = logs[0].id;
+            const now = Date.now();
+            const diff = now - lastLog;
+            
+            timeSinceDiv.textContent = `Time since last incident: ${formatTime(diff)}`;
+        }
+
+        function logEntry() {
+            const timestamp = new Date().toLocaleString();
+
+            const entry = {
+                timestamp,
+                id: Date.now()
+            };
+
+            logs.unshift(entry); // Add to beginning of array
+            cleanOldLogs(); // Clean logs older than 7 days
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+            
+            renderLogs();
+            updateStats();
+            updateTimeSince();
+        }
+
+        function updateStats() {
+            const statsDiv = document.getElementById('stats');
+            const avgTime = calculateAverageTimeBetweenLogs();
+            const avgMilliseconds = avgTime * (1000 * 60 * 60);
+            statsDiv.innerHTML = `
+                <h3>Statistics</h3>
+                <p>Average time between incidents: ${formatTime(avgMilliseconds)}</p>
+            `;
+        }
+
+        function renderLogs() {
+            const logHistory = document.getElementById('logHistory');
+            logHistory.innerHTML = '';
+
+            logs.forEach(entry => {
+                const div = document.createElement('div');
+                div.className = 'log-entry';
+                div.innerHTML = `<small>${entry.timestamp}</small>`;
+                logHistory.appendChild(div);
+            });
+        }
+
+        // Clean old logs and render on initial load
+        cleanOldLogs();
+        renderLogs();
+        updateStats();
+        updateTimeSince();
+
+        // Update time since every second
+        clearInterval(timeSinceInterval);
+        timeSinceInterval = setInterval(updateTimeSince, 1000);
+    </script>
+</body>
+</html>

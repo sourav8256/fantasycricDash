@@ -111,10 +111,10 @@
                         text: content,
                         date: new Date().toLocaleString()
                     };
+                    NotesManagerDb.saveAllNotesToDb(notes);
                 }
             }
 
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
             window.history.back();
         }
     </script>

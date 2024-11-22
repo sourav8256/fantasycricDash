@@ -183,10 +183,29 @@
             const logHistory = document.getElementById('logHistory');
             logHistory.innerHTML = '';
 
-            logs.forEach(entry => {
+            logs.forEach((entry, index) => {
                 const div = document.createElement('div');
                 div.className = 'log-entry';
-                div.innerHTML = `<small>${entry.timestamp}</small>`;
+                let intervalTime = '';
+                let opacity = 0.1; // Default light opacity
+                
+                if (index < logs.length - 1) {
+                    const timeDiff = entry.id - logs[index + 1].id;
+                    intervalTime = ` (Interval: ${formatTime(timeDiff)})`;
+                    
+                    // Calculate opacity based on interval time
+                    // Assuming 24 hours is max opacity
+                    const hoursElapsed = timeDiff / (1000 * 60 * 60);
+                    opacity = Math.min(hoursElapsed / 24, 1);
+                }
+                
+                div.style.backgroundColor = `rgba(41, 128, 185, ${opacity})`; // Using the same blue as log-btn
+                div.style.color = opacity > 0.5 ? '#fff' : '#000'; // White text for darker backgrounds
+                div.style.padding = '10px';
+                div.style.borderRadius = '4px';
+                div.style.marginBottom = '5px';
+                
+                div.innerHTML = `<small>${entry.timestamp}${intervalTime}</small>`;
                 logHistory.appendChild(div);
             });
         }

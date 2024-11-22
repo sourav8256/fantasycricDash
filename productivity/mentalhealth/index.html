@@ -57,9 +57,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Voice Raising Logger</h1>
+        <h1 contenteditable="true" id="editableTitle">Voice Raising Logger</h1>
         
-        <button class="log-btn" onclick="logEntry()">Log Voice Raising</button>
+        <button class="log-btn" onclick="logEntry()">Log</button>
 
         <div class="time-since" id="timeSince"></div>
         <div class="stats" id="stats"></div>
@@ -70,6 +70,16 @@
         const STORAGE_KEY = 'voice-raising-logs';
         let logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let timeSinceInterval;
+
+        const titleElement = document.getElementById('editableTitle');
+
+        // Load the saved title from localStorage
+        titleElement.textContent = localStorage.getItem('editableTitle') || 'Voice Raising Logger';
+
+        // Save the title to localStorage on input
+        titleElement.addEventListener('input', () => {
+            localStorage.setItem('editableTitle', titleElement.textContent);
+        });
 
         function cleanOldLogs() {
             // Keep only the most recent 50 logs

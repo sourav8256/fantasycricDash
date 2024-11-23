@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notes App</title>
-    <!-- Add Parse SDK -->
-    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -145,13 +143,7 @@
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1>Notes</h1>
-            <div>
-                <button onclick="loadFromDatabase()" style="padding: 8px 16px; background-color: #2980b9; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px;">⬇️</button>
-                <button onclick="saveToDatabase()" style="padding: 8px 16px; background-color: #2980b9; color: white; border: none; border-radius: 4px; cursor: pointer;">⬆️</button>
-            </div>
-        </div>
+        <h1>Notes</h1>
         <div id="tagContainer" class="tag-container"></div>
         <ul class="note-list" id="noteList"></ul>
     </div>
@@ -159,14 +151,6 @@
     <button class="fab" onclick="window.location.href='noteeditor offline.html'">+</button>
 
     <script>
-        // Parse initialization
-        const APP_ID = "IKmm8MbcH9movBK7et1DrQVyd8nJqfJq8bm548t6";
-        const JS_KEY = "6Ik3DvMj2RRikc52dWYqt6BJ9qDrjdUWI1nUCS3v";
-        const SERVER_URL = "https://parseapi.back4app.com/";
-
-        Parse.initialize(APP_ID, JS_KEY);
-        Parse.serverURL = SERVER_URL;
-
         // Global string constants
         const STORAGE_KEY = 'tracker-notes';
         const CATEGORIES_KEY = 'tracker-categories';
@@ -181,62 +165,6 @@
         let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let categories = Array.from(new Set(notes.map(note => note.category).filter(Boolean)));
         let activeCategories = new Set(JSON.parse(localStorage.getItem(ACTIVE_CATEGORIES_KEY)) || []);
-
-        async function loadFromDatabase() {
-            try {
-                const Note = Parse.Object.extend("Note");
-                const query = new Parse.Query(Note);
-                query.equalTo("userId", Parse.User.current()?.id);
-                
-                const parseNotes = await query.find({ useMasterKey: false });
-                notes = parseNotes.map(parseNote => ({
-                    id: parseNote.get('localId'),
-                    title: parseNote.get('title'),
-                    text: parseNote.get('text'),
-                    date: parseNote.get('date'),
-                    category: parseNote.get('category')
-                }));
-                
-                saveNotes();
-                renderNotes();
-                updateTagFilter();
-                alert("Notes loaded from database successfully!");
-            } catch (error) {
-                console.error("Error loading from database:", error);
-                alert("Error loading from database: " + error.message);
-            }
-        }
-
-        async function saveToDatabase() {
-            try {
-                const Note = Parse.Object.extend("Note");
-                const query = new Parse.Query(Note);
-                query.equalTo("userId", Parse.User.current()?.id);
-                
-                // First delete all existing notes for this user
-                const existingNotes = await query.find({ useMasterKey: false });
-                await Parse.Object.destroyAll(existingNotes, { useMasterKey: false });
-                
-                // Then save all current notes
-                const savePromises = notes.map(note => {
-                    const parseNote = new Note();
-                    return parseNote.save({
-                        title: note.title,
-                        text: note.text,
-                        date: note.date,
-                        category: note.category,
-                        localId: note.id,
-                        userId: Parse.User.current()?.id
-                    }, { useMasterKey: false });
-                });
-                
-                await Promise.all(savePromises);
-                alert("Notes saved to database successfully!");
-            } catch (error) {
-                console.error("Error saving to database:", error);
-                alert("Error saving to database: " + error.message);
-            }
-        }
 
         function deleteNote(id, event) {
             event.stopPropagation(); // Prevent note opening when deleting

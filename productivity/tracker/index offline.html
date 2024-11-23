@@ -154,6 +154,7 @@
         // Global string constants
         const STORAGE_KEY = 'tracker-notes';
         const CATEGORIES_KEY = 'tracker-categories';
+        const ACTIVE_CATEGORIES_KEY = 'tracker-active-categories';
         const NOTE_PLACEHOLDER = 'Enter your note here...';
         const TITLE_PLACEHOLDER = 'Enter note title...';
         const ADD_NOTE_TEXT = 'Add Note';
@@ -163,7 +164,7 @@
 
         let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let categories = Array.from(new Set(notes.map(note => note.category).filter(Boolean)));
-        let activeCategories = new Set();
+        let activeCategories = new Set(JSON.parse(localStorage.getItem(ACTIVE_CATEGORIES_KEY)) || []);
 
         function deleteNote(id, event) {
             event.stopPropagation(); // Prevent note opening when deleting
@@ -187,6 +188,10 @@
             localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
         }
 
+        function saveActiveCategories() {
+            localStorage.setItem(ACTIVE_CATEGORIES_KEY, JSON.stringify(Array.from(activeCategories)));
+        }
+
         function updateTagFilter() {
             const tagContainer = document.getElementById('tagContainer');
             tagContainer.innerHTML = '';
@@ -197,6 +202,7 @@
             allTag.textContent = 'All';
             allTag.onclick = () => {
                 activeCategories.clear();
+                saveActiveCategories();
                 updateTagFilter();
                 renderNotes();
             };
@@ -212,6 +218,7 @@
                 } else {
                     activeCategories.add(null);
                 }
+                saveActiveCategories();
                 updateTagFilter();
                 renderNotes();
             };
@@ -228,6 +235,7 @@
                     } else {
                         activeCategories.add(category);
                     }
+                    saveActiveCategories();
                     updateTagFilter();
                     renderNotes();
                 };

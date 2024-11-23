@@ -61,12 +61,28 @@
             background-color: #95a5a6;
             color: white;
         }
+
+        .category-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Edit Note</h1>
         <input type="text" id="noteTitle" class="note-title-input" placeholder="Note Title">
+        <input type="text" id="noteCategory" class="category-input" list="categories" placeholder="Category (optional)">
+        <datalist id="categories">
+            <option value="Work">
+            <option value="Personal">
+            <option value="Ideas">
+            <option value="Tasks">
+            <option value="Journal">
+        </datalist>
         <textarea id="noteContent" class="note-content" placeholder="Note Content"></textarea>
         <div class="button-group">
             <button class="cancel-btn" onclick="window.history.back()">Cancel</button>
@@ -85,6 +101,7 @@
                 const note = notes.find(n => n.id === parseInt(noteId));
                 if (note) {
                     document.getElementById('noteTitle').value = note.title;
+                    document.getElementById('noteCategory').value = note.category || '';
                     const contentElement = document.getElementById('noteContent');
                     contentElement.value = note.text;
                     // Scroll textarea to bottom
@@ -96,6 +113,7 @@
         function saveNote() {
             const title = document.getElementById('noteTitle').value.trim();
             const content = document.getElementById('noteContent').value.trim();
+            const category = document.getElementById('noteCategory').value.trim();
 
             if (!title || !content) {
                 alert('Both title and content are required');
@@ -109,6 +127,7 @@
                         ...notes[noteIndex],
                         title: title,
                         text: content,
+                        category: category,
                         date: new Date().toLocaleString()
                     };
                     NotesManagerDb.saveAllNotesToDb(notes);

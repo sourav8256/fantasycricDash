@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Note</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .note-title-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1.2em;
+        }
+
+        .note-content {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .save-btn, .cancel-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .save-btn {
+            background-color: #2980b9;
+            color: white;
+        }
+
+        .cancel-btn {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .category-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .category-select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        .category-container {
+            margin-bottom: 10px;
+        }
+
+        #newCategoryInput {
+            display: none;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="pageTitle">Edit Note</h1>
+        <input type="text" id="noteTitle" class="note-title-input" placeholder="Note Title">
+        <div class="category-container">
+            <select id="noteCategory" class="category-select" onchange="handleCategoryChange()">
+                <option value="">Select Category (optional)</option>
+                <option value="new">+ Add New Category</option>
+            </select>
+            <input type="text" id="newCategoryInput" placeholder="Type new category name" class="category-input">
+        </div>
+        <textarea id="noteContent" class="note-content" placeholder="Note Content"></textarea>
+        <div class="button-group">
+            <button class="cancel-btn" onclick="window.history.back()">Cancel</button>
+            <button class="save-btn" onclick="saveNote()">Save</button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'tracker-notes';
+        const CATEGORIES_KEY = 'tracker-categories';
+        let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        let noteId = new URLSearchParams(window.location.search).get('id');
+        let isNewNote = !noteId;
+
+        function handleCategoryChange() {
+            const categorySelect = document.getElementById('noteCategory');
+            const newCategoryInput = document.getElementById('newCategoryInput');
+            
+            if (categorySelect.value === 'new') {
+                newCategoryInput.style.display = 'block';
+                newCategoryInput.focus();
+            } else {
+                newCategoryInput.style.display = 'none';
+            }
+        }
+
+        // Load note data when page loads
+        window.onload = function() {
+            // Get unique categories from all notes
+            const uniqueCategories = new Set();
+            notes.forEach(note => {
+                if (note.category) {
+                    uniqueCategories.add(note.category);
+                }
+            });
+
+            // Populate categories dropdown
+            const categorySelect = document.getElementById('noteCategory');
+            const newCategoryOption = categorySelect.querySelector('option[value="new"]');
+            categorySelect.innerHTML = '<option value="">Select Category (optional)</option>';
+            uniqueCategories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+            categorySelect.appendChild(newCategoryOption);
+
+            if (isNewNote) {
+                document.getElementById('pageTitle').textContent = 'New Note';
+            } else {
+                const note = notes.find(n => n.id === parseInt(noteId));
+                if (note) {
+                    document.getElementById('noteTitle').value = note.title;
+                    document.getElementById('noteCategory').value = note.category || '';
+                    const contentElement = document.getElementById('noteContent');
+                    contentElement.value = note.text;
+                    // Scroll textarea to bottom
+                    contentElement.scrollTop = contentElement.scrollHeight;
+                }
+            }
+        };
+
+        function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            const categorySelect = document.getElementById('noteCategory');
+            const newCategoryInput = document.getElementById('newCategoryInput');
+            let category = categorySelect.value === 'new' ? newCategoryInput.value.trim() : categorySelect.value.trim();
+
+            if (!title) {
+                alert('Title is required');
+                return;
+            }
+
+            if (isNewNote) {
+                const newNote = {
+                    id: Date.now(),
+                    title: title,
+                    text: content,
+                    category: category,
+                    date: new Date().toLocaleString()
+                };
+                notes.push(newNote);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+            } else {
+                const noteIndex = notes.findIndex(n => n.id === parseInt(noteId));
+                if (noteIndex !== -1) {
+                    notes[noteIndex] = {
+                        ...notes[noteIndex],
+                        title: title,
+                        text: content,
+                        category: category,
+                        date: new Date().toLocaleString()
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+                }
+            }
+
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

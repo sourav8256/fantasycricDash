@@ -127,7 +127,15 @@
         <ul class="note-list" id="noteList"></ul>
     </div>
 
-    <button class="fab" onclick="window.location.href='noteeditor.html'">+</button>
+    <button class="fab" onclick="UIManager.openModal()">+</button>
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="UIManager.closeModal()">&times;</span>
+            <input type="text" class="note-title-input" placeholder="Enter note title..." style="width: 100%; box-sizing: border-box; margin-bottom: 10px;" />
+            <textarea class="note-input" placeholder="Enter your note here..." rows="4" style="width: 100%; box-sizing: border-box; display: block; margin-bottom: 10px;"></textarea>
+            <button class="add-btn" onclick="noteManager.addNote()">Add Note</button>
+        </div>
+    </div>
 
     <script>
         // Parse initialization
@@ -147,6 +155,24 @@
         let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         class UIManager {
+            static openModal() {
+                document.getElementById('noteModal').style.display = 'block';
+                document.querySelector('.note-title-input').focus();
+            }
+
+            static closeModal() {
+                document.getElementById('noteModal').style.display = 'none';
+                document.querySelector('.note-title-input').value = '';
+                document.querySelector('.note-input').value = '';
+            }
+
+            static handleOutsideClick(event) {
+                const modal = document.getElementById('noteModal');
+                if (event.target === modal) {
+                    this.closeModal();
+                }
+            }
+
             static renderNotes() {
                 const noteList = document.getElementById('noteList');
                 noteList.innerHTML = '';
@@ -173,6 +199,18 @@
 
             static initializeUI() {
                 document.querySelector('h1').textContent = NOTES_TITLE;
+                document.querySelector('.note-input').placeholder = NOTE_PLACEHOLDER;
+                document.querySelector('.note-title-input').placeholder = TITLE_PLACEHOLDER;
+                document.querySelector('.add-btn').textContent = ADD_NOTE_TEXT;
+
+                document.querySelector('.note-input').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        noteManager.addNote();
+                    }
+                });
+
+                window.onclick = (event) => this.handleOutsideClick(event);
             }
         }
 
@@ -240,6 +278,29 @@
         }
 
         class NoteManager {
+            addNote() {
+                const titleInput = document.querySelector('.note-title-input');
+                const noteInput = document.querySelector('.note-input');
+                const titleText = titleInput.value.trim();
+                const noteText = noteInput.value.trim() || " ";
+                
+                if (titleText && noteText) {
+                    const note = {
+                        id: Date.now(),
+                        title: titleText,
+                        text: noteText,
+                        date: new Date().toLocaleString()
+                    };
+                    
+                    notes.push(note);
+                    NotesManager.saveNotesToDb(note);
+                    UIManager.renderNotes();
+                    UIManager.closeModal();
+                } else {
+                    console.log('Note text is required');
+                }
+            }
+
             deleteNote(id, event) {
                 event.stopPropagation();
                 NotesManagerDb.deleteNoteFromDb(id);

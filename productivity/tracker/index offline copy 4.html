@@ -81,10 +81,6 @@
             cursor: pointer;
         }
 
-        .note-item.archived {
-            opacity: 0.5;
-        }
-
         .note-item:hover {
             background-color: #e9ecef;
         }
@@ -145,12 +141,6 @@
             background-color: #2980b9;
             color: white;
         }
-
-        .days-left {
-            color: #dc3545;
-            font-size: 0.8em;
-            margin-left: 10px;
-        }
     </style>
 </head>
 <body>
@@ -184,29 +174,13 @@
         const NOTE_PLACEHOLDER = 'Enter your note here...';
         const TITLE_PLACEHOLDER = 'Enter note title...';
         const ADD_NOTE_TEXT = 'Add Note';
-        const DELETE_TEXT = 'Archive';
+        const DELETE_TEXT = 'Delete';
         const NOTES_TITLE = 'Notes';
-        const DELETE_CONFIRM_MESSAGE = 'Are you sure you want to archive this note?';
-        const ARCHIVE_DAYS = 30;
+        const DELETE_CONFIRM_MESSAGE = 'Are you sure you want to delete this note?';
 
         let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let categories = Array.from(new Set(notes.map(note => note.category).filter(Boolean)));
         let activeCategories = new Set(JSON.parse(localStorage.getItem(ACTIVE_CATEGORIES_KEY)) || []);
-        let showArchived = false;
-
-        // Clean up expired archived notes
-        function cleanupArchivedNotes() {
-            const now = new Date().getTime();
-            notes = notes.filter(note => {
-                if (!note.archived) return true;
-                const archiveDate = new Date(note.archivedDate || note.date).getTime();
-                return (now - archiveDate) < (ARCHIVE_DAYS * 24 * 60 * 60 * 1000);
-            });
-            saveNotes();
-        }
-
-        // Run cleanup on load
-        cleanupArchivedNotes();
 
         async function loadFromDatabase() {
             try {
@@ -220,9 +194,7 @@
                     title: parseNote.get('title'),
                     text: parseNote.get('text'),
                     date: parseNote.get('date'),
-                    category: parseNote.get('category'),
-                    archived: parseNote.get('archived') || false,
-                    archivedDate: parseNote.get('archivedDate')
+                    category: parseNote.get('category')
                 }));
                 
                 saveNotes();
@@ -241,9 +213,11 @@
                 const query = new Parse.Query(Note);
                 query.equalTo("userId", Parse.User.current()?.id);
                 
+                // First delete all existing notes for this user
                 const existingNotes = await query.find({ useMasterKey: false });
                 await Parse.Object.destroyAll(existingNotes, { useMasterKey: false });
                 
+                // Then save all current notes
                 const savePromises = notes.map(note => {
                     const parseNote = new Note();
                     return parseNote.save({
@@ -252,9 +226,7 @@
                         date: note.date,
                         category: note.category,
                         localId: note.id,
-                        userId: Parse.User.current()?.id,
-                        archived: note.archived || false,
-                        archivedDate: note.archivedDate
+                        userId: Parse.User.current()?.id
                     }, { useMasterKey: false });
                 });
                 
@@ -266,17 +238,13 @@
             }
         }
 
-        function archiveNote(id, event) {
-            event.stopPropagation();
+        function deleteNote(id, event) {
+            event.stopPropagation(); // Prevent note opening when deleting
             if (confirm(DELETE_CONFIRM_MESSAGE)) {
-                const noteIndex = notes.findIndex(note => note.id === id);
-                if (noteIndex !== -1) {
-                    notes[noteIndex].archived = true;
-                    notes[noteIndex].archivedDate = new Date().toISOString();
-                    saveNotes();
-                    renderNotes();
-                    updateTagFilter();
-                }
+                notes = notes.filter(note => note.id !== id);
+                saveNotes();
+                renderNotes();
+                updateTagFilter();
             }
         }
 
@@ -286,6 +254,8 @@
 
         function saveNotes() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+            
+            // Update categories list with unique values
             categories = Array.from(new Set(notes.map(note => note.category).filter(Boolean)));
             localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
         }
@@ -294,17 +264,11 @@
             localStorage.setItem(ACTIVE_CATEGORIES_KEY, JSON.stringify(Array.from(activeCategories)));
         }
 
-        function getDaysLeft(archivedDate) {
-            const now = new Date().getTime();
-            const archiveTime = new Date(archivedDate).getTime();
-            const daysLeft = ARCHIVE_DAYS - Math.floor((now - archiveTime) / (24 * 60 * 60 * 1000));
-            return Math.max(0, daysLeft);
-        }
-
         function updateTagFilter() {
             const tagContainer = document.getElementById('tagContainer');
             tagContainer.innerHTML = '';
             
+            // Add "All" tag
             const allTag = document.createElement('span');
             allTag.className = `tag ${activeCategories.size === 0 ? 'active' : ''}`;
             allTag.textContent = 'All';
@@ -316,6 +280,7 @@
             };
             tagContainer.appendChild(allTag);
             
+            // Add "Unassigned" tag
             const unassignedTag = document.createElement('span');
             unassignedTag.className = `tag ${activeCategories.has(null) ? 'active' : ''}`;
             unassignedTag.textContent = '---';
@@ -330,17 +295,8 @@
                 renderNotes();
             };
             tagContainer.appendChild(unassignedTag);
-
-            const archivedTag = document.createElement('span');
-            archivedTag.className = `tag ${showArchived ? 'active' : ''}`;
-            archivedTag.textContent = 'Archived';
-            archivedTag.onclick = () => {
-                showArchived = !showArchived;
-                updateTagFilter();
-                renderNotes();
-            };
-            tagContainer.appendChild(archivedTag);
             
+            // Add category tags
             categories.sort().forEach(category => {
                 const tag = document.createElement('span');
                 tag.className = `tag ${activeCategories.has(category) ? 'active' : ''}`;
@@ -366,21 +322,20 @@
             const filteredNotes = activeCategories.size > 0
                 ? notes.filter(note => {
                     if (activeCategories.has(null)) {
-                        return (!note.category || activeCategories.has(note.category)) && (showArchived ? note.archived : !note.archived);
+                        return !note.category || activeCategories.has(note.category);
                     }
-                    return activeCategories.has(note.category) && (showArchived ? note.archived : !note.archived);
+                    return activeCategories.has(note.category);
                 })
-                : notes.filter(note => showArchived ? note.archived : !note.archived);
+                : notes;
             
             filteredNotes.forEach(note => {
                 const li = document.createElement('li');
-                li.className = `note-item ${note.archived ? 'archived' : ''}`;
+                li.className = 'note-item';
                 li.onclick = () => openNoteEditor(note.id);
                 
+                // Preserve line breaks in preview
                 const previewLines = note.text.split('\n').slice(-2);
                 const previewText = previewLines.join('\n');
-                
-                const daysLeft = note.archived ? getDaysLeft(note.archivedDate || note.date) : null;
                 
                 li.innerHTML = `
                     <div>
@@ -388,9 +343,8 @@
                         <p style="white-space: pre-line">${previewText}</p>
                         <small>${note.date}</small>
                         ${note.category ? `<small style="margin-left: 10px; color: #666;">Category: ${note.category}</small>` : ''}
-                        ${note.archived ? `<small style="margin-left: 10px; color: #dc3545;">Archived (${daysLeft} days left)</small>` : ''}
                     </div>
-                    <button class="delete-btn" onclick="archiveNote(${note.id}, event)">${note.archived ? 'Unarchive' : DELETE_TEXT}</button>
+                    <button class="delete-btn" onclick="deleteNote(${note.id}, event)">${DELETE_TEXT}</button>
                 `;
                 noteList.appendChild(li);
             });
@@ -402,9 +356,6 @@
 
         // Update static elements with constants
         document.querySelector('h1').textContent = NOTES_TITLE;
-
-        // Check for expired notes periodically
-        setInterval(cleanupArchivedNotes, 60 * 60 * 1000); // Check every hour
     </script>
 </body>
 </html>

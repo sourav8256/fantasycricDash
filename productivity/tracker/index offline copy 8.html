@@ -228,16 +228,6 @@
                 box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
             }
         }
-
-        .editor-container {
-            display: none;
-        }
-
-        @media (max-width: 1199px) {
-            .editor-container {
-                display: none !important;
-            }
-        }
     </style>
 </head>
 <body>
@@ -287,7 +277,6 @@
         let activeCategories = new Set(JSON.parse(localStorage.getItem(ACTIVE_CATEGORIES_KEY)) || []);
         let showArchived = false;
         let hasUnsavedChanges = localStorage.getItem(UNSAVED_CHANGES_KEY) === 'true';
-        let currentlyEditingId = null;
 
         // Listen for storage changes to update the list when editor saves
         window.addEventListener('storage', function(e) {
@@ -295,23 +284,10 @@
                 notes = JSON.parse(e.newValue) || [];
                 renderNotes();
                 updateTagFilter();
-                if (currentlyEditingId) {
-                    openEditor(currentlyEditingId);
-                }
             }
         });
 
-        // Listen for beforeunload to warn about unsaved changes
-        // window.addEventListener('beforeunload', function(e) {
-            // if (hasUnsavedChanges) {
-            //     e.preventDefault();
-            //     e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-            //     return e.returnValue;
-            // }
-        // });
-
         function openEditor(id = '') {
-            currentlyEditingId = id;
             if (window.innerWidth >= 1200) {
                 const editorContainer = document.getElementById('editorContainer');
                 const editorFrame = document.getElementById('editorFrame');
@@ -376,8 +352,6 @@
                 
                 saveNotes();
                 renderNotes();
-                console.log('load from db', notes);
-                clearUnsavedChanges();
                 updateTagFilter();
                 alert("Notes loaded from database successfully!");
             } catch (error) {

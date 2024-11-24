@@ -15,38 +15,6 @@
             background-color: #f0f0f0;
         }
 
-        @media (min-width: 1200px) {
-            body {
-                max-width: none;
-                margin: 0;
-                padding: 20px;
-                display: flex;
-                gap: 20px;
-            }
-
-            .container {
-                flex: 1;
-                margin: 0;
-                height: calc(100vh - 40px);
-                overflow-y: auto;
-            }
-
-            .editor-container {
-                flex: 1;
-                margin: 0;
-                height: calc(100vh);
-                display: none;
-            }
-
-            .editor-frame {
-                width: 100%;
-                height: 100%;
-                border: none;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-        }
-
         .container {
             background-color: white;
             padding: 20px;
@@ -228,16 +196,6 @@
                 box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
             }
         }
-
-        .editor-container {
-            display: none;
-        }
-
-        @media (max-width: 1199px) {
-            .editor-container {
-                display: none !important;
-            }
-        }
     </style>
 </head>
 <body>
@@ -253,11 +211,7 @@
         <ul class="note-list" id="noteList"></ul>
     </div>
 
-    <div class="editor-container" id="editorContainer">
-        <iframe class="editor-frame" id="editorFrame"></iframe>
-    </div>
-
-    <button class="fab" onclick="openEditor()">+</button>
+    <button class="fab" onclick="window.location.href='noteeditor offline.html'">+</button>
 
     <script>
         // Parse initialization
@@ -287,40 +241,6 @@
         let activeCategories = new Set(JSON.parse(localStorage.getItem(ACTIVE_CATEGORIES_KEY)) || []);
         let showArchived = false;
         let hasUnsavedChanges = localStorage.getItem(UNSAVED_CHANGES_KEY) === 'true';
-        let currentlyEditingId = null;
-
-        // Listen for storage changes to update the list when editor saves
-        window.addEventListener('storage', function(e) {
-            if (e.key === STORAGE_KEY) {
-                notes = JSON.parse(e.newValue) || [];
-                renderNotes();
-                updateTagFilter();
-                if (currentlyEditingId) {
-                    openEditor(currentlyEditingId);
-                }
-            }
-        });
-
-        // Listen for beforeunload to warn about unsaved changes
-        // window.addEventListener('beforeunload', function(e) {
-            // if (hasUnsavedChanges) {
-            //     e.preventDefault();
-            //     e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-            //     return e.returnValue;
-            // }
-        // });
-
-        function openEditor(id = '') {
-            currentlyEditingId = id;
-            if (window.innerWidth >= 1200) {
-                const editorContainer = document.getElementById('editorContainer');
-                const editorFrame = document.getElementById('editorFrame');
-                editorContainer.style.display = 'block';
-                editorFrame.src = `noteeditor offline.html${id ? '?id=' + id : ''}`;
-            } else {
-                window.location.href = `noteeditor offline.html${id ? '?id=' + id : ''}`;
-            }
-        }
 
         // Initialize unsaved changes UI state
         if (hasUnsavedChanges) {
@@ -376,8 +296,6 @@
                 
                 saveNotes();
                 renderNotes();
-                console.log('load from db', notes);
-                clearUnsavedChanges();
                 updateTagFilter();
                 alert("Notes loaded from database successfully!");
             } catch (error) {
@@ -445,8 +363,7 @@
         }
 
         function openNoteEditor(id) {
-            console.log('openNoteEditor', id);
-            openEditor(id);
+            window.location.href = `noteeditor offline.html?id=${id}`;
         }
 
         function saveNotes() {

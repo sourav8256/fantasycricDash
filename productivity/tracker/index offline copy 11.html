@@ -280,7 +280,6 @@
         const CATEGORIES_KEY = 'tracker-categories';
         const ACTIVE_CATEGORIES_KEY = 'tracker-active-categories';
         const UNSAVED_CHANGES_KEY = 'tracker-unsaved-changes';
-        const LAST_SAVED_TIME_KEY = 'tracker-last-saved-time';
         const NOTE_PLACEHOLDER = 'Enter your note here...';
         const TITLE_PLACEHOLDER = 'Enter note title...';
         const ADD_NOTE_TEXT = 'Add Note';
@@ -299,7 +298,7 @@
 
         function updateLastSavedTime() {
             const now = new Date();
-            const lastSavedTime = localStorage.getItem(LAST_SAVED_TIME_KEY) || now.getTime();
+            const lastSavedTime = now.getTime();
             
             function updateTimeAgo() {
                 const currentTime = new Date().getTime();
@@ -331,7 +330,6 @@
 
         // Listen for storage changes to update the list when editor saves
         window.addEventListener('storage', function(e) {
-            console.log('storage', e.key, e.newValue);
             if (e.key === STORAGE_KEY) {
                 notes = JSON.parse(e.newValue) || [];
                 renderNotes();
@@ -340,26 +338,9 @@
                     openEditor(currentlyEditingId);
                 }
             } else if (e.key === UNSAVED_CHANGES_KEY) {
-
-                // console.log('unsaved changes', e.newValue);
-                // hasUnsavedChanges = e.newValue === 'true';
-                // if (hasUnsavedChanges) {
-                //     // Only run saveToDatabase once per minute max
-                //     const now = Date.now();
-                //     const lastSave = window.lastSaveTime || 0;
-                //     if (now - lastSave >= 60000) { // 60000ms = 1 minute
-                //         window.lastSaveTime = now;
-                //         saveToDatabase();
-                //     }
-                //     document.getElementById('saveToDbBtn').classList.add('highlight');
-                //     updateLastSavedTime();
-                // } else {
-                //     document.getElementById('saveToDbBtn').classList.remove('highlight');
-                // }
-            }
-
-
- 
+                hasUnsavedChanges = e.newValue === 'true';
+                if (hasUnsavedChanges) {
+                    // Only run saveToDatabase once per minute max
                     const now = Date.now();
                     const lastSave = window.lastSaveTime || 0;
                     if (now - lastSave >= 60000) { // 60000ms = 1 minute
@@ -368,7 +349,10 @@
                     }
                     document.getElementById('saveToDbBtn').classList.add('highlight');
                     updateLastSavedTime();
-              
+                } else {
+                    document.getElementById('saveToDbBtn').classList.remove('highlight');
+                }
+            }
         });
 
         // Listen for beforeunload to warn about unsaved changes
@@ -409,8 +393,6 @@
             hasUnsavedChanges = false;
             localStorage.setItem(UNSAVED_CHANGES_KEY, 'false');
             document.getElementById('saveToDbBtn').classList.remove('highlight');
-            localStorage.setItem(LAST_SAVED_TIME_KEY, Date.now());
-            updateLastSavedTime();
         }
 
         // Clean up expired archived notes
@@ -433,7 +415,7 @@
 
         async function loadFromDatabase() {
             try {
-                const Note = Parse.Object.extend("Tracker");
+                const Note = Parse.Object.extend("Note");
                 const query = new Parse.Query(Note);
                 query.equalTo("userId", Parse.User.current()?.id);
                 
@@ -463,7 +445,7 @@
 
         async function saveToDatabase() {
             try {
-                const Note = Parse.Object.extend("Tracker");
+                const Note = Parse.Object.extend("Note");
                 const query = new Parse.Query(Note);
                 query.equalTo("userId", Parse.User.current()?.id);
                 
@@ -484,14 +466,9 @@
                     }, { useMasterKey: false });
                 });
                 
-                try {
-                    await Promise.all(savePromises);
-                    console.log('no error while saving');
-                } catch (error) {
-                    console.error("Error saving notes:", error);
-                    throw new Error(`Failed to save notes: ${error.message}`);
-                }
+                await Promise.all(savePromises);
                 clearUnsavedChanges();
+                alert("Notes saved to database successfully!");
             } catch (error) {
                 console.error("Error saving to database:", error);
                 alert("Error saving to database: " + error.message);

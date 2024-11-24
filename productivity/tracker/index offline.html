@@ -217,6 +217,18 @@
             animation: pulse 2s infinite;
         }
 
+        .upload-btn.loading {
+            animation: blink 1s infinite;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0.7; }
+            50% { opacity: 0.3; }
+            100% { opacity: 0.7; }
+        }
+
         @keyframes pulse {
             0% {
                 box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
@@ -250,10 +262,13 @@
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1>Notes</h1>
-            <div>
-                <button onclick="if(confirm('Are you sure you want to load notes from the database? This will overwrite your local notes.')) loadFromDatabase()" class="upload-btn">⬇️</button>
-                <button id="saveToDbBtn" onclick="if(confirm('Are you sure you want to save notes to the database? This will overwrite your cloud notes.')) saveToDatabase()" class="upload-btn">⬆️</button>
+            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                <div>
+                    <button onclick="loadFromDatabaseWithLoading()" class="upload-btn" id="loadFromDbBtn">⬇️</button>
+                    <button id="saveToDbBtn" onclick="saveToDatabaseWithLoading()" class="upload-btn">⬆️</button>
+                </div>
                 <span id="lastSaved" class="last-saved"></span>
+                
             </div>
         </div>
         <div id="tagContainer" class="tag-container"></div>
@@ -296,6 +311,30 @@
         let showArchived = false;
         let hasUnsavedChanges = localStorage.getItem(UNSAVED_CHANGES_KEY) === 'true';
         let currentlyEditingId = null;
+
+        async function loadFromDatabaseWithLoading() {
+            if(confirm('Are you sure you want to load notes from the database? This will overwrite your local notes.')) {
+                const loadBtn = document.getElementById('loadFromDbBtn');
+                loadBtn.classList.add('loading');
+                try {
+                    await loadFromDatabase();
+                } finally {
+                    loadBtn.classList.remove('loading');
+                }
+            }
+        }
+
+        async function saveToDatabaseWithLoading() {
+            if(confirm('Are you sure you want to save notes to the database? This will overwrite your cloud notes.')) {
+                const saveBtn = document.getElementById('saveToDbBtn');
+                saveBtn.classList.add('loading');
+                try {
+                    await saveToDatabase();
+                } finally {
+                    saveBtn.classList.remove('loading');
+                }
+            }
+        }
 
         function updateLastSavedTime() {
             const now = new Date();
@@ -340,45 +379,16 @@
                     openEditor(currentlyEditingId);
                 }
             } else if (e.key === UNSAVED_CHANGES_KEY) {
-
-                // console.log('unsaved changes', e.newValue);
-                // hasUnsavedChanges = e.newValue === 'true';
-                // if (hasUnsavedChanges) {
-                //     // Only run saveToDatabase once per minute max
-                //     const now = Date.now();
-                //     const lastSave = window.lastSaveTime || 0;
-                //     if (now - lastSave >= 60000) { // 60000ms = 1 minute
-                //         window.lastSaveTime = now;
-                //         saveToDatabase();
-                //     }
-                //     document.getElementById('saveToDbBtn').classList.add('highlight');
-                //     updateLastSavedTime();
-                // } else {
-                //     document.getElementById('saveToDbBtn').classList.remove('highlight');
-                // }
+                const now = Date.now();
+                const lastSave = window.lastSaveTime || 0;
+                if (now - lastSave >= 60000) { // 60000ms = 1 minute
+                    window.lastSaveTime = now;
+                    saveToDatabase();
+                }
+                document.getElementById('saveToDbBtn').classList.add('highlight');
+                updateLastSavedTime();
             }
-
-
- 
-                    const now = Date.now();
-                    const lastSave = window.lastSaveTime || 0;
-                    if (now - lastSave >= 60000) { // 60000ms = 1 minute
-                        window.lastSaveTime = now;
-                        saveToDatabase();
-                    }
-                    document.getElementById('saveToDbBtn').classList.add('highlight');
-                    updateLastSavedTime();
-              
         });
-
-        // Listen for beforeunload to warn about unsaved changes
-        // window.addEventListener('beforeunload', function(e) {
-            // if (hasUnsavedChanges) {
-            //     e.preventDefault();
-            //     e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-            //     return e.returnValue;
-            // }
-        // });
 
         function openEditor(id = '') {
             currentlyEditingId = id;
@@ -459,7 +469,6 @@
                 alert("Error loading from database: " + error.message);
             }
         }
-
 
         async function saveToDatabase() {
             try {

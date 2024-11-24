@@ -151,6 +151,36 @@
             font-size: 0.8em;
             margin-left: 10px;
         }
+
+        .upload-btn {
+            padding: 8px 16px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn.highlight {
+            transform: scale(1.1);
+            background-color: #e74c3c;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -158,8 +188,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1>Notes</h1>
             <div>
-                <button onclick="if(confirm('Are you sure you want to load notes from the database? This will overwrite your local notes.')) loadFromDatabase()" style="padding: 8px 16px; background-color: #2980b9; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px;">⬇️</button>
-                <button onclick="if(confirm('Are you sure you want to save notes to the database? This will overwrite your cloud notes.')) saveToDatabase()" style="padding: 8px 16px; background-color: #2980b9; color: white; border: none; border-radius: 4px; cursor: pointer;">⬆️</button>
+                <button onclick="if(confirm('Are you sure you want to load notes from the database? This will overwrite your local notes.')) loadFromDatabase()" class="upload-btn">⬇️</button>
+                <button id="saveToDbBtn" onclick="if(confirm('Are you sure you want to save notes to the database? This will overwrite your cloud notes.')) saveToDatabase()" class="upload-btn">⬆️</button>
             </div>
         </div>
         <div id="tagContainer" class="tag-container"></div>
@@ -181,6 +211,7 @@
         const STORAGE_KEY = 'tracker-notes';
         const CATEGORIES_KEY = 'tracker-categories';
         const ACTIVE_CATEGORIES_KEY = 'tracker-active-categories';
+        const UNSAVED_CHANGES_KEY = 'tracker-unsaved-changes';
         const NOTE_PLACEHOLDER = 'Enter your note here...';
         const TITLE_PLACEHOLDER = 'Enter note title...';
         const ADD_NOTE_TEXT = 'Add Note';
@@ -193,16 +224,38 @@
         let categories = Array.from(new Set(notes.map(note => note.category).filter(Boolean)));
         let activeCategories = new Set(JSON.parse(localStorage.getItem(ACTIVE_CATEGORIES_KEY)) || []);
         let showArchived = false;
+        let hasUnsavedChanges = localStorage.getItem(UNSAVED_CHANGES_KEY) === 'true';
+
+        // Initialize unsaved changes UI state
+        if (hasUnsavedChanges) {
+            document.getElementById('saveToDbBtn').classList.add('highlight');
+        }
+
+        function markUnsavedChanges() {
+            hasUnsavedChanges = true;
+            localStorage.setItem(UNSAVED_CHANGES_KEY, 'true');
+            document.getElementById('saveToDbBtn').classList.add('highlight');
+        }
+
+        function clearUnsavedChanges() {
+            hasUnsavedChanges = false;
+            localStorage.setItem(UNSAVED_CHANGES_KEY, 'false');
+            document.getElementById('saveToDbBtn').classList.remove('highlight');
+        }
 
         // Clean up expired archived notes
         function cleanupArchivedNotes() {
             const now = new Date().getTime();
+            const oldLength = notes.length;
             notes = notes.filter(note => {
                 if (!note.archived) return true;
                 const archiveDate = new Date(note.archivedDate || note.date).getTime();
                 return (now - archiveDate) < (ARCHIVE_DAYS * 24 * 60 * 60 * 1000);
             });
-            saveNotes();
+            if (notes.length !== oldLength) {
+                saveNotes();
+                markUnsavedChanges();
+            }
         }
 
         // Run cleanup on load
@@ -259,6 +312,7 @@
                 });
                 
                 await Promise.all(savePromises);
+                clearUnsavedChanges();
                 alert("Notes saved to database successfully!");
             } catch (error) {
                 console.error("Error saving to database:", error);
@@ -276,6 +330,7 @@
                     saveNotes();
                     renderNotes();
                     updateTagFilter();
+                    markUnsavedChanges();
                 }
             }
         }
@@ -288,6 +343,7 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
             categories = Array.from(new Set(notes.map(note => note.category).filter(Boolean)));
             localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+            // markUnsavedChanges();
         }
 
         function saveActiveCategories() {

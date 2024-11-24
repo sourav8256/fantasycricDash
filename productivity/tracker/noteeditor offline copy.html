@@ -114,7 +114,6 @@
     <script>
         const STORAGE_KEY = 'tracker-notes';
         const CATEGORIES_KEY = 'tracker-categories';
-        const UNSAVED_CHANGES_KEY = 'tracker-unsaved-changes';
         let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let noteId = new URLSearchParams(window.location.search).get('id');
         let isNewNote = !noteId;
@@ -204,7 +203,6 @@
                 }
             }
 
-            localStorage.setItem(UNSAVED_CHANGES_KEY, 'true');
             window.history.back();
         }
     </script>

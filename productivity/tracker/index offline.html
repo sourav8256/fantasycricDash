@@ -314,24 +314,20 @@
 
         async function loadFromDatabaseWithLoading() {
             if(confirm('Are you sure you want to load notes from the database? This will overwrite your local notes.')) {
-                const loadBtn = document.getElementById('loadFromDbBtn');
-                loadBtn.classList.add('loading');
+
                 try {
                     await loadFromDatabase();
                 } finally {
-                    loadBtn.classList.remove('loading');
                 }
             }
         }
 
         async function saveToDatabaseWithLoading() {
             if(confirm('Are you sure you want to save notes to the database? This will overwrite your cloud notes.')) {
-                const saveBtn = document.getElementById('saveToDbBtn');
-                saveBtn.classList.add('loading');
+
                 try {
                     await saveToDatabase();
                 } finally {
-                    saveBtn.classList.remove('loading');
                 }
             }
         }
@@ -442,6 +438,9 @@
         cleanupArchivedNotes();
 
         async function loadFromDatabase() {
+            const loadBtn = document.getElementById('loadFromDbBtn');
+            loadBtn.classList.add('loading');
+
             try {
                 const Note = Parse.Object.extend("Tracker");
                 const query = new Parse.Query(Note);
@@ -468,9 +467,13 @@
                 console.error("Error loading from database:", error);
                 alert("Error loading from database: " + error.message);
             }
+            loadBtn.classList.remove('loading');
         }
 
         async function saveToDatabase() {
+            const saveBtn = document.getElementById('saveToDbBtn');
+            saveBtn.classList.add('loading');
+
             try {
                 const Note = Parse.Object.extend("Tracker");
                 const query = new Parse.Query(Note);
@@ -505,6 +508,8 @@
                 console.error("Error saving to database:", error);
                 alert("Error saving to database: " + error.message);
             }
+
+            saveBtn.classList.remove('loading');
         }
 
         function archiveNote(id, event) {

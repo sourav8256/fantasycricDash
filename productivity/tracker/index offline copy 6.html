@@ -96,21 +96,6 @@
             padding: 5px 10px;
             border-radius: 4px;
             cursor: pointer;
-            margin-left: 8px;
-        }
-
-        .delete-permanent-btn {
-            background-color: #000;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 8px;
         }
 
         .modal {
@@ -233,7 +218,6 @@
         const DELETE_TEXT = 'Archive';
         const NOTES_TITLE = 'Notes';
         const DELETE_CONFIRM_MESSAGE = 'Are you sure you want to archive this note?';
-        const DELETE_PERMANENT_MESSAGE = 'Are you sure you want to permanently delete this note? This cannot be undone.';
         const ARCHIVE_DAYS = 30;
 
         let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -351,17 +335,6 @@
             }
         }
 
-        function deleteNotePermanently(id, event) {
-            event.stopPropagation();
-            if (confirm(DELETE_PERMANENT_MESSAGE)) {
-                notes = notes.filter(note => note.id !== id);
-                saveNotes();
-                renderNotes();
-                updateTagFilter();
-                markUnsavedChanges();
-            }
-        }
-
         function openNoteEditor(id) {
             window.location.href = `noteeditor offline.html?id=${id}`;
         }
@@ -473,14 +446,7 @@
                         ${note.category ? `<small style="margin-left: 10px; color: #666;">Category: ${note.category}</small>` : ''}
                         ${note.archived ? `<small style="margin-left: 10px; color: #dc3545;">Archived (${daysLeft} days left)</small>` : ''}
                     </div>
-                    <div class="button-group">
-                        ${note.archived ? `
-                            <button class="delete-btn" onclick="archiveNote(${note.id}, event)">Unarchive</button>
-                            <button class="delete-permanent-btn" onclick="deleteNotePermanently(${note.id}, event)">Delete Permanently</button>
-                        ` : `
-                            <button class="delete-btn" onclick="archiveNote(${note.id}, event)">${DELETE_TEXT}</button>
-                        `}
-                    </div>
+                    <button class="delete-btn" onclick="archiveNote(${note.id}, event)">${note.archived ? 'Unarchive' : DELETE_TEXT}</button>
                 `;
                 noteList.appendChild(li);
             });

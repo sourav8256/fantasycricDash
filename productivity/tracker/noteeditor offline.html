@@ -207,7 +207,7 @@
 
             // console.log('unsaved changes', UNSAVED_CHANGES_KEY, 'true');
             localStorage.setItem(UNSAVED_CHANGES_KEY, 'true');
-            if (window.self === window.top) {
+            if (window.location.pathname.toLowerCase().split('/').pop().includes('editor')) {
                 window.history.back();
             }
         }

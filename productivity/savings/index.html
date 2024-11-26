@@ -541,12 +541,21 @@
                 });
 
             const actualTotal = savingsHistory.reduce((sum, entry) => sum + entry.amount, 0);
-            const expectedTotal = parseFloat(document.getElementById('expectedSavings').textContent);
+            const expectedTotal = parseFloat(document.getElementById('expectedSavings').textContent) || calculateExpectedTotal();
             const percentage = expectedTotal !== 0 ? ((actualTotal / expectedTotal) * 100).toFixed(1) : '0.0';
             
             document.getElementById('totalSavings').textContent = actualTotal.toFixed(2);
             document.getElementById('savingsPercentage').textContent = percentage;
             calculateExpectedSavings();
+        }
+
+        function calculateExpectedTotal() {
+            const startDate = new Date(2019, 6); // July 2019
+            const currentDate = new Date();
+            const monthsDiff = (currentDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                             (currentDate.getMonth() - startDate.getMonth());
+            
+            return monthsDiff * expectedRate;
         }
 
         function deleteEntry(index) {

@@ -38,8 +38,6 @@
 
         .timeline-item {
             position: absolute;
-            left: 50px;
-            right: 0;
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -340,27 +338,67 @@
             const timelineContainer = document.getElementById('timelineContainer');
             timelineContainer.innerHTML = '';
             timelineContainer.style.height = `${TIMELINE_HEIGHT}px`;
-
             const totalHeight = timelineContainer.clientHeight;
 
-            activities.forEach((item, index) => {
-                const timelineItem = document.createElement('div');
-                timelineItem.className = 'timeline-item';
-                
-                const itemStart = getMinutesSinceMidnight(item.startTime);
-                const itemEnd = getMinutesSinceMidnight(item.endTime);
-                const topPosition = (itemStart / 1440) * totalHeight;
-                const height = ((itemEnd - itemStart) / 1440) * totalHeight;
-                
-                timelineItem.style.top = `${topPosition}px`;
-                timelineItem.style.height = `${height}px`;
-                timelineItem.style.backgroundColor = COLORS[index % COLORS.length];
-                timelineItem.innerHTML = `
-                    <div class="timeline-time">${formatTime(item.startTime)} - ${formatTime(item.endTime)}</div>
-                    <div class="timeline-content">${item.activity}</div>
-                `;
-                timelineContainer.appendChild(timelineItem);
+            // First, group overlapping activities
+            const timeSlots = new Map(); // Map to store activities by time slots
+            
+            // Sort activities by start time
+            const sortedActivities = [...activities].sort((a, b) => {
+                return getMinutesSinceMidnight(a.startTime) - getMinutesSinceMidnight(b.startTime);
             });
+
+            // Find overlapping groups
+            sortedActivities.forEach((activity, index) => {
+                const start = getMinutesSinceMidnight(activity.startTime);
+                const end = getMinutesSinceMidnight(activity.endTime);
+                
+                // Find which group this activity belongs to
+                let foundGroup = false;
+                for (const [groupStart, group] of timeSlots.entries()) {
+                    const lastActivity = group[group.length - 1];
+                    const groupEnd = getMinutesSinceMidnight(lastActivity.endTime);
+                    
+                    if (start < groupEnd) {
+                        group.push(activity);
+                        foundGroup = true;
+                        break;
+                    }
+                }
+                
+                if (!foundGroup) {
+                    timeSlots.set(start, [activity]);
+                }
+            });
+
+            // Render each group of activities
+            for (const [_, group] of timeSlots) {
+                const maxOverlap = group.length;
+                const itemWidth = `calc((100% - 50px) / ${maxOverlap})`;
+                
+                group.forEach((item, index) => {
+                    const timelineItem = document.createElement('div');
+                    timelineItem.className = 'timeline-item';
+                    
+                    const itemStart = getMinutesSinceMidnight(item.startTime);
+                    const itemEnd = getMinutesSinceMidnight(item.endTime);
+                    const topPosition = (itemStart / 1440) * totalHeight;
+                    const height = ((itemEnd - itemStart) / 1440) * totalHeight;
+                    
+                    timelineItem.style.top = `${topPosition}px`;
+                    timelineItem.style.height = `${height}px`;
+                    timelineItem.style.width = itemWidth;
+                    timelineItem.style.left = `${5 + (index * 100 / maxOverlap)}%`;
+                    timelineItem.style.backgroundColor = COLORS[index % COLORS.length];
+                    
+                    timelineItem.innerHTML = `
+                        <div class="timeline-time">${formatTime(item.startTime)} - ${formatTime(item.endTime)}</div>
+                        <div class="timeline-content">${item.activity}</div>
+                    `;
+                    
+                    timelineContainer.appendChild(timelineItem);
+                });
+            }
 
             addTimeMarkers(timelineContainer, totalHeight);
 
@@ -382,7 +420,7 @@
             timelineContainer.appendChild(currentTimeLine);
             
             // Scroll current time into view
-            document.querySelector('.current-time-label').scrollIntoView({
+            document.querySelector('.current-time-label')?.scrollIntoView({
                 behavior: 'smooth',
                 block: 'center'
             });

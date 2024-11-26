@@ -1,0 +1,332 @@
+{
+    "settings": {
+      "theme": "light",
+      "timeFormat": "12h"
+    },
+    "calendars": [
+      "default",
+      "Home",
+      "Work"
+    ],
+    "currentCalendar": "Work",
+    "calendarData": {
+      "default": [
+        {
+          "startTime": "07:00",
+          "endTime": "07:30",
+          "activity": "Wake up"
+        },
+        {
+          "startTime": "07:30",
+          "endTime": "08:00",
+          "activity": "Morning Routine"
+        },
+        {
+          "startTime": "08:00",
+          "endTime": "08:30",
+          "activity": "Commute"
+        },
+        {
+          "startTime": "08:30",
+          "endTime": "09:00",
+          "activity": "Check Emails"
+        },
+        {
+          "startTime": "09:00",
+          "endTime": "10:00",
+          "activity": "Team Meeting"
+        },
+        {
+          "startTime": "10:00",
+          "endTime": "12:00",
+          "activity": "Focus Work"
+        },
+        {
+          "startTime": "12:00",
+          "endTime": "13:00",
+          "activity": "Lunch Break"
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:30",
+          "activity": "Project Planning"
+        },
+        {
+          "startTime": "14:30",
+          "endTime": "16:00",
+          "activity": "Client Calls"
+        },
+        {
+          "startTime": "16:00",
+          "endTime": "17:00",
+          "activity": "Admin Tasks"
+        },
+        {
+          "startTime": "17:00",
+          "endTime": "17:30",
+          "activity": "Review & Plan Tomorrow"
+        },
+        {
+          "startTime": "17:30",
+          "endTime": "18:00",
+          "activity": "Commute Home"
+        },
+        {
+          "startTime": "18:30",
+          "endTime": "19:30",
+          "activity": "Exercise"
+        },
+        {
+          "startTime": "19:30",
+          "endTime": "21:00",
+          "activity": "Dinner & Relax"
+        },
+        {
+          "startTime": "21:00",
+          "endTime": "22:00",
+          "activity": "Evening Routine"
+        },
+        {
+          "startTime": "22:00",
+          "endTime": "07:00",
+          "activity": "Sleep"
+        }
+      ],
+      "Home": [
+        {
+          "startTime": "00:30",
+          "endTime": "01:00",
+          "activity": "fasdfasdf"
+        },
+        {
+          "startTime": "00:30",
+          "endTime": "01:30",
+          "activity": "fasdfasdf"
+        },
+        {
+          "startTime": "02:30",
+          "endTime": "03:00",
+          "activity": "type"
+        },
+        {
+          "startTime": "06:00",
+          "endTime": "06:30",
+          "activity": "Wake up and Brush"
+        },
+        {
+          "startTime": "06:30",
+          "endTime": "07:00",
+          "activity": "Exercise"
+        },
+        {
+          "startTime": "07:00",
+          "endTime": "07:30",
+          "activity": "Bath & Get Ready"
+        },
+        {
+          "startTime": "07:30",
+          "endTime": "08:00",
+          "activity": "Breakfast"
+        },
+        {
+          "startTime": "08:00",
+          "endTime": "13:00",
+          "activity": "Work Session 1"
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:00",
+          "activity": "Lunch Break"
+        },
+        {
+          "startTime": "14:00",
+          "endTime": "18:00",
+          "activity": "Work Session 2"
+        },
+        {
+          "startTime": "18:00",
+          "endTime": "19:00",
+          "activity": "Exercise/Walk"
+        },
+        {
+          "startTime": "19:00",
+          "endTime": "20:00",
+          "activity": "Dinner"
+        },
+        {
+          "startTime": "20:00",
+          "endTime": "22:00",
+          "activity": "Free Time/Reading"
+        },
+        {
+          "startTime": "22:00",
+          "endTime": "22:30",
+          "activity": "Prepare for Bed"
+        }
+      ],
+      "Work": [
+        {
+          "startTime": "07:00",
+          "endTime": "07:30",
+          "activity": "Wake up"
+        },
+        {
+          "startTime": "07:30",
+          "endTime": "08:00",
+          "activity": "Morning Routine"
+        },
+        {
+          "startTime": "08:00",
+          "endTime": "08:30",
+          "activity": "Commute"
+        },
+        {
+          "startTime": "08:30",
+          "endTime": "09:00",
+          "activity": "Check Emails"
+        },
+        {
+          "startTime": "09:00",
+          "endTime": "10:00",
+          "activity": "Team Meeting"
+        },
+        {
+          "startTime": "10:00",
+          "endTime": "12:00",
+          "activity": "Focus Work"
+        },
+        {
+          "startTime": "12:00",
+          "endTime": "13:00",
+          "activity": "Lunch Break"
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:30",
+          "activity": "Project Planning"
+        },
+        {
+          "startTime": "14:30",
+          "endTime": "16:00",
+          "activity": "Client Calls"
+        },
+        {
+          "startTime": "16:00",
+          "endTime": "17:00",
+          "activity": "Admin Tasks"
+        },
+        {
+          "startTime": "17:00",
+          "endTime": "17:30",
+          "activity": "Review & Plan Tomorrow"
+        },
+        {
+          "startTime": "17:30",
+          "endTime": "18:00",
+          "activity": "Commute Home"
+        },
+        {
+          "startTime": "18:30",
+          "endTime": "19:30",
+          "activity": "Exercise"
+        },
+        {
+          "startTime": "19:30",
+          "endTime": "21:00",
+          "activity": "Dinner & Relax"
+        },
+        {
+          "startTime": "21:00",
+          "endTime": "22:00",
+          "activity": "Evening Routine"
+        },
+        {
+          "startTime": "22:00",
+          "endTime": "07:00",
+          "activity": "Sleep"
+        }
+      ],
+      "Work2": [
+        {
+          "startTime": "07:00",
+          "endTime": "07:30",
+          "activity": "Wake up"
+        },
+        {
+          "startTime": "07:30",
+          "endTime": "08:00",
+          "activity": "Morning Routine"
+        },
+        {
+          "startTime": "08:00",
+          "endTime": "08:30",
+          "activity": "Commute"
+        },
+        {
+          "startTime": "08:30",
+          "endTime": "09:00",
+          "activity": "Check Emails"
+        },
+        {
+          "startTime": "09:00",
+          "endTime": "10:00",
+          "activity": "Team Meeting"
+        },
+        {
+          "startTime": "10:00",
+          "endTime": "12:00",
+          "activity": "Focus Work"
+        },
+        {
+          "startTime": "12:00",
+          "endTime": "13:00",
+          "activity": "Lunch Break"
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:30",
+          "activity": "Project Planning"
+        },
+        {
+          "startTime": "14:30",
+          "endTime": "16:00",
+          "activity": "Client Calls"
+        },
+        {
+          "startTime": "16:00",
+          "endTime": "17:00",
+          "activity": "Admin Tasks"
+        },
+        {
+          "startTime": "17:00",
+          "endTime": "17:30",
+          "activity": "Review & Plan Tomorrow"
+        },
+        {
+          "startTime": "17:30",
+          "endTime": "18:00",
+          "activity": "Commute Home"
+        },
+        {
+          "startTime": "18:30",
+          "endTime": "19:30",
+          "activity": "Exercise"
+        },
+        {
+          "startTime": "19:30",
+          "endTime": "21:00",
+          "activity": "Dinner & Relax"
+        },
+        {
+          "startTime": "21:00",
+          "endTime": "22:00",
+          "activity": "Evening Routine"
+        },
+        {
+          "startTime": "22:00",
+          "endTime": "07:00",
+          "activity": "Sleep"
+        }
+      ]
+    }
+  }

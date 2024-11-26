@@ -126,7 +126,7 @@
             color: #666;
         }
 
-        #editForm, #settingsForm {
+        #editForm {
             background-color: #f8f9fa;
             padding: 20px;
             border-radius: 8px;
@@ -136,15 +136,15 @@
             overflow: hidden;
         }
 
-        #editForm.collapsed, #settingsForm.collapsed {
+        #editForm.collapsed {
             max-height: 60px;
         }
 
-        #editForm.expanded, #settingsForm.expanded {
+        #editForm.expanded {
             max-height: 500px;
         }
 
-        #activityTextArea, #settingsTextArea {
+        #activityTextArea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ced4da;
@@ -157,7 +157,7 @@
             box-sizing: border-box;
         }
 
-        #activityTextArea:focus, #settingsTextArea:focus {
+        #activityTextArea:focus {
             outline: none;
             border-color: #80bdff;
             box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
@@ -187,11 +187,11 @@
             transition: opacity 0.3s ease-out;
         }
 
-        #editForm.collapsed .form-content, #settingsForm.collapsed .form-content {
+        #editForm.collapsed .form-content {
             opacity: 0;
         }
 
-        #editForm.expanded .form-content, #settingsForm.expanded .form-content {
+        #editForm.expanded .form-content {
             opacity: 1;
         }
 
@@ -200,7 +200,7 @@
             transition: transform 0.3s;
         }
 
-        #editForm.collapsed .toggle-icon, #settingsForm.collapsed .toggle-icon {
+        #editForm.collapsed .toggle-icon {
             transform: rotate(180deg);
         }
 
@@ -234,18 +234,7 @@
         <div class="calendar-controls">
             <select id="calendarSelect"></select>
             <button id="newCalendarButton">➕ New Calendar</button>
-            <button id="settingsButton" onclick="toggleSettingsForm()">⚙️ Settings</button>
-        </div>
-        <div id="settingsForm" class="collapsed">
-            <div class="form-header" onclick="toggleSettingsForm()">
-                <h2 class="form-title">Settings</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="form-content">
-                <p class="form-instructions">View and edit all settings in JSON format</p>
-                <textarea id="settingsTextArea" rows="10"></textarea>
-                <button id="saveSettingsButton">💾 Save Settings</button>
-            </div>
+            <button id="settingsButton">⚙️ Settings</button>
         </div>
         <div id="editForm" class="collapsed">
             <div class="form-header" onclick="toggleEditForm()">
@@ -262,52 +251,50 @@
     </div>
 
     <script>
-        const STORAGE_KEY_PREFIX = 'daily-timetable-';
-        const CALENDARS_KEY = 'timetable-calendars';
-        const CURRENT_CALENDAR_KEY = 'current-calendar';
-        const TIMELINE_HEIGHT = 9000;
-        const COLORS = [
-            '#ffcdd2', // Light Red
-            '#c8e6c9', // Light Green  
-            '#bbdefb', // Light Blue
-            '#fff9c4', // Light Yellow
-            '#e1bee7', // Light Purple
-            '#ffe0b2', // Light Orange
-            '#b2dfdb', // Light Teal
-            '#f8bbd0', // Light Pink
-            '#d7ccc8', // Light Brown
-            '#cfd8dc'  // Light Gray Blue
-        ];
-        
+        const SETTINGS_KEY = 'daily-timetable-settings';
+        const DEFAULT_SETTINGS = {
+            calendars: ['default'],
+            currentCalendar: 'default',
+            calendarData: {
+                'default': [] // Store activities for each calendar
+            }
+        };
+
+        let settings = loadSettings();
+
+        function loadSettings() {
+            const storedSettings = localStorage.getItem(SETTINGS_KEY);
+            return storedSettings ? JSON.parse(storedSettings) : DEFAULT_SETTINGS;
+        }
+
+        function saveSettings() {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        }
+
         let activities = [];
-        let currentCalendar = localStorage.getItem(CURRENT_CALENDAR_KEY) || 'default';
         let calendars = [];
 
         // Load available calendars
         function loadCalendars() {
-            const storedCalendars = localStorage.getItem(CALENDARS_KEY);
-            calendars = storedCalendars ? JSON.parse(storedCalendars) : ['default'];
-            
             const select = document.getElementById('calendarSelect');
             select.innerHTML = '';
-            calendars.forEach(calendar => {
+            settings.calendars.forEach(calendar => {
                 const option = document.createElement('option');
                 option.value = calendar;
                 option.textContent = calendar;
                 select.appendChild(option);
             });
-            
-            select.value = currentCalendar;
+            select.value = settings.currentCalendar;
         }
 
         // Create new calendar
         document.getElementById('newCalendarButton').addEventListener('click', () => {
             const name = prompt('Enter calendar name:');
-            if (name && !calendars.includes(name)) {
-                calendars.push(name);
-                localStorage.setItem(CALENDARS_KEY, JSON.stringify(calendars));
-                currentCalendar = name;
-                localStorage.setItem(CURRENT_CALENDAR_KEY, currentCalendar);
+            if (name && !settings.calendars.includes(name)) {
+                settings.calendars.push(name);
+                settings.currentCalendar = name;
+                settings.calendarData[name] = [];
+                saveSettings();
                 loadCalendars();
                 activities = [];
                 renderTimeline();
@@ -317,8 +304,8 @@
 
         // Switch between calendars
         document.getElementById('calendarSelect').addEventListener('change', (e) => {
-            currentCalendar = e.target.value;
-            localStorage.setItem(CURRENT_CALENDAR_KEY, currentCalendar);
+            settings.currentCalendar = e.target.value;
+            saveSettings();
             loadActivities();
         });
 
@@ -333,76 +320,10 @@
             }
         }
 
-        function toggleSettingsForm() {
-            const settingsForm = document.getElementById('settingsForm');
-            if (settingsForm.classList.contains('expanded')) {
-                settingsForm.classList.remove('expanded');
-                settingsForm.classList.add('collapsed');
-            } else {
-                settingsForm.classList.remove('collapsed');
-                settingsForm.classList.add('expanded');
-                loadSettings();
-            }
-        }
-
-        function loadSettings() {
-            const allCalendarData = {};
-            calendars.forEach(calendar => {
-                const storedActivities = localStorage.getItem(STORAGE_KEY_PREFIX + calendar);
-                allCalendarData[calendar] = storedActivities ? JSON.parse(storedActivities) : [];
-            });
-
-            const settings = {
-                calendars: calendars,
-                currentCalendar: currentCalendar,
-                allCalendarData: allCalendarData
-            };
-            document.getElementById('settingsTextArea').value = JSON.stringify(settings, null, 2);
-        }
-
-        document.getElementById('saveSettingsButton').addEventListener('click', () => {
-            try {
-                const settings = JSON.parse(document.getElementById('settingsTextArea').value);
-                
-                // Save calendars list
-                localStorage.setItem(CALENDARS_KEY, JSON.stringify(settings.calendars));
-                calendars = settings.calendars;
-                
-                // Save current calendar selection
-                localStorage.setItem(CURRENT_CALENDAR_KEY, settings.currentCalendar);
-                currentCalendar = settings.currentCalendar;
-                
-                // Save each calendar's activities
-                Object.entries(settings.allCalendarData).forEach(([calendar, activities]) => {
-                    localStorage.setItem(STORAGE_KEY_PREFIX + calendar, JSON.stringify(activities));
-                });
-                
-                // Update current activities
-                activities = settings.allCalendarData[currentCalendar] || [];
-                
-                // Refresh UI
-                loadCalendars();
-                renderTimeline();
-                populateTextArea();
-                
-                alert('Settings saved successfully!');
-            } catch (e) {
-                alert('Invalid JSON format. Please check your input.');
-                console.error(e);
-            }
-        });
-
         function loadActivities() {
-            const storedActivities = localStorage.getItem(STORAGE_KEY_PREFIX + currentCalendar);
-            if (storedActivities) {
-                activities = JSON.parse(storedActivities);
-                renderTimeline();
-                populateTextArea();
-            } else {
-                activities = [];
-                renderTimeline();
-                populateTextArea();
-            }
+            activities = settings.calendarData[settings.currentCalendar] || [];
+            renderTimeline();
+            populateTextArea();
         }
 
         function populateTextArea() {
@@ -421,10 +342,10 @@
                     activity
                 };
             });
-            renderTimeline();
             
-            // Save activities to local storage with calendar prefix
-            localStorage.setItem(STORAGE_KEY_PREFIX + currentCalendar, JSON.stringify(activities));
+            settings.calendarData[settings.currentCalendar] = activities;
+            saveSettings();
+            renderTimeline();
         });
 
         function getMinutesBetween(start, end) {

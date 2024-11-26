@@ -126,7 +126,7 @@
             color: #666;
         }
 
-        #editForm, #settingsForm {
+        #editForm {
             background-color: #f8f9fa;
             padding: 20px;
             border-radius: 8px;
@@ -136,15 +136,15 @@
             overflow: hidden;
         }
 
-        #editForm.collapsed, #settingsForm.collapsed {
+        #editForm.collapsed {
             max-height: 60px;
         }
 
-        #editForm.expanded, #settingsForm.expanded {
+        #editForm.expanded {
             max-height: 500px;
         }
 
-        #activityTextArea, #settingsTextArea {
+        #activityTextArea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ced4da;
@@ -157,7 +157,7 @@
             box-sizing: border-box;
         }
 
-        #activityTextArea:focus, #settingsTextArea:focus {
+        #activityTextArea:focus {
             outline: none;
             border-color: #80bdff;
             box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
@@ -187,11 +187,11 @@
             transition: opacity 0.3s ease-out;
         }
 
-        #editForm.collapsed .form-content, #settingsForm.collapsed .form-content {
+        #editForm.collapsed .form-content {
             opacity: 0;
         }
 
-        #editForm.expanded .form-content, #settingsForm.expanded .form-content {
+        #editForm.expanded .form-content {
             opacity: 1;
         }
 
@@ -200,7 +200,7 @@
             transition: transform 0.3s;
         }
 
-        #editForm.collapsed .toggle-icon, #settingsForm.collapsed .toggle-icon {
+        #editForm.collapsed .toggle-icon {
             transform: rotate(180deg);
         }
 
@@ -222,9 +222,12 @@
             background-color: #6c757d;
         }
 
-        #settingsButton {
-            background-color: #6c757d;
-            margin-left: auto;
+        #backupTextArea {
+            width: 100%;
+            height: 200px;
+            margin-top: 10px;
+            font-family: monospace;
+            display: none;
         }
     </style>
 </head>
@@ -234,19 +237,9 @@
         <div class="calendar-controls">
             <select id="calendarSelect"></select>
             <button id="newCalendarButton">➕ New Calendar</button>
-            <button id="settingsButton" onclick="toggleSettingsForm()">⚙️ Settings</button>
+            <button id="backupButton" onclick="showBackup()">📋 Backup Settings</button>
         </div>
-        <div id="settingsForm" class="collapsed">
-            <div class="form-header" onclick="toggleSettingsForm()">
-                <h2 class="form-title">Settings</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="form-content">
-                <p class="form-instructions">View and edit all settings in JSON format</p>
-                <textarea id="settingsTextArea" rows="10"></textarea>
-                <button id="saveSettingsButton">💾 Save Settings</button>
-            </div>
-        </div>
+        <textarea id="backupTextArea" readonly></textarea>
         <div id="editForm" class="collapsed">
             <div class="form-header" onclick="toggleEditForm()">
                 <h2 class="form-title">Edit Schedule</h2>
@@ -282,6 +275,33 @@
         let activities = [];
         let currentCalendar = localStorage.getItem(CURRENT_CALENDAR_KEY) || 'default';
         let calendars = [];
+
+        function showBackup() {
+            const backupTextArea = document.getElementById('backupTextArea');
+            const allSettings = {};
+            
+            // Get all calendars and their activities
+            calendars.forEach(calendar => {
+                const calendarActivities = localStorage.getItem(STORAGE_KEY_PREFIX + calendar);
+                if (calendarActivities) {
+                    allSettings[calendar] = JSON.parse(calendarActivities);
+                }
+            });
+            
+            // Add calendar list and current calendar
+            allSettings.calendarList = calendars;
+            allSettings.currentCalendar = currentCalendar;
+            
+            // Convert to pretty JSON and show in textarea
+            backupTextArea.value = JSON.stringify(allSettings, null, 2);
+            backupTextArea.style.display = 'block';
+            
+            // Select and copy to clipboard
+            backupTextArea.select();
+            document.execCommand('copy');
+            
+            alert('Settings copied to clipboard!');
+        }
 
         // Load available calendars
         function loadCalendars() {
@@ -332,65 +352,6 @@
                 editForm.classList.add('expanded');
             }
         }
-
-        function toggleSettingsForm() {
-            const settingsForm = document.getElementById('settingsForm');
-            if (settingsForm.classList.contains('expanded')) {
-                settingsForm.classList.remove('expanded');
-                settingsForm.classList.add('collapsed');
-            } else {
-                settingsForm.classList.remove('collapsed');
-                settingsForm.classList.add('expanded');
-                loadSettings();
-            }
-        }
-
-        function loadSettings() {
-            const allCalendarData = {};
-            calendars.forEach(calendar => {
-                const storedActivities = localStorage.getItem(STORAGE_KEY_PREFIX + calendar);
-                allCalendarData[calendar] = storedActivities ? JSON.parse(storedActivities) : [];
-            });
-
-            const settings = {
-                calendars: calendars,
-                currentCalendar: currentCalendar,
-                allCalendarData: allCalendarData
-            };
-            document.getElementById('settingsTextArea').value = JSON.stringify(settings, null, 2);
-        }
-
-        document.getElementById('saveSettingsButton').addEventListener('click', () => {
-            try {
-                const settings = JSON.parse(document.getElementById('settingsTextArea').value);
-                
-                // Save calendars list
-                localStorage.setItem(CALENDARS_KEY, JSON.stringify(settings.calendars));
-                calendars = settings.calendars;
-                
-                // Save current calendar selection
-                localStorage.setItem(CURRENT_CALENDAR_KEY, settings.currentCalendar);
-                currentCalendar = settings.currentCalendar;
-                
-                // Save each calendar's activities
-                Object.entries(settings.allCalendarData).forEach(([calendar, activities]) => {
-                    localStorage.setItem(STORAGE_KEY_PREFIX + calendar, JSON.stringify(activities));
-                });
-                
-                // Update current activities
-                activities = settings.allCalendarData[currentCalendar] || [];
-                
-                // Refresh UI
-                loadCalendars();
-                renderTimeline();
-                populateTextArea();
-                
-                alert('Settings saved successfully!');
-            } catch (e) {
-                alert('Invalid JSON format. Please check your input.');
-                console.error(e);
-            }
-        });
 
         function loadActivities() {
             const storedActivities = localStorage.getItem(STORAGE_KEY_PREFIX + currentCalendar);
@@ -543,7 +504,8 @@
             timeLabel.className = 'current-time-label';
             timeLabel.textContent = new Date().toLocaleTimeString([], { 
                 hour: '2-digit', 
-                minute: '2-digit'
+                minute: '2-digit',
+                hour12: true 
             });
             currentTimeLine.appendChild(timeLabel);
             
@@ -559,7 +521,8 @@
         function formatTime(time) {
             return new Date(`2000-01-01T${time}`).toLocaleTimeString([], { 
                 hour: '2-digit', 
-                minute: '2-digit'
+                minute: '2-digit',
+                hour12: true 
             });
         }
 

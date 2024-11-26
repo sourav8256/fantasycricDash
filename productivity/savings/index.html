@@ -197,7 +197,7 @@
         <div class="stats">
             <div class="stat-item">
                 <div class="stat-label">Total Actual Savings</div>
-                <div class="stat-value">₹<span id="totalSavings">0.00</span></div>
+                <div class="stat-value">₹<span id="totalSavings">0.00</span> (<span id="savingsPercentage">0.0</span>%)</div>
             </div>
             <div class="stat-item">
                 <div class="stat-label">Expected Savings Since July 2019</div>
@@ -540,7 +540,12 @@
                     categoryBreakdown.appendChild(div);
                 });
 
-            document.getElementById('totalSavings').textContent = savingsHistory.reduce((sum, entry) => sum + entry.amount, 0).toFixed(2);
+            const actualTotal = savingsHistory.reduce((sum, entry) => sum + entry.amount, 0);
+            const expectedTotal = parseFloat(document.getElementById('expectedSavings').textContent);
+            const percentage = expectedTotal !== 0 ? ((actualTotal / expectedTotal) * 100).toFixed(1) : '0.0';
+            
+            document.getElementById('totalSavings').textContent = actualTotal.toFixed(2);
+            document.getElementById('savingsPercentage').textContent = percentage;
             calculateExpectedSavings();
         }
 

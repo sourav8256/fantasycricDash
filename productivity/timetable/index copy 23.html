@@ -457,12 +457,7 @@
                     label.className = 'time-marker-label';
                     const hours = Math.floor(minutes / 60);
                     const mins = minutes % 60;
-                    const time = new Date(`2000-01-01T${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`);
-                    label.textContent = time.toLocaleTimeString([], { 
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true
-                    });
+                    label.textContent = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
                     marker.appendChild(label);
                 }
                 
@@ -563,9 +558,8 @@
 
         function formatTime(time) {
             return new Date(`2000-01-01T${time}`).toLocaleTimeString([], { 
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
+                hour: '2-digit', 
+                minute: '2-digit'
             });
         }
 

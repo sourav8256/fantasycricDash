@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Timetable</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .timeline {
+            position: relative;
+            margin: 40px 0;
+            padding-left: 50px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #4CAF50;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 10px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -54px;
+            top: 50%;
+            width: 10px;
+            height: 10px;
+            background: #4CAF50;
+            border-radius: 50%;
+            transform: translateY(-50%);
+        }
+
+        .timeline-time {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+
+        .timeline-content {
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        .current-time-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #ff4444;
+            z-index: 1;
+        }
+
+        .current-time-label {
+            position: absolute;
+            right: 100%;
+            margin-right: 10px;
+            color: #ff4444;
+            font-weight: bold;
+            transform: translateY(-50%);
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Daily Timetable</h1>
+        <div class="timeline" id="timelineContainer"></div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'daily-timetable';
+        let activities = [
+            {
+                startTime: '06:00',
+                endTime: '06:30',
+                activity: 'Wake up and Brush'
+            },
+            {
+                startTime: '06:30',
+                endTime: '07:00',
+                activity: 'Morning Tea & Planning'
+            },
+            {
+                startTime: '07:00',
+                endTime: '07:30',
+                activity: 'Bath & Get Ready'
+            },
+            {
+                startTime: '07:30',
+                endTime: '08:00',
+                activity: 'Breakfast'
+            },
+            {
+                startTime: '08:00',
+                endTime: '13:00',
+                activity: 'Work Session 1'
+            },
+            {
+                startTime: '13:00',
+                endTime: '14:00',
+                activity: 'Lunch Break'
+            },
+            {
+                startTime: '14:00',
+                endTime: '18:00',
+                activity: 'Work Session 2'
+            },
+            {
+                startTime: '18:00',
+                endTime: '19:00',
+                activity: 'Exercise/Walk'
+            },
+            {
+                startTime: '19:00',
+                endTime: '20:00',
+                activity: 'Dinner'
+            },
+            {
+                startTime: '20:00',
+                endTime: '22:00',
+                activity: 'Free Time/Reading'
+            },
+            {
+                startTime: '22:00',
+                endTime: '22:30',
+                activity: 'Prepare for Bed'
+            }
+        ];
+
+        function getMinutesBetween(start, end) {
+            const startDate = new Date(`2000-01-01T${start}`);
+            const endDate = new Date(`2000-01-01T${end}`);
+            return (endDate - startDate) / (1000 * 60);
+        }
+
+        function getMinutesSinceMidnight(time) {
+            const [hours, minutes] = time.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        function getCurrentTimePosition() {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            let totalHeight = 0;
+            let position = 0;
+
+            for (const item of activities) {
+                const startMinutes = getMinutesSinceMidnight(item.startTime);
+                const endMinutes = getMinutesSinceMidnight(item.endTime);
+                const duration = getMinutesBetween(item.startTime, item.endTime);
+                const height = Math.max(50, duration);
+
+                if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+                    const progress = (currentMinutes - startMinutes) / (endMinutes - startMinutes);
+                    position = totalHeight + (height * progress);
+                    break;
+                }
+                totalHeight += height + 10; // Add margin-bottom
+            }
+            return position;
+        }
+
+        function renderTimeline() {
+            const timelineContainer = document.getElementById('timelineContainer');
+            timelineContainer.innerHTML = '';
+
+            activities.forEach((item) => {
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item';
+                const duration = getMinutesBetween(item.startTime, item.endTime);
+                const height = Math.max(50, duration);
+                timelineItem.style.height = `${height}px`;
+                timelineItem.innerHTML = `
+                    <div class="timeline-time">${formatTime(item.startTime)} - ${formatTime(item.endTime)}</div>
+                    <div class="timeline-content">${item.activity}</div>
+                `;
+                timelineContainer.appendChild(timelineItem);
+            });
+
+            // Add current time line
+            const currentTimeLine = document.createElement('div');
+            currentTimeLine.className = 'current-time-line';
+            const position = getCurrentTimePosition();
+            currentTimeLine.style.top = `${position}px`;
+            
+            const timeLabel = document.createElement('div');
+            timeLabel.className = 'current-time-label';
+            timeLabel.textContent = new Date().toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            currentTimeLine.appendChild(timeLabel);
+            
+            timelineContainer.appendChild(currentTimeLine);
+        }
+
+        function formatTime(time) {
+            return new Date(`2000-01-01T${time}`).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+        }
+
+        // Initial render
+        renderTimeline();
+
+        // Update timeline every minute
+        setInterval(renderTimeline, 60000);
+    </script>
+</body>
+</html>

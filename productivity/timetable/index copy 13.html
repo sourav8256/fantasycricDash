@@ -80,11 +80,6 @@
             cursor: pointer;
             font-size: 16px;
             margin-right: 10px;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #45a049;
         }
 
         .current-time-line {
@@ -126,100 +121,11 @@
             font-size: 12px;
             color: #666;
         }
-
-        #editForm {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #dee2e6;
-            transition: max-height 0.3s ease-out;
-            overflow: hidden;
-        }
-
-        #editForm.collapsed {
-            max-height: 60px;
-        }
-
-        #editForm.expanded {
-            max-height: 500px;
-        }
-
-        #activityTextArea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            resize: vertical;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-        }
-
-        #activityTextArea:focus {
-            outline: none;
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        }
-
-        .form-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            cursor: pointer;
-        }
-
-        .form-title {
-            font-size: 1.2em;
-            color: #495057;
-            margin: 0;
-        }
-
-        .form-instructions {
-            color: #6c757d;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-
-        .form-content {
-            transition: opacity 0.3s ease-out;
-        }
-
-        #editForm.collapsed .form-content {
-            opacity: 0;
-        }
-
-        #editForm.expanded .form-content {
-            opacity: 1;
-        }
-
-        .toggle-icon {
-            font-size: 1.2em;
-            transition: transform 0.3s;
-        }
-
-        #editForm.collapsed .toggle-icon {
-            transform: rotate(180deg);
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Daily Timetable</h1>
-        <div id="editForm" class="expanded">
-            <div class="form-header" onclick="toggleEditForm()">
-                <h2 class="form-title">Edit Schedule</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="form-content">
-                <p class="form-instructions">Enter activities in the format: "Activity: HH:MM - HH:MM" (one per line)</p>
-                <textarea id="activityTextArea" rows="10" placeholder="Example:&#10;Wake up: 06:00 - 06:30&#10;Exercise: 06:30 - 07:00"></textarea>
-                <button id="saveActivitiesButton">💾 Save Activities</button>
-            </div>
-        </div>
         <div class="timeline" id="timelineContainer"></div>
     </div>
 
@@ -241,62 +147,21 @@
         
         let activities = [];
 
-        function toggleEditForm() {
-            const editForm = document.getElementById('editForm');
-            if (editForm.classList.contains('expanded')) {
-                editForm.classList.remove('expanded');
-                editForm.classList.add('collapsed');
-            } else {
-                editForm.classList.remove('collapsed');
-                editForm.classList.add('expanded');
-            }
-        }
-
-        // Load activities from local storage or input file
-        const storedActivities = localStorage.getItem(STORAGE_KEY);
-        if (storedActivities) {
-            activities = JSON.parse(storedActivities);
-            renderTimeline();
-            populateTextArea(); // Populate the text area with current activities
-        } else {
-            fetch('input')
-                .then(response => response.text())
-                .then(text => {
-                    activities = text.trim().split('\n').map(line => {
-                        const [activity, times] = line.split(': ');
-                        const [startTime, endTime] = times.split(' - ');
-                        return {
-                            startTime,
-                            endTime,
-                            activity
-                        };
-                    });
-                    renderTimeline();
-                    populateTextArea(); // Populate the text area with current activities
+        // Load activities from input file
+        fetch('input')
+            .then(response => response.text())
+            .then(text => {
+                activities = text.trim().split('\n').map(line => {
+                    const [activity, times] = line.split(': ');
+                    const [startTime, endTime] = times.split(' - ');
+                    return {
+                        startTime,
+                        endTime,
+                        activity
+                    };
                 });
-        }
-
-        function populateTextArea() {
-            const textArea = document.getElementById('activityTextArea');
-            textArea.value = activities.map(item => `${item.activity}: ${item.startTime} - ${item.endTime}`).join('\n');
-        }
-
-        document.getElementById('saveActivitiesButton').addEventListener('click', () => {
-            const textAreaValue = document.getElementById('activityTextArea').value;
-            activities = textAreaValue.trim().split('\n').map(line => {
-                const [activity, times] = line.split(': ');
-                const [startTime, endTime] = times.split(' - ');
-                return {
-                    startTime,
-                    endTime,
-                    activity
-                };
+                renderTimeline();
             });
-            renderTimeline();
-            
-            // Save activities to local storage
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
-        });
 
         function getMinutesBetween(start, end) {
             const startDate = new Date(`2000-01-01T${start}`);

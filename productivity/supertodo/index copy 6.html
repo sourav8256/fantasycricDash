@@ -123,35 +123,11 @@
             color: white;
             border-color: #4CAF50;
         }
-
-        .button-container {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .utility-btn {
-            padding: 5px 15px;
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .utility-btn:hover {
-            background-color: #5a6268;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Super Todo List</h1>
-        <div class="button-container">
-            <button onclick="exportTodos()" class="utility-btn">Export</button>
-            <input type="file" id="importInput" style="display: none" accept=".json" onchange="importTodos(event)">
-            <button onclick="document.getElementById('importInput').click()" class="utility-btn">Import</button>
-        </div>
         <div class="input-container">
             <input type="text" id="todoInput" class="todo-input" placeholder="Add a new todo item...">
             <select id="category" onchange="handleCategoryChange()">
@@ -399,49 +375,13 @@
                 
                 addTodo(todoInput.value.trim(), category);
                 todoInput.value = '';
-                categorySelect.value = '';
-                document.getElementById('newCategory').value = '';
-                document.getElementById('newCategoryInputs').classList.remove('show');
+                if (categorySelect.value === 'new') {
+                    document.getElementById('newCategory').value = '';
+                    categorySelect.value = category;
+                    handleCategoryChange();
+                }
             }
         });
-
-        function exportTodos() {
-            const data = {
-                todos: todos,
-                activeFilters: activeFilters
-            };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'todos.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function importTodos(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        todos = data.todos || [];
-                        activeFilters = data.activeFilters || ['all'];
-                        saveTodos();
-                        localStorage.setItem('activeFilters', JSON.stringify(activeFilters));
-                        initializeCategories();
-                        renderTodos();
-                        event.target.value = ''; // Reset file input
-                    } catch (error) {
-                        alert('Invalid JSON file');
-                    }
-                };
-                reader.readAsText(file);
-            }
-        }
 
         // Initial render
         initializeCategories();

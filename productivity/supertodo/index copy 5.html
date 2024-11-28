@@ -121,11 +121,35 @@
             color: white;
             border-color: #4CAF50;
         }
+
+        .action-buttons {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 5px 15px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background-color: #5a6268;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Super Todo List</h1>
+        <div class="action-buttons">
+            <button onclick="exportTodos()" class="action-btn">Export</button>
+            <input type="file" id="importInput" style="display: none" accept=".json" onchange="importTodos(event)">
+            <button onclick="document.getElementById('importInput').click()" class="action-btn">Import</button>
+        </div>
         <div class="input-container">
             <input type="text" id="todoInput" class="todo-input" placeholder="Add a new todo item...">
             <select id="category" onchange="handleCategoryChange()">
@@ -168,7 +192,7 @@
             });
 
             // Update category filters
-            categoryFilters.innerHTML = '<span class="category-filter active" onclick="filterTodos(\'all\')" data-category="all">All</span>';
+            categoryFilters.innerHTML = '<span class="category-filter active" data-category="all">All</span>';
             existingCategories.forEach(cat => {
                 const filterSpan = document.createElement('span');
                 filterSpan.className = 'category-filter';
@@ -181,16 +205,10 @@
 
         function filterTodos(category) {
             const index = activeFilters.indexOf(category);
-            console.log(category);
+            
             if (category === 'all') {
-                // Toggle 'all' filter
-                if (activeFilters.includes('all')) {
-                    // If 'all' is already active and clicked again, remove it
-                    activeFilters = [];
-                } else {
-                    // If 'all' is clicked and not active, clear other filters and set to 'all'
-                    activeFilters = ['all'];
-                }
+                // If 'all' is clicked, clear other filters
+                activeFilters = ['all'];
             } else {
                 // Remove 'all' when selecting specific categories
                 const allIndex = activeFilters.indexOf('all');
@@ -203,12 +221,11 @@
                     activeFilters.push(category);
                 } else {
                     activeFilters.splice(index, 1);
+                    // If no filters selected, default to 'all'
+                    if (activeFilters.length === 0) {
+                        activeFilters = ['all'];
+                    }
                 }
-            }
-
-            // If no filters are selected, default to 'all'
-            if (activeFilters.length === 0) {
-                activeFilters = ['all'];
             }
 
             // Update filter UI
@@ -371,6 +388,44 @@
                 }
             }
         });
+
+        function exportTodos() {
+            const dataStr = JSON.stringify(todos, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'todos.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function importTodos(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedTodos = JSON.parse(e.target.result);
+                        if (Array.isArray(importedTodos)) {
+                            todos = importedTodos;
+                            saveTodos();
+                            initializeCategories();
+                            renderTodos();
+                            alert('Todos imported successfully!');
+                        } else {
+                            alert('Invalid todo list format');
+                        }
+                    } catch (error) {
+                        alert('Error importing todos: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+            event.target.value = ''; // Reset file input
+        }
 
         // Initial render
         initializeCategories();

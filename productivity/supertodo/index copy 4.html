@@ -168,7 +168,7 @@
             });
 
             // Update category filters
-            categoryFilters.innerHTML = '<span class="category-filter active" onclick="filterTodos(\'all\')" data-category="all">All</span>';
+            categoryFilters.innerHTML = '<span class="category-filter active" data-category="all">All</span>';
             existingCategories.forEach(cat => {
                 const filterSpan = document.createElement('span');
                 filterSpan.className = 'category-filter';
@@ -181,16 +181,10 @@
 
         function filterTodos(category) {
             const index = activeFilters.indexOf(category);
-            console.log(category);
+            
             if (category === 'all') {
-                // Toggle 'all' filter
-                if (activeFilters.includes('all')) {
-                    // If 'all' is already active and clicked again, remove it
-                    activeFilters = [];
-                } else {
-                    // If 'all' is clicked and not active, clear other filters and set to 'all'
-                    activeFilters = ['all'];
-                }
+                // If 'all' is clicked, clear other filters
+                activeFilters = ['all'];
             } else {
                 // Remove 'all' when selecting specific categories
                 const allIndex = activeFilters.indexOf('all');
@@ -203,12 +197,11 @@
                     activeFilters.push(category);
                 } else {
                     activeFilters.splice(index, 1);
+                    // If no filters selected, default to 'all'
+                    if (activeFilters.length === 0) {
+                        activeFilters = ['all'];
+                    }
                 }
-            }
-
-            // If no filters are selected, default to 'all'
-            if (activeFilters.length === 0) {
-                activeFilters = ['all'];
             }
 
             // Update filter UI

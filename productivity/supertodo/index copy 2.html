@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Todo List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .todo-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .create-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .create-btn:hover {
+            background-color: #45a049;
+        }
+
+        .todo-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            cursor: move;
+            user-select: none;
+        }
+
+        .todo-item.dragging {
+            opacity: 0.5;
+            background-color: #e9ecef;
+        }
+
+        .todo-item .delete-btn {
+            margin-left: auto;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .todo-item .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        select, input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .category-inputs {
+            display: none;
+        }
+
+        .category-inputs.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Super Todo List</h1>
+        <div class="input-container">
+            <input type="text" id="todoInput" class="todo-input" placeholder="Add a new todo item...">
+            <select id="category" onchange="handleCategoryChange()">
+                <option value="">Select Category</option>
+                <option value="new">+ Add New Category</option>
+            </select>
+            <div id="newCategoryInputs" class="category-inputs">
+                <input type="text" id="newCategory" placeholder="Enter new category name">
+            </div>
+            <button id="createTodo" class="create-btn">Create</button>
+        </div>
+        <ul id="todoList" class="todo-list"></ul>
+    </div>
+
+    <script>
+        const todoInput = document.getElementById('todoInput');
+        const todoList = document.getElementById('todoList');
+        const createBtn = document.getElementById('createTodo');
+        const categorySelect = document.getElementById('category');
+        let todos = JSON.parse(localStorage.getItem('todos')) || [];
+        let draggedItem = null;
+
+        function getExistingCategories() {
+            return [...new Set(todos.map(todo => todo.category).filter(Boolean))];
+        }
+
+        function initializeCategories() {
+            const existingCategories = getExistingCategories();
+            categorySelect.innerHTML = '<option value="">Select Category</option><option value="new">+ Add New Category</option>';
+            existingCategories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.insertBefore(option, categorySelect.lastElementChild);
+            });
+        }
+
+        function handleCategoryChange() {
+            const newCategoryInputs = document.getElementById('newCategoryInputs');
+            if (categorySelect.value === 'new') {
+                newCategoryInputs.classList.add('show');
+            } else {
+                newCategoryInputs.classList.remove('show');
+            }
+        }
+
+        function saveTodos() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+
+        function renderTodos() {
+            todoList.innerHTML = '';
+            todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.className = 'todo-item';
+                li.draggable = true;
+
+                const span = document.createElement('span');
+                span.textContent = `${todo.category ? `[${todo.category}] ` : ''}${todo.text}`;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = 'Delete';
+                
+                let clickCount = 0;
+                let clickTimer;
+                
+                deleteBtn.addEventListener('click', () => {
+                    clickCount++;
+                    if (clickCount === 1) {
+                        clickTimer = setTimeout(() => {
+                            clickCount = 0;
+                        }, 300);
+                    } else if (clickCount === 2) {
+                        clearTimeout(clickTimer);
+                        clickCount = 0;
+                        deleteTodo(index);
+                    }
+                });
+
+                li.addEventListener('dragstart', (e) => {
+                    draggedItem = li;
+                    setTimeout(() => li.classList.add('dragging'), 0);
+                });
+
+                li.addEventListener('dragend', () => {
+                    draggedItem = null;
+                    li.classList.remove('dragging');
+                });
+
+                li.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(todoList, e.clientY);
+                    if (afterElement == null) {
+                        todoList.appendChild(draggedItem);
+                    } else {
+                        todoList.insertBefore(draggedItem, afterElement);
+                    }
+                    updateTodosOrder();
+                });
+
+                li.appendChild(span);
+                li.appendChild(deleteBtn);
+                todoList.appendChild(li);
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.todo-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function updateTodosOrder() {
+            const newTodos = [];
+            todoList.querySelectorAll('.todo-item').forEach((item) => {
+                const text = item.querySelector('span').textContent;
+                const categoryMatch = text.match(/^\[(.*?)\]/);
+                const category = categoryMatch ? categoryMatch[1] : '';
+                const todoText = categoryMatch ? text.slice(categoryMatch[0].length).trim() : text;
+                newTodos.push({ text: todoText, category });
+            });
+            todos = newTodos;
+            saveTodos();
+        }
+
+        function addTodo(text, category) {
+            todos.push({ text, category });
+            saveTodos();
+            renderTodos();
+            initializeCategories();
+        }
+
+        function deleteTodo(index) {
+            todos.splice(index, 1);
+            saveTodos();
+            renderTodos();
+            initializeCategories();
+        }
+
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && todoInput.value.trim()) {
+                const category = categorySelect.value === 'new' ? 
+                    document.getElementById('newCategory').value.trim() : 
+                    categorySelect.value;
+                
+                if (category === 'new' || !category) return;
+                
+                addTodo(todoInput.value.trim(), category);
+                todoInput.value = '';
+                if (categorySelect.value === 'new') {
+                    document.getElementById('newCategory').value = '';
+                    categorySelect.value = category;
+                    handleCategoryChange();
+                }
+            }
+        });
+
+        createBtn.addEventListener('click', () => {
+            if (todoInput.value.trim()) {
+                const category = categorySelect.value === 'new' ? 
+                    document.getElementById('newCategory').value.trim() : 
+                    categorySelect.value;
+                
+                if (category === 'new' || !category) return;
+                
+                addTodo(todoInput.value.trim(), category);
+                todoInput.value = '';
+                if (categorySelect.value === 'new') {
+                    document.getElementById('newCategory').value = '';
+                    categorySelect.value = category;
+                    handleCategoryChange();
+                }
+            }
+        });
+
+        // Initial render
+        initializeCategories();
+        renderTodos();
+    </script>
+</body>
+</html>

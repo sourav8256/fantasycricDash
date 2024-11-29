@@ -7,6 +7,8 @@ const mindMap = {
     viewOffset: { x: 0, y: 0 },
     lastTouch: { x: 0, y: 0 },
     selectedNode: null,
+    isPanning: false,
+    panStart: { x: 0, y: 0 },
 
     addNode() {
         const container = document.getElementById('mindmap-container');
@@ -223,6 +225,7 @@ const mindMap = {
             const rect = document.getElementById('mindmap-container').getBoundingClientRect();
             node.style.left = (rect.width / 2 - 50) + 'px';
             node.style.top = (rect.height / 2 - 25) + 'px';
+            node.style.transform = 'translate(0px, 0px)';
         });
         this.updateConnections();
     },
@@ -242,8 +245,19 @@ const mindMap = {
         this.addNode();
         window.addEventListener('resize', () => this.updateConnections());
         
+        // Add panning event listeners
+        const container = document.getElementById('mindmap-container');
+        container.addEventListener('mousedown', (e) => this.startPanning(e));
+        container.addEventListener('mousemove', (e) => this.pan(e));
+        container.addEventListener('mouseup', () => this.stopPanning());
+        
+        // Add touch events for panning
+        container.addEventListener('touchstart', (e) => this.startTouchPanning(e));
+        container.addEventListener('touchmove', (e) => this.touchPan(e));
+        container.addEventListener('touchend', () => this.stopPanning());
+        
         // Add click handler on container to deselect when clicking empty space
-        document.getElementById('mindmap-container').addEventListener('click', (e) => {
+        container.addEventListener('click', (e) => {
             if (e.target.id === 'mindmap-container') {
                 if (this.selectedNode) {
                     this.selectedNode.classList.remove('selected');
@@ -251,6 +265,59 @@ const mindMap = {
                 }
             }
         });
+    },
+
+    startPanning(e) {
+        // Only start panning if clicking directly on the container
+        if (e.target.id === 'mindmap-container') {
+            this.isPanning = true;
+            this.panStart = { x: e.clientX - this.viewOffset.x, y: e.clientY - this.viewOffset.y };
+        }
+    },
+
+    pan(e) {
+        if (!this.isPanning) return;
+        
+        this.viewOffset.x = e.clientX - this.panStart.x;
+        this.viewOffset.y = e.clientY - this.panStart.y;
+        
+        // Update all nodes positions
+        this.nodes.forEach(node => {
+            const left = parseInt(node.style.left) || 0;
+            const top = parseInt(node.style.top) || 0;
+            node.style.transform = `translate(${this.viewOffset.x}px, ${this.viewOffset.y}px)`;
+        });
+        
+        this.updateConnections();
+    },
+
+    startTouchPanning(e) {
+        if (e.target.id === 'mindmap-container') {
+            this.isPanning = true;
+            const touch = e.touches[0];
+            this.panStart = { x: touch.clientX - this.viewOffset.x, y: touch.clientY - this.viewOffset.y };
+        }
+    },
+
+    touchPan(e) {
+        if (!this.isPanning) return;
+        const touch = e.touches[0];
+        
+        this.viewOffset.x = touch.clientX - this.panStart.x;
+        this.viewOffset.y = touch.clientY - this.panStart.y;
+        
+        // Update all nodes positions
+        this.nodes.forEach(node => {
+            const left = parseInt(node.style.left) || 0;
+            const top = parseInt(node.style.top) || 0;
+            node.style.transform = `translate(${this.viewOffset.x}px, ${this.viewOffset.y}px)`;
+        });
+        
+        this.updateConnections();
+    },
+
+    stopPanning() {
+        this.isPanning = false;
     }
 };
 

@@ -77,19 +77,6 @@ function updateTaskVisuals() {
         taskGradient.slice(0, -2) // remove last comma and space
     );
 
-    // Update task labels
-    const labelsContainer = document.querySelector('.task-labels');
-    labelsContainer.innerHTML = '';
-    
-    tasks.forEach((task, index) => {
-        const angle = (tasks.slice(0, index).reduce((sum, t) => sum + t.duration, 0) + task.duration/2) / totalTime * 360;
-        const label = document.createElement('div');
-        label.className = 'task-label';
-        label.textContent = `${task.name} (${formatTimeString(task.duration)})`;
-        label.style.transform = `rotate(${angle}deg) translateX(60px)`;
-        labelsContainer.appendChild(label);
-    });
-
     // Update textarea with current tasks
     document.getElementById('task-list').value = tasks.map(task => 
         `${task.name} - ${formatTimeString(task.duration)}`

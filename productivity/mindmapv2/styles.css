@@ -12,6 +12,11 @@ body {
     background: #f0f0f0;
     position: relative;
     overflow: hidden;
+    cursor: grab;
+}
+
+#mindmap-container:active {
+    cursor: grabbing;
 }
 
 .node {
@@ -25,6 +30,8 @@ body {
     touch-action: none;
     max-width: 200px;
     word-wrap: break-word;
+    transform: translate(0, 0);
+    will-change: transform;
 }
 
 .node input {
@@ -45,6 +52,7 @@ body {
     position: absolute;
     pointer-events: none;
     z-index: -1;
+    will-change: transform;
 }
 
 #controls {

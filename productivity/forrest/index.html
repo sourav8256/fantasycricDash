@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forest Timer</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f8f0;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .timer-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .timer-circle {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .timer-circle circle {
+            stroke-dasharray: 565.48;
+            stroke-dashoffset: 0;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        #timer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2em;
+            margin: 0;
+        }
+
+        #start-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #start-btn:hover {
+            background-color: #45a049;
+        }
+
+        .stats-container {
+            margin-top: 40px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 8px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .bar {
+            flex: 1;
+            background: #4CAF50;
+            min-width: 30px;
+            transition: height 0.3s;
+            position: relative;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            height: 50px;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-container">
+        <svg class="timer-circle" width="200" height="200">
+            <circle cx="100" cy="100" r="90" fill="none" stroke="#ddd" stroke-width="10"/>
+            <circle cx="100" cy="100" r="90" fill="none" stroke="#4CAF50" stroke-width="10"/>
+        </svg>
+        <div id="timer">0:05</div>
+    </div>
+    <button id="start-btn">Start Growing</button>
+
+    <div class="stats-container">
+        <div class="bar-chart" id="bar-chart"></div>
+    </div>
+
+    <script>
+        const totalTime = 3600; // Changed to 5 seconds
+        let timeLeft = parseInt(localStorage.getItem('timeLeft')) || totalTime;
+        let timerInterval;
+        const timerDisplay = document.getElementById('timer');
+        const startBtn = document.getElementById('start-btn');
+        const timerCircle = document.querySelector('.timer-circle circle:nth-child(2)');
+        const circumference = 2 * Math.PI * 90;
+
+        // Initialize stats tracking
+        let completedTimers = JSON.parse(localStorage.getItem('completedTimers')) || {};
+
+        function updateBarChart() {
+            const barChart = document.getElementById('bar-chart');
+            barChart.innerHTML = '';
+            
+            const today = new Date();
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const count = completedTimers[dateStr] || 0;
+                
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                const maxHeight = 180; // Maximum height for bars
+                const height = count > 0 ? (count * 20) : 1; // 20px per completion, minimum 1px
+                bar.style.height = `${Math.min(height, maxHeight)}px`;
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.textContent = dateStr.split('-').slice(1).join('/'); // Show as MM/DD
+                
+                const value = document.createElement('div');
+                value.className = 'bar-value';
+                value.textContent = count;
+                
+                bar.appendChild(label);
+                bar.appendChild(value);
+                barChart.appendChild(bar);
+            }
+        }
+
+        // Initialize timer display on page load
+        const isRunning = localStorage.getItem('isRunning') === 'true';
+        if (isRunning) {
+            startBtn.textContent = 'Reset';
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+        updateTimer();
+        updateBarChart();
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timeLeft = totalTime;
+            timerCircle.style.strokeDashoffset = 0;
+            startBtn.textContent = 'Start Growing';
+            localStorage.setItem('isRunning', 'false');
+            localStorage.setItem('timeLeft', timeLeft);
+            updateTimer();
+        }
+
+        function recordCompletion() {
+            const today = new Date().toISOString().split('T')[0];
+            completedTimers[today] = (completedTimers[today] || 0) + 1;
+            localStorage.setItem('completedTimers', JSON.stringify(completedTimers));
+            updateBarChart();
+        }
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            const progress = timeLeft / totalTime;
+            const dashoffset = circumference * (1 - progress);
+            timerCircle.style.strokeDasharray = circumference;
+            timerCircle.style.strokeDashoffset = dashoffset;
+
+            if (timeLeft === 0) {
+                clearInterval(timerInterval);
+                recordCompletion();
+                resetTimer();
+                return;
+            }
+            timeLeft--;
+            localStorage.setItem('timeLeft', timeLeft);
+        }
+
+        startBtn.addEventListener('click', () => {
+            if (timerInterval) {
+                resetTimer();
+            } else {
+                timerInterval = setInterval(updateTimer, 1000);
+                startBtn.textContent = 'Reset';
+                localStorage.setItem('isRunning', 'true');
+                localStorage.setItem('timeLeft', timeLeft);
+                updateTimer();
+            }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && timerInterval) {
+                resetTimer();
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('timeLeft', timeLeft);
+            localStorage.setItem('isRunning', timerInterval !== null);
+        });
+    </script>
+</body>
+</html>

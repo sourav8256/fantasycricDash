@@ -142,6 +142,28 @@
         .utility-btn:hover {
             background-color: #5a6268;
         }
+
+        .todo-item .expand-btn {
+            margin-right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 0 5px;
+        }
+
+        .subtasks {
+            margin-left: 20px;
+            display: none;
+        }
+
+        .subtasks.show {
+            display: block;
+        }
+
+        .todo-item.has-subtasks {
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
@@ -277,7 +299,22 @@
             filteredTodos.forEach((todo, index) => {
                 const li = document.createElement('li');
                 li.className = 'todo-item';
+                if (todo.subtasks && todo.subtasks.length > 0) {
+                    li.classList.add('has-subtasks');
+                }
                 li.draggable = true;
+
+                const expandBtn = document.createElement('button');
+                expandBtn.className = 'expand-btn';
+                expandBtn.textContent = todo.subtasks?.length ? '▼' : '▶';
+                expandBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const subtasksList = li.querySelector('.subtasks');
+                    if (subtasksList) {
+                        subtasksList.classList.toggle('show');
+                        expandBtn.textContent = subtasksList.classList.contains('show') ? '▼' : '▶';
+                    }
+                };
 
                 const span = document.createElement('span');
                 span.textContent = `${todo.category ? `[${todo.category}] ` : ''}${todo.text}`;
@@ -302,6 +339,12 @@
                     }
                 });
 
+                // Add touch event handlers
+                li.addEventListener('touchstart', handleTouchStart);
+                li.addEventListener('touchmove', handleTouchMove);
+                li.addEventListener('touchend', handleTouchEnd);
+
+                // Existing mouse event handlers
                 li.addEventListener('dragstart', (e) => {
                     draggedItem = li;
                     setTimeout(() => li.classList.add('dragging'), 0);
@@ -323,6 +366,19 @@
                     updateTodosOrder();
                 });
 
+                // Add subtasks container
+                if (todo.subtasks?.length) {
+                    const subtasksList = document.createElement('ul');
+                    subtasksList.className = 'subtasks';
+                    todo.subtasks.forEach(subtask => {
+                        const subtaskLi = document.createElement('li');
+                        subtaskLi.textContent = subtask;
+                        subtasksList.appendChild(subtaskLi);
+                    });
+                    li.appendChild(subtasksList);
+                }
+
+                li.insertBefore(expandBtn, li.firstChild);
                 li.appendChild(span);
                 li.appendChild(deleteBtn);
                 todoList.appendChild(li);
@@ -358,7 +414,11 @@
         }
 
         function addTodo(text, category) {
-            todos.push({ text, category });
+            todos.push({ 
+                text, 
+                category,
+                subtasks: [] // Initialize empty subtasks array
+            });
             saveTodos();
             renderTodos();
             initializeCategories();
@@ -446,6 +506,40 @@
         // Initial render
         initializeCategories();
         renderTodos();
+
+        // Add these new functions
+        let touchY = null;
+        let touchItem = null;
+
+        function handleTouchStart(e) {
+            touchItem = e.target.closest('.todo-item');
+            touchY = e.touches[0].clientY;
+            touchItem.classList.add('dragging');
+        }
+
+        function handleTouchMove(e) {
+            if (!touchItem) return;
+            e.preventDefault();
+
+            const currentY = e.touches[0].clientY;
+            const afterElement = getDragAfterElement(todoList, currentY);
+            
+            if (afterElement == null) {
+                todoList.appendChild(touchItem);
+            } else {
+                todoList.insertBefore(touchItem, afterElement);
+            }
+            
+            touchY = currentY;
+        }
+
+        function handleTouchEnd() {
+            if (!touchItem) return;
+            touchItem.classList.remove('dragging');
+            updateTodosOrder();
+            touchItem = null;
+            touchY = null;
+        }
     </script>
 </body>
 </html>

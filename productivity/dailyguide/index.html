@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .task-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .task-header:hover {
+            background-color: #e9ecef;
+        }
+
+        .subtasks {
+            padding: 10px;
+            margin-top: 10px;
+            display: block;
+        }
+
+        .subtask {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            padding: 5px;
+        }
+
+        .subtask input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .arrow {
+            transition: transform 0.3s ease;
+            transform: rotate(90deg);
+        }
+
+        .arrow.active {
+            transform: rotate(90deg);
+        }
+
+        .category-filters {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .category-filter {
+            margin-right: 10px;
+            padding: 5px 10px;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .category-filter.active {
+            background: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="category-filters" id="categoryFilters">
+        <!-- Category filters will be populated here -->
+    </div>
+    <div id="tasks">
+        <!-- Tasks will be populated here -->
+    </div>
+
+    <script>
+        const tasks = [
+            {
+                name: "Bath",
+                category: "Daily",
+                subtasks: [
+                    "Get clean towel and clothes",
+                    "Set water temperature",
+                    "Wash hair",
+                    "Wash body", 
+                    "Rinse thoroughly",
+                    "Dry off"
+                ]
+            },
+            {
+                name: "Brush teeth",
+                category: "Daily",
+                subtasks: [
+                    "Wet toothbrush",
+                    "Apply toothpaste",
+                    "Brush for 2 minutes",
+                    "Rinse mouth",
+                    "Clean toothbrush"
+                ]
+            },
+            {
+                name: "Take vitamins",
+                category: "Daily",
+                subtasks: [
+                    "Get water",
+                    "Take daily multivitamin",
+                    "Take vitamin D",
+                    "Take omega-3"
+                ]
+            },
+            {
+                name: "Exercise",
+                category: "Daily",
+                subtasks: [
+                    "Warm up stretches",
+                    "Cardio (20 mins)",
+                    "Strength training",
+                    "Cool down stretches"
+                ]
+            },
+            {
+                name: "Meditate",
+                category: "Daily",
+                subtasks: [
+                    "Find quiet space",
+                    "Set timer",
+                    "Focus on breathing",
+                    "Clear mind"
+                ]
+            },
+            {
+                name: "Check Emails",
+                category: "Work",
+                subtasks: [
+                    "Review inbox",
+                    "Flag important messages",
+                    "Respond to urgent emails",
+                    "Archive processed emails"
+                ]
+            },
+            {
+                name: "Team Meeting",
+                category: "Work",
+                subtasks: [
+                    "Review agenda",
+                    "Prepare updates",
+                    "Take notes",
+                    "Follow up on action items"
+                ]
+            },
+            {
+                name: "Project Planning",
+                category: "Work",
+                subtasks: [
+                    "Review project status",
+                    "Update timeline",
+                    "Identify blockers",
+                    "Delegate tasks",
+                    "Document decisions"
+                ]
+            }
+        ];
+
+        let activeCategories = new Set(JSON.parse(localStorage.getItem('activeCategories')) || []);
+        let completedSubtasks = new Set(JSON.parse(localStorage.getItem('completedSubtasks')) || []);
+
+        function createCategoryFilters() {
+            const filtersContainer = document.getElementById('categoryFilters');
+            const categories = new Set(tasks.map(task => task.category));
+            
+            // Add "All" filter
+            const allFilter = document.createElement('button');
+            allFilter.className = 'category-filter';
+            if (activeCategories.size === categories.size) {
+                allFilter.classList.add('active');
+            }
+            allFilter.textContent = 'All';
+            allFilter.onclick = () => toggleFilter('All');
+            filtersContainer.appendChild(allFilter);
+
+            // Add individual category filters
+            categories.forEach(category => {
+                const filterButton = document.createElement('button');
+                filterButton.className = 'category-filter';
+                if (activeCategories.has(category)) {
+                    filterButton.classList.add('active');
+                }
+                filterButton.textContent = category;
+                filterButton.onclick = () => toggleFilter(category);
+                filtersContainer.appendChild(filterButton);
+            });
+
+            // Initialize activeCategories if empty
+            if (activeCategories.size === 0) {
+                activeCategories = new Set(categories);
+                localStorage.setItem('activeCategories', JSON.stringify([...activeCategories]));
+            }
+        }
+
+        function toggleFilter(category) {
+            const filters = document.querySelectorAll('.category-filter');
+            
+            if (category === 'All') {
+                // Toggle all categories
+                const allFilter = document.querySelector('.category-filter');
+                const isActive = allFilter.classList.contains('active');
+                
+                filters.forEach(filter => {
+                    filter.classList.toggle('active', !isActive);
+                });
+                
+                if (!isActive) {
+                    activeCategories = new Set(tasks.map(task => task.category));
+                } else {
+                    activeCategories.clear();
+                }
+            } else {
+                // Toggle individual category
+                const filter = Array.from(filters).find(f => f.textContent === category);
+                filter.classList.toggle('active');
+                
+                if (activeCategories.has(category)) {
+                    activeCategories.delete(category);
+                } else {
+                    activeCategories.add(category);
+                }
+                
+                // Update "All" filter
+                const allFilter = document.querySelector('.category-filter');
+                allFilter.classList.toggle('active', activeCategories.size === tasks.map(task => task.category).length);
+            }
+            
+            localStorage.setItem('activeCategories', JSON.stringify([...activeCategories]));
+            createTaskElements();
+        }
+
+        function createTaskElements() {
+            const tasksContainer = document.getElementById('tasks');
+            tasksContainer.innerHTML = ''; // Clear existing content
+            
+            tasks.forEach(task => {
+                if (activeCategories.has(task.category)) {
+                    const taskContainer = document.createElement('div');
+                    taskContainer.className = 'task-container';
+
+                    const taskHeader = document.createElement('div');
+                    taskHeader.className = 'task-header';
+                    taskHeader.innerHTML = `
+                        <span>${task.name}</span>
+                        <span class="arrow">▶</span>
+                    `;
+
+                    const subtasksDiv = document.createElement('div');
+                    subtasksDiv.className = 'subtasks';
+
+                    task.subtasks.forEach(subtask => {
+                        const subtaskElement = document.createElement('div');
+                        subtaskElement.className = 'subtask';
+                        const subtaskId = `${task.name}-${subtask}`;
+                        subtaskElement.innerHTML = `
+                            <input type="checkbox" ${completedSubtasks.has(subtaskId) ? 'checked' : ''}>
+                            <span>${subtask}</span>
+                        `;
+                        
+                        const checkbox = subtaskElement.querySelector('input[type="checkbox"]');
+                        checkbox.addEventListener('change', () => {
+                            if (checkbox.checked) {
+                                completedSubtasks.add(subtaskId);
+                            } else {
+                                completedSubtasks.delete(subtaskId);
+                            }
+                            localStorage.setItem('completedSubtasks', JSON.stringify([...completedSubtasks]));
+                        });
+                        
+                        subtasksDiv.appendChild(subtaskElement);
+                    });
+
+                    taskContainer.appendChild(taskHeader);
+                    taskContainer.appendChild(subtasksDiv);
+                    tasksContainer.appendChild(taskContainer);
+                }
+            });
+        }
+
+        createCategoryFilters();
+        createTaskElements();
+    </script>
+</body>
+</html>

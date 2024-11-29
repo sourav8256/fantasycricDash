@@ -1,0 +1,61 @@
+{
+    "todos": [
+      {
+        "text": "Bath",
+        "category": "Daily",
+        "subtasks": [
+          {
+            "text": "Get clean towel and clothes",
+            "completed": false
+          },
+          {
+            "text": "Set water temperature",
+            "completed": false
+          },
+          {
+            "text": "Wash hair",
+            "completed": false
+          },
+          {
+            "text": "Wash body",
+            "completed": false
+          },
+          {
+            "text": "Rinse thoroughly",
+            "completed": false
+          },
+          {
+            "text": "Dry off",
+            "completed": false
+          }
+        ]
+      },
+      {
+        "text": "Make bed",
+        "category": "Daily"
+      },
+      {
+        "text": "Brush teeth",
+        "category": "Daily"
+      },
+      {
+        "text": "Take vitamins",
+        "category": "Daily"
+      },
+      {
+        "text": "Exercise",
+        "category": "Daily"
+      },
+      {
+        "text": "Meditate",
+        "category": "Daily"
+      },
+      {
+        "text": "Journal",
+        "category": "Daily"
+      }
+    ],
+    "activeFilters": [
+      "all"
+    ]
+  }

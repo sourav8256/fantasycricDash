@@ -1,0 +1,187 @@
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background: #f0f0f0;
+    gap: 20px;
+}
+
+.clock {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: white;
+    border: 10px solid #333;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.clock::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: conic-gradient(from 0deg, var(--task-colors));
+    top: 0;
+    left: 0;
+}
+
+.hand {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform-origin: bottom;
+    background: #333;
+    border-radius: 4px;
+}
+
+.second-hand {
+    width: 4px;
+    height: 40%;
+    margin-left: -2px;
+    background: #ff0000;
+}
+
+.center-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #333;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.time-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    font-family: Arial, sans-serif;
+    z-index: 1;
+}
+
+.time-input {
+    padding: 8px;
+    font-size: 1rem;
+    border: 2px solid #333;
+    border-radius: 4px;
+    width: 100px;
+    text-align: center;
+    margin: 5px;
+}
+
+.input-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.input-label {
+    font-family: Arial, sans-serif;
+    font-size: 1rem;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.control-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: 2px solid #333;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.control-button:hover {
+    background: #f0f0f0;
+}
+
+.task-editor {
+    width: 300px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#task-list {
+    width: 100%;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.task-labels {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.task-label {
+    position: absolute;
+    left: 50%;
+    width: 100px;
+    text-align: left;
+    transform-origin: left;
+    font-size: 12px;
+    color: #000000;
+    padding: 2px 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 0 2px rgba(255,255,255,0.8);
+}
+
+.task-sequence {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+    font-family: Arial, sans-serif;
+}
+
+.sequence-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+}
+
+.sequence-item .label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.sequence-item .task-name {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.sequence-item.current .task-name {
+    color: inherit;
+}
+
+.sequence-item .task-name[data-is-break="true"] {
+    color: #FF9800;
+}
+
+/* Remove or comment out this rule as it's now handled by the data-is-break attribute */
+/* .sequence-item.current .task-name {
+    color: #FF9800;
+} */ 

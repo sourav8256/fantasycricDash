@@ -1,0 +1,102 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+}
+
+#mindmap-container {
+    width: 100vw;
+    height: 100vh;
+    background: #f0f0f0;
+    position: relative;
+    overflow: hidden;
+}
+
+.node {
+    position: absolute;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: move;
+    user-select: none;
+    touch-action: none;
+    max-width: 200px;
+    word-wrap: break-word;
+}
+
+.node input {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+    background: transparent;
+    cursor: move;
+}
+
+.node input:not([readonly]) {
+    cursor: text;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.connection {
+    position: absolute;
+    pointer-events: none;
+    z-index: -1;
+}
+
+#controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.delete-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    display: none;
+}
+
+.node:hover .delete-btn {
+    display: flex;
+}
+
+.node.selected {
+    box-shadow: 0 0 0 2px #007bff, 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.node.selected input {
+    color: #007bff;
+} 

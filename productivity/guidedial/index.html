@@ -4,249 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timer</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: #f0f0f0;
-            gap: 20px;
-        }
-
-        .clock {
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: white;
-            border: 10px solid #333;
-            position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .clock::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: conic-gradient(
-                orange 0deg,
-                orange calc(360deg * var(--break-ratio)),
-                transparent calc(360deg * var(--break-ratio)),
-                transparent 360deg
-            );
-            top: 0;
-            left: 0;
-        }
-
-        .hand {
-            position: absolute;
-            bottom: 50%;
-            left: 50%;
-            transform-origin: bottom;
-            background: #333;
-            border-radius: 4px;
-        }
-
-        .second-hand {
-            width: 4px;
-            height: 40%;
-            margin-left: -2px;
-            background: #ff0000;
-        }
-
-        .center-dot {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #333;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .time-display {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2rem;
-            font-family: Arial, sans-serif;
-            z-index: 1;
-        }
-
-        .time-input {
-            padding: 8px;
-            font-size: 1rem;
-            border: 2px solid #333;
-            border-radius: 4px;
-            width: 100px;
-            text-align: center;
-            margin: 5px;
-        }
-
-        .input-container {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .input-label {
-            font-family: Arial, sans-serif;
-            font-size: 1rem;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .control-button {
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: 2px solid #333;
-            border-radius: 4px;
-            background: white;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .control-button:hover {
-            background: #f0f0f0;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="input-container">
-        <div>
-            <span class="input-label">Work Time (minutes):</span>
-            <input type="number" class="time-input" id="work-time" value="25" min="1" max="60" onchange="updateTimes()">
-        </div>
-        <div>
-            <span class="input-label">Break Time (minutes):</span>
-            <input type="number" class="time-input" id="break-time" value="5" min="1" max="60" onchange="updateTimes()">
-        </div>
+    <div class="task-editor">
+        <textarea id="task-list" rows="5" placeholder="Enter tasks (one per line) in format:
+Task Name - HH:MM:SS
+Example:
+Coding - 01:30:00
+Break - 00:15:00"></textarea>
+        <button class="control-button" onclick="updateTasks()">Update Tasks</button>
     </div>
     <div class="clock">
         <div class="hand second-hand"></div>
         <div class="center-dot"></div>
-        <div class="numbers"></div>
-        <div class="time-display">25:00</div>
+        <div class="task-labels"></div>
+        <div class="time-display">00:00:00</div>
+    </div>
+    <div class="task-sequence">
+        <div class="sequence-item previous">
+            <span class="label">Previous:</span>
+            <span class="task-name">-</span>
+        </div>
+        <div class="sequence-item current">
+            <span class="label">Current:</span>
+            <span class="task-name">-</span>
+        </div>
+        <div class="sequence-item next">
+            <span class="label">Next:</span>
+            <span class="task-name">-</span>
+        </div>
     </div>
     <div class="controls">
         <button class="control-button" onclick="adjustTime(-60)">◀ -1m</button>
         <button class="control-button" onclick="adjustTime(60)">+1m ▶</button>
     </div>
 
-    <script>
-        const STORAGE_KEYS = {
-            WORK_TIME: 'guidedial_workTime',
-            BREAK_TIME: 'guidedial_breakTime',
-            TIME_LEFT: 'guidedial_timeLeft',
-            LAST_UPDATE: 'guidedial_lastUpdateTime',
-            IS_WORK_TIME: 'guidedial_isWorkTime'
-        };
-
-        let workTime = parseInt(localStorage.getItem(STORAGE_KEYS.WORK_TIME)) || 25;
-        let breakTime = parseInt(localStorage.getItem(STORAGE_KEYS.BREAK_TIME)) || 5;
-        let isWorkTime = localStorage.getItem(STORAGE_KEYS.IS_WORK_TIME) === null ? 
-            true : localStorage.getItem(STORAGE_KEYS.IS_WORK_TIME) === 'true';
-        let totalTime = (workTime + breakTime) * 60; // Convert to seconds
-        let timeLeft = parseInt(localStorage.getItem(STORAGE_KEYS.TIME_LEFT)) || totalTime;
-        let timerInterval;
-        let lastUpdateTime = parseInt(localStorage.getItem(STORAGE_KEYS.LAST_UPDATE)) || Date.now();
-
-        // Set initial input values from localStorage
-        document.getElementById('work-time').value = workTime;
-        document.getElementById('break-time').value = breakTime;
-
-        function updateTimes() {
-            workTime = parseInt(document.getElementById('work-time').value);
-            breakTime = parseInt(document.getElementById('break-time').value);
-            totalTime = (workTime + breakTime) * 60; // Convert to seconds
-            timeLeft = totalTime;
-            
-            // Update the break ratio CSS variable
-            const breakRatio = breakTime / (workTime + breakTime);
-            document.documentElement.style.setProperty('--break-ratio', breakRatio);
-            
-            localStorage.setItem(STORAGE_KEYS.WORK_TIME, workTime);
-            localStorage.setItem(STORAGE_KEYS.BREAK_TIME, breakTime);
-            localStorage.setItem(STORAGE_KEYS.TIME_LEFT, timeLeft);
-            updateTimer();
-        }
-
-        // Set initial break ratio when page loads
-        const initialBreakRatio = breakTime / (workTime + breakTime);
-        document.documentElement.style.setProperty('--break-ratio', initialBreakRatio);
-
-        function adjustTime(seconds) {
-            // Calculate new time
-            const newTime = Math.min(totalTime, Math.max(0, timeLeft + seconds));
-            
-            // Only update if the time actually changed
-            if (newTime !== timeLeft) {
-                timeLeft = newTime;
-                lastUpdateTime = Date.now();
-                
-                // Store the new state
-                localStorage.setItem(STORAGE_KEYS.TIME_LEFT, timeLeft);
-                localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, lastUpdateTime);
-                
-                // Update the display immediately
-                updateTimer();
-            }
-        }
-
-        function updateTimer() {
-            const currentTime = Date.now();
-            const timePassed = Math.floor((currentTime - lastUpdateTime) / 1000);
-            
-            if (timePassed > 0) {
-                timeLeft = Math.max(0, timeLeft - timePassed);
-                lastUpdateTime = currentTime;
-            }
-
-            if (timeLeft <= 0) {
-                isWorkTime = !isWorkTime;
-                timeLeft = totalTime;
-                document.querySelector('.clock').style.borderColor = isWorkTime ? '#333' : '#4CAF50';
-                localStorage.setItem(STORAGE_KEYS.IS_WORK_TIME, isWorkTime);
-            }
-
-            localStorage.setItem(STORAGE_KEYS.TIME_LEFT, timeLeft);
-            localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, lastUpdateTime);
-
-            // Format time display as MM:SS
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            document.querySelector('.time-display').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            // Calculate angle for second hand
-            const secondDegrees = ((totalTime - timeLeft) / totalTime) * 360;
-            document.querySelector('.second-hand').style.transform = `rotate(${secondDegrees}deg)`;
-        }
-
-        // Update initial display
-        updateTimer();
-
-        // Start continuous timer
-        timerInterval = setInterval(updateTimer, 1000);
-
-        // Save state before page unload
-        window.addEventListener('beforeunload', () => {
-            localStorage.setItem(STORAGE_KEYS.TIME_LEFT, timeLeft);
-            localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, lastUpdateTime);
-            localStorage.setItem(STORAGE_KEYS.WORK_TIME, workTime);
-            localStorage.setItem(STORAGE_KEYS.BREAK_TIME, breakTime);
-            localStorage.setItem(STORAGE_KEYS.IS_WORK_TIME, isWorkTime);
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

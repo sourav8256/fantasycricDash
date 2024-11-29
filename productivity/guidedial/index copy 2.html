@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15 Second Timer</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+        }
+
+        .clock {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: white;
+            border: 10px solid #333;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .second-hand {
+            width: 4px;
+            height: 40%;
+            margin-left: -2px;
+            background: #ff0000;
+        }
+
+        .center-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #333;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .number {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 1.5rem;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .time-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-family: Arial, sans-serif;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="clock">
+        <div class="hand second-hand"></div>
+        <div class="center-dot"></div>
+        <div class="numbers"></div>
+        <div class="time-display">15</div>
+    </div>
+
+    <script>
+        let timeLeft = 15;
+        let timerInterval;
+
+        function updateTimer() {
+            if (timeLeft <= 0) {
+                timeLeft = 15;
+            }
+
+            timeLeft--;
+            document.querySelector('.time-display').textContent = timeLeft;
+            
+            // Calculate angle for second hand
+            const secondDegrees = ((15 - timeLeft) / 15) * 360;
+            document.querySelector('.second-hand').style.transform = `rotate(${secondDegrees}deg)`;
+        }
+
+        // Add timer marks
+        const numbers = document.querySelector('.numbers');
+        for(let i = 0; i < 15; i++) {
+            const number = document.createElement('div');
+            number.className = 'number';
+            number.style.transform = `rotate(${i * 24}deg)`;
+            number.innerHTML = `<span style="transform: rotate(-${i * 24}deg) translateY(-120px) block">${15-i}</span>`;
+            numbers.appendChild(number);
+        }
+
+        // Start continuous timer
+        timerInterval = setInterval(updateTimer, 1000);
+    </script>
+</body>
+</html>

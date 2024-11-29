@@ -99,6 +99,26 @@
             font-family: Arial, sans-serif;
             font-size: 1rem;
         }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .control-button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: 2px solid #333;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .control-button:hover {
+            background: #f0f0f0;
+        }
     </style>
 </head>
 <body>
@@ -117,6 +137,10 @@
         <div class="center-dot"></div>
         <div class="numbers"></div>
         <div class="time-display">25:00</div>
+    </div>
+    <div class="controls">
+        <button class="control-button" onclick="adjustTime(-60)">◀ -1m</button>
+        <button class="control-button" onclick="adjustTime(60)">+1m ▶</button>
     </div>
 
     <script>
@@ -160,6 +184,24 @@
         // Set initial break ratio when page loads
         const initialBreakRatio = breakTime / (workTime + breakTime);
         document.documentElement.style.setProperty('--break-ratio', initialBreakRatio);
+
+        function adjustTime(seconds) {
+            // Calculate new time
+            const newTime = Math.min(totalTime, Math.max(0, timeLeft + seconds));
+            
+            // Only update if the time actually changed
+            if (newTime !== timeLeft) {
+                timeLeft = newTime;
+                lastUpdateTime = Date.now();
+                
+                // Store the new state
+                localStorage.setItem(STORAGE_KEYS.TIME_LEFT, timeLeft);
+                localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, lastUpdateTime);
+                
+                // Update the display immediately
+                updateTimer();
+            }
+        }
 
         function updateTimer() {
             const currentTime = Date.now();

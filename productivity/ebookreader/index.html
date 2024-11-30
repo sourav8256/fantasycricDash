@@ -270,13 +270,21 @@
         }
 
         function parseContent(text) {
-            // Create a temporary div to measure text and control line breaks
+            const selectedBook = localStorage.getItem('selectedBook');
+            const settingsKey = `bookSettings_${selectedBook}`;
+            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+            const fontSize = settings.fontSize || '18';
+            const fontFamily = settings.fontFamily || 'arial';
+            const linesPerPage = parseInt(settings.linesPerPage || '25');
+
+            // Create measurement div with book-specific settings
             const measureDiv = document.createElement('div');
             measureDiv.style.cssText = `
                 position: absolute;
                 visibility: hidden;
                 width: ${content.clientWidth}px;
-                font-size: ${content.style.fontSize || '18px'};
+                font-size: ${fontSize}px;
+                font-family: ${getFontFamily(fontFamily)};
                 line-height: 1.6;
                 white-space: pre-wrap;
                 word-wrap: break-word;
@@ -315,7 +323,6 @@
             document.body.removeChild(measureDiv);
 
             // Group lines into pages, ensuring complete sentences
-            const linesPerPage = getLinesPerPage();
             pages = [];
             let currentPage = [];
             let lineCount = 0;
@@ -349,17 +356,17 @@
 
         function displayCurrentPage() {
             if (pages.length > 0) {
-                // Get settings from localStorage
+                // Get current book settings
                 const selectedBook = localStorage.getItem('selectedBook');
                 const settingsKey = `bookSettings_${selectedBook}`;
                 const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
                 
-                // Set default values if not found
+                // Apply book-specific settings with defaults
                 const fontSize = settings.fontSize || '18';
                 const fontFamily = settings.fontFamily || 'arial';
                 const linesPerPage = settings.linesPerPage || '25';
                 
-                // Apply settings to content
+                // Apply font settings
                 content.style.fontSize = `${fontSize}px`;
                 content.className = `content font-${fontFamily}`;
                 
@@ -386,6 +393,7 @@
                 };
                 fontInfo.textContent = `${fontNames[fontFamily]} ${fontSize}px`;
                 
+                // Save page state and display settings
                 savePageState();
                 displayBookSettings();
             }
@@ -462,6 +470,20 @@
             });
 
             storageDiv.textContent = output;
+        }
+
+        // Add helper function to get actual font family string
+        function getFontFamily(fontType) {
+            const fontFamilies = {
+                'georgia': 'Georgia, serif',
+                'palatino': '"Palatino Linotype", "Book Antiqua", Palatino, serif',
+                'times': '"Times New Roman", Times, serif',
+                'arial': 'Arial, Helvetica, sans-serif',
+                'verdana': 'Verdana, Geneva, sans-serif',
+                'courier': '"Courier New", Courier, monospace',
+                'comic': '"Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", "Marker Felt", "DroidSansFallback", "Noto Color Emoji", "Roboto", cursive'
+            };
+            return fontFamilies[fontType] || fontFamilies['arial'];
         }
     </script>
 </body>

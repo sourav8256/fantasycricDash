@@ -163,6 +163,15 @@
             font-size: 14px;
             color: #666;
         }
+
+        .storage-info {
+            margin-top: 20px;
+            padding: 10px;
+            color: #666;
+            font-size: 12px;
+            font-family: monospace;
+            margin-bottom: 160px;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -189,6 +198,8 @@
                 <button id="nextPage">Next</button>
             </div>
         </div>
+
+        <div id="storageInfo" class="storage-info"></div>
     </div>
 
     <script>
@@ -376,6 +387,7 @@
                 fontInfo.textContent = `${fontNames[fontFamily]} ${fontSize}px`;
                 
                 savePageState();
+                displayBookSettings();
             }
         }
 
@@ -425,6 +437,22 @@
             if (savedPage !== null) {
                 currentPage = parseInt(savedPage);
             }
+        }
+
+        function displayBookSettings() {
+            const storageDiv = document.getElementById('storageInfo');
+            const selectedBook = localStorage.getItem('selectedBook');
+            const settingsKey = `bookSettings_${selectedBook}`;
+            const pageStateKey = `pageState_${selectedBook}`;
+            
+            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+            const pageState = localStorage.getItem(pageStateKey);
+            
+            const info = `Current Book: ${selectedBook}
+Settings: ${JSON.stringify(settings, null, 2)}
+Page State: ${pageState}`;
+            
+            storageDiv.textContent = info;
         }
     </script>
 </body>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>eBook Reader</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -216,10 +217,19 @@
         // Auto-load the EPUB file when the page loads
         window.addEventListener('load', async () => {
             try {
-                const selectedBook = localStorage.getItem('selectedBook') || 'Abraham-Lincoln.epub';
-                const response = await fetch(`books/${selectedBook}`);
+                const defaultBook = 'Abraham-Lincoln.epub';
+                const settingsKey = `bookSettings_${defaultBook}`;
+                let settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+                
+                // Initialize settings if they don't exist
+                if (!settings.selectedBook) {
+                    settings.selectedBook = defaultBook;
+                    localStorage.setItem(settingsKey, JSON.stringify(settings));
+                }
+
+                const response = await fetch(`books/${settings.selectedBook}`);
                 const blob = await response.blob();
-                const file = new File([blob], selectedBook, { type: 'application/epub+zip' });
+                const file = new File([blob], settings.selectedBook, { type: 'application/epub+zip' });
                 await handleEpub(file);
             } catch (error) {
                 content.innerHTML = `Error loading book: ${error.message}`;
@@ -263,15 +273,15 @@
         }
 
         function getLinesPerPage() {
-            const selectedBook = localStorage.getItem('selectedBook');
-            const settingsKey = `bookSettings_${selectedBook}`;
+            const currentBook = getCurrentBook();
+            const settingsKey = `bookSettings_${currentBook}`;
             const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
             return parseInt(settings.linesPerPage || '25');
         }
 
         function parseContent(text) {
-            const selectedBook = localStorage.getItem('selectedBook');
-            const settingsKey = `bookSettings_${selectedBook}`;
+            const currentBook = getCurrentBook();
+            const settingsKey = `bookSettings_${currentBook}`;
             const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
             const fontSize = settings.fontSize || '18';
             const fontFamily = settings.fontFamily || 'arial';
@@ -357,8 +367,8 @@
         function displayCurrentPage() {
             if (pages.length > 0) {
                 // Get current book settings
-                const selectedBook = localStorage.getItem('selectedBook');
-                const settingsKey = `bookSettings_${selectedBook}`;
+                const currentBook = getCurrentBook();
+                const settingsKey = `bookSettings_${currentBook}`;
                 const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
                 
                 // Apply book-specific settings with defaults
@@ -434,8 +444,8 @@
 
         // Add function to save current page state
         function savePageState() {
-            const selectedBook = localStorage.getItem('selectedBook');
-            const settingsKey = `bookSettings_${selectedBook}`;
+            const currentBook = getCurrentBook();
+            const settingsKey = `bookSettings_${currentBook}`;
             const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
             
             // Add page state to settings object
@@ -446,8 +456,8 @@
 
         // Add function to load page state
         function loadPageState() {
-            const selectedBook = localStorage.getItem('selectedBook');
-            const settingsKey = `bookSettings_${selectedBook}`;
+            const currentBook = getCurrentBook();
+            const settingsKey = `bookSettings_${currentBook}`;
             const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
             
             if (settings.currentPage !== undefined) {
@@ -461,12 +471,10 @@
             const storageDiv = document.getElementById('storageInfo');
             let output = 'Book Reader Settings:\n\n';
 
-            // Get all localStorage keys
+            // Only show bookSettings_ entries
             const keys = Object.keys(localStorage);
-            
-            // Filter and display book-related settings
             keys.forEach(key => {
-                if (key.startsWith('bookSettings_') || key === 'selectedBook') {
+                if (key.startsWith('bookSettings_')) {
                     const value = localStorage.getItem(key);
                     try {
                         const parsed = JSON.parse(value);
@@ -492,6 +500,20 @@
                 'comic': '"Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", "Marker Felt", "DroidSansFallback", "Noto Color Emoji", "Roboto", cursive'
             };
             return fontFamilies[fontType] || fontFamilies['arial'];
+        }
+
+        // Update functions to get book from settings
+        function getCurrentBook() {
+            const keys = Object.keys(localStorage);
+            const settingsKey = keys.find(key => key.startsWith('bookSettings_'));
+            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+            return settings.selectedBook || 'Abraham-Lincoln.epub';
+        }
+
+        function getBookSettings() {
+            const currentBook = getCurrentBook();
+            const settingsKey = `bookSettings_${currentBook}`;
+            return JSON.parse(localStorage.getItem(settingsKey) || '{}');
         }
     </script>
 </body>

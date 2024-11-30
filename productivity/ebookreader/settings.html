@@ -284,11 +284,12 @@
         // Update save function to save per-book settings
         function saveAndReturn() {
             const settings = {
+                selectedBook: bookSelect.value,
                 fontSize: fontSizeControl.value,
                 fontFamily: fontFamilyControl.value,
                 linesPerPage: linesPerPage.value
             };
-            const settingsKey = `bookSettings_${selectedBook}`;
+            const settingsKey = `bookSettings_${settings.selectedBook}`;
             localStorage.setItem(settingsKey, JSON.stringify(settings));
             window.location.href = 'index.html';
         }

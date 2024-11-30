@@ -441,18 +441,27 @@
 
         function displayBookSettings() {
             const storageDiv = document.getElementById('storageInfo');
-            const selectedBook = localStorage.getItem('selectedBook');
-            const settingsKey = `bookSettings_${selectedBook}`;
-            const pageStateKey = `pageState_${selectedBook}`;
+            let output = 'Book Reader Settings:\n\n';
+
+            // Get all localStorage keys
+            const keys = Object.keys(localStorage);
             
-            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
-            const pageState = localStorage.getItem(pageStateKey);
-            
-            const info = `Current Book: ${selectedBook}
-Settings: ${JSON.stringify(settings, null, 2)}
-Page State: ${pageState}`;
-            
-            storageDiv.textContent = info;
+            // Filter and display book-related settings
+            keys.forEach(key => {
+                if (key.startsWith('bookSettings_') || key === 'selectedBook' || key.startsWith('pageState_')) {
+                    const value = localStorage.getItem(key);
+                    try {
+                        // Try to parse JSON for prettier display
+                        const parsed = JSON.parse(value);
+                        output += `${key}:\n${JSON.stringify(parsed, null, 2)}\n\n`;
+                    } catch {
+                        // If not JSON, display as is
+                        output += `${key}: ${value}\n\n`;
+                    }
+                }
+            });
+
+            storageDiv.textContent = output;
         }
     </script>
 </body>

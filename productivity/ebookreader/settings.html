@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reader Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -78,7 +79,17 @@
         .font-arial { font-family: Arial, Helvetica, sans-serif; }
         .font-verdana { font-family: Verdana, Geneva, sans-serif; }
         .font-courier { font-family: "Courier New", Courier, monospace; }
-        .font-comic { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive; }
+        .font-comic { 
+            font-family: "Comic Sans MS", 
+                        "Comic Sans", 
+                        "Chalkboard SE", 
+                        "Comic Neue", 
+                        "Marker Felt",
+                        "DroidSansFallback",  /* Android fallback */
+                        "Noto Color Emoji",    /* Android emoji font that has a playful look */
+                        "Roboto",             /* Default Android font */
+                        cursive;
+        }
 
         /* Add number input styling */
         input[type="number"] {

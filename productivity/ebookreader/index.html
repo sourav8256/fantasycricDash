@@ -217,19 +217,27 @@
         // Auto-load the EPUB file when the page loads
         window.addEventListener('load', async () => {
             try {
-                const defaultBook = 'Abraham-Lincoln.epub';
-                const settingsKey = `bookSettings_${defaultBook}`;
-                let settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+                // Get all book settings entries
+                const keys = Object.keys(localStorage);
+                const bookSettingsKeys = keys.filter(key => key.startsWith('bookSettings_'));
                 
-                // Initialize settings if they don't exist
-                if (!settings.selectedBook) {
-                    settings.selectedBook = defaultBook;
-                    localStorage.setItem(settingsKey, JSON.stringify(settings));
+                let currentBook = 'Abraham-Lincoln.epub';  // Default book
+                
+                // If we have book settings, get the most recently used book
+                if (bookSettingsKeys.length > 0) {
+                    for (let key of bookSettingsKeys) {
+                        const settings = JSON.parse(localStorage.getItem(key) || '{}');
+                        if (settings.selectedBook) {
+                            currentBook = settings.selectedBook;
+                            break;
+                        }
+                    }
                 }
 
-                const response = await fetch(`books/${settings.selectedBook}`);
+                // Load the current book
+                const response = await fetch(`books/${currentBook}`);
                 const blob = await response.blob();
-                const file = new File([blob], settings.selectedBook, { type: 'application/epub+zip' });
+                const file = new File([blob], currentBook, { type: 'application/epub+zip' });
                 await handleEpub(file);
             } catch (error) {
                 content.innerHTML = `Error loading book: ${error.message}`;
@@ -284,7 +292,7 @@
             const settingsKey = `bookSettings_${currentBook}`;
             const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
             const fontSize = settings.fontSize || '18';
-            const fontFamily = settings.fontFamily || 'arial';
+            const fontFamily = settings.fontFamily || 'comic';
             const linesPerPage = parseInt(settings.linesPerPage || '25');
 
             // Create measurement div with book-specific settings
@@ -301,38 +309,62 @@
             `;
             document.body.appendChild(measureDiv);
 
-            // Split text into paragraphs first
-            const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+            // First, clean up the text
+            text = text.replace(/\r\n/g, '\n')  // Normalize line endings
+                     .replace(/\n{3,}/g, '\n\n') // Reduce multiple blank lines to double
+                     .trim();
+
+            // Split into paragraphs while preserving empty lines
+            const paragraphs = text.split(/\n\n+/);
             
-            // Process text into lines with proper wrapping
             let allLines = [];
-            paragraphs.forEach(paragraph => {
-                // Split paragraph into sentences
-                const sentences = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
-                let currentLine = '';
-                
-                sentences.forEach(sentence => {
-                    measureDiv.textContent = currentLine + sentence;
-                    if (measureDiv.offsetHeight > parseFloat(getComputedStyle(measureDiv).lineHeight)) {
-                        if (currentLine) {
-                            allLines.push(currentLine.trim());
-                        }
-                        currentLine = sentence;
+            paragraphs.forEach((paragraph, index) => {
+                if (!paragraph.trim()) {
+                    // Preserve empty lines between paragraphs
+                    allLines.push('');
+                    return;
+                }
+
+                // Handle each line in the paragraph
+                const lines = paragraph.split('\n');
+                lines.forEach(line => {
+                    if (!line.trim()) {
+                        allLines.push('');
+                        return;
+                    }
+
+                    // Handle long lines
+                    measureDiv.textContent = line;
+                    if (measureDiv.offsetHeight <= parseFloat(getComputedStyle(measureDiv).lineHeight)) {
+                        allLines.push(line);
                     } else {
-                        currentLine += sentence;
+                        // Split long lines while preserving words
+                        const words = line.split(' ');
+                        let currentLine = '';
+                        
+                        words.forEach(word => {
+                            measureDiv.textContent = currentLine + (currentLine ? ' ' : '') + word;
+                            if (measureDiv.offsetHeight > parseFloat(getComputedStyle(measureDiv).lineHeight)) {
+                                if (currentLine) allLines.push(currentLine);
+                                currentLine = word;
+                            } else {
+                                currentLine = currentLine ? currentLine + ' ' + word : word;
+                            }
+                        });
+                        if (currentLine) allLines.push(currentLine);
                     }
                 });
-                
-                if (currentLine) {
-                    allLines.push(currentLine.trim());
+
+                // Add paragraph spacing
+                if (index < paragraphs.length - 1) {
+                    allLines.push('');
+                    allLines.push('');
                 }
-                allLines.push(''); // Add empty line between paragraphs
             });
 
-            // Remove the measurement div
             document.body.removeChild(measureDiv);
 
-            // Group lines into pages, ensuring complete sentences
+            // Group into pages
             pages = [];
             let currentPage = [];
             let lineCount = 0;
@@ -340,25 +372,17 @@
             for (let i = 0; i < allLines.length; i++) {
                 const line = allLines[i];
                 currentPage.push(line);
-                lineCount++;
+                
+                // Only count non-empty lines toward the limit
+                if (line.trim()) lineCount++;
 
-                // Check if we've reached the line limit
-                if (lineCount >= linesPerPage) {
-                    // Look ahead to include the rest of the sentence if needed
-                    let j = i + 1;
-                    while (j < allLines.length && !allLines[j-1].match(/[.!?]$/)) {
-                        currentPage.push(allLines[j]);
-                        j++;
-                    }
-                    
+                if (lineCount >= linesPerPage || i === allLines.length - 1) {
                     pages.push(currentPage.join('\n'));
                     currentPage = [];
                     lineCount = 0;
-                    i = j - 1; // Update the counter to skip the lines we've included
                 }
             }
 
-            // Add any remaining lines as the last page
             if (currentPage.length > 0) {
                 pages.push(currentPage.join('\n'));
             }

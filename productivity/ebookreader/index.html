@@ -152,6 +152,17 @@
                         "Roboto",
                         cursive;
         }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .font-info {
+            font-size: 14px;
+            color: #666;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -159,7 +170,10 @@
     <div class="reader-container">
         <div class="header">
             <h1>eBook Reader</h1>
-            <button class="settings-button" onclick="window.location.href='settings.html'">⚙️</button>
+            <div class="header-right">
+                <span class="font-info" id="fontInfo"></span>
+                <button class="settings-button" onclick="window.location.href='settings.html'">⚙️</button>
+            </div>
         </div>
         
         <div id="content" class="content">
@@ -183,6 +197,7 @@
         const nextPageBtn = document.getElementById('nextPage');
         const pageInput = document.getElementById('pageInput');
         const totalPagesSpan = document.getElementById('totalPages');
+        const fontInfo = document.getElementById('fontInfo');
 
         let currentPage = 0;
         let pages = [];
@@ -333,10 +348,20 @@
         function applyFontSettings() {
             const settings = loadBookSettings(localStorage.getItem('selectedBook'));
             content.style.fontSize = `${settings.fontSize}px`;
-            // First remove any existing font classes
             content.className = content.className.replace(/font-\w+/g, '').trim();
-            // Then add the new font class
             content.className = `content font-${settings.fontFamily}`;
+            
+            // Update font info display
+            const fontNames = {
+                'georgia': 'Georgia',
+                'palatino': 'Palatino',
+                'times': 'Times New Roman',
+                'arial': 'Arial',
+                'verdana': 'Verdana',
+                'courier': 'Courier New',
+                'comic': 'Comic Sans MS'
+            };
+            fontInfo.textContent = `${fontNames[settings.fontFamily]} ${settings.fontSize}px`;
         }
 
         function displayCurrentPage() {

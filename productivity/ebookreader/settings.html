@@ -89,6 +89,31 @@
             font-size: 16px;
             margin-bottom: 10px;
         }
+
+        /* Add this style for the reset button */
+        .reset-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .reset-button:hover {
+            background-color: #c82333;
+        }
+
+        /* Add space between buttons */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -140,7 +165,10 @@
                    placeholder="Enter lines per page">
         </div>
 
-        <button class="back-button" onclick="saveAndReturn()">Save & Return</button>
+        <div class="button-group">
+            <button class="back-button" onclick="saveAndReturn()">Save & Return</button>
+            <button class="reset-button" onclick="resetAllSettings()">Reset All Settings</button>
+        </div>
     </div>
 
     <script>
@@ -259,6 +287,28 @@
             if (value > 36) e.target.value = 36;
             updatePreview();
         });
+
+        function resetAllSettings() {
+            if (confirm('This will reset all saved settings for all books. Continue?')) {
+                // Get all localStorage keys
+                const keys = Object.keys(localStorage);
+                
+                // Remove all book-related settings
+                keys.forEach(key => {
+                    if (key.startsWith('bookSettings_') || key.startsWith('pageState_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+
+                // Reset current page settings to defaults
+                fontSizeControl.value = '18';
+                fontFamilyControl.value = 'arial';
+                linesPerPage.value = '25';
+                updatePreview();
+
+                alert('All settings have been reset.');
+            }
+        }
     </script>
 </body>
 </html> 

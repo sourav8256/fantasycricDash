@@ -434,16 +434,26 @@
 
         // Add function to save current page state
         function savePageState() {
-            const currentBook = localStorage.getItem('selectedBook');
-            localStorage.setItem(`pageState_${currentBook}`, currentPage);
+            const selectedBook = localStorage.getItem('selectedBook');
+            const settingsKey = `bookSettings_${selectedBook}`;
+            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+            
+            // Add page state to settings object
+            settings.currentPage = currentPage;
+            
+            localStorage.setItem(settingsKey, JSON.stringify(settings));
         }
 
         // Add function to load page state
         function loadPageState() {
-            const currentBook = localStorage.getItem('selectedBook');
-            const savedPage = localStorage.getItem(`pageState_${currentBook}`);
-            if (savedPage !== null) {
-                currentPage = parseInt(savedPage);
+            const selectedBook = localStorage.getItem('selectedBook');
+            const settingsKey = `bookSettings_${selectedBook}`;
+            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+            
+            if (settings.currentPage !== undefined) {
+                currentPage = parseInt(settings.currentPage);
+            } else {
+                currentPage = 0;
             }
         }
 
@@ -456,14 +466,12 @@
             
             // Filter and display book-related settings
             keys.forEach(key => {
-                if (key.startsWith('bookSettings_') || key === 'selectedBook' || key.startsWith('pageState_')) {
+                if (key.startsWith('bookSettings_') || key === 'selectedBook') {
                     const value = localStorage.getItem(key);
                     try {
-                        // Try to parse JSON for prettier display
                         const parsed = JSON.parse(value);
                         output += `${key}:\n${JSON.stringify(parsed, null, 2)}\n\n`;
                     } catch {
-                        // If not JSON, display as is
                         output += `${key}: ${value}\n\n`;
                     }
                 }

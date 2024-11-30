@@ -141,7 +141,17 @@
         .font-arial { font-family: Arial, Helvetica, sans-serif; }
         .font-verdana { font-family: Verdana, Geneva, sans-serif; }
         .font-courier { font-family: "Courier New", Courier, monospace; }
-        .font-comic { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive; }
+        .font-comic { 
+            font-family: "Comic Sans MS", 
+                        "Comic Sans", 
+                        "Chalkboard SE", 
+                        "Comic Neue", 
+                        "Marker Felt",
+                        "DroidSansFallback",
+                        "Noto Color Emoji",
+                        "Roboto",
+                        cursive;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -323,6 +333,9 @@
         function applyFontSettings() {
             const settings = loadBookSettings(localStorage.getItem('selectedBook'));
             content.style.fontSize = `${settings.fontSize}px`;
+            // First remove any existing font classes
+            content.className = content.className.replace(/font-\w+/g, '').trim();
+            // Then add the new font class
             content.className = `content font-${settings.fontFamily}`;
         }
 

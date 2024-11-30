@@ -289,24 +289,10 @@
         });
 
         function resetAllSettings() {
-            if (confirm('This will reset all saved settings for all books. Continue?')) {
-                // Get all localStorage keys
-                const keys = Object.keys(localStorage);
-                
-                // Remove all book-related settings
-                keys.forEach(key => {
-                    if (key.startsWith('bookSettings_') || key.startsWith('pageState_')) {
-                        localStorage.removeItem(key);
-                    }
-                });
-
-                // Reset current page settings to defaults
-                fontSizeControl.value = '18';
-                fontFamilyControl.value = 'arial';
-                linesPerPage.value = '25';
-                updatePreview();
-
-                alert('All settings have been reset.');
+            if (confirm('This will reset all saved settings. Continue?')) {
+                localStorage.clear();
+                alert('All settings have been reset. The page will reload.');
+                window.location.reload();
             }
         }
     </script>

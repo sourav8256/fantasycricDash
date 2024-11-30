@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .news-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .news-card {
+            transition: transform 0.2s;
+            margin-bottom: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+        }
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .news-image {
+            width: 200px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .news-thumbnail {
+            flex: 0 0 200px;
+            padding: 10px;
+        }
+        .news-content {
+            flex: 1;
+            padding: 10px;
+        }
+        .news-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .news-description {
+            font-size: 0.9rem;
+            color: #666;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .error-message {
+            display: none;
+            color: #dc3545;
+            text-align: center;
+            padding: 20px;
+        }
+        .update-progress {
+            width: 100%;
+            height: 4px;
+            background-color: #e9ecef;
+            border-radius: 2px;
+            margin-top: 8px;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #0d6efd;
+            border-radius: 2px;
+            transition: width 1s linear;
+        }
+        .update-info {
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="news-container">
+        <h1 class="text-center mb-4">Breaking News</h1>
+        
+        <!-- Update Progress -->
+        <div class="update-info">
+            <div id="updateStatus" class="text-muted text-center"></div>
+            <div class="update-progress">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="row mb-4">
+            <div class="col-md-8 mx-auto">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search news...">
+                    <button class="btn btn-primary" onclick="searchNews()">Search</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="error">
+            Something went wrong. Please try again later.
+        </div>
+
+        <!-- News Grid -->
+        <div class="row" id="newsGrid"></div>
+    </div>
+
+    <script>
+        const API_KEY = '8abd4d0e9b664890b45eb4c1d427c23e'; // Get your API key from newsapi.org
+        const newsGrid = document.getElementById('newsGrid');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+        let progressInterval;
+
+        // Initialize cache from localStorage or create new cache
+        let newsCache = JSON.parse(localStorage.getItem('newsCache')) || {
+            timestamp: 0,
+            data: null,
+            query: ''
+        };
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNews();
+            startProgressBar();
+        });
+
+        function startProgressBar() {
+            const updateStatus = document.getElementById('updateStatus');
+            const progressBar = document.getElementById('progressBar');
+            
+            // Clear any existing interval
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+
+            function updateProgress() {
+                const currentTime = new Date().getTime();
+                const timeSinceUpdate = currentTime - newsCache.timestamp;
+                const timeLeft = CACHE_DURATION - timeSinceUpdate;
+                
+                if (timeLeft <= 0) {
+                    // Time to update
+                    fetchNews(newsCache.query);
+                    return;
+                }
+
+                // Calculate progress percentage
+                const progress = (timeSinceUpdate / CACHE_DURATION) * 100;
+                progressBar.style.width = `${progress}%`;
+
+                // Calculate minutes and seconds left
+                const minutesLeft = Math.floor(timeLeft / 60000);
+                const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
+
+                // Update status text
+                const lastUpdated = new Date(newsCache.timestamp).toLocaleString();
+                updateStatus.innerHTML = `Last updated: ${lastUpdated}<br>
+                    <small>Next update in: ${minutesLeft}m ${secondsLeft}s</small>`;
+            }
+
+            // Update immediately and then every second
+            updateProgress();
+            progressInterval = setInterval(updateProgress, 1000);
+        }
+
+        async function fetchNews(query = '') {
+            const currentTime = new Date().getTime();
+            
+            // Check if we have valid cached data for the same query
+            if (newsCache.data && 
+                newsCache.query === query && 
+                currentTime - newsCache.timestamp < CACHE_DURATION) {
+                displayNews(newsCache.data);
+                return;
+            }
+
+            showLoading();
+            try {
+                let url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${API_KEY}`;
+                if (query) {
+                    url = `https://newsapi.org/v2/everything?q=${query}&apiKey=${API_KEY}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    // Update cache
+                    newsCache = {
+                        timestamp: currentTime,
+                        data: data.articles,
+                        query: query
+                    };
+                    // Save to localStorage
+                    localStorage.setItem('newsCache', JSON.stringify(newsCache));
+                    displayNews(data.articles);
+                    startProgressBar(); // Restart progress bar after new data
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (err) {
+                showError();
+                console.error('Error fetching news:', err);
+            }
+        }
+
+        function displayNews(articles) {
+            hideLoading();
+            hideError();
+            newsGrid.innerHTML = '';
+            
+            articles.forEach(article => {
+                if (!article.title || !article.description) return;
+
+                const col = document.createElement('div');
+                col.className = 'col-12 mb-3';
+                
+                col.innerHTML = `
+                    <div class="card news-card">
+                        <div class="news-thumbnail">
+                            <img src="${article.urlToImage || 'https://via.placeholder.com/200x140?text=No+Image'}" 
+                                 class="news-image" 
+                                 alt="${article.title}"
+                                 onerror="this.src='https://via.placeholder.com/200x140?text=No+Image'">
+                        </div>
+                        <div class="news-content">
+                            <h5 class="news-title">${article.title}</h5>
+                            <p class="news-description">${article.description}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted">
+                                    ${new Date(article.publishedAt).toLocaleDateString()}
+                                </small>
+                                <button onclick="openNewsDetails(${JSON.stringify(article).replace(/"/g, '&quot;')})" 
+                                        class="btn btn-sm btn-primary">Read More</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                newsGrid.appendChild(col);
+            });
+        }
+
+        function openNewsDetails(article) {
+            const encodedData = encodeURIComponent(JSON.stringify(article));
+            window.location.href = `details.html?news=${encodedData}`;
+        }
+
+        function searchNews() {
+            const searchInput = document.getElementById('searchInput');
+            const query = searchInput.value.trim();
+            if (query) {
+                fetchNews(query);
+            }
+        }
+
+        function showLoading() {
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            newsGrid.innerHTML = '';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function showError() {
+            error.style.display = 'block';
+            loading.style.display = 'none';
+        }
+
+        function hideError() {
+            error.style.display = 'none';
+        }
+
+        // Handle search on enter key
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchNews();
+            }
+        });
+    </script>
+</body>
+</html>

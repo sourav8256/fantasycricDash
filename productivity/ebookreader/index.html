@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBook Reader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+            padding-bottom: 140px;
+        }
+
+        .reader-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-height: calc(100vh - 160px);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 0;
+            text-align: center;
+        }
+
+        .content {
+            line-height: 1.6;
+            font-size: 18px;
+            padding: 10px;
+            background-color: #fff;
+            min-height: 500px;
+        }
+
+        .page-navigation {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 70px;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        .page-input {
+            width: 50px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+
+            .content {
+                padding: 5px;
+            }
+
+            button {
+                padding: 6px 10px;
+                min-width: 60px;
+            }
+
+            select {
+                padding: 6px;
+            }
+        }
+
+        .settings-button {
+            background-color: #007bff;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .settings-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <div class="reader-container">
+        <div class="header">
+            <h1>eBook Reader</h1>
+            <button class="settings-button" onclick="window.location.href='settings.html'">⚙️</button>
+        </div>
+        
+        <div id="content" class="content">
+            Loading book...
+        </div>
+
+        <div class="page-navigation">
+            <div class="nav-controls">
+                <button id="prevPage">Previous</button>
+                <div class="page-info">
+                    Page <input type="number" id="pageInput" class="page-input" min="1" value="1"> of <span id="totalPages">1</span>
+                </div>
+                <button id="nextPage">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const content = document.getElementById('content');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pageInput = document.getElementById('pageInput');
+        const totalPagesSpan = document.getElementById('totalPages');
+
+        let currentPage = 0;
+        let pages = [];
+
+        // Auto-load the EPUB file when the page loads
+        window.addEventListener('load', async () => {
+            try {
+                const selectedBook = localStorage.getItem('selectedBook') || 'Abraham-Lincoln.epub';
+                const response = await fetch(`books/${selectedBook}`);
+                const blob = await response.blob();
+                const file = new File([blob], selectedBook, { type: 'application/epub+zip' });
+                await handleEpub(file);
+            } catch (error) {
+                content.innerHTML = `Error loading book: ${error.message}`;
+            }
+        });
+
+        async function handleEpub(file) {
+            try {
+                const zip = new JSZip();
+                const zipData = await zip.loadAsync(file);
+                
+                // Find the content files (usually HTML files)
+                const contentFiles = [];
+                for (let filename in zipData.files) {
+                    if (filename.endsWith('.html') || filename.endsWith('.xhtml')) {
+                        contentFiles.push(filename);
+                    }
+                }
+
+                // Read content from HTML files
+                let fullText = '';
+                for (let filename of contentFiles) {
+                    const content = await zipData.files[filename].async('text');
+                    // Strip HTML tags and decode entities
+                    const textContent = content
+                        .replace(/<[^>]*>/g, ' ')
+                        .replace(/&nbsp;/g, ' ')
+                        .replace(/&[a-z]+;/g, ' ');
+                    fullText += textContent + '\n\n';
+                }
+
+                parseContent(fullText);
+                
+                // Load saved page state before displaying
+                loadPageState();
+                displayCurrentPage();
+
+            } catch (error) {
+                content.innerHTML = `Error reading EPUB file: ${error.message}`;
+            }
+        }
+
+        function getLinesPerPage() {
+            return parseInt(localStorage.getItem('readerLinesPerPage')) || 25;
+        }
+
+        function parseContent(text) {
+            // Create a temporary div to measure text and control line breaks
+            const measureDiv = document.createElement('div');
+            measureDiv.style.cssText = `
+                position: absolute;
+                visibility: hidden;
+                width: ${content.clientWidth}px;
+                font-size: ${content.style.fontSize || '18px'};
+                line-height: 1.6;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            `;
+            document.body.appendChild(measureDiv);
+
+            // Split text into paragraphs first
+            const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+            
+            // Process text into lines with proper wrapping
+            let allLines = [];
+            paragraphs.forEach(paragraph => {
+                measureDiv.textContent = paragraph;
+                const paragraphHeight = measureDiv.offsetHeight;
+                const lineHeight = parseFloat(getComputedStyle(measureDiv).lineHeight);
+                const linesInParagraph = Math.ceil(paragraphHeight / lineHeight);
+                
+                // Split long paragraphs into approximate lines
+                const words = paragraph.split(' ');
+                let currentLine = [];
+                let currentText = '';
+                
+                words.forEach(word => {
+                    const testText = currentText + (currentText ? ' ' : '') + word;
+                    measureDiv.textContent = testText;
+                    
+                    if (measureDiv.offsetHeight > lineHeight) {
+                        allLines.push(currentText);
+                        currentText = word;
+                    } else {
+                        currentText = testText;
+                    }
+                });
+                
+                if (currentText) {
+                    allLines.push(currentText);
+                }
+                allLines.push(''); // Add empty line between paragraphs
+            });
+
+            // Remove the measurement div
+            document.body.removeChild(measureDiv);
+
+            // Group lines into pages
+            const linesPerPage = getLinesPerPage();
+            pages = [];
+            
+            for (let i = 0; i < allLines.length; i += linesPerPage) {
+                const pageLines = allLines.slice(i, i + linesPerPage);
+                pages.push(pageLines.join('\n'));
+            }
+        }
+
+        // Apply saved font settings when displaying content
+        function applyFontSettings() {
+            const fontSize = localStorage.getItem('readerFontSize') || '18';
+            const fontFamily = localStorage.getItem('readerFontFamily') || 'arial';
+            
+            content.style.fontSize = `${fontSize}px`;
+            content.className = `content font-${fontFamily}`;
+        }
+
+        function displayCurrentPage() {
+            if (pages.length > 0) {
+                content.innerHTML = `
+                    <div style="margin-bottom: 20px">
+                        ${pages[currentPage]}
+                    </div>
+                `;
+                
+                // Apply font settings after content is updated
+                applyFontSettings();
+                
+                pageInput.value = currentPage + 1;
+                totalPagesSpan.textContent = pages.length;
+                
+                // Save page state whenever page changes
+                savePageState();
+            }
+        }
+
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                displayCurrentPage();
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPage < pages.length - 1) {
+                currentPage++;
+                displayCurrentPage();
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                prevPageBtn.click();
+            } else if (e.key === 'ArrowRight') {
+                nextPageBtn.click();
+            }
+        });
+
+        pageInput.addEventListener('change', () => {
+            const newPage = parseInt(pageInput.value) - 1;
+            if (newPage >= 0 && newPage < pages.length) {
+                currentPage = newPage;
+                displayCurrentPage();
+            } else {
+                pageInput.value = currentPage + 1;
+            }
+        });
+
+        // Add function to save current page state
+        function savePageState() {
+            const currentBook = localStorage.getItem('selectedBook');
+            localStorage.setItem(`pageState_${currentBook}`, currentPage);
+        }
+
+        // Add function to load page state
+        function loadPageState() {
+            const currentBook = localStorage.getItem('selectedBook');
+            const savedPage = localStorage.getItem(`pageState_${currentBook}`);
+            if (savedPage !== null) {
+                currentPage = parseInt(savedPage);
+            }
+        }
+    </script>
+</body>
+</html>

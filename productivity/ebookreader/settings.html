@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reader Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+
+        .settings-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .setting-group {
+            margin-bottom: 30px;
+        }
+
+        .setting-group h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .back-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Add font preview */
+        .font-preview {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 60px;
+        }
+
+        /* Font classes */
+        .font-georgia { font-family: Georgia, serif; }
+        .font-palatino { font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif; }
+        .font-times { font-family: "Times New Roman", Times, serif; }
+        .font-arial { font-family: Arial, Helvetica, sans-serif; }
+        .font-verdana { font-family: Verdana, Geneva, sans-serif; }
+        .font-courier { font-family: "Courier New", Courier, monospace; }
+        .font-comic { font-family: "Comic Sans MS", "Comic Sans", cursive; }
+
+        /* Add number input styling */
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <h1>Reader Settings</h1>
+        
+        <div class="setting-group">
+            <h2>Select Book</h2>
+            <select id="bookSelect">
+                <!-- Options will be populated by JavaScript -->
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <h2>Font Size</h2>
+            <select id="fontSizeControl">
+                <option value="16">16px</option>
+                <option value="18">18px</option>
+                <option value="20">20px</option>
+                <option value="22">22px</option>
+                <option value="24">24px</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <h2>Font Family</h2>
+            <select id="fontFamilyControl">
+                <option value="georgia">Georgia</option>
+                <option value="palatino">Palatino</option>
+                <option value="times">Times New Roman</option>
+                <option value="arial">Arial</option>
+                <option value="verdana">Verdana</option>
+                <option value="courier">Courier New</option>
+                <option value="comic">Comic Sans MS</option>
+            </select>
+            <div id="fontPreview" class="font-preview">
+                The quick brown fox jumps over the lazy dog.
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <h2>Lines Per Page</h2>
+            <input type="number" 
+                   id="linesPerPage" 
+                   min="10" 
+                   max="100" 
+                   step="1" 
+                   value="25"
+                   placeholder="Enter lines per page">
+        </div>
+
+        <button class="back-button" onclick="saveAndReturn()">Save & Return</button>
+    </div>
+
+    <script>
+        const fontSizeControl = document.getElementById('fontSizeControl');
+        const fontFamilyControl = document.getElementById('fontFamilyControl');
+        const fontPreview = document.getElementById('fontPreview');
+        const linesPerPage = document.getElementById('linesPerPage');
+        const bookSelect = document.getElementById('bookSelect');
+        let selectedBook = localStorage.getItem('selectedBook') || 'Abraham-Lincoln.epub';
+
+        // Function to load and display available books
+        async function loadBooks() {
+            try {
+                const response = await fetch('books/');
+                const text = await response.text();
+                
+                // Create a temporary div to parse the directory listing
+                const div = document.createElement('div');
+                div.innerHTML = text;
+                
+                // Get all links that have icon-epub class
+                const books = Array.from(div.querySelectorAll('.icon-epub'))
+                    .map(a => a.title)
+                    .filter(title => title.endsWith('.epub'));
+                
+                bookSelect.innerHTML = books.map(book => `
+                    <option value="${book}" ${book === selectedBook ? 'selected' : ''}>
+                        ${book.replace('.epub', '')}
+                    </option>
+                `).join('');
+                
+                if (books.length === 0) {
+                    bookSelect.innerHTML = '<option>No books found</option>';
+                }
+            } catch (error) {
+                bookSelect.innerHTML = '<option>Error loading books</option>';
+            }
+        }
+
+        bookSelect.addEventListener('change', (e) => {
+            selectedBook = e.target.value;
+            localStorage.setItem('selectedBook', selectedBook);
+        });
+
+        // Load books when page loads
+        window.addEventListener('load', () => {
+            loadBooks();
+            const fontSize = localStorage.getItem('readerFontSize') || '18';
+            const fontFamily = localStorage.getItem('readerFontFamily') || 'arial';
+            const linesPerPageSetting = localStorage.getItem('readerLinesPerPage') || '25';
+            
+            fontSizeControl.value = fontSize;
+            fontFamilyControl.value = fontFamily;
+            linesPerPage.value = linesPerPageSetting;
+            updatePreview();
+        });
+
+        function updatePreview() {
+            fontPreview.style.fontSize = `${fontSizeControl.value}px`;
+            fontPreview.className = `font-preview font-${fontFamilyControl.value}`;
+        }
+
+        fontSizeControl.addEventListener('change', updatePreview);
+        fontFamilyControl.addEventListener('change', updatePreview);
+
+        function saveAndReturn() {
+            localStorage.setItem('readerFontSize', fontSizeControl.value);
+            localStorage.setItem('readerFontFamily', fontFamilyControl.value);
+            localStorage.setItem('readerLinesPerPage', linesPerPage.value);
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html> 

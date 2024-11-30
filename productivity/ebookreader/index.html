@@ -141,7 +141,7 @@
         .font-arial { font-family: Arial, Helvetica, sans-serif; }
         .font-verdana { font-family: Verdana, Geneva, sans-serif; }
         .font-courier { font-family: "Courier New", Courier, monospace; }
-        .font-comic { font-family: "Comic Sans MS", "Comic Sans", cursive; }
+        .font-comic { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -227,7 +227,18 @@
         }
 
         function getLinesPerPage() {
-            return parseInt(localStorage.getItem('readerLinesPerPage')) || 25;
+            const settings = loadBookSettings(localStorage.getItem('selectedBook'));
+            return parseInt(settings.linesPerPage);
+        }
+
+        function loadBookSettings(book) {
+            const settingsKey = `bookSettings_${book}`;
+            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+            return {
+                fontSize: settings.fontSize || '18',
+                fontFamily: settings.fontFamily || 'arial',
+                linesPerPage: settings.linesPerPage || '25'
+            };
         }
 
         function parseContent(text) {
@@ -250,30 +261,24 @@
             // Process text into lines with proper wrapping
             let allLines = [];
             paragraphs.forEach(paragraph => {
-                measureDiv.textContent = paragraph;
-                const paragraphHeight = measureDiv.offsetHeight;
-                const lineHeight = parseFloat(getComputedStyle(measureDiv).lineHeight);
-                const linesInParagraph = Math.ceil(paragraphHeight / lineHeight);
+                // Split paragraph into sentences
+                const sentences = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
+                let currentLine = '';
                 
-                // Split long paragraphs into approximate lines
-                const words = paragraph.split(' ');
-                let currentLine = [];
-                let currentText = '';
-                
-                words.forEach(word => {
-                    const testText = currentText + (currentText ? ' ' : '') + word;
-                    measureDiv.textContent = testText;
-                    
-                    if (measureDiv.offsetHeight > lineHeight) {
-                        allLines.push(currentText);
-                        currentText = word;
+                sentences.forEach(sentence => {
+                    measureDiv.textContent = currentLine + sentence;
+                    if (measureDiv.offsetHeight > parseFloat(getComputedStyle(measureDiv).lineHeight)) {
+                        if (currentLine) {
+                            allLines.push(currentLine.trim());
+                        }
+                        currentLine = sentence;
                     } else {
-                        currentText = testText;
+                        currentLine += sentence;
                     }
                 });
                 
-                if (currentText) {
-                    allLines.push(currentText);
+                if (currentLine) {
+                    allLines.push(currentLine.trim());
                 }
                 allLines.push(''); // Add empty line between paragraphs
             });
@@ -281,23 +286,44 @@
             // Remove the measurement div
             document.body.removeChild(measureDiv);
 
-            // Group lines into pages
+            // Group lines into pages, ensuring complete sentences
             const linesPerPage = getLinesPerPage();
             pages = [];
-            
-            for (let i = 0; i < allLines.length; i += linesPerPage) {
-                const pageLines = allLines.slice(i, i + linesPerPage);
-                pages.push(pageLines.join('\n'));
+            let currentPage = [];
+            let lineCount = 0;
+
+            for (let i = 0; i < allLines.length; i++) {
+                const line = allLines[i];
+                currentPage.push(line);
+                lineCount++;
+
+                // Check if we've reached the line limit
+                if (lineCount >= linesPerPage) {
+                    // Look ahead to include the rest of the sentence if needed
+                    let j = i + 1;
+                    while (j < allLines.length && !allLines[j-1].match(/[.!?]$/)) {
+                        currentPage.push(allLines[j]);
+                        j++;
+                    }
+                    
+                    pages.push(currentPage.join('\n'));
+                    currentPage = [];
+                    lineCount = 0;
+                    i = j - 1; // Update the counter to skip the lines we've included
+                }
+            }
+
+            // Add any remaining lines as the last page
+            if (currentPage.length > 0) {
+                pages.push(currentPage.join('\n'));
             }
         }
 
         // Apply saved font settings when displaying content
         function applyFontSettings() {
-            const fontSize = localStorage.getItem('readerFontSize') || '18';
-            const fontFamily = localStorage.getItem('readerFontFamily') || 'arial';
-            
-            content.style.fontSize = `${fontSize}px`;
-            content.className = `content font-${fontFamily}`;
+            const settings = loadBookSettings(localStorage.getItem('selectedBook'));
+            content.style.fontSize = `${settings.fontSize}px`;
+            content.className = `content font-${settings.fontFamily}`;
         }
 
         function displayCurrentPage() {

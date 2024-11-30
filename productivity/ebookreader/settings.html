@@ -78,7 +78,7 @@
         .font-arial { font-family: Arial, Helvetica, sans-serif; }
         .font-verdana { font-family: Verdana, Geneva, sans-serif; }
         .font-courier { font-family: "Courier New", Courier, monospace; }
-        .font-comic { font-family: "Comic Sans MS", "Comic Sans", cursive; }
+        .font-comic { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive; }
 
         /* Add number input styling */
         input[type="number"] {
@@ -188,21 +188,49 @@
             }
         }
 
+        // Add function to get settings key for current book
+        function getSettingsKey(book) {
+            return `bookSettings_${book}`;
+        }
+
+        // Function to load settings for a specific book
+        function loadBookSettings(book) {
+            const settingsKey = getSettingsKey(book);
+            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+            return {
+                fontSize: settings.fontSize || '18',
+                fontFamily: settings.fontFamily || 'arial',
+                linesPerPage: settings.linesPerPage || '25'
+            };
+        }
+
+        // Function to save settings for a specific book
+        function saveBookSettings(book, settings) {
+            const settingsKey = getSettingsKey(book);
+            localStorage.setItem(settingsKey, JSON.stringify(settings));
+        }
+
+        // Update the load event to use per-book settings
+        window.addEventListener('load', () => {
+            loadBooks();
+            const settings = loadBookSettings(selectedBook);
+            
+            fontSizeControl.value = settings.fontSize;
+            fontFamilyControl.value = settings.fontFamily;
+            linesPerPage.value = settings.linesPerPage;
+            updatePreview();
+        });
+
+        // Update book selection to load appropriate settings
         bookSelect.addEventListener('change', (e) => {
             selectedBook = e.target.value;
             localStorage.setItem('selectedBook', selectedBook);
-        });
-
-        // Load books when page loads
-        window.addEventListener('load', () => {
-            loadBooks();
-            const fontSize = localStorage.getItem('readerFontSize') || '18';
-            const fontFamily = localStorage.getItem('readerFontFamily') || 'arial';
-            const linesPerPageSetting = localStorage.getItem('readerLinesPerPage') || '25';
             
-            fontSizeControl.value = fontSize;
-            fontFamilyControl.value = fontFamily;
-            linesPerPage.value = linesPerPageSetting;
+            // Load settings for the newly selected book
+            const settings = loadBookSettings(selectedBook);
+            fontSizeControl.value = settings.fontSize;
+            fontFamilyControl.value = settings.fontFamily;
+            linesPerPage.value = settings.linesPerPage;
             updatePreview();
         });
 
@@ -214,10 +242,14 @@
         fontSizeControl.addEventListener('input', updatePreview);
         fontFamilyControl.addEventListener('change', updatePreview);
 
+        // Update save function to save per-book settings
         function saveAndReturn() {
-            localStorage.setItem('readerFontSize', fontSizeControl.value);
-            localStorage.setItem('readerFontFamily', fontFamilyControl.value);
-            localStorage.setItem('readerLinesPerPage', linesPerPage.value);
+            const settings = {
+                fontSize: fontSizeControl.value,
+                fontFamily: fontFamilyControl.value,
+                linesPerPage: linesPerPage.value
+            };
+            saveBookSettings(selectedBook, settings);
             window.location.href = 'index.html';
         }
 

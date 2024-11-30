@@ -364,17 +364,42 @@
 
         function displayCurrentPage() {
             if (pages.length > 0) {
+                // Get settings from localStorage
+                const selectedBook = localStorage.getItem('selectedBook');
+                const settingsKey = `bookSettings_${selectedBook}`;
+                const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+                
+                // Set default values if not found
+                const fontSize = settings.fontSize || '18';
+                const fontFamily = settings.fontFamily || 'arial';
+                
+                // Apply settings to content
+                content.style.fontSize = `${fontSize}px`;
+                content.className = `content font-${fontFamily}`;
+                
+                // Display content
                 content.innerHTML = `
                     <div style="margin-bottom: 20px">
                         ${pages[currentPage]}
                     </div>
                 `;
                 
-                // Apply font settings after content is updated
-                applyFontSettings();
-                
+                // Update page info
                 pageInput.value = currentPage + 1;
                 totalPagesSpan.textContent = pages.length;
+                
+                // Update font info display
+                const fontNames = {
+                    'georgia': 'Georgia',
+                    'palatino': 'Palatino',
+                    'times': 'Times New Roman',
+                    'arial': 'Arial',
+                    'verdana': 'Verdana',
+                    'courier': 'Courier New',
+                    'comic': 'Comic Sans MS'
+                };
+                fontInfo.textContent = `${fontNames[fontFamily]} ${fontSize}px`;
+                
                 savePageState();
             }
         }

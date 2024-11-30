@@ -4,7 +4,10 @@ const ITEMS_PER_PAGE = 10;
 let currentPage = 1;
 let penaltyChart = null;
 const DAILY_SNAPSHOT_KEY = 'penaltyTimeSnapshots';
-let currentGraphType = 'bar';
+let currentGraphType = localStorage.getItem('penaltyGraphType') || 'bar';
+const RECENT_TREND_KEY = 'penaltyTimeRecentTrend';
+const TREND_INTERVAL_MINUTES = 15; // Store data point every 15 minutes
+let recentTrendChart = null;
 
 // Update display on page load
 window.addEventListener('load', () => {
@@ -19,9 +22,16 @@ window.addEventListener('load', () => {
     updateTotal();
     startCountdown();
     updateGraph();
+    updateRecentTrendGraph();
     
-    // Add graph toggle handler
+    // Start trend tracking
+    updateRecentTrend();
+    setInterval(updateRecentTrend, TREND_INTERVAL_MINUTES * 60 * 1000);
+    
+    // Add graph toggle handler and set initial button text
     document.getElementById('toggleGraph').addEventListener('click', toggleGraphType);
+    document.getElementById('toggleGraph').textContent = 
+        `Switch to ${currentGraphType === 'bar' ? 'Line' : 'Bar'} Graph`;
 });
 
 function saveRate() {
@@ -59,6 +69,7 @@ function calculatePenalty() {
     updateTotal();
     startCountdown();
     updateGraph();
+    updateRecentTrend();
 
     document.getElementById('amount').value = '';
 }
@@ -180,6 +191,7 @@ function clearHistory() {
         updateTotal();
         document.getElementById('result').textContent = 'Your penalty time will appear here';
         updateGraph();
+        updateRecentTrend();
     }
 }
 
@@ -309,9 +321,106 @@ function updateGraph() {
 
 function toggleGraphType() {
     currentGraphType = currentGraphType === 'bar' ? 'line' : 'bar';
+    localStorage.setItem('penaltyGraphType', currentGraphType);
     const button = document.getElementById('toggleGraph');
     button.textContent = `Switch to ${currentGraphType === 'bar' ? 'Line' : 'Bar'} Graph`;
     updateGraph();
+}
+
+function updateRecentTrend() {
+    const now = new Date();
+    let trendData = JSON.parse(localStorage.getItem(RECENT_TREND_KEY) || '[]');
+    
+    // Remove data points older than 3 hours
+    const threeHoursAgo = new Date(now - 3 * 60 * 60 * 1000);
+    trendData = trendData.filter(point => new Date(point.timestamp) > threeHoursAgo);
+    
+    // Calculate current total remaining time
+    const totalMinutes = penalties.reduce((sum, penalty) => {
+        const endTime = new Date(penalty.endTime);
+        if (endTime > now) {
+            const remainingMs = endTime - now;
+            return sum + (remainingMs / (60 * 1000));
+        }
+        return sum;
+    }, 0);
+
+    // Add new data point
+    trendData.push({
+        timestamp: now.toISOString(),
+        minutes: totalMinutes
+    });
+
+    localStorage.setItem(RECENT_TREND_KEY, JSON.stringify(trendData));
+    updateRecentTrendGraph();
+}
+
+function updateRecentTrendGraph() {
+    const ctx = document.getElementById('recentTrendGraph');
+    
+    // Get trend data
+    const trendData = JSON.parse(localStorage.getItem(RECENT_TREND_KEY) || '[]');
+    
+    // Destroy existing chart if it exists
+    if (recentTrendChart) {
+        recentTrendChart.destroy();
+    }
+
+    // Create new chart
+    recentTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trendData.map(point => {
+                const date = new Date(point.timestamp);
+                return date.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                });
+            }),
+            datasets: [{
+                label: 'Remaining Time (hours)',
+                data: trendData.map(point => +(point.minutes / 60).toFixed(1)),
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Time (hours)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Penalty Time Trend - Last 3 Hours'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const hours = context.raw;
+                            const minutes = Math.round((hours % 1) * 60);
+                            return `${Math.floor(hours)}h ${minutes}m`;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 // Update total every minute

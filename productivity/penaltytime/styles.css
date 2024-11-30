@@ -111,4 +111,14 @@ button:hover {
 
 .graph-toggle:hover {
     background-color: #5a6268;
+}
+
+.graph-container h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.graph-container + .graph-container {
+    margin-top: 20px;
 } 

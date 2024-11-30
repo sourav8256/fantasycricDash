@@ -361,6 +361,19 @@ function updateRecentTrendGraph() {
     // Get trend data
     const trendData = JSON.parse(localStorage.getItem(RECENT_TREND_KEY) || '[]');
     
+    if (trendData.length === 0) return;
+
+    // Calculate min and max values for better scaling
+    const values = trendData.map(point => point.minutes / 60);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue;
+    
+    // Set y-axis minimum to slightly below the lowest value
+    const yMin = Math.max(0, minValue - (range * 0.1));
+    // Set y-axis maximum to slightly above the highest value
+    const yMax = maxValue + (range * 0.1);
+
     // Destroy existing chart if it exists
     if (recentTrendChart) {
         recentTrendChart.destroy();
@@ -379,22 +392,29 @@ function updateRecentTrendGraph() {
             }),
             datasets: [{
                 label: 'Remaining Time (hours)',
-                data: trendData.map(point => +(point.minutes / 60).toFixed(1)),
+                data: values,
                 borderColor: 'rgba(75, 192, 192, 1)',
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderWidth: 2,
                 tension: 0.3,
-                fill: true
+                fill: true,
+                pointRadius: 3,
+                pointHoverRadius: 5
             }]
         },
         options: {
             responsive: true,
             scales: {
                 y: {
-                    beginAtZero: true,
+                    min: yMin,
+                    max: yMax,
                     title: {
                         display: true,
                         text: 'Time (hours)'
+                    },
+                    ticks: {
+                        // Show more precise values on y-axis
+                        precision: 1
                     }
                 },
                 x: {
@@ -418,6 +438,9 @@ function updateRecentTrendGraph() {
                         }
                     }
                 }
+            },
+            animation: {
+                duration: 750
             }
         }
     });

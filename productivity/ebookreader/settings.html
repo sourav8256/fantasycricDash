@@ -103,14 +103,14 @@
         </div>
 
         <div class="setting-group">
-            <h2>Font Size</h2>
-            <select id="fontSizeControl">
-                <option value="16">16px</option>
-                <option value="18">18px</option>
-                <option value="20">20px</option>
-                <option value="22">22px</option>
-                <option value="24">24px</option>
-            </select>
+            <h2>Font Size (px)</h2>
+            <input type="number" 
+                   id="fontSizeControl" 
+                   min="12" 
+                   max="36" 
+                   step="1" 
+                   value="18"
+                   placeholder="Enter font size in pixels">
         </div>
 
         <div class="setting-group">
@@ -211,7 +211,7 @@
             fontPreview.className = `font-preview font-${fontFamilyControl.value}`;
         }
 
-        fontSizeControl.addEventListener('change', updatePreview);
+        fontSizeControl.addEventListener('input', updatePreview);
         fontFamilyControl.addEventListener('change', updatePreview);
 
         function saveAndReturn() {
@@ -220,6 +220,13 @@
             localStorage.setItem('readerLinesPerPage', linesPerPage.value);
             window.location.href = 'index.html';
         }
+
+        fontSizeControl.addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (value < 12) e.target.value = 12;
+            if (value > 36) e.target.value = 36;
+            updatePreview();
+        });
     </script>
 </body>
 </html> 

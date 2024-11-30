@@ -288,7 +288,8 @@
                 fontFamily: fontFamilyControl.value,
                 linesPerPage: linesPerPage.value
             };
-            saveBookSettings(selectedBook, settings);
+            const settingsKey = `bookSettings_${selectedBook}`;
+            localStorage.setItem(settingsKey, JSON.stringify(settings));
             window.location.href = 'index.html';
         }
 

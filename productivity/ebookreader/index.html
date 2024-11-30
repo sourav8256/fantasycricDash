@@ -344,11 +344,9 @@
             }
         }
 
-        // Apply saved font settings when displaying content
         function applyFontSettings() {
             const settings = loadBookSettings(localStorage.getItem('selectedBook'));
             content.style.fontSize = `${settings.fontSize}px`;
-            content.className = content.className.replace(/font-\w+/g, '').trim();
             content.className = `content font-${settings.fontFamily}`;
             
             // Update font info display
@@ -377,8 +375,6 @@
                 
                 pageInput.value = currentPage + 1;
                 totalPagesSpan.textContent = pages.length;
-                
-                // Save page state whenever page changes
                 savePageState();
             }
         }

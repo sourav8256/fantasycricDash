@@ -154,28 +154,36 @@
         // Function to load and display available books
         async function loadBooks() {
             try {
+                // Try directory listing first
                 const response = await fetch('books/');
                 const text = await response.text();
+                let books = [];
                 
-                // Create a temporary div to parse the directory listing
+                // Parse directory listing
                 const div = document.createElement('div');
                 div.innerHTML = text;
-                
-                // Get all links that have icon-epub class
-                const books = Array.from(div.querySelectorAll('.icon-epub'))
+                books = Array.from(div.querySelectorAll('.icon-epub'))
                     .map(a => a.title)
                     .filter(title => title.endsWith('.epub'));
-                
-                bookSelect.innerHTML = books.map(book => `
-                    <option value="${book}" ${book === selectedBook ? 'selected' : ''}>
-                        ${book.replace('.epub', '')}
-                    </option>
-                `).join('');
-                
+
+                // If directory listing fails or returns no books, try list.json
                 if (books.length === 0) {
+                    const jsonResponse = await fetch('books/list.json');
+                    books = await jsonResponse.json();
+                }
+
+                // Update select options
+                if (books.length > 0) {
+                    bookSelect.innerHTML = books.map(book => `
+                        <option value="${book}" ${book === selectedBook ? 'selected' : ''}>
+                            ${book.replace('.epub', '')}
+                        </option>
+                    `).join('');
+                } else {
                     bookSelect.innerHTML = '<option>No books found</option>';
                 }
             } catch (error) {
+                console.error('Error loading books:', error);
                 bookSelect.innerHTML = '<option>Error loading books</option>';
             }
         }

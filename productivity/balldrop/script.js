@@ -29,14 +29,23 @@ function loadFromSettings() {
     // Calculate remaining balls based on elapsed time
     if (settings.lastDropTime) {
         const elapsedMs = Date.now() - settings.lastDropTime;
-        const dropInterval = settings.dropInterval * 1000; // convert to ms
+        const dropInterval = settings.dropInterval * 1000;
         const dropsOccurred = Math.floor(elapsedMs / dropInterval);
         remainingBalls = Math.max(0, settings.remainingBalls - dropsOccurred);
+        
+        // Calculate time until next drop
+        if (remainingBalls > 0) {
+            const msInCurrentInterval = elapsedMs % dropInterval;
+            const msUntilNextDrop = dropInterval - msInCurrentInterval;
+            timeLeft = Math.ceil(msUntilNextDrop / 1000);
+        } else {
+            timeLeft = settings.dropInterval;
+        }
     } else {
         remainingBalls = settings.remainingBalls ?? totalBalls;
+        timeLeft = settings.dropInterval;
     }
 
-    timeLeft = settings.dropInterval;
     ballSize = settings.ballSize;
     ballSpacing = ballSize * 1.5;
     
@@ -51,15 +60,6 @@ function loadFromSettings() {
     `;
     document.head.appendChild(style);
     
-    // Calculate time until next drop
-    if (settings.lastDropTime && remainingBalls > 0) {
-        const elapsedMs = Date.now() - settings.lastDropTime;
-        const dropInterval = settings.dropInterval * 1000;
-        const msInCurrentInterval = elapsedMs % dropInterval;
-        const msUntilNextDrop = dropInterval - msInCurrentInterval;
-        timeLeft = Math.ceil(msUntilNextDrop / 1000);
-    }
-    
     // Render balls
     logRenderBalls('0002', remainingBalls, totalBalls);
     renderBalls(remainingBalls, totalBalls);
@@ -68,7 +68,6 @@ function loadFromSettings() {
     setState({
         ...settings,
         remainingBalls,
-        timeLeft,
         lastDropTime: remainingBalls === 0 ? null : settings.lastDropTime
     });
     
@@ -88,14 +87,11 @@ function returnBallToUpper() {
     logRenderBalls('0001', remainingBalls, totalBalls);
     renderBalls(remainingBalls, totalBalls);
     
-    const currentState = getState();
-    const state = {
-        remainingBalls: remainingBalls,
-        timeLeft: getInitialInterval(),
-        lastDropTime: wasEmpty ? Date.now() : currentState.lastDropTime,
-        dropInterval: getInitialInterval()
-    };
-    setState(state);
+    setState({
+        ...getState(),
+        remainingBalls,
+        lastDropTime: wasEmpty ? Date.now() : getState().lastDropTime
+    });
     
     timeLeft = getInitialInterval();
     timeDisplay.textContent = formatTime(timeLeft);
@@ -107,23 +103,17 @@ function dropBall() {
         remainingBalls--;
         logRenderBalls('0003', remainingBalls, totalBalls);
         renderBalls(remainingBalls, totalBalls);
+        
         setState({
-            remainingBalls: remainingBalls,
-            timeLeft: timeLeft,
-            lastDropTime: timeLeft === getInitialInterval() ? Date.now() : getState().lastDropTime,
-            dropInterval: getInitialInterval()
+            ...getState(),
+            remainingBalls,
+            lastDropTime: remainingBalls === 0 ? null : Date.now()
         });
     }
     
     if (remainingBalls === 0) {
         clearInterval(interval);
         isRunning = false;
-        setState({
-            remainingBalls: remainingBalls,
-            timeLeft: timeLeft,
-            lastDropTime: timeLeft === getInitialInterval() ? Date.now() : getState().lastDropTime,
-            dropInterval: getInitialInterval()
-        });
     }
 }
 
@@ -139,16 +129,13 @@ function updateTimer() {
 
 function startTimer() {
     clearInterval(interval);
-    if (balls.length > 0) {
+    if (remainingBalls > 0) {
         const settings = getState();
         if (!settings.lastDropTime) {
-            const initialState = {
+            setState({
                 ...settings,
-                timeLeft: getInitialInterval(),
-                lastDropTime: Date.now(),
-                dropInterval: getInitialInterval()
-            };
-            setState(initialState);
+                lastDropTime: Date.now()
+            });
         }
 
         const dropInterval = getInitialInterval();
@@ -168,8 +155,13 @@ resetBtn.addEventListener('click', () => {
     isRunning = false;
     timeLeft = getInitialInterval();
     timeDisplay.textContent = formatTime(timeLeft);
-    setState(null);
+    
     remainingBalls = totalBalls;
+    setState({
+        ...getState(),
+        remainingBalls,
+        lastDropTime: Date.now()
+    });
     logRenderBalls('0004', remainingBalls, totalBalls);
     renderBalls(remainingBalls, totalBalls);
     startTimer();
@@ -218,10 +210,9 @@ function addBall() {
         logRenderBalls('0005', remainingBalls, totalBalls);
         renderBalls(remainingBalls, totalBalls);
         setState({
-            remainingBalls: remainingBalls,
-            timeLeft: timeLeft,
-            lastDropTime: timeLeft === getInitialInterval() ? Date.now() : getState().lastDropTime,
-            dropInterval: getInitialInterval()
+            ...getState(),
+            remainingBalls,
+            lastDropTime: remainingBalls === 1 ? Date.now() : getState().lastDropTime
         });
         
         if (!interval && remainingBalls === 1) {
@@ -236,10 +227,9 @@ function removeBall() {
         logRenderBalls('0006', remainingBalls, totalBalls);
         renderBalls(remainingBalls, totalBalls);
         setState({
-            remainingBalls: remainingBalls,
-            timeLeft: timeLeft,
-            lastDropTime: timeLeft === getInitialInterval() ? Date.now() : getState().lastDropTime,
-            dropInterval: getInitialInterval()
+            ...getState(),
+            remainingBalls,
+            lastDropTime: remainingBalls === 1 ? Date.now() : getState().lastDropTime
         });
         
         if (remainingBalls === 0) {
@@ -260,27 +250,12 @@ function updateButtonStates() {
     removeBallBtn.disabled = remainingBalls === 0;
 }
 
-// Modify loadState function to include button state updates
-const originalLoadState = loadFromSettings;
-loadFromSettings = function() {
-    originalLoadState.apply(this, arguments);
-    updateButtonStates();
-}
-
-// Modify dropBall function to include button state updates
-const originalDropBall = dropBall;
-dropBall = function() {
-    originalDropBall.apply(this, arguments);
-    updateButtonStates();
-}
-
 // Add near the top with other state-related functions
 function getState() {
     const savedSettings = localStorage.getItem('ballDropSettings');
     return savedSettings ? JSON.parse(savedSettings) : {
         totalBalls: 20,
         remainingBalls: 20,
-        timeLeft: 1,
         lastDropTime: Date.now(),
         dropInterval: 1,
         ballSize: 40,
@@ -301,6 +276,8 @@ function setState(state) {
         ...currentSettings,
         ...state
     };
+
+    console.log('line 278, newSettings', newSettings);
     localStorage.setItem('ballDropSettings', JSON.stringify(newSettings));
 }
 

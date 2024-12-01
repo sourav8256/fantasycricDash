@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Motivator</title>
+    <style>
+        :root {
+            --primary: #7C4DFF;
+            --primary-dark: #5E35B1;
+            --success: #00C853;
+            --easy: #4CAF50;
+            --medium: #2196F3;
+            --hard: #FF9800;
+            --epic: #E91E63;
+            --background: #F5F5F7;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--background);
+            color: #2C3E50;
+            line-height: 1.6;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 2.5em;
+            margin-bottom: 1.5em;
+            font-weight: 700;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: linear-gradient(145deg, #ffffff, #f5f5f5);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 5px 5px 15px #f0f0f0,
+                        -5px -5px 15px #ffffff;
+            transition: transform 0.2s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-box h3 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-box p {
+            font-size: 2em;
+            margin: 10px 0 0;
+            font-weight: bold;
+            color: #2C3E50;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            transition: width 0.5s ease;
+        }
+
+        .task-input {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .task-input input, #task-difficulty {
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .task-input input:focus, #task-difficulty:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.1);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(124, 77, 255, 0.2);
+        }
+
+        .tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .task {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .task:hover {
+            transform: translateX(5px);
+        }
+
+        .task.easy { border-left: 5px solid var(--easy); }
+        .task.medium { border-left: 5px solid var(--medium); }
+        .task.hard { border-left: 5px solid var(--hard); }
+        .task.epic { border-left: 5px solid var(--epic); }
+
+        .difficulty-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: white;
+            margin-left: 12px;
+        }
+
+        .difficulty-badge.easy { background: var(--easy); }
+        .difficulty-badge.medium { background: var(--medium); }
+        .difficulty-badge.hard { background: var(--hard); }
+        .difficulty-badge.epic { background: var(--epic); }
+
+        .achievements {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #f5f5f5;
+        }
+
+        .achievements h2 {
+            color: var(--primary);
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .achievement {
+            padding: 15px 20px;
+            background: linear-gradient(145deg, #f8f9fa, #ffffff);
+            margin: 10px 0;
+            border-radius: 12px;
+            border-left: 5px solid var(--success);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .achievement:hover {
+            transform: translateX(5px);
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .task-input {
+                flex-direction: column;
+            }
+            
+            .task-input input, #task-difficulty, button {
+                width: 100%;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Work Motivator</h1>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <h3>Level</h3>
+                <p id="level">1</p>
+            </div>
+            <div class="stat-box">
+                <h3>XP</h3>
+                <p id="xp">0</p>
+            </div>
+            <div class="stat-box">
+                <h3>Tasks Completed</h3>
+                <p id="tasks-completed">0</p>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress" id="xp-progress"></div>
+        </div>
+
+        <div class="task-input">
+            <button onclick="generateTask()">Generate New Task</button>
+            <button onclick="toggleAutoGenerate()" id="autoGenBtn">Enable Auto-Generate</button>
+        </div>
+
+        <div class="tasks" id="task-list">
+            <!-- Tasks will be added here -->
+        </div>
+
+        <div class="achievements">
+            <h2>Achievements</h2>
+            <div id="achievements-list">
+                <!-- Achievements will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const taskTemplates = {
+            easy: [
+                "Reply to one important email",
+                "Review your to-do list",
+                "Clean up your desktop/workspace",
+                "Update your calendar",
+                "Document what you're currently working on",
+                "Write down your next steps",
+                "Check project notifications",
+                "Review recent changes in your code",
+                "Update your status/progress"
+            ],
+            medium: [
+                "Fix one small bug",
+                "Write documentation for one feature",
+                "Review one pull request",
+                "Refactor a small piece of code",
+                "Add comments to unclear code sections",
+                "Create a new test case",
+                "Optimize one slow function",
+                "Implement a minor feature",
+                "Debug an issue",
+                "Research a solution for a problem"
+            ],
+            hard: [
+                "Complete a key feature implementation",
+                "Solve a complex bug",
+                "Design a new component/module",
+                "Improve performance of a critical section",
+                "Write a technical specification",
+                "Implement error handling for a module",
+                "Create a project milestone plan",
+                "Refactor a complex component",
+                "Add comprehensive tests for a module",
+                "Integrate a new service/library"
+            ],
+            epic: [
+                "Complete the main feature milestone",
+                "Architect a new system design",
+                "Implement a critical system component",
+                "Complete the sprint's primary objective",
+                "Ship a major feature",
+                "Complete performance optimization phase",
+                "Finish security implementation",
+                "Complete API integration",
+                "Deliver the MVP version",
+                "Finish the technical debt cleanup"
+            ]
+        };
+
+        // Add task categories
+        const taskCategories = {
+            coding: {
+                easy: [
+                    "Fix a typo in the code",
+                    "Add a missing comment",
+                    "Update a variable name",
+                    "Remove unused imports",
+                    "Add logging to a function"
+                ],
+                medium: [
+                    "Implement input validation",
+                    "Add error handling",
+                    "Create a helper function",
+                    "Optimize a database query",
+                    "Add unit tests for a function"
+                ],
+                hard: [
+                    "Implement a new API endpoint",
+                    "Create a new component",
+                    "Add caching mechanism",
+                    "Implement authentication flow",
+                    "Create data migration script"
+                ]
+            },
+            design: {
+                easy: [
+                    "Update color scheme",
+                    "Fix spacing issues",
+                    "Improve button styles",
+                    "Update icon set",
+                    "Fix mobile layout issues"
+                ],
+                medium: [
+                    "Create component variations",
+                    "Implement responsive design",
+                    "Design new feature mockup",
+                    "Improve accessibility",
+                    "Create animation effects"
+                ],
+                hard: [
+                    "Design new user flow",
+                    "Create design system",
+                    "Implement theme switching",
+                    "Design complex data visualization",
+                    "Create interactive prototype"
+                ]
+            },
+            planning: {
+                easy: [
+                    "Update project timeline",
+                    "Create today's todo list",
+                    "Schedule team sync",
+                    "Update task status",
+                    "Review project requirements"
+                ],
+                medium: [
+                    "Plan next sprint tasks",
+                    "Create technical proposal",
+                    "Review resource allocation",
+                    "Update project documentation",
+                    "Create progress report"
+                ],
+                hard: [
+                    "Create project roadmap",
+                    "Plan system architecture",
+                    "Define technical requirements",
+                    "Create scaling strategy",
+                    "Plan migration strategy"
+                ]
+            }
+        };
+
+        let state = {
+            level: 1,
+            xp: 0,
+            tasksCompleted: 0,
+            tasks: [],
+            achievements: [
+                { id: 1, name: "First Step", description: "Complete your first task", unlocked: false },
+                { id: 2, name: "Getting Started", description: "Reach level 2", unlocked: false },
+                { id: 3, name: "Task Master", description: "Complete 10 tasks", unlocked: false },
+                { id: 4, name: "Productivity Pro", description: "Reach level 5", unlocked: false }
+            ],
+            autoGenerate: false,
+            autoGenInterval: null,
+            currentTask: null
+        };
+
+        // Load saved state
+        const savedState = localStorage.getItem('motivatorState');
+        if (savedState) {
+            const loadedState = JSON.parse(savedState);
+            state = { ...state, ...loadedState };
+            
+            // Restart auto-generate if it was enabled
+            if (state.autoGenerate) {
+                toggleAutoGenerate();
+            }
+            
+            updateUI();
+        }
+
+        function saveState() {
+            localStorage.setItem('motivatorState', JSON.stringify(state));
+        }
+
+        const XP_REWARDS = {
+            easy: 30,
+            medium: 50,
+            hard: 100,
+            epic: 200
+        };
+
+        function generateTask() {
+            // Determine difficulty based on current level
+            let difficulties = ['easy', 'medium', 'hard', 'epic'];
+            let availableDifficulties = difficulties.slice(0, Math.min(Math.ceil(state.level / 2), 4));
+            let difficulty = availableDifficulties[Math.floor(Math.random() * availableDifficulties.length)];
+            
+            // Randomly choose between general tasks and category-specific tasks
+            let taskText;
+            if (Math.random() < 0.5) {
+                // Use general tasks
+                let tasks = taskTemplates[difficulty];
+                taskText = tasks[Math.floor(Math.random() * tasks.length)];
+            } else {
+                // Use category-specific tasks
+                let categories = Object.keys(taskCategories);
+                let category = categories[Math.floor(Math.random() * categories.length)];
+                let categoryTasks = taskCategories[category][difficulty] || taskTemplates[difficulty];
+                taskText = categoryTasks[Math.floor(Math.random() * categoryTasks.length)];
+            }
+            
+            state.tasks.push({
+                id: Date.now(),
+                text: taskText,
+                completed: false,
+                difficulty: difficulty
+            });
+            
+            updateUI();
+            saveState();
+        }
+
+        function toggleAutoGenerate() {
+            state.autoGenerate = !state.autoGenerate;
+            const btn = document.getElementById('autoGenBtn');
+            
+            if (state.autoGenerate) {
+                btn.textContent = 'Disable Auto-Generate';
+                btn.style.background = 'var(--hard)';
+                
+                // Generate new task every 3 minutes if no active tasks
+                state.autoGenInterval = setInterval(() => {
+                    if (state.tasks.filter(t => !t.completed).length === 0) {
+                        generateTask();
+                    }
+                }, 180000); // 3 minutes
+                
+                // Generate first task immediately if no tasks
+                if (state.tasks.filter(t => !t.completed).length === 0) {
+                    generateTask();
+                }
+            } else {
+                btn.textContent = 'Enable Auto-Generate';
+                btn.style.background = 'var(--primary)';
+                clearInterval(state.autoGenInterval);
+            }
+            
+            saveState();
+        }
+
+        function completeTask(taskId) {
+            const task = state.tasks.find(t => t.id === taskId);
+            if (task && !task.completed) {
+                task.completed = true;
+                state.tasksCompleted++;
+                addXP(XP_REWARDS[task.difficulty]);
+                checkAchievements();
+                
+                // Auto-generate new task if enabled
+                if (state.autoGenerate && state.tasks.filter(t => !t.completed).length === 0) {
+                    setTimeout(generateTask, 1000); // Small delay for better UX
+                }
+                
+                updateUI();
+                saveState();
+            }
+        }
+
+        function addXP(amount) {
+            state.xp += amount;
+            const xpNeeded = state.level * 100;
+            
+            if (state.xp >= xpNeeded) {
+                state.level++;
+                state.xp = state.xp - xpNeeded;
+                showLevelUpMessage();
+                checkAchievements();
+            }
+        }
+
+        function showLevelUpMessage() {
+            alert(`Congratulations! You've reached level ${state.level}!`);
+        }
+
+        function checkAchievements() {
+            state.achievements.forEach(achievement => {
+                if (!achievement.unlocked) {
+                    switch(achievement.id) {
+                        case 1:
+                            if (state.tasksCompleted >= 1) achievement.unlocked = true;
+                            break;
+                        case 2:
+                            if (state.level >= 2) achievement.unlocked = true;
+                            break;
+                        case 3:
+                            if (state.tasksCompleted >= 10) achievement.unlocked = true;
+                            break;
+                        case 4:
+                            if (state.level >= 5) achievement.unlocked = true;
+                            break;
+                    }
+                    if (achievement.unlocked) {
+                        showAchievementMessage(achievement);
+                    }
+                }
+            });
+        }
+
+        function showAchievementMessage(achievement) {
+            alert(`Achievement Unlocked: ${achievement.name}\n${achievement.description}`);
+        }
+
+        function updateUI() {
+            document.getElementById('level').textContent = state.level;
+            document.getElementById('xp').textContent = state.xp;
+            document.getElementById('tasks-completed').textContent = state.tasksCompleted;
+            
+            // Update XP progress bar
+            const xpNeeded = state.level * 100;
+            const progressPercent = (state.xp / xpNeeded) * 100;
+            document.getElementById('xp-progress').style.width = `${progressPercent}%`;
+
+            // Update tasks with difficulty badges
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            state.tasks.forEach(task => {
+                if (!task.completed) {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = `task ${task.difficulty}`;
+                    taskElement.innerHTML = `
+                        <div>
+                            <span>${task.text}</span>
+                            <span class="difficulty-badge ${task.difficulty}">
+                                ${task.difficulty.charAt(0).toUpperCase() + task.difficulty.slice(1)}
+                            </span>
+                        </div>
+                        <button onclick="completeTask(${task.id})">Complete</button>
+                    `;
+                    taskList.appendChild(taskElement);
+                }
+            });
+
+            // Update achievements
+            const achievementsList = document.getElementById('achievements-list');
+            achievementsList.innerHTML = '';
+            state.achievements.forEach(achievement => {
+                if (achievement.unlocked) {
+                    const achievementElement = document.createElement('div');
+                    achievementElement.className = 'achievement';
+                    achievementElement.textContent = `${achievement.name} - ${achievement.description}`;
+                    achievementsList.appendChild(achievementElement);
+                }
+            });
+
+            // Update auto-generate button state
+            const btn = document.getElementById('autoGenBtn');
+            if (state.autoGenerate) {
+                btn.textContent = 'Disable Auto-Generate';
+                btn.style.background = 'var(--hard)';
+            } else {
+                btn.textContent = 'Enable Auto-Generate';
+                btn.style.background = 'var(--primary)';
+            }
+        }
+    </script>
+</body>
+</html>

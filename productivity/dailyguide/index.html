@@ -38,6 +38,10 @@
         .subtasks {
             padding: 10px;
             margin-top: 10px;
+            display: none;
+        }
+
+        .subtasks.expanded {
             display: block;
         }
 
@@ -48,17 +52,13 @@
             padding: 5px;
         }
 
-        .subtask input[type="checkbox"] {
-            margin-right: 10px;
-        }
-
         .arrow {
             transition: transform 0.3s ease;
             transform: rotate(90deg);
         }
 
-        .arrow.active {
-            transform: rotate(90deg);
+        .arrow.collapsed {
+            transform: rotate(0deg);
         }
 
         .category-filters {
@@ -154,47 +154,6 @@
                 ]
             },
             {
-                name: "Brush teeth",
-                category: "Daily",
-                subtasks: [
-                    "Wet toothbrush",
-                    "Apply toothpaste",
-                    "Brush for 2 minutes",
-                    "Rinse mouth",
-                    "Clean toothbrush"
-                ]
-            },
-            {
-                name: "Take vitamins",
-                category: "Daily",
-                subtasks: [
-                    "Get water",
-                    "Take daily multivitamin",
-                    "Take vitamin D",
-                    "Take omega-3"
-                ]
-            },
-            {
-                name: "Exercise",
-                category: "Daily",
-                subtasks: [
-                    "Warm up stretches",
-                    "Cardio (20 mins)",
-                    "Strength training",
-                    "Cool down stretches"
-                ]
-            },
-            {
-                name: "Meditate",
-                category: "Daily",
-                subtasks: [
-                    "Find quiet space",
-                    "Set timer",
-                    "Focus on breathing",
-                    "Clear mind"
-                ]
-            },
-            {
                 name: "Check Emails",
                 category: "Work",
                 subtasks: [
@@ -205,38 +164,27 @@
                 ]
             },
             {
-                name: "Team Meeting",
+                name: "Incident Management",
                 category: "Work",
                 subtasks: [
-                    "Review agenda",
-                    "Prepare updates",
-                    "Take notes",
-                    "Follow up on action items"
-                ]
-            },
-            {
-                name: "Project Planning",
-                category: "Work",
-                subtasks: [
-                    "Review project status",
-                    "Update timeline",
-                    "Identify blockers",
-                    "Delegate tasks",
-                    "Document decisions"
+                    "Update incident ticket",
+                    "Send status update email",
+                    "Follow up with team members",
+                    "Document resolution steps",
+                    "Close incident if resolved"
                 ]
             }
         ];
 
         let tasks = JSON.parse(localStorage.getItem('tasks')) || defaultTasks;
         let activeCategories = new Set(JSON.parse(localStorage.getItem('activeCategories')) || []);
-        let completedSubtasks = new Set(JSON.parse(localStorage.getItem('completedSubtasks')) || []);
+        let collapsedTasks = new Set(JSON.parse(localStorage.getItem('collapsedTasks')) || []);
 
         function resetToDefault() {
             if (confirm('Are you sure you want to reset to the default list? This will remove any custom tasks.')) {
                 tasks = [...defaultTasks];
-                completedSubtasks.clear();
-                localStorage.setItem('tasks', JSON.stringify(tasks));
-                localStorage.setItem('completedSubtasks', JSON.stringify([...completedSubtasks]));
+                collapsedTasks.clear();
+                localStorage.setItem('collapsedTasks', JSON.stringify([...collapsedTasks]));
                 createCategoryFilters();
                 createTaskElements();
             }
@@ -249,7 +197,7 @@
             // Add "All" filter
             const allFilter = document.createElement('button');
             allFilter.className = 'category-filter';
-            if (activeCategories.size === categories.size) {
+            if (localStorage.getItem('allSelected') === 'true') {
                 allFilter.classList.add('active');
             }
             allFilter.textContent = 'All';
@@ -267,45 +215,46 @@
                 filterButton.onclick = () => toggleFilter(category);
                 filtersContainer.appendChild(filterButton);
             });
-
-            // Initialize activeCategories if empty
-            if (activeCategories.size === 0) {
-                activeCategories = new Set(categories);
-                localStorage.setItem('activeCategories', JSON.stringify([...activeCategories]));
-            }
         }
 
         function toggleFilter(category) {
             const filters = document.querySelectorAll('.category-filter');
+            const allFilter = document.querySelector('.category-filter');
             
             if (category === 'All') {
-                // Toggle all categories
-                const allFilter = document.querySelector('.category-filter');
-                const isActive = allFilter.classList.contains('active');
+                // Toggle the All filter
+                allFilter.classList.toggle('active');
                 
-                filters.forEach(filter => {
-                    filter.classList.toggle('active', !isActive);
-                });
+                // Store All filter state
+                localStorage.setItem('allSelected', allFilter.classList.contains('active'));
                 
-                if (!isActive) {
-                    activeCategories = new Set(tasks.map(task => task.category));
-                } else {
+                // If All is being selected, unselect all other categories
+                if (allFilter.classList.contains('active')) {
+                    filters.forEach(filter => {
+                        if (filter.textContent !== 'All') {
+                            filter.classList.remove('active');
+                        }
+                    });
                     activeCategories.clear();
+                    localStorage.setItem('activeCategories', JSON.stringify([...activeCategories]));
                 }
+                
+                // Show/hide tasks based on whether All is selected
+                createTaskElements();
+                return;
+            }
+            
+            // Deselect "All" when toggling individual category
+            allFilter.classList.remove('active');
+            
+            // Toggle individual category
+            const filter = Array.from(filters).find(f => f.textContent === category);
+            filter.classList.toggle('active');
+            
+            if (activeCategories.has(category)) {
+                activeCategories.delete(category);
             } else {
-                // Toggle individual category
-                const filter = Array.from(filters).find(f => f.textContent === category);
-                filter.classList.toggle('active');
-                
-                if (activeCategories.has(category)) {
-                    activeCategories.delete(category);
-                } else {
-                    activeCategories.add(category);
-                }
-                
-                // Update "All" filter
-                const allFilter = document.querySelector('.category-filter');
-                allFilter.classList.toggle('active', activeCategories.size === tasks.map(task => task.category).length);
+                activeCategories.add(category);
             }
             
             localStorage.setItem('activeCategories', JSON.stringify([...activeCategories]));
@@ -332,10 +281,13 @@
 
         function createTaskElements() {
             const tasksContainer = document.getElementById('tasks');
-            tasksContainer.innerHTML = ''; // Clear existing content
+            tasksContainer.innerHTML = '';
+            
+            const allFilter = document.querySelector('.category-filter');
+            const isAllSelected = allFilter.classList.contains('active');
             
             tasks.forEach((task, index) => {
-                if (activeCategories.has(task.category)) {
+                if (isAllSelected || activeCategories.has(task.category)) {
                     const taskContainer = document.createElement('div');
                     taskContainer.className = 'task-container';
 
@@ -347,33 +299,40 @@
                             <button class="move-btn" onclick="moveTask(${index}, -1)">↑</button>
                             <button class="move-btn" onclick="moveTask(${index}, 1)">↓</button>
                             <button class="delete-btn" onclick="deleteTask(${index})">×</button>
-                            <span class="arrow">▶</span>
+                            <span class="arrow ${collapsedTasks.has(task.name) ? 'collapsed' : ''}">▶</span>
                         </div>
                     `;
 
                     const subtasksDiv = document.createElement('div');
                     subtasksDiv.className = 'subtasks';
+                    if (!collapsedTasks.has(task.name)) {
+                        subtasksDiv.classList.add('expanded');
+                    }
 
                     task.subtasks.forEach(subtask => {
                         const subtaskElement = document.createElement('div');
                         subtaskElement.className = 'subtask';
-                        const subtaskId = `${task.name}-${subtask}`;
                         subtaskElement.innerHTML = `
-                            <input type="checkbox" ${completedSubtasks.has(subtaskId) ? 'checked' : ''}>
                             <span>${subtask}</span>
                         `;
                         
-                        const checkbox = subtaskElement.querySelector('input[type="checkbox"]');
-                        checkbox.addEventListener('change', () => {
-                            if (checkbox.checked) {
-                                completedSubtasks.add(subtaskId);
-                            } else {
-                                completedSubtasks.delete(subtaskId);
-                            }
-                            localStorage.setItem('completedSubtasks', JSON.stringify([...completedSubtasks]));
-                        });
-                        
                         subtasksDiv.appendChild(subtaskElement);
+                    });
+
+                    taskHeader.addEventListener('click', (e) => {
+                        if (e.target.tagName === 'BUTTON') return;
+                        
+                        const arrow = taskHeader.querySelector('.arrow');
+                        arrow.classList.toggle('collapsed');
+                        subtasksDiv.classList.toggle('expanded');
+                        
+                        // Update collapsed state in storage
+                        if (arrow.classList.contains('collapsed')) {
+                            collapsedTasks.add(task.name);
+                        } else {
+                            collapsedTasks.delete(task.name);
+                        }
+                        localStorage.setItem('collapsedTasks', JSON.stringify([...collapsedTasks]));
                     });
 
                     taskContainer.appendChild(taskHeader);

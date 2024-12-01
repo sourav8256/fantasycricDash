@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Work Focus Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .timer-container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .task-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .break-suggestions {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        #currentTask {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Office Work Focus Assistant</h1>
+    
+    <div class="timer-container">
+        <h2>Focus Timer</h2>
+        <div id="timer">25:00</div>
+        <button onclick="startTimer()">Start Focus Session</button>
+        <button onclick="pauseTimer()">Pause</button>
+        <button onclick="resetTimer()">Reset</button>
+    </div>
+
+    <div class="task-container">
+        <h2>Current Task</h2>
+        <div id="currentTask">No task selected</div>
+        <h3>Task List</h3>
+        <div id="taskList">
+            <div class="task-item">
+                <input type="checkbox" id="task1">
+                <label for="task1">Check and respond to important emails (15 min)</label>
+            </div>
+            <div class="task-item">
+                <input type="checkbox" id="task2">
+                <label for="task2">Work on primary project (25 min)</label>
+            </div>
+            <div class="task-item">
+                <input type="checkbox" id="task3">
+                <label for="task3">Review documents (20 min)</label>
+            </div>
+        </div>
+        <button onclick="addTask()">Add New Task</button>
+    </div>
+
+    <div class="break-suggestions">
+        <h2>Break Time Activities</h2>
+        <ul>
+            <li>Stand up and stretch</li>
+            <li>Walk around for 2 minutes</li>
+            <li>Get a glass of water</li>
+            <li>Do 5 quick exercises</li>
+        </ul>
+    </div>
+
+    <script>
+        let timeLeft = 1500; // 25 minutes in seconds
+        let timerId = null;
+
+        function startTimer() {
+            if (timerId === null) {
+                timerId = setInterval(updateTimer, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            clearInterval(timerId);
+            timerId = null;
+        }
+
+        function resetTimer() {
+            clearInterval(timerId);
+            timerId = null;
+            timeLeft = 1500;
+            updateTimerDisplay();
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(timerId);
+                timerId = null;
+                alert("Time for a break!");
+                timeLeft = 1500;
+            }
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function addTask() {
+            const taskText = prompt("Enter new task:");
+            if (taskText) {
+                const taskList = document.getElementById('taskList');
+                const taskDiv = document.createElement('div');
+                taskDiv.className = 'task-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = 'task' + (taskList.children.length + 1);
+                
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = taskText;
+                
+                taskDiv.appendChild(checkbox);
+                taskDiv.appendChild(label);
+                taskList.appendChild(taskDiv);
+            }
+        }
+
+        // Add click event listeners to checkboxes
+        document.querySelectorAll('.task-item input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    document.getElementById('currentTask').textContent = 
+                        this.nextElementSibling.textContent;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

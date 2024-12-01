@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Drop Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+
+        .settings-container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .setting-item {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="number"], 
+        input[type="color"] {
+            width: 100px;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #666;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #333;
+        }
+
+        .time-input-group {
+            margin-bottom: 20px;
+        }
+
+        .time-input-group label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .time-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-input input {
+            width: 60px;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .time-input span {
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <h2>Ball Drop Settings</h2>
+        
+        <div class="setting-item">
+            <label for="totalBalls">Total Balls:</label>
+            <input type="number" id="totalBalls" min="1" max="100">
+        </div>
+
+        <div class="time-input-group">
+            <label>Drop Interval:</label>
+            <div class="time-inputs">
+                <div class="time-input">
+                    <input type="number" id="hours" min="0" max="24">
+                    <span>Hours</span>
+                </div>
+                <div class="time-input">
+                    <input type="number" id="minutes" min="0" max="59">
+                    <span>Minutes</span>
+                </div>
+                <div class="time-input">
+                    <input type="number" id="seconds" min="0" max="59">
+                    <span>Seconds</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <label for="ballColor">Ball Color:</label>
+            <input type="color" id="ballColor">
+        </div>
+
+        <div class="setting-item">
+            <label for="ballSize">Ball Size (pixels):</label>
+            <input type="number" id="ballSize" min="20" max="100">
+        </div>
+
+        <button onclick="saveSettings()">Save Settings</button>
+        <button onclick="resetDefaults()">Reset to Defaults</button>
+    </div>
+
+    <a href="index.html" class="back-link">← Back to Ball Drop</a>
+
+    <script>
+        const defaultSettings = {
+            totalBalls: 20,
+            dropInterval: 1,
+            hours: 0,
+            minutes: 0,
+            seconds: 1,
+            ballColor: '#2196F3',
+            ballSize: 40
+        };
+
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('ballDropSettings');
+            const settings = savedSettings ? JSON.parse(savedSettings) : defaultSettings;
+
+            document.getElementById('totalBalls').value = settings.totalBalls;
+            document.getElementById('hours').value = settings.hours || 0;
+            document.getElementById('minutes').value = settings.minutes || 0;
+            document.getElementById('seconds').value = settings.seconds || settings.dropInterval || 1;
+            document.getElementById('ballColor').value = settings.ballColor;
+            document.getElementById('ballSize').value = settings.ballSize;
+        }
+
+        function saveSettings() {
+            const hours = parseInt(document.getElementById('hours').value) || 0;
+            const minutes = parseInt(document.getElementById('minutes').value) || 0;
+            const seconds = parseInt(document.getElementById('seconds').value) || 0;
+            
+            // Calculate total seconds for dropInterval
+            const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+            
+            if (totalSeconds === 0) {
+                alert('Drop interval must be at least 1 second!');
+                return;
+            }
+
+            const settings = {
+                totalBalls: parseInt(document.getElementById('totalBalls').value),
+                dropInterval: totalSeconds,
+                hours: hours,
+                minutes: minutes,
+                seconds: seconds,
+                ballColor: document.getElementById('ballColor').value,
+                ballSize: parseInt(document.getElementById('ballSize').value)
+            };
+
+            localStorage.setItem('ballDropSettings', JSON.stringify(settings));
+            alert('Settings saved successfully!');
+        }
+
+        function resetDefaults() {
+            localStorage.setItem('ballDropSettings', JSON.stringify(defaultSettings));
+            loadSettings();
+            alert('Settings reset to defaults!');
+        }
+
+        // Load settings when page loads
+        window.addEventListener('load', loadSettings);
+    </script>
+</body>
+</html> 

@@ -26,8 +26,8 @@ function loadFromSettings() {
     // Load settings
     totalBalls = settings.totalBalls;
     
-    // Calculate remaining balls based on elapsed time
-    if (settings.lastDropTime) {
+    // Calculate remaining balls based on elapsed time only if app was running
+    if (settings.lastDropTime && settings.remainingBalls > 0) {
         const elapsedMs = Date.now() - settings.lastDropTime;
         const dropInterval = settings.dropInterval * 1000;
         const dropsOccurred = Math.floor(elapsedMs / dropInterval);
@@ -38,8 +38,10 @@ function loadFromSettings() {
             const msInCurrentInterval = elapsedMs % dropInterval;
             const msUntilNextDrop = dropInterval - msInCurrentInterval;
             timeLeft = Math.ceil(msUntilNextDrop / 1000);
+            settings.lastDropTime = Date.now() - msInCurrentInterval;
         } else {
             timeLeft = settings.dropInterval;
+            settings.lastDropTime = null;
         }
     } else {
         remainingBalls = settings.remainingBalls ?? totalBalls;
@@ -68,7 +70,7 @@ function loadFromSettings() {
     setState({
         ...settings,
         remainingBalls,
-        lastDropTime: remainingBalls === 0 ? null : settings.lastDropTime
+        lastDropTime: settings.lastDropTime
     });
     
     timeDisplay.textContent = formatTime(timeLeft);

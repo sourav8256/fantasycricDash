@@ -159,10 +159,11 @@ function calculateStateAfterReopen() {
 }
 
 function saveState() {
+    const currentState = JSON.parse(localStorage.getItem('ballDropState') || '{}');
     const state = {
         remainingBalls: balls.length,
         timeLeft: timeLeft,
-        lastDropTime: Date.now(),
+        lastDropTime: timeLeft === getInitialInterval() ? Date.now() : currentState.lastDropTime,
         dropInterval: getInitialInterval()
     };
     localStorage.setItem('ballDropState', JSON.stringify(state));
@@ -188,7 +189,19 @@ function loadState() {
         createBall(lowerChamber, i, false);
     }
 
-    timeLeft = savedState.timeLeft || getInitialInterval();
+    // If this is first load or upper chamber was empty, set lastDropTime to now
+    if (!savedState.lastDropTime || savedState.remainingBalls === 0) {
+        const state = {
+            ...savedState,
+            lastDropTime: Date.now(),
+            timeLeft: getInitialInterval()
+        };
+        localStorage.setItem('ballDropState', JSON.stringify(state));
+        timeLeft = getInitialInterval();
+    } else {
+        timeLeft = savedState.timeLeft || getInitialInterval();
+    }
+    
     timeDisplay.textContent = formatTime(timeLeft);
 
     if (balls.length > 0) {
@@ -238,7 +251,8 @@ function updateTimer() {
 function startTimer() {
     clearInterval(interval);
     if (balls.length > 0) {
-        if (!localStorage.getItem('ballDropState')) {
+        const currentState = JSON.parse(localStorage.getItem('ballDropState') || '{}');
+        if (!currentState.lastDropTime) {
             const initialState = {
                 remainingBalls: balls.length,
                 timeLeft: getInitialInterval(),
@@ -248,6 +262,14 @@ function startTimer() {
             localStorage.setItem('ballDropState', JSON.stringify(initialState));
             console.log('Initial state set in startTimer() - line 250:', initialState);
         }
+
+        const dropInterval = getInitialInterval();
+        const elapsedMs = Date.now() - currentState.lastDropTime;
+        const msInInterval = elapsedMs % (dropInterval * 1000);
+        const msUntilNextDrop = (dropInterval * 1000) - msInInterval;
+        timeLeft = Math.ceil(msUntilNextDrop / 1000);
+        timeDisplay.textContent = formatTime(timeLeft);
+        
         interval = setInterval(updateTimer, 1000);
     }
 }

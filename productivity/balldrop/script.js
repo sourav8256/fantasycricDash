@@ -189,13 +189,12 @@ window.addEventListener('resize', () => {
     }, 250);
 });
 
-window.addEventListener('beforeunload', () => {
-    setState({
-        remainingBalls: remainingBalls,
-        timeLeft: timeLeft,
-        lastDropTime: timeLeft === getInitialInterval() ? Date.now() : getState().lastDropTime,
-        dropInterval: getInitialInterval()
-    });
+// Add near the top with other event listeners
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        // App has become visible again
+        loadFromSettings();
+    }
 });
 
 // Load settings before initializing balls

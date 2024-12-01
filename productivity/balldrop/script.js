@@ -3,6 +3,8 @@ const lowerChamber = document.getElementById('lowerChamber');
 const resetBtn = document.getElementById('resetBtn');
 const timeDisplay = document.getElementById('timeLeft');
 const settingsBtn = document.getElementById('settingsBtn');
+const addBallBtn = document.getElementById('addBallBtn');
+const removeBallBtn = document.getElementById('removeBallBtn');
 
 let balls = [];
 let totalBalls = 20;
@@ -317,4 +319,109 @@ function formatTime(totalSeconds) {
     const seconds = totalSeconds % 60;
     
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function addBall() {
+    const lowerBalls = lowerChamber.getElementsByClassName('ball');
+    if (lowerBalls.length > 0 && balls.length < totalBalls) {
+        // Remove the last ball from lower chamber
+        const lastBall = lowerBalls[lowerBalls.length - 1];
+        lastBall.remove();
+        
+        // Add ball to upper chamber
+        const newBall = createBall(upperChamber, balls.length);
+        balls.push(newBall);
+        saveState();
+        updateButtonStates();
+        
+        // Start timer if it wasn't running and this is the first ball
+        if (!interval && balls.length === 1) {
+            startTimer();
+        }
+    }
+}
+
+function removeBall() {
+    if (balls.length > 0) {
+        // Remove ball from upper chamber
+        const ball = balls.pop();
+        ball.remove();
+        
+        // Add ball to lower chamber
+        const newBall = createBall(lowerChamber, totalBalls - balls.length - 1, false);
+        saveState();
+        updateButtonStates();
+        
+        // Stop timer if no balls left in upper chamber
+        if (balls.length === 0) {
+            clearInterval(interval);
+            interval = null;
+        }
+    }
+}
+
+// Add event listeners
+addBallBtn.addEventListener('click', addBall);
+removeBallBtn.addEventListener('click', removeBall);
+
+// Update the loadState function to enable/disable buttons based on ball count
+function updateButtonStates() {
+    // Update button states based on balls in each chamber
+    const lowerBalls = lowerChamber.getElementsByClassName('ball');
+    addBallBtn.disabled = lowerBalls.length === 0;
+    removeBallBtn.disabled = balls.length === 0;
+}
+
+// Modify loadState to include button state updates
+const originalLoadState = loadState;
+loadState = function() {
+    originalLoadState.apply(this, arguments);
+    updateButtonStates();
+}
+
+// Add button state updates to relevant functions
+function addBall() {
+    const lowerBalls = lowerChamber.getElementsByClassName('ball');
+    if (lowerBalls.length > 0 && balls.length < totalBalls) {
+        // Remove the last ball from lower chamber
+        const lastBall = lowerBalls[lowerBalls.length - 1];
+        lastBall.remove();
+        
+        // Add ball to upper chamber
+        const newBall = createBall(upperChamber, balls.length);
+        balls.push(newBall);
+        saveState();
+        updateButtonStates();
+        
+        // Start timer if it wasn't running and this is the first ball
+        if (!interval && balls.length === 1) {
+            startTimer();
+        }
+    }
+}
+
+function removeBall() {
+    if (balls.length > 0) {
+        // Remove ball from upper chamber
+        const ball = balls.pop();
+        ball.remove();
+        
+        // Add ball to lower chamber
+        const newBall = createBall(lowerChamber, totalBalls - balls.length - 1, false);
+        saveState();
+        updateButtonStates();
+        
+        // Stop timer if no balls left in upper chamber
+        if (balls.length === 0) {
+            clearInterval(interval);
+            interval = null;
+        }
+    }
+}
+
+// Update dropBall function to include button state updates
+const originalDropBall = dropBall;
+dropBall = function() {
+    originalDropBall.apply(this, arguments);
+    updateButtonStates();
 } 

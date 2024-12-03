@@ -268,14 +268,6 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="categoryType">Category Type *</label>
-            <select id="categoryType">
-                <option value="liquid">Liquid</option>
-                <option value="asset">Asset</option>
-            </select>
-        </div>
-
         <div class="button-group">
             <button onclick="addSavings()">Add Monthly Savings</button>
             <button class="remove" onclick="removeSavings()">Remove Monthly Savings</button>
@@ -383,7 +375,7 @@
             }
 
             let category = document.getElementById('category').value;
-            const categoryType = document.getElementById('categoryType').value;
+            const categoryType = null;
 
             if (category === 'new') {
                 category = document.getElementById('newCategory').value.trim();
@@ -393,9 +385,7 @@
                 }
                 if (!categories.includes(category)) {
                     categories.push(category);
-                    categoryTypes[category] = categoryType;
                     localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-                    localStorage.setItem(CATEGORY_TYPES_KEY, JSON.stringify(categoryTypes));
                     const option = document.createElement('option');
                     option.value = category;
                     option.textContent = category;
@@ -408,7 +398,7 @@
                 amount: amount,
                 date: new Date().toISOString(),
                 category: category,
-                categoryType: categoryTypes[category] || categoryType
+                categoryType: categoryTypes[category] || null
             };
 
             savingsHistory.push(entry);
@@ -525,20 +515,25 @@
             let categoryTotals = {};
             let liquidTotal = 0;
             let assetTotal = 0;
+            let unselectedTotal = 0;
 
             // Calculate totals by type
             savingsHistory.forEach(entry => {
-                if (entry.categoryType === 'liquid') {
-                    liquidTotal += entry.amount;
+                const amount = entry.amount;
+                if (!entry.categoryType) {
+                    unselectedTotal += amount;
+                } else if (entry.categoryType === 'liquid') {
+                    liquidTotal += amount;
                 } else {
-                    assetTotal += entry.amount;
+                    assetTotal += amount;
                 }
             });
 
             // Add asset vs liquid breakdown header
-            const totalSavings = liquidTotal + assetTotal;
+            const totalSavings = liquidTotal + assetTotal + unselectedTotal;
             const liquidPercentage = totalSavings !== 0 ? ((liquidTotal / totalSavings) * 100).toFixed(1) : '0.0';
             const assetPercentage = totalSavings !== 0 ? ((assetTotal / totalSavings) * 100).toFixed(1) : '0.0';
+            const unselectedPercentage = totalSavings !== 0 ? ((unselectedTotal / totalSavings) * 100).toFixed(1) : '0.0';
             
             const breakdownHeader = document.createElement('div');
             breakdownHeader.className = 'category-total';
@@ -546,9 +541,10 @@
             breakdownHeader.style.marginBottom = '15px';
             breakdownHeader.innerHTML = `
                 <span class="category-name">Asset vs Liquid Split</span>
-                <span class="category-amount">
-                    <span style="color: #1976d2;">Liquid: ₹${liquidTotal.toFixed(2)} (${liquidPercentage}%)</span> | 
+                <span class="category-amount" style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="color: #1976d2;">Liquid: ₹${liquidTotal.toFixed(2)} (${liquidPercentage}%)</span>
                     <span style="color: #388e3c;">Asset: ₹${assetTotal.toFixed(2)} (${assetPercentage}%)</span>
+                    <span style="color: #6c757d;">Unselected: ₹${unselectedTotal.toFixed(2)} (${unselectedPercentage}%)</span>
                 </span>
             `;
             categoryBreakdown.appendChild(breakdownHeader);
@@ -603,12 +599,13 @@
                     div.className = 'category-total';
                     const totalAmount = savingsHistory.reduce((sum, entry) => sum + entry.amount, 0);
                     const percentage = totalAmount !== 0 ? ((amount / totalAmount) * 100).toFixed(1) : '0.0';
-                    const type = categoryTypes[category] || 'liquid';
+                    const type = categoryTypes[category] || '';
                     div.innerHTML = `
-                        <span class="category-name">${category} (${type})</span>
+                        <span class="category-name">${category}${type ? ` (${type})` : ''}</span>
                         <span class="category-amount">₹${amount.toFixed(2)} (${percentage}%)
                             ${category !== 'Uncategorized' ? `
                                 <select onchange="updateCategoryType('${category}', this.value)">
+                                    <option value="" ${!type ? 'selected' : ''}>Select Type</option>
                                     <option value="liquid" ${type === 'liquid' ? 'selected' : ''}>Liquid</option>
                                     <option value="asset" ${type === 'asset' ? 'selected' : ''}>Asset</option>
                                 </select>

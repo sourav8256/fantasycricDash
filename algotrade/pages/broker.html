@@ -1,0 +1,160 @@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <h5>Connect Broker</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Select Broker</label>
+                    <select class="form-select mb-3">
+                        <option value="">Choose your broker...</option>
+                        <option>Zerodha</option>
+                        <option>Angel One</option>
+                        <option>Upstox</option>
+                        <option>5paisa</option>
+                        <option>ICICI Direct</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Client ID</label>
+                    <input type="text" class="form-control mb-3" placeholder="Enter your client ID">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">API Key</label>
+                    <input type="password" class="form-control mb-3" placeholder="Enter your API key">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">API Secret</label>
+                    <input type="password" class="form-control mb-3" placeholder="Enter your API secret">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Redirect URL</label>
+                    <input type="text" class="form-control mb-3" value="https://algotrade.com/redirect" readonly>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-primary w-100">Connect Broker</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <h5>Connected Brokers</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Broker</th>
+                            <th>Client ID</th>
+                            <th>Status</th>
+                            <th>Last Connected</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="assets/zerodha-logo.png" alt="Zerodha" width="24" class="me-2">
+                                    Zerodha
+                                </div>
+                            </td>
+                            <td>ZD1234</td>
+                            <td><span class="badge bg-success">Connected</span></td>
+                            <td>2024-03-15 09:15:00</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger">Disconnect</button>
+                                <button class="btn btn-sm btn-outline-primary">Refresh</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="assets/angelone-logo.png" alt="Angel One" width="24" class="me-2">
+                                    Angel One
+                                </div>
+                            </td>
+                            <td>AN5678</td>
+                            <td><span class="badge bg-warning">Session Expired</span></td>
+                            <td>2024-03-14 15:30:00</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary">Reconnect</button>
+                                <button class="btn btn-sm btn-outline-danger">Remove</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <h5>Broker Settings</h5>
+            <div class="mb-3">
+                <label class="form-label">Default Broker</label>
+                <select class="form-select">
+                    <option>Zerodha</option>
+                    <option>Angel One</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Auto Reconnect</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="autoReconnect" checked>
+                    <label class="form-check-label" for="autoReconnect">Automatically reconnect when session expires</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Session Timeout</label>
+                <select class="form-select">
+                    <option>1 hour</option>
+                    <option>4 hours</option>
+                    <option>8 hours</option>
+                    <option>24 hours</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <h5>API Limits</h5>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <small>Orders/min</small>
+                    <span>40/100</span>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar" style="width: 40%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <small>Margin API Calls</small>
+                    <span>150/300</span>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar" style="width: 50%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <small>Position API Calls</small>
+                    <span>80/200</span>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar" style="width: 40%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <small>WebSocket Connections</small>
+                    <span>2/5</span>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar" style="width: 40%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

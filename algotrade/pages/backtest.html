@@ -1,0 +1,122 @@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <h5>Create Backtest</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Select Strategy</label>
+                    <select class="form-select mb-3">
+                        <option value="">Choose a strategy...</option>
+                        <option>Advanced Delta Neutral</option>
+                        <option>1% SL Strangle BNF</option>
+                        <option>Intraday Momentum</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Time Period</label>
+                    <select class="form-select mb-3">
+                        <option>Last 1 Month</option>
+                        <option>Last 3 Months</option>
+                        <option>Last 6 Months</option>
+                        <option>Last 1 Year</option>
+                        <option>Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Capital</label>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" class="form-control" value="500000">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Risk Per Trade</label>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" value="1">
+                        <span class="input-group-text">%</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Max Drawdown Limit</label>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" value="10">
+                        <span class="input-group-text">%</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Target ROI</label>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" value="20">
+                        <span class="input-group-text">%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-end">
+                <button class="btn btn-primary">Run Backtest</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <h5>Performance Metrics</h5>
+            <canvas id="backtestPerformanceChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <h5>Trade Distribution</h5>
+            <canvas id="backtestDistributionChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <h5>Trade Log</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Instrument</th>
+                            <th>Strategy</th>
+                            <th>Entry</th>
+                            <th>Exit</th>
+                            <th>Quantity</th>
+                            <th>P&L</th>
+                            <th>ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2024-03-15</td>
+                            <td>NIFTY 24MAR 22500 CE</td>
+                            <td>Delta Neutral</td>
+                            <td>₹125.50</td>
+                            <td>₹145.75</td>
+                            <td>50</td>
+                            <td class="text-success">+₹1,012.50</td>
+                            <td class="text-success">+1.62%</td>
+                        </tr>
+                        <tr>
+                            <td>2024-03-15</td>
+                            <td>BANKNIFTY 24MAR 48000 PE</td>
+                            <td>Delta Neutral</td>
+                            <td>₹185.25</td>
+                            <td>₹165.50</td>
+                            <td>25</td>
+                            <td class="text-danger">-₹493.75</td>
+                            <td class="text-danger">-0.79%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,98 @@
+<div class="nav nav-pills" id="strategyTabs" role="tablist">
+    <button class="nav-link active" id="create-tab" data-bs-toggle="pill" data-bs-target="#create" type="button" role="tab">Create Strategy</button>
+    <button class="nav-link" id="my-tab" data-bs-toggle="pill" data-bs-target="#my" type="button" role="tab">My Strategies</button>
+    <button class="nav-link" id="deployed-tab" data-bs-toggle="pill" data-bs-target="#deployed" type="button" role="tab">Deployed Strategies</button>
+</div>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="create" role="tabpanel">
+        <div class="card">
+            <h5>Strategy Type</h5>
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="strategy" id="time" checked>
+                <label class="btn btn-outline-primary" for="time">Time Based</label>
+                
+                <input type="radio" class="btn-check" name="strategy" id="indicator">
+                <label class="btn btn-outline-primary" for="indicator">Indicator Based</label>
+            </div>
+        </div>
+
+        <div class="card">
+            <h5>Select Instruments</h5>
+            <select class="form-select mb-3">
+                <option>NIFTY 50</option>
+                <option>BANKNIFTY</option>
+                <option>FINNIFTY</option>
+            </select>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text">Lot Size</span>
+                        <input type="number" class="form-control" value="25" style="margin: 0;">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text">Strike</span>
+                        <select class="form-select">
+                            <option>ATM</option>
+                            <option>ITM</option>
+                            <option>OTM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text">Option</span>
+                        <select class="form-select">
+                            <option>CE</option>
+                            <option>PE</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h5>Risk Management</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Stop Loss</label>
+                    <input type="number" class="form-control" placeholder="Points">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Target</label>
+                    <input type="number" class="form-control" placeholder="Points">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h5>Save Strategy</h5>
+            <div class="row align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label">Strategy Name</label>
+                    <input type="text" class="form-control" placeholder="Enter a name for your strategy">
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-primary">Save Strategy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="my" role="tabpanel">
+        <div class="card">
+            <h5>My Saved Strategies</h5>
+            <p>No strategies saved yet</p>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="deployed" role="tabpanel">
+        <div class="card">
+            <h5>Currently Deployed</h5>
+            <p>No strategies deployed</p>
+        </div>
+    </div>
+</div> 

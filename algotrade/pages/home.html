@@ -1,0 +1,288 @@
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <h5>Portfolio Performance</h5>
+            <canvas id="portfolioChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <h5>Strategy Distribution</h5>
+            <canvas id="strategyPieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <h5>Broker Details</h5>
+            <p class="text-muted">No brokers added at the moment</p>
+            <button class="btn btn-primary">Add New Broker</button>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <h5>Deployed Strategies</h5>
+            <p class="text-muted">No Strategy Deployed</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <h5>Daily P&L</h5>
+            <canvas id="dailyPnlChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <h5>Risk Metrics</h5>
+            <canvas id="riskMetricsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <h5>Strategy Templates</h5>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="strategy-card">
+                <h6>Advanced Delta Neutral</h6>
+                <div class="strategy-stats">
+                    <div>
+                        <small>Max DD</small>
+                        <span>₹10.97k</span>
+                    </div>
+                    <div>
+                        <small>Margin</small>
+                        <span>₹1.50L</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="strategy-card">
+                <h6>1% SL Strangle BNF</h6>
+                <div class="strategy-stats">
+                    <div>
+                        <small>Max DD</small>
+                        <span>₹8.67k</span>
+                    </div>
+                    <div>
+                        <small>Margin</small>
+                        <span>₹1.10L</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Portfolio Performance Line Chart
+    new Chart(document.getElementById('portfolioChart'), {
+        type: 'line',
+        data: {
+            labels: ['9:15', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:15', '15:30'],
+            datasets: [{
+                label: 'Portfolio Value',
+                data: [
+                    500000,    // Opening balance
+                    499200,    // Small initial drawdown
+                    501500,    // Recovery
+                    504200,    // Morning momentum
+                    503100,    // Small pullback
+                    505800,    // Pre-lunch rally
+                    504900,    // Lunch hour consolidation
+                    504700,    // Lunch hour dip
+                    506300,    // Early afternoon momentum
+                    508900,    // Trend continuation
+                    507200,    // Small profit booking
+                    509500,    // Fresh buying
+                    512800,    // Late day rally
+                    514200,    // Final push
+                    515600     // Closing balance
+                ],
+                borderColor: '#1a237e',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(26, 35, 126, 0.1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const profit = context.raw - 500000;
+                            const profitText = profit >= 0 ? 
+                                `+₹${profit.toLocaleString('en-IN')}` : 
+                                `-₹${Math.abs(profit).toLocaleString('en-IN')}`;
+                            return [
+                                `Value: ₹${context.raw.toLocaleString('en-IN')}`,
+                                `P&L: ${profitText} (${((profit/500000)*100).toFixed(2)}%)`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    min: 495000,  // Set minimum to show variations better
+                    max: 520000,  // Set maximum to show variations better
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + (value/1000).toFixed(0) + 'k';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+
+    // Strategy Distribution Pie Chart
+    new Chart(document.getElementById('strategyPieChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Intraday Options', 'Positional F&O', 'Index Options', 'Equity'],
+            datasets: [{
+                data: [45, 25, 20, 10],
+                backgroundColor: ['#1a237e', '#283593', '#3949ab', '#5c6bc0']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.raw + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Daily P&L Bar Chart
+    new Chart(document.getElementById('dailyPnlChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+            datasets: [{
+                label: 'P&L',
+                data: [12500, -8200, 15400, 9800, -4800],
+                backgroundColor: function(context) {
+                    return context.raw >= 0 ? '#00c853' : '#ff1744';
+                }
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const sign = context.raw >= 0 ? '+' : '';
+                            return 'P&L: ' + sign + '₹' + context.raw.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + (value/1000) + 'k';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Risk Metrics Radar Chart
+    new Chart(document.getElementById('riskMetricsChart'), {
+        type: 'radar',
+        data: {
+            labels: ['Win Rate', 'Risk/Reward', 'Max DD', 'Sharpe', 'ROI'],
+            datasets: [{
+                label: 'Current Month',
+                data: [72, 65, 85, 78, 82],
+                borderColor: '#1a237e',
+                backgroundColor: 'rgba(26, 35, 126, 0.2)'
+            }, {
+                label: 'Last Month',
+                data: [65, 58, 75, 71, 73],
+                borderColor: '#3949ab',
+                backgroundColor: 'rgba(57, 73, 171, 0.2)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20
+                    },
+                    pointLabels: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.raw + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script> 

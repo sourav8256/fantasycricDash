@@ -34,7 +34,7 @@
             border: none;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            margin-bottom: 1.5rem;
+            margin-bottom: 0;
             padding: 1.5rem;
             transition: transform 0.2s;
         }
@@ -205,12 +205,118 @@
                 margin-bottom: 0.5rem;
             }
         }
+        .market-indices {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .index-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .index-name {
+            font-weight: 600;
+            color: #1a237e;
+        }
+        .index-value {
+            font-weight: 500;
+        }
+        .index-change {
+            color: #666;
+        }
+        .index-change.positive {
+            color: #00c853;
+        }
+        .strategy-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            height: 100%;
+        }
+        .strategy-card h6 {
+            color: #1a237e;
+            margin-bottom: 1rem;
+        }
+        .strategy-stats {
+            display: flex;
+            justify-content: space-between;
+        }
+        .strategy-stats small {
+            display: block;
+            color: #666;
+            font-size: 0.8rem;
+        }
+        .strategy-stats span {
+            font-weight: 500;
+        }
+        .card canvas {
+            padding: 1rem;
+            max-height: 300px;
+        }
+        .mb-4 {
+            margin-bottom: 1.5rem !important;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .metric-item small {
+            color: #666;
+            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+        }
+        .metric-item span {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .text-success {
+            color: #00c853 !important;
+        }
+        .text-danger {
+            color: #ff1744 !important;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="container-fluid">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
             <h1 class="ms-3">AlgoTrade</h1>
+            <div class="d-flex align-items-center me-3">
+                <span class="me-3">Hello, Sourav</span>
+                <button class="btn btn-outline-light btn-sm">Help Desk</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="market-indices py-3 bg-white border-bottom">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="index-card">
+                        <span class="index-name">NIFTY</span>
+                        <span class="index-value">24457.15</span>
+                        <span class="index-change positive">(0.75%)</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="index-card">
+                        <span class="index-name">BANKNIFTY</span>
+                        <span class="index-value">52695.75</span>
+                        <span class="index-change">(0.00%)</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="index-card">
+                        <span class="index-name">FINNIFTY</span>
+                        <span class="index-value">24296.55</span>
+                        <span class="index-change positive">(0.93%)</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -218,17 +324,14 @@
         <div class="sidebar">
             <a href="#home" onclick="showSection('home')" id="nav-home">Home</a>
             <a href="#broker" onclick="showSection('broker')" id="nav-broker">Broker</a>
-            <a href="#strategies" class="active" onclick="showSection('strategies')" id="nav-strategies">Strategies</a>
+            <a href="#strategies" onclick="showSection('strategies')" id="nav-strategies">Strategies</a>
             <a href="#backtest" onclick="showSection('backtest')" id="nav-backtest">Backtest</a>
             <a href="#reports" onclick="showSection('reports')" id="nav-reports">Reports</a>
         </div>
 
         <div class="main-content">
             <div id="home" class="content-section">
-                <div class="card">
-                    <h5>Home</h5>
-                    <p>Welcome to AlgoTrade!</p>
-                </div>
+                <!-- Home content will be loaded here -->
             </div>
 
             <div id="broker" class="content-section" style="display: none;">
@@ -239,127 +342,75 @@
             </div>
 
             <div id="strategies" class="content-section" style="display: none;">
-                <div class="nav nav-pills" id="strategyTabs" role="tablist">
-                    <button class="nav-link active" id="create-tab" data-bs-toggle="pill" data-bs-target="#create" type="button" role="tab">Create Strategy</button>
-                    <button class="nav-link" id="my-tab" data-bs-toggle="pill" data-bs-target="#my" type="button" role="tab">My Strategies</button>
-                    <button class="nav-link" id="deployed-tab" data-bs-toggle="pill" data-bs-target="#deployed" type="button" role="tab">Deployed Strategies</button>
-                </div>
-                <div class="tab-content">
-                    <div class="tab-pane fade show active" id="create" role="tabpanel">
-                        <div class="card">
-                            <h5>Strategy Type</h5>
-                            <div class="btn-group" role="group">
-                                <input type="radio" class="btn-check" name="strategy" id="time" checked>
-                                <label class="btn btn-outline-primary" for="time">Time Based</label>
-                                
-                                <input type="radio" class="btn-check" name="strategy" id="indicator">
-                                <label class="btn btn-outline-primary" for="indicator">Indicator Based</label>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <h5>Select Instruments</h5>
-                            <select class="form-select mb-3">
-                                <option>NIFTY 50</option>
-                                <option>BANKNIFTY</option>
-                                <option>FINNIFTY</option>
-                            </select>
-
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="input-group">
-                                        <span class="input-group-text">Lot Size</span>
-                                        <input type="number" class="form-control" value="25" style="margin: 0;">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="input-group">
-                                        <span class="input-group-text">Strike</span>
-                                        <select class="form-select">
-                                            <option>ATM</option>
-                                            <option>ITM</option>
-                                            <option>OTM</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="input-group">
-                                        <span class="input-group-text">Option</span>
-                                        <select class="form-select">
-                                            <option>CE</option>
-                                            <option>PE</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <h5>Risk Management</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-label">Stop Loss</label>
-                                    <input type="number" class="form-control" placeholder="Points">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Target</label>
-                                    <input type="number" class="form-control" placeholder="Points">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
-                            <button class="btn btn-primary">Save Strategy</button>
-                        </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="my" role="tabpanel">
-                        <div class="card">
-                            <h5>My Saved Strategies</h5>
-                            <p>No strategies saved yet</p>
-                        </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="deployed" role="tabpanel">
-                        <div class="card">
-                            <h5>Currently Deployed</h5>
-                            <p>No strategies deployed</p>
-                        </div>
-                    </div>
-                </div>
+                <!-- Strategies content will be loaded here -->
             </div>
 
             <div id="backtest" class="content-section" style="display: none;">
-                <div class="card">
-                    <h5>Backtest</h5>
-                    <p>Backtesting tools and results.</p>
-                </div>
+                <!-- Backtest content will be loaded here -->
             </div>
 
             <div id="reports" class="content-section" style="display: none;">
-                <div class="card">
-                    <h5>Reports</h5>
-                    <p>Reports and analytics.</p>
-                </div>
+                <!-- Reports content will be loaded here -->
             </div>
         </div>
     </div>
 
     <script>
+        async function loadContent(sectionId) {
+            console.log('Loading section:', sectionId);
+            try {
+                const response = await fetch(`pages/${sectionId}.html`);
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const content = await response.text();
+                document.getElementById(sectionId).innerHTML = content;
+                console.log(`${sectionId} content loaded successfully`);
+                
+                if (typeof initializeCharts === 'function') {
+                    console.log('Initializing charts...');
+                    setTimeout(initializeCharts, 100);
+                }
+            } catch (error) {
+                console.error(`Error loading ${sectionId} content:`, error);
+            }
+        }
+
         function showSection(sectionId) {
+            // Hide all sections
             const sections = document.querySelectorAll('.content-section');
             sections.forEach(section => {
                 section.style.display = 'none';
             });
-            document.getElementById(sectionId).style.display = 'block';
 
+            // Show selected section
+            const selectedSection = document.getElementById(sectionId);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            }
+
+            // Update navigation
             const navLinks = document.querySelectorAll('.sidebar a');
             navLinks.forEach(link => {
                 link.classList.remove('active');
             });
-            document.querySelector(`#nav-${sectionId}`).classList.add('active');
+            const activeLink = document.querySelector(`#nav-${sectionId}`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+
+            // Load content if needed
+            loadContent(sectionId);
         }
+
+        // Load home content when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadContent('home');
+        });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/charts.js"></script>
 </body>
 </html>

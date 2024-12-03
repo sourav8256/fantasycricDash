@@ -1,0 +1,127 @@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <h5>Report Settings</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Report Type</label>
+                    <select class="form-select mb-3">
+                        <option>Performance Summary</option>
+                        <option>Strategy Analysis</option>
+                        <option>Risk Analysis</option>
+                        <option>P&L Statement</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Time Period</label>
+                    <select class="form-select mb-3">
+                        <option>Today</option>
+                        <option>This Week</option>
+                        <option>This Month</option>
+                        <option>Last 3 Months</option>
+                        <option>Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Strategy Filter</label>
+                    <select class="form-select mb-3">
+                        <option>All Strategies</option>
+                        <option>Delta Neutral</option>
+                        <option>Strangle BNF</option>
+                        <option>Momentum</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-end">
+                <button class="btn btn-outline-primary me-2">Export PDF</button>
+                <button class="btn btn-primary">Generate Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <h5>Monthly Performance</h5>
+            <canvas id="monthlyPerformanceChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <h5>Strategy-wise P&L</h5>
+            <canvas id="strategyPnLChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <h5>Key Metrics</h5>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <small>Net P&L</small>
+                    <span class="text-success">₹52,450</span>
+                </div>
+                <div class="metric-item">
+                    <small>Win Rate</small>
+                    <span>68%</span>
+                </div>
+                <div class="metric-item">
+                    <small>Avg Win</small>
+                    <span class="text-success">₹4,250</span>
+                </div>
+                <div class="metric-item">
+                    <small>Avg Loss</small>
+                    <span class="text-danger">₹2,180</span>
+                </div>
+                <div class="metric-item">
+                    <small>Max Drawdown</small>
+                    <span>8.2%</span>
+                </div>
+                <div class="metric-item">
+                    <small>Sharpe Ratio</small>
+                    <span>1.85</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <h5>Daily P&L Breakdown</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Gross P&L</th>
+                            <th>Charges</th>
+                            <th>Net P&L</th>
+                            <th>ROI</th>
+                            <th>Trades</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>15 Mar 2024</td>
+                            <td class="text-success">₹12,450</td>
+                            <td>₹850</td>
+                            <td class="text-success">₹11,600</td>
+                            <td class="text-success">2.32%</td>
+                            <td>8</td>
+                        </tr>
+                        <tr>
+                            <td>14 Mar 2024</td>
+                            <td class="text-danger">-₹4,200</td>
+                            <td>₹720</td>
+                            <td class="text-danger">-₹4,920</td>
+                            <td class="text-danger">-0.98%</td>
+                            <td>6</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -67,6 +67,16 @@
             text-align: center;
             padding: 20px;
         }
+
+        /* Add media query for larger screens */
+        @media (min-width: 992px) {
+            .sidebar {
+                left: 0;
+            }
+            .content {
+                margin-left: 250px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -126,6 +136,12 @@
             const appToLoad = urlParams.get('app');
             if (appToLoad) {
                 loadApp(appToLoad);
+            }
+            
+            // Add this: Check screen size and open sidebar if large screen
+            if (window.innerWidth >= 992) {
+                sidebar.classList.add('active');
+                content.classList.add('active');
             }
         };
 

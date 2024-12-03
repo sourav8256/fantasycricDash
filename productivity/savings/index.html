@@ -188,6 +188,34 @@
         .consolidate-btn:hover {
             background-color: #0056b3;
         }
+
+        .category-name::after {
+            content: attr(data-type);
+            font-size: 0.8em;
+            color: #666;
+            margin-left: 8px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+        }
+
+        .category-type-liquid::after {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .category-type-asset::after {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .category-amount select {
+            width: auto;
+            margin: 0 10px;
+            padding: 4px 8px;
+            font-size: 14px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -240,6 +268,14 @@
             </div>
         </div>
 
+        <div class="form-group">
+            <label for="categoryType">Category Type *</label>
+            <select id="categoryType">
+                <option value="liquid">Liquid</option>
+                <option value="asset">Asset</option>
+            </select>
+        </div>
+
         <div class="button-group">
             <button onclick="addSavings()">Add Monthly Savings</button>
             <button class="remove" onclick="removeSavings()">Remove Monthly Savings</button>
@@ -256,9 +292,11 @@
         const STORAGE_KEY = 'monthly-savings';
         const EXPECTED_RATE_KEY = 'expected-monthly-rate';
         const CATEGORIES_KEY = 'savings-categories';
+        const CATEGORY_TYPES_KEY = 'savings-category-types';
         let savingsHistory = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let expectedRate = parseFloat(localStorage.getItem(EXPECTED_RATE_KEY)) || 0;
         let categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY)) || [];
+        let categoryTypes = JSON.parse(localStorage.getItem(CATEGORY_TYPES_KEY)) || {};
 
         // Set initial expected rate in input
         document.getElementById('expectedRate').value = expectedRate;
@@ -339,10 +377,7 @@
             }
 
             let category = document.getElementById('category').value;
-            if (!category) {
-                alert('Please select a category');
-                return;
-            }
+            const categoryType = document.getElementById('categoryType').value;
 
             if (category === 'new') {
                 category = document.getElementById('newCategory').value.trim();
@@ -352,7 +387,9 @@
                 }
                 if (!categories.includes(category)) {
                     categories.push(category);
+                    categoryTypes[category] = categoryType;
                     localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+                    localStorage.setItem(CATEGORY_TYPES_KEY, JSON.stringify(categoryTypes));
                     const option = document.createElement('option');
                     option.value = category;
                     option.textContent = category;
@@ -364,7 +401,8 @@
             const entry = {
                 amount: amount,
                 date: new Date().toISOString(),
-                category: category
+                category: category,
+                categoryType: categoryTypes[category] || categoryType
             };
 
             savingsHistory.push(entry);
@@ -425,20 +463,19 @@
 
         function deleteCategory(category) {
             if (confirm(`Are you sure you want to delete the category "${category}"? All entries in this category will be preserved but marked as "Uncategorized".`)) {
-                // Update category in all history entries
                 savingsHistory = savingsHistory.map(entry => ({
                     ...entry,
-                    category: entry.category === category ? 'Uncategorized' : entry.category
+                    category: entry.category === category ? 'Uncategorized' : entry.category,
+                    categoryType: entry.category === category ? 'liquid' : entry.categoryType
                 }));
                 
-                // Remove category from categories array
                 categories = categories.filter(cat => cat !== category);
+                delete categoryTypes[category];
                 
-                // Update localStorage
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(savingsHistory));
                 localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+                localStorage.setItem(CATEGORY_TYPES_KEY, JSON.stringify(categoryTypes));
                 
-                // Re-render everything
                 initializeCategories();
                 renderHistory();
             }
@@ -480,6 +517,35 @@
             
             let total = savingsHistory.reduce((sum, entry) => sum + entry.amount, 0);
             let categoryTotals = {};
+            let liquidTotal = 0;
+            let assetTotal = 0;
+
+            // Calculate totals by type
+            savingsHistory.forEach(entry => {
+                if (entry.categoryType === 'liquid') {
+                    liquidTotal += entry.amount;
+                } else {
+                    assetTotal += entry.amount;
+                }
+            });
+
+            // Add asset vs liquid breakdown header
+            const totalSavings = liquidTotal + assetTotal;
+            const liquidPercentage = totalSavings !== 0 ? ((liquidTotal / totalSavings) * 100).toFixed(1) : '0.0';
+            const assetPercentage = totalSavings !== 0 ? ((assetTotal / totalSavings) * 100).toFixed(1) : '0.0';
+            
+            const breakdownHeader = document.createElement('div');
+            breakdownHeader.className = 'category-total';
+            breakdownHeader.style.backgroundColor = '#f8f9fa';
+            breakdownHeader.style.marginBottom = '15px';
+            breakdownHeader.innerHTML = `
+                <span class="category-name">Asset vs Liquid Split</span>
+                <span class="category-amount">
+                    <span style="color: #1976d2;">Liquid: ₹${liquidTotal.toFixed(2)} (${liquidPercentage}%)</span> | 
+                    <span style="color: #388e3c;">Asset: ₹${assetTotal.toFixed(2)} (${assetPercentage}%)</span>
+                </span>
+            `;
+            categoryBreakdown.appendChild(breakdownHeader);
 
             // Initialize all categories with 0
             categories.forEach(category => {
@@ -531,10 +597,17 @@
                     div.className = 'category-total';
                     const totalAmount = savingsHistory.reduce((sum, entry) => sum + entry.amount, 0);
                     const percentage = totalAmount !== 0 ? ((amount / totalAmount) * 100).toFixed(1) : '0.0';
+                    const type = categoryTypes[category] || 'liquid';
                     div.innerHTML = `
-                        <span class="category-name">${category}</span>
+                        <span class="category-name">${category} (${type})</span>
                         <span class="category-amount">₹${amount.toFixed(2)} (${percentage}%)
-                            ${category !== 'Uncategorized' ? `<button class="delete-category" onclick="deleteCategory('${category}')">Delete Category</button>` : ''}
+                            ${category !== 'Uncategorized' ? `
+                                <select onchange="updateCategoryType('${category}', this.value)">
+                                    <option value="liquid" ${type === 'liquid' ? 'selected' : ''}>Liquid</option>
+                                    <option value="asset" ${type === 'asset' ? 'selected' : ''}>Asset</option>
+                                </select>
+                                <button class="delete-category" onclick="deleteCategory('${category}')">Delete Category</button>
+                            ` : ''}
                         </span>
                     `;
                     categoryBreakdown.appendChild(div);
@@ -547,6 +620,10 @@
             document.getElementById('totalSavings').textContent = actualTotal.toFixed(2);
             document.getElementById('savingsPercentage').textContent = percentage;
             calculateExpectedSavings();
+
+            // Update the display
+            document.getElementById('liquidTotal').textContent = liquidTotal.toFixed(2);
+            document.getElementById('assetTotal').textContent = assetTotal.toFixed(2);
         }
 
         function calculateExpectedTotal() {
@@ -564,6 +641,20 @@
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(savingsHistory));
                 renderHistory();
             }
+        }
+
+        function updateCategoryType(category, newType) {
+            categoryTypes[category] = newType;
+            localStorage.setItem(CATEGORY_TYPES_KEY, JSON.stringify(categoryTypes));
+
+            // Update all entries for this category
+            savingsHistory = savingsHistory.map(entry => ({
+                ...entry,
+                categoryType: entry.category === category ? newType : entry.categoryType
+            }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(savingsHistory));
+
+            renderHistory();
         }
 
         // Initial render

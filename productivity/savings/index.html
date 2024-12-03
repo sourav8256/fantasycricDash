@@ -281,6 +281,12 @@
             <button class="remove" onclick="removeSavings()">Remove Monthly Savings</button>
         </div>
 
+        <div class="button-group" style="margin-top: 20px;">
+            <button onclick="exportData()" style="background-color: #6c757d;">Export Data</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+            <button onclick="document.getElementById('importFile').click()" style="background-color: #6c757d;">Import Data</button>
+        </div>
+
         <div class="savings-history">
             <h2>Savings History</h2>
             <button class="consolidate-btn" onclick="consolidateHistory()">Consolidate History by Category</button>
@@ -660,6 +666,71 @@
         // Initial render
         initializeCategories();
         renderHistory();
+
+        function exportData() {
+            const data = {
+                savingsHistory,
+                expectedRate,
+                categories,
+                categoryTypes
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `savings-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Validate the data structure
+                    if (!data.savingsHistory || !Array.isArray(data.savingsHistory) ||
+                        typeof data.expectedRate !== 'number' ||
+                        !Array.isArray(data.categories) ||
+                        typeof data.categoryTypes !== 'object') {
+                        throw new Error('Invalid data format');
+                    }
+
+                    // Update all data
+                    savingsHistory = data.savingsHistory;
+                    expectedRate = data.expectedRate;
+                    categories = data.categories;
+                    categoryTypes = data.categoryTypes;
+
+                    // Save to localStorage
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(savingsHistory));
+                    localStorage.setItem(EXPECTED_RATE_KEY, expectedRate);
+                    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+                    localStorage.setItem(CATEGORY_TYPES_KEY, JSON.stringify(categoryTypes));
+
+                    // Update UI
+                    document.getElementById('expectedRate').value = expectedRate;
+                    initializeCategories();
+                    renderHistory();
+
+                    alert('Data imported successfully!');
+                } catch (error) {
+                    alert('Error importing data: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset the file input
+            event.target.value = '';
+        }
     </script>
 </body>
 </html>

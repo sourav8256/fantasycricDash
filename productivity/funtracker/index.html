@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun Activity Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .activity-form {
+            margin-bottom: 20px;
+        }
+
+        .activity-list {
+            margin-top: 20px;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        select, input {
+            padding: 8px;
+            margin-right: 10px;
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+        }
+
+        .cooldown {
+            color: #e53935;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .activity-type-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        select:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .cooldown-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+        }
+
+        .cooldown-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 1s linear;
+        }
+
+        .cooldown-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .countdown {
+            font-family: monospace;
+            font-weight: bold;
+            color: #e53935;
+        }
+
+        .add-activity-form {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+        }
+
+        .add-activity-form input {
+            margin: 5px 0;
+        }
+
+        .add-activity-form button {
+            background-color: #2196F3;
+        }
+
+        .add-activity-form button:hover {
+            background-color: #1976D2;
+        }
+
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .activity-button {
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .activity-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .activity-button .cooldown-text {
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .cooldown-item .countdown {
+            min-width: 120px;
+            text-align: right;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .cooldown-item .countdown:not([data-time]) {
+            color: #4CAF50;
+        }
+
+        .cooldown-inputs {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .time-input {
+            width: 80px;
+        }
+
+        .add-activity-form input[type="number"] {
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fun Activity Tracker</h1>
+        
+        <div class="activities-grid" id="activitiesGrid">
+            <!-- Activities will be added here dynamically -->
+        </div>
+
+        <div class="add-activity-form">
+            <h3>Add New Activity</h3>
+            <input type="text" id="newActivityName" placeholder="Activity name">
+            <div class="cooldown-inputs">
+                <input type="number" id="cooldownDays" placeholder="Days" min="0" class="time-input">
+                <input type="number" id="cooldownHours" placeholder="Hours" min="0" max="23" class="time-input">
+                <input type="number" id="cooldownMinutes" placeholder="Minutes" min="0" max="59" class="time-input">
+            </div>
+            <button onclick="addNewActivity()">Add Activity</button>
+        </div>
+
+        <div class="cooldown-info">
+            <h3>Cooldown Status</h3>
+            <div id="cooldownStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        let activities = JSON.parse(localStorage.getItem('activities')) || [];
+        let customActivities = JSON.parse(localStorage.getItem('customActivities')) || [];
+
+        function updateActivityOptions() {
+            const grid = document.getElementById('activitiesGrid');
+            grid.innerHTML = '';
+            
+            // Only show custom activities
+            customActivities.forEach(activity => {
+                const button = createActivityButton({
+                    value: activity.name,
+                    cooldown: activity.cooldown,
+                    label: activity.name
+                });
+                grid.appendChild(button);
+            });
+        }
+
+        function createActivityButton(activity) {
+            const button = document.createElement('button');
+            button.className = 'activity-button';
+            button.dataset.value = activity.value;
+            button.dataset.cooldown = activity.cooldown;
+
+            // Format cooldown time for display
+            const days = Math.floor(activity.cooldown / (24 * 60));
+            const hours = Math.floor((activity.cooldown % (24 * 60)) / 60);
+            const minutes = activity.cooldown % 60;
+            
+            let cooldownText = '';
+            if (days > 0) cooldownText += `${days}d `;
+            if (hours > 0) cooldownText += `${hours}h `;
+            if (minutes > 0) cooldownText += `${minutes}m`;
+            if (!cooldownText) cooldownText = '0m';
+
+            button.innerHTML = `
+                <span>${activity.label}</span>
+                <span class="cooldown-text">${cooldownText} cooldown</span>
+            `;
+            button.onclick = () => logActivity(activity.value);
+            return button;
+        }
+
+        function logActivity(type) {
+            if (!type) return;
+
+            const button = document.querySelector(`button[data-value="${type}"]`);
+            if (button.disabled) {
+                alert('This activity is still in cooldown!');
+                return;
+            }
+
+            const activity = {
+                type,
+                timestamp: new Date().toISOString()
+            };
+
+            activities.unshift(activity);
+            localStorage.setItem('activities', JSON.stringify(activities));
+            
+            updateCooldowns();
+        }
+
+        function formatTime(totalSeconds) {
+            const days = Math.floor(totalSeconds / (24 * 3600));
+            const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+
+            if (days > 0) {
+                return `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateCooldowns() {
+            const now = new Date();
+            const cooldownStatus = document.getElementById('cooldownStatus');
+            cooldownStatus.innerHTML = '';
+            
+            document.querySelectorAll('.activity-button').forEach(button => {
+                const type = button.dataset.value;
+                const lastActivity = activities.find(a => a.type === type);
+                const cooldownMinutes = parseInt(button.dataset.cooldown);
+                
+                const cooldownItem = document.createElement('div');
+                cooldownItem.className = 'cooldown-item';
+                
+                if (lastActivity) {
+                    const lastTime = new Date(lastActivity.timestamp);
+                    const cooldownEnd = new Date(lastTime.getTime() + cooldownMinutes * 60000);
+                    
+                    if (cooldownEnd > now) {
+                        const remainingSeconds = Math.ceil((cooldownEnd - now) / 1000);
+                        const progressPercent = 100 - (remainingSeconds / (cooldownMinutes * 60) * 100);
+                        
+                        cooldownItem.innerHTML = `
+                            <div class="cooldown-details">
+                                <span>${type}</span>
+                                <span class="countdown">${formatTime(remainingSeconds)}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                            </div>
+                        `;
+                        button.disabled = true;
+                    } else {
+                        cooldownItem.innerHTML = `
+                            <div class="cooldown-details">
+                                <span>${type}</span>
+                                <span class="countdown">Ready!</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%"></div>
+                            </div>
+                        `;
+                        button.disabled = false;
+                    }
+                } else {
+                    cooldownItem.innerHTML = `
+                        <div class="cooldown-details">
+                            <span>${type}</span>
+                            <span class="countdown">Never used</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                    `;
+                    button.disabled = false;
+                }
+                
+                cooldownStatus.appendChild(cooldownItem);
+            });
+        }
+
+        function addNewActivity() {
+            const name = document.getElementById('newActivityName').value.trim();
+            const days = parseInt(document.getElementById('cooldownDays').value) || 0;
+            const hours = parseInt(document.getElementById('cooldownHours').value) || 0;
+            const minutes = parseInt(document.getElementById('cooldownMinutes').value) || 0;
+
+            if (!name) {
+                alert('Please enter an activity name');
+                return;
+            }
+
+            if (days === 0 && hours === 0 && minutes === 0) {
+                alert('Please enter a cooldown time');
+                return;
+            }
+
+            if (customActivities.some(a => a.name === name)) {
+                alert('An activity with this name already exists');
+                return;
+            }
+
+            // Convert all to minutes
+            const totalMinutes = (days * 24 * 60) + (hours * 60) + minutes;
+
+            const activity = {
+                name: name,
+                cooldown: totalMinutes
+            };
+
+            customActivities.push(activity);
+            localStorage.setItem('customActivities', JSON.stringify(customActivities));
+            
+            updateActivityOptions();
+            clearNewActivityForm();
+        }
+
+        function clearNewActivityForm() {
+            document.getElementById('newActivityName').value = '';
+            document.getElementById('cooldownDays').value = '';
+            document.getElementById('cooldownHours').value = '';
+            document.getElementById('cooldownMinutes').value = '';
+        }
+
+        // Initialize the options when page loads
+        updateActivityOptions();
+        setInterval(updateCooldowns, 1000);
+        updateCooldowns();
+    </script>
+</body>
+</html>

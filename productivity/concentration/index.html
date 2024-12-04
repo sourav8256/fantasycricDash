@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concentration Training</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        #game-container {
+            width: 600px;
+            height: 400px;
+            background-color: white;
+            position: relative;
+            margin: 20px;
+            border: 2px solid #333;
+            cursor: pointer;
+        }
+
+        .target {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #ff4444;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .target:hover {
+            transform: scale(1.1);
+        }
+
+        #score-container {
+            font-size: 1.2em;
+            margin: 20px;
+        }
+
+        #start-btn {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        #start-btn:hover {
+            background-color: #45a049;
+        }
+
+        .instructions {
+            max-width: 600px;
+            margin: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Concentration Training</h1>
+    <div class="instructions">
+        <h3>Instructions:</h3>
+        <p>Click on the red circles as quickly as possible when they appear. Try to get the highest score!</p>
+        <p>You have 30 seconds to click as many targets as you can.</p>
+    </div>
+    <div id="score-container">
+        Score: <span id="score">0</span> | Time: <span id="timer">30</span>s
+    </div>
+    <button id="start-btn">Start Game</button>
+    <div id="game-container"></div>
+
+    <script>
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval;
+        let currentTarget = null;
+        let isGameRunning = false;
+
+        const gameContainer = document.getElementById('game-container');
+        const scoreElement = document.getElementById('score');
+        const timerElement = document.getElementById('timer');
+        const startButton = document.getElementById('start-btn');
+
+        function createTarget() {
+            if (currentTarget) {
+                gameContainer.removeChild(currentTarget);
+            }
+
+            const target = document.createElement('div');
+            target.className = 'target';
+            
+            const maxX = gameContainer.clientWidth - 30;
+            const maxY = gameContainer.clientHeight - 30;
+            
+            target.style.left = Math.random() * maxX + 'px';
+            target.style.top = Math.random() * maxY + 'px';
+            
+            target.addEventListener('click', hitTarget);
+            
+            gameContainer.appendChild(target);
+            currentTarget = target;
+        }
+
+        function hitTarget() {
+            score += 1;
+            scoreElement.textContent = score;
+            createTarget();
+        }
+
+        function updateTimer() {
+            timeLeft -= 1;
+            timerElement.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        function startGame() {
+            if (isGameRunning) return;
+            
+            isGameRunning = true;
+            score = 0;
+            timeLeft = 30;
+            scoreElement.textContent = score;
+            timerElement.textContent = timeLeft;
+            
+            startButton.textContent = 'Game in Progress';
+            startButton.disabled = true;
+            
+            createTarget();
+            gameInterval = setInterval(updateTimer, 1000);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            if (currentTarget) {
+                gameContainer.removeChild(currentTarget);
+                currentTarget = null;
+            }
+            
+            isGameRunning = false;
+            startButton.textContent = 'Start Game';
+            startButton.disabled = false;
+            
+            alert(`Game Over! Your score: ${score}`);
+        }
+
+        startButton.addEventListener('click', startGame);
+    </script>
+</body>
+</html>

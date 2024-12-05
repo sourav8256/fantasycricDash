@@ -192,18 +192,112 @@
         }
 
         @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin: 35px 0 20px;
+            }
+
             .timer {
-                font-size: 48px;
+                font-size: 56px;
+                margin: 20px 0;
+            }
+
+            .controls {
+                flex-wrap: wrap;
+                gap: 10px;
             }
 
             button {
                 padding: 10px 20px;
                 font-size: 16px;
+                flex: 1;
+                min-width: 100px;
             }
 
-            .container {
-                padding: 20px;
+            .select-wrapper {
+                max-width: 100%;
             }
+
+            select {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            .stats {
+                padding: 15px 10px;
+                margin: 15px 0;
+            }
+
+            .stat-box {
+                padding: 0 5px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+
+            .session {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .top-controls {
+                top: 15px;
+                right: 15px;
+                gap: 8px;
+            }
+
+            .mute-button, .reset-button, .test-sound-button {
+                width: 35px;
+                height: 35px;
+                padding: 8px;
+            }
+
+            .history {
+                padding: 15px;
+                margin-top: 25px;
+            }
+
+            .history h2 {
+                font-size: 1.4em;
+            }
+
+            /* Adjust notification for mobile */
+            .notification {
+                left: 10px;
+                right: 10px;
+                top: auto;
+                bottom: 20px;
+                width: auto;
+                font-size: 14px;
+                padding: 12px 20px;
+            }
+        }
+
+        /* Add styles for notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            animation: slideIn 0.5s ease-out;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .top-controls {
@@ -291,6 +385,30 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
         }
+
+        button#cancel {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            box-shadow: 0 4px 15px rgba(127, 140, 141, 0.2);
+            opacity: 0.5;  /* Start with faded appearance */
+            transition: all 0.3s ease;
+        }
+
+        button#cancel.active {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
     </style>
     <audio id="achievementSound">
         <source src="bell sound.mp3" type="audio/mpeg">
@@ -331,6 +449,7 @@
         <div class="controls">
             <button id="start">Start</button>
             <button id="stop">Stop</button>
+            <button id="cancel">Cancel</button>
         </div>
 
         <div class="history">
@@ -376,6 +495,7 @@
         const resetButton = document.getElementById('resetButton');
         const testSoundButton = document.getElementById('testSoundButton');
         const minuteSound = document.getElementById('minuteSound');
+        const cancelButton = document.getElementById('cancel');
 
         muteButton.addEventListener('click', () => {
             isMuted = !isMuted;
@@ -395,6 +515,8 @@
             const minutes = Math.floor(seconds / 60);
             const remainingSeconds = seconds % 60;
             timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+
+            updateCancelButton();
 
             // Play minute sound
             if (seconds % 60 === 0) {
@@ -417,29 +539,7 @@
             if (!averageReached && seconds > avgSecondsPerSession && avgSecondsPerSession > 0) {
                 averageReached = true;
                 playSound(achievementSound);
-                
-                // Show notification
-                const notification = document.createElement('div');
-                notification.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: #4CAF50;
-                    color: white;
-                    padding: 15px 25px;
-                    border-radius: 10px;
-                    animation: slideIn 0.5s ease-out;
-                    z-index: 1000;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                `;
-                notification.textContent = "Congratulations! You've exceeded your average meditation time! 🎉";
-                document.body.appendChild(notification);
-
-                // Remove notification after 5 seconds
-                setTimeout(() => {
-                    notification.style.animation = 'slideOut 0.5s ease-in';
-                    setTimeout(() => notification.remove(), 500);
-                }, 5000);
+                showNotification("Congratulations! You've exceeded your average meditation time! 🎉");
             }
         }
 
@@ -474,8 +574,25 @@
                 // Reset timer
                 seconds = 0;
                 timerDisplay.textContent = '00:00';
+                updateCancelButton();
 
                 updateHistory();
+            }
+        }
+
+        function cancelTimer() {
+            if (seconds > 0) {
+                if (confirm('Are you sure you want to cancel this meditation session?')) {
+                    clearInterval(timer);
+                    isRunning = false;
+                    startButton.textContent = 'Start';
+                    averageReached = false;
+
+                    // Reset timer without saving
+                    seconds = 0;
+                    timerDisplay.textContent = '00:00';
+                    updateCancelButton();
+                }
             }
         }
 
@@ -551,6 +668,7 @@
 
         startButton.addEventListener('click', startTimer);
         stopButton.addEventListener('click', stopTimer);
+        cancelButton.addEventListener('click', cancelTimer);
 
         // Load existing history
         updateHistory();
@@ -566,6 +684,26 @@
         testSoundButton.addEventListener('click', () => {
             playSound(achievementSound);
         });
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.5s ease-in';
+                setTimeout(() => notification.remove(), 500);
+            }, 5000);
+        }
+
+        function updateCancelButton() {
+            const canCancel = seconds > 0;
+            cancelButton.classList.toggle('active', canCancel);
+        }
+
+        // Add initial call
+        updateCancelButton();
     </script>
 </body>
 </html>

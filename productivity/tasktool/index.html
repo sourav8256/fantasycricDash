@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tool - Limited Todo List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #taskInput {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #addButton {
+            background-color: #4CAF50;
+        }
+
+        #addButton:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+
+        .action-btn {
+            margin-left: 10px;
+        }
+
+        .delete-btn {
+            background-color: #ff4444;
+        }
+
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-text {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .task-count {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .points-display {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .effort-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-size: 16px;
+        }
+
+        .task-points {
+            color: #4CAF50;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .graph-container {
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .daily-stats {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        canvas {
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Todo List</h1>
+        <div class="task-count">Tasks: <span id="taskCount">0</span>/5</div>
+        <div class="points-display">Points: <span id="pointsDisplay">0</span></div>
+        <div class="input-container">
+            <input type="text" id="taskInput" placeholder="Enter a new task...">
+            <select id="effortLevel" class="effort-select">
+                <option value="1">Easy (1pt)</option>
+                <option value="2">Medium (2pts)</option>
+                <option value="3">Hard (3pts)</option>
+            </select>
+            <button onclick="addTask()" id="addButton">Add Task</button>
+        </div>
+        <div id="taskList"></div>
+        <div class="graph-container">
+            <div class="daily-stats">
+                Today's Points: <span id="todayPoints">0</span>
+                | 7-Day Average: <span id="averagePoints">0</span>
+            </div>
+            <canvas id="pointsGraph"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const MAX_TASKS = 5;
+        const taskList = document.getElementById('taskList');
+        const taskInput = document.getElementById('taskInput');
+        const addButton = document.getElementById('addButton');
+
+        function calculateTotalPoints() {
+            return Array.from(taskList.querySelectorAll('.task-points'))
+                .reduce((sum, pointSpan) => sum + parseInt(pointSpan.textContent.match(/\d+/)[0]), 0);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTasks);
+
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            
+            tasks.slice(0, MAX_TASKS).forEach(task => {
+                createTaskElement(task.text, task.points);
+            });
+            
+            document.getElementById('pointsDisplay').textContent = calculateTotalPoints();
+            updateTaskCount();
+            updateDailyPoints();
+        }
+
+        function updateTaskCount() {
+            const count = taskList.children.length;
+            document.getElementById('taskCount').textContent = count;
+            
+            const isMaxed = count >= MAX_TASKS;
+            addButton.disabled = isMaxed;
+            taskInput.disabled = isMaxed;
+            taskInput.placeholder = isMaxed ? "Maximum tasks reached" : "Enter a new task...";
+        }
+
+        function createTaskElement(text, points) {
+            const taskItem = document.createElement('div');
+            taskItem.className = 'task-item';
+            
+            taskItem.innerHTML = `
+                <span class="task-text">${text}</span>
+                <span class="task-points">(${points}pt${points > 1 ? 's' : ''})</span>
+                <button class="action-btn delete-btn" onclick="deleteTask(this)">Delete</button>
+            `;
+
+            taskList.appendChild(taskItem);
+        }
+
+        function saveTasks() {
+            const tasks = Array.from(taskList.querySelectorAll('.task-item'))
+                .map(item => ({ 
+                    text: item.querySelector('.task-text').textContent,
+                    points: parseInt(item.querySelector('.task-points').textContent.match(/\d+/)[0])
+                }));
+            
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            updateTaskCount();
+        }
+
+        function addTask() {
+            if (taskList.children.length >= MAX_TASKS) return;
+
+            const text = taskInput.value.trim();
+            if (text === '') return;
+
+            const effortLevel = parseInt(document.getElementById('effortLevel').value);
+
+            createTaskElement(text, effortLevel);
+            taskInput.value = '';
+            
+            document.getElementById('pointsDisplay').textContent = calculateTotalPoints();
+            saveTasks();
+            updateDailyPoints();
+        }
+
+        function deleteTask(button) {
+            button.parentElement.remove();
+            document.getElementById('pointsDisplay').textContent = calculateTotalPoints();
+            saveTasks();
+            updateDailyPoints();
+        }
+
+        taskInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') addTask();
+        });
+
+        // Daily points tracking
+        function getDailyPoints() {
+            const dailyPoints = JSON.parse(localStorage.getItem('dailyPoints')) || {};
+            return dailyPoints;
+        }
+
+        function updateDailyPoints() {
+            const today = new Date().toISOString().split('T')[0];
+            const dailyPoints = getDailyPoints();
+            dailyPoints[today] = calculateTotalPoints();
+            
+            // Keep only last 30 days
+            const sortedDates = Object.keys(dailyPoints).sort();
+            if (sortedDates.length > 30) {
+                delete dailyPoints[sortedDates[0]];
+            }
+            
+            localStorage.setItem('dailyPoints', JSON.stringify(dailyPoints));
+            updateStats();
+            drawGraph();
+        }
+
+        function updateStats() {
+            const dailyPoints = getDailyPoints();
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Update today's points
+            document.getElementById('todayPoints').textContent = dailyPoints[today] || 0;
+            
+            // Calculate 7-day average
+            const dates = Object.keys(dailyPoints).sort();
+            const last7Days = dates.slice(-7);
+            const average = last7Days.reduce((sum, date) => sum + dailyPoints[date], 0) / last7Days.length;
+            
+            document.getElementById('averagePoints').textContent = average.toFixed(1);
+        }
+
+        function drawGraph() {
+            const canvas = document.getElementById('pointsGraph');
+            const ctx = canvas.getContext('2d');
+            const dailyPoints = getDailyPoints();
+            const dates = Object.keys(dailyPoints).sort().slice(-14); // Last 14 days
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (dates.length < 2) return; // Need at least 2 points to draw
+            
+            const points = dates.map(date => dailyPoints[date]);
+            const max = Math.max(...points) || 1;
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 20;
+            
+            // Draw line graph
+            ctx.beginPath();
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 2;
+            
+            points.forEach((point, i) => {
+                const x = padding + (i * (width - 2 * padding) / (dates.length - 1));
+                const y = height - padding - ((point / max) * (height - 2 * padding));
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // Draw points
+            points.forEach((point, i) => {
+                const x = padding + (i * (width - 2 * padding) / (dates.length - 1));
+                const y = height - padding - ((point / max) * (height - 2 * padding));
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fillStyle = '#4CAF50';
+                ctx.fill();
+            });
+        }
+
+        // Add window resize handler for canvas
+        window.addEventListener('resize', drawGraph);
+    </script>
+</body>
+</html>

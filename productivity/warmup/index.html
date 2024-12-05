@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .activity-form {
+            margin-bottom: 20px;
+        }
+
+        .activity-list {
+            margin-top: 20px;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        select, input {
+            padding: 8px;
+            margin-right: 10px;
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+        }
+
+        .cooldown {
+            color: #e53935;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .activity-type-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        select:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .cooldown-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+        }
+
+        .cooldown-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 1s linear;
+        }
+
+        .cooldown-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .countdown {
+            font-family: monospace;
+            font-weight: bold;
+            color: #e53935;
+        }
+
+        .add-activity-form {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+        }
+
+        .add-activity-form input {
+            margin: 5px 0;
+        }
+
+        .add-activity-form button {
+            background-color: #2196F3;
+        }
+
+        .add-activity-form button:hover {
+            background-color: #1976D2;
+        }
+
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .activity-button {
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .activity-button:disabled {
+            background: white !important;  /* Override any gradient */
+            color: #333;
+            cursor: not-allowed;
+            border: 2px solid #eee;
+            opacity: 1;
+        }
+
+        .activity-button:disabled .cooldown-text {
+            color: #666;
+            background: none;
+        }
+
+        .activity-button:disabled .edit-button {
+            background: rgba(0, 0, 0, 0.1);
+            color: #666;
+        }
+
+        .activity-button .cooldown-text {
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .cooldown-item .countdown {
+            min-width: 120px;
+            text-align: right;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .cooldown-item .countdown:not([data-time]) {
+            color: #4CAF50;
+        }
+
+        .cooldown-inputs {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .time-input {
+            width: 80px;
+        }
+
+        .add-activity-form input[type="number"] {
+            padding: 8px;
+        }
+
+        .activity-button {
+            position: relative;
+        }
+
+        .edit-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.1);
+            border: none;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+
+        .edit-button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .edit-form {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 90%;  /* Set width relative to viewport */
+            max-width: 400px;  /* Maximum width on larger screens */
+            margin: 0 auto;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .edit-form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .edit-form-buttons button {
+            flex: 1;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+
+        .monthly-costs {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .monthly-costs h3 {
+            color: #2196F3;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e3f2fd;
+        }
+
+        .monthly-cost-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .monthly-cost-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .monthly-cost-item .activity-name {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .monthly-cost-item .cost-amount {
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #2196F3;
+            font-weight: bold;
+        }
+
+        .monthly-cost-total {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #e3f2fd;
+            text-align: right;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1976D2;
+        }
+
+        .no-costs-message {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .activity-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-progress-fill {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: width 1s linear;
+        }
+
+        .activity-button:disabled .activity-progress {
+            background: #eee;
+        }
+
+        .activity-button:disabled .activity-progress-fill {
+            background: #ccc;
+        }
+
+        /* Make inputs more responsive */
+        .cooldown-inputs {
+            display: flex;
+            flex-wrap: wrap;  /* Allow wrapping on small screens */
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .time-input {
+            flex: 1;  /* Allow inputs to grow */
+            min-width: 70px;  /* Minimum width for inputs */
+            max-width: calc(50% - 5px);  /* Maximum width on small screens */
+        }
+
+        /* Make edit form inputs full width */
+        .edit-form input[type="text"],
+        .edit-form input[type="number"] {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        /* Adjust button layout for small screens */
+        .edit-form-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .edit-form-buttons button {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        /* Add some responsive padding */
+        @media (max-width: 480px) {
+            .edit-form {
+                padding: 15px;
+            }
+
+            .cooldown-inputs {
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Work Tracker</h1>
+        
+        <div class="activities-grid" id="activitiesGrid">
+            <!-- Activities will be added here dynamically -->
+        </div>
+
+        <div class="add-activity-form">
+            <h3>Add New Activity</h3>
+            <input type="text" id="newActivityName" placeholder="Activity name">
+            <div class="cooldown-inputs">
+                <input type="number" id="cooldownDays" placeholder="Days" min="0" class="time-input">
+                <input type="number" id="cooldownHours" placeholder="Hours" min="0" max="23" class="time-input">
+                <input type="number" id="cooldownMinutes" placeholder="Minutes" min="0" max="59" class="time-input">
+                <input type="number" id="newActivityCost" placeholder="Cost (₹)" min="0" step="0.01" class="time-input">
+            </div>
+            <button onclick="addNewActivity()">Add Activity</button>
+        </div>
+
+        <div class="cooldown-info">
+            <h3>Cooldown Status</h3>
+            <div id="cooldownStatus"></div>
+        </div>
+
+        <div class="overlay" id="editOverlay">
+            <div class="edit-form" id="editForm">
+                <h3>Edit Activity</h3>
+                <input type="text" id="editActivityName" placeholder="Activity name">
+                <div class="cooldown-inputs">
+                    <input type="number" id="editCooldownDays" placeholder="Days" min="0" class="time-input">
+                    <input type="number" id="editCooldownHours" placeholder="Hours" min="0" max="23" class="time-input">
+                    <input type="number" id="editCooldownMinutes" placeholder="Minutes" min="0" max="59" class="time-input">
+                    <input type="number" id="editActivityCost" placeholder="Cost (₹)" min="0" step="0.01" class="time-input">
+                </div>
+                <div class="edit-form-buttons">
+                    <button onclick="saveEdit()">Save</button>
+                    <button onclick="closeEditForm()">Cancel</button>
+                    <button class="delete-button" onclick="deleteActivity()">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="monthly-costs">
+            <h3>Monthly Cost Breakdown</h3>
+            <div id="monthlyCostBreakdown"></div>
+            <div id="monthlyCostTotal" class="monthly-cost-total"></div>
+        </div>
+    </div>
+
+    <script>
+        let activities = JSON.parse(localStorage.getItem('warmup_activities')) || [];
+        let customActivities = JSON.parse(localStorage.getItem('warmup_customActivities')) || [];
+        let currentEditingActivity = null;
+
+        function updateActivityOptions() {
+            const grid = document.getElementById('activitiesGrid');
+            grid.innerHTML = '';
+            
+            // Only show custom activities
+            customActivities.forEach(activity => {
+                const button = createActivityButton({
+                    value: activity.name,
+                    cooldown: activity.cooldown,
+                    label: activity.name,
+                    cost: activity.cost
+                });
+                grid.appendChild(button);
+            });
+        }
+
+        function createActivityButton(activity) {
+            const button = document.createElement('button');
+            button.className = 'activity-button';
+            button.dataset.value = activity.value;
+            button.dataset.cooldown = activity.cooldown;
+
+            const days = Math.floor(activity.cooldown / (24 * 60));
+            const hours = Math.floor((activity.cooldown % (24 * 60)) / 60);
+            const minutes = activity.cooldown % 60;
+            
+            let cooldownText = '';
+            if (days > 0) cooldownText += `${days}d `;
+            if (hours > 0) cooldownText += `${hours}h `;
+            if (minutes > 0) cooldownText += `${minutes}m`;
+            if (!cooldownText) cooldownText = '0m';
+
+            const costText = `Cost: ₹${(parseFloat(activity.cost) || 0).toFixed(2)}`;
+
+            button.innerHTML = `
+                <span>${activity.label}</span>
+                <span class="cooldown-text">${cooldownText} cooldown</span>
+                <span class="cooldown-text">${costText}</span>
+                <button class="edit-button" onclick="event.stopPropagation(); openEditForm('${activity.value}')">✎</button>
+            `;
+            button.onclick = () => logActivity(activity.value);
+            return button;
+        }
+
+        function logActivity(type) {
+            if (!type) return;
+
+            const button = document.querySelector(`button[data-value="${type}"]`);
+            if (button.disabled) {
+                alert('This activity is still in cooldown!');
+                return;
+            }
+
+            const activity = {
+                type,
+                timestamp: new Date().toISOString()
+            };
+
+            activities.unshift(activity);
+            localStorage.setItem('warmup_activities', JSON.stringify(activities));
+            
+            updateCooldowns();
+        }
+
+        function formatTime(totalSeconds) {
+            const days = Math.floor(totalSeconds / (24 * 3600));
+            const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+
+            if (days > 0) {
+                return `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateCooldowns() {
+            const now = new Date();
+            const cooldownStatus = document.getElementById('cooldownStatus');
+            cooldownStatus.innerHTML = '';
+            
+            document.querySelectorAll('.activity-button').forEach(button => {
+                const type = button.dataset.value;
+                const lastActivity = activities.find(a => a.type === type);
+                const cooldownMinutes = parseInt(button.dataset.cooldown);
+                
+                const cooldownItem = document.createElement('div');
+                cooldownItem.className = 'cooldown-item';
+                
+                // Find or create progress bar
+                let progressBar = button.querySelector('.activity-progress');
+                if (!progressBar) {
+                    progressBar = document.createElement('div');
+                    progressBar.className = 'activity-progress';
+                    progressBar.innerHTML = '<div class="activity-progress-fill"></div>';
+                    button.appendChild(progressBar);
+                }
+                const progressFill = progressBar.querySelector('.activity-progress-fill');
+                
+                if (lastActivity) {
+                    const lastTime = new Date(lastActivity.timestamp);
+                    const cooldownEnd = new Date(lastTime.getTime() + cooldownMinutes * 60000);
+                    
+                    if (cooldownEnd > now) {
+                        const remainingSeconds = Math.ceil((cooldownEnd - now) / 1000);
+                        const progressPercent = 100 - (remainingSeconds / (cooldownMinutes * 60) * 100);
+                        
+                        progressFill.style.width = `${progressPercent}%`;
+                        
+                        cooldownItem.innerHTML = `
+                            <div class="cooldown-details">
+                                <span>${type}</span>
+                                <span class="countdown">${formatTime(remainingSeconds)}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                            </div>
+                        `;
+                        button.disabled = true;
+                    } else {
+                        progressFill.style.width = '100%';
+                        
+                        cooldownItem.innerHTML = `
+                            <div class="cooldown-details">
+                                <span>${type}</span>
+                                <span class="countdown">Ready!</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%"></div>
+                            </div>
+                        `;
+                        button.disabled = false;
+                    }
+                } else {
+                    progressFill.style.width = '100%';
+                    
+                    cooldownItem.innerHTML = `
+                        <div class="cooldown-details">
+                            <span>${type}</span>
+                            <span class="countdown">Never used</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                    `;
+                    button.disabled = false;
+                }
+                
+                cooldownStatus.appendChild(cooldownItem);
+            });
+        }
+
+        function calculateMonthlyCost(activity) {
+            const minutesInMonth = 30 * 24 * 60; // 30 days * 24 hours * 60 minutes
+            const occurrencesPerMonth = Math.floor(minutesInMonth / activity.cooldown);
+            return occurrencesPerMonth * (parseFloat(activity.cost) || 0);
+        }
+
+        function updateMonthlyCosts() {
+            const breakdown = document.getElementById('monthlyCostBreakdown');
+            const totalElement = document.getElementById('monthlyCostTotal');
+            breakdown.innerHTML = '';
+            
+            let monthlyTotal = 0;
+            let hasActivities = false;
+            
+            customActivities.forEach(activity => {
+                const monthlyCost = calculateMonthlyCost(activity);
+                monthlyTotal += monthlyCost;
+                
+                // Only show activities that have a cost
+                if (activity.cost) {
+                    hasActivities = true;
+                    const div = document.createElement('div');
+                    div.className = 'monthly-cost-item';
+                    div.innerHTML = `
+                        <span class="activity-name">${activity.name}</span>
+                        <span class="cost-amount">₹${monthlyCost.toFixed(2)} / month</span>
+                    `;
+                    breakdown.appendChild(div);
+                }
+            });
+
+            if (!hasActivities) {
+                breakdown.innerHTML = `
+                    <div class="no-costs-message">
+                        No activities with costs added yet
+                    </div>
+                `;
+            }
+            
+            totalElement.innerHTML = `
+                <span>Total Monthly Cost:</span>
+                <span style="margin-left: 10px">₹${monthlyTotal.toFixed(2)}</span>
+            `;
+        }
+
+        function addNewActivity() {
+            const name = document.getElementById('newActivityName').value.trim();
+            const days = parseInt(document.getElementById('cooldownDays').value) || 0;
+            const hours = parseInt(document.getElementById('cooldownHours').value) || 0;
+            const minutes = parseInt(document.getElementById('cooldownMinutes').value) || 0;
+            const cost = parseFloat(document.getElementById('newActivityCost').value) || 0;
+
+            if (!name) {
+                alert('Please enter an activity name');
+                return;
+            }
+
+            if (days === 0 && hours === 0 && minutes === 0) {
+                alert('Please enter a cooldown time');
+                return;
+            }
+
+            if (customActivities.some(a => a.name === name)) {
+                alert('An activity with this name already exists');
+                return;
+            }
+
+            const totalMinutes = (days * 24 * 60) + (hours * 60) + minutes;
+
+            const activity = {
+                name: name,
+                cooldown: totalMinutes,
+                cost: cost
+            };
+
+            customActivities.push(activity);
+            localStorage.setItem('warmup_customActivities', JSON.stringify(customActivities));
+            
+            updateActivityOptions();
+            updateMonthlyCosts();
+            clearNewActivityForm();
+        }
+
+        function clearNewActivityForm() {
+            document.getElementById('newActivityName').value = '';
+            document.getElementById('cooldownDays').value = '';
+            document.getElementById('cooldownHours').value = '';
+            document.getElementById('cooldownMinutes').value = '';
+            document.getElementById('newActivityCost').value = '';
+        }
+
+        function openEditForm(activityName) {
+            const activity = customActivities.find(a => a.name === activityName);
+            if (!activity) return;
+
+            currentEditingActivity = activity;
+            
+            const days = Math.floor(activity.cooldown / (24 * 60));
+            const hours = Math.floor((activity.cooldown % (24 * 60)) / 60);
+            const minutes = activity.cooldown % 60;
+
+            document.getElementById('editActivityName').value = activity.name;
+            document.getElementById('editCooldownDays').value = days;
+            document.getElementById('editCooldownHours').value = hours;
+            document.getElementById('editCooldownMinutes').value = minutes;
+            document.getElementById('editActivityCost').value = activity.cost || '';
+            
+            document.getElementById('editOverlay').classList.add('active');
+        }
+
+        function closeEditForm() {
+            document.getElementById('editOverlay').classList.remove('active');
+            currentEditingActivity = null;
+        }
+
+        function saveEdit() {
+            if (!currentEditingActivity) return;
+
+            const newName = document.getElementById('editActivityName').value.trim();
+            const days = parseInt(document.getElementById('editCooldownDays').value) || 0;
+            const hours = parseInt(document.getElementById('editCooldownHours').value) || 0;
+            const minutes = parseInt(document.getElementById('editCooldownMinutes').value) || 0;
+            const cost = parseFloat(document.getElementById('editActivityCost').value) || 0;
+
+            if (!newName) {
+                alert('Please enter an activity name');
+                return;
+            }
+
+            if (days === 0 && hours === 0 && minutes === 0) {
+                alert('Please enter a cooldown time');
+                return;
+            }
+
+            const totalMinutes = (days * 24 * 60) + (hours * 60) + minutes;
+
+            const index = customActivities.findIndex(a => a.name === currentEditingActivity.name);
+            if (index !== -1) {
+                customActivities[index] = {
+                    name: newName,
+                    cooldown: totalMinutes,
+                    cost: cost
+                };
+                
+                activities = activities.map(a => {
+                    if (a.type === currentEditingActivity.name) {
+                        return { ...a, type: newName };
+                    }
+                    return a;
+                });
+
+                localStorage.setItem('warmup_activities', JSON.stringify(activities));
+                localStorage.setItem('warmup_customActivities', JSON.stringify(customActivities));
+                
+                updateActivityOptions();
+                updateMonthlyCosts();
+                updateCooldowns();
+                closeEditForm();
+            }
+        }
+
+        function deleteActivity() {
+            if (!currentEditingActivity) return;
+            
+            if (confirm('Are you sure you want to delete this activity?')) {
+                customActivities = customActivities.filter(a => a.name !== currentEditingActivity.name);
+                activities = activities.filter(a => a.type !== currentEditingActivity.name);
+                
+                localStorage.setItem('warmup_activities', JSON.stringify(activities));
+                localStorage.setItem('warmup_customActivities', JSON.stringify(customActivities));
+                
+                updateActivityOptions();
+                updateMonthlyCosts();
+                updateCooldowns();
+                closeEditForm();
+            }
+        }
+
+        updateActivityOptions();
+        updateMonthlyCosts();
+        setInterval(updateCooldowns, 1000);
+        updateCooldowns();
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editable Table</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin: 20px;
+        }
+        td {
+            padding: 5px;
+            border: 1px solid #ccc;
+        }
+        textarea {
+            width: 100%;
+            padding: 5px;
+            border: none;
+            box-sizing: border-box;
+            min-height: 60px;
+            resize: vertical;
+        }
+    </style>
+    <script>
+        function scrollToBottom(textarea) {
+            textarea.scrollTop = textarea.scrollHeight;
+        }
+
+        // Load saved data when page loads
+        window.addEventListener('load', () => {
+            const savedData = localStorage.getItem('tableData');
+            if (savedData) {
+                const textareas = document.querySelectorAll('textarea');
+                const data = JSON.parse(savedData);
+                textareas.forEach((textarea, index) => {
+                    textarea.value = data[index] || '';
+                    scrollToBottom(textarea);
+                });
+            }
+        });
+
+        // Save data and scroll to bottom whenever any textarea changes
+        document.addEventListener('input', (e) => {
+            if (e.target.tagName === 'TEXTAREA') {
+                const textareas = document.querySelectorAll('textarea');
+                const data = Array.from(textareas).map(textarea => textarea.value);
+                localStorage.setItem('tableData', JSON.stringify(data));
+                scrollToBottom(e.target);
+            }
+        });
+    </script>
+</head>
+<body>
+    <table>
+        <tr>
+            <td><textarea placeholder="Enter text"></textarea></td>
+            <td><textarea placeholder="Enter text"></textarea></td>
+        </tr>
+        <tr>
+            <td><textarea placeholder="Enter text"></textarea></td>
+            <td><textarea placeholder="Enter text"></textarea></td>
+        </tr>
+        <tr>
+            <td><textarea placeholder="Enter text"></textarea></td>
+            <td><textarea placeholder="Enter text"></textarea></td>
+        </tr>
+        <tr>
+            <td><textarea placeholder="Enter text"></textarea></td>
+            <td><textarea placeholder="Enter text"></textarea></td>
+        </tr>
+        <tr>
+            <td><textarea placeholder="Enter text"></textarea></td>
+            <td><textarea placeholder="Enter text"></textarea></td>
+        </tr>
+    </table>
+</body>
+</html>

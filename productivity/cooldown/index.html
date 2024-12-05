@@ -261,6 +261,65 @@
         .delete-button:hover {
             background-color: #c82333;
         }
+
+        .monthly-costs {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .monthly-costs h3 {
+            color: #2196F3;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e3f2fd;
+        }
+
+        .monthly-cost-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .monthly-cost-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .monthly-cost-item .activity-name {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .monthly-cost-item .cost-amount {
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #2196F3;
+            font-weight: bold;
+        }
+
+        .monthly-cost-total {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #e3f2fd;
+            text-align: right;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1976D2;
+        }
+
+        .no-costs-message {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -269,17 +328,6 @@
         
         <div class="activities-grid" id="activitiesGrid">
             <!-- Activities will be added here dynamically -->
-        </div>
-
-        <div class="add-activity-form">
-            <h3>Add New Activity</h3>
-            <input type="text" id="newActivityName" placeholder="Activity name">
-            <div class="cooldown-inputs">
-                <input type="number" id="cooldownDays" placeholder="Days" min="0" class="time-input">
-                <input type="number" id="cooldownHours" placeholder="Hours" min="0" max="23" class="time-input">
-                <input type="number" id="cooldownMinutes" placeholder="Minutes" min="0" max="59" class="time-input">
-            </div>
-            <button onclick="addNewActivity()">Add Activity</button>
         </div>
 
         <div class="cooldown-info">
@@ -295,6 +343,7 @@
                     <input type="number" id="editCooldownDays" placeholder="Days" min="0" class="time-input">
                     <input type="number" id="editCooldownHours" placeholder="Hours" min="0" max="23" class="time-input">
                     <input type="number" id="editCooldownMinutes" placeholder="Minutes" min="0" max="59" class="time-input">
+                    <input type="number" id="editActivityCost" placeholder="Cost (₹)" min="0" step="0.01" class="time-input">
                 </div>
                 <div class="edit-form-buttons">
                     <button onclick="saveEdit()">Save</button>
@@ -302,6 +351,12 @@
                     <button class="delete-button" onclick="deleteActivity()">Delete</button>
                 </div>
             </div>
+        </div>
+
+        <div class="monthly-costs">
+            <h3>Monthly Cost Breakdown</h3>
+            <div id="monthlyCostBreakdown"></div>
+            <div id="monthlyCostTotal" class="monthly-cost-total"></div>
         </div>
     </div>
 
@@ -319,7 +374,8 @@
                 const button = createActivityButton({
                     value: activity.name,
                     cooldown: activity.cooldown,
-                    label: activity.name
+                    label: activity.name,
+                    cost: activity.cost
                 });
                 grid.appendChild(button);
             });
@@ -331,7 +387,6 @@
             button.dataset.value = activity.value;
             button.dataset.cooldown = activity.cooldown;
 
-            // Format cooldown time for display
             const days = Math.floor(activity.cooldown / (24 * 60));
             const hours = Math.floor((activity.cooldown % (24 * 60)) / 60);
             const minutes = activity.cooldown % 60;
@@ -342,9 +397,12 @@
             if (minutes > 0) cooldownText += `${minutes}m`;
             if (!cooldownText) cooldownText = '0m';
 
+            const costText = `Cost: ₹${(parseFloat(activity.cost) || 0).toFixed(2)}`;
+
             button.innerHTML = `
                 <span>${activity.label}</span>
                 <span class="cooldown-text">${cooldownText} cooldown</span>
+                <span class="cooldown-text">${costText}</span>
                 <button class="edit-button" onclick="event.stopPropagation(); openEditForm('${activity.value}')">✎</button>
             `;
             button.onclick = () => logActivity(activity.value);
@@ -443,11 +501,57 @@
             });
         }
 
+        function calculateMonthlyCost(activity) {
+            const minutesInMonth = 30 * 24 * 60; // 30 days * 24 hours * 60 minutes
+            const occurrencesPerMonth = Math.floor(minutesInMonth / activity.cooldown);
+            return occurrencesPerMonth * (parseFloat(activity.cost) || 0);
+        }
+
+        function updateMonthlyCosts() {
+            const breakdown = document.getElementById('monthlyCostBreakdown');
+            const totalElement = document.getElementById('monthlyCostTotal');
+            breakdown.innerHTML = '';
+            
+            let monthlyTotal = 0;
+            let hasActivities = false;
+            
+            customActivities.forEach(activity => {
+                const monthlyCost = calculateMonthlyCost(activity);
+                monthlyTotal += monthlyCost;
+                
+                // Only show activities that have a cost
+                if (activity.cost) {
+                    hasActivities = true;
+                    const div = document.createElement('div');
+                    div.className = 'monthly-cost-item';
+                    div.innerHTML = `
+                        <span class="activity-name">${activity.name}</span>
+                        <span class="cost-amount">₹${monthlyCost.toFixed(2)} / month</span>
+                    `;
+                    breakdown.appendChild(div);
+                }
+            });
+
+            if (!hasActivities) {
+                breakdown.innerHTML = `
+                    <div class="no-costs-message">
+                        No activities with costs added yet
+                    </div>
+                `;
+            }
+            
+            totalElement.innerHTML = `
+                <span>Total Monthly Cost:</span>
+                <span style="margin-left: 10px">₹${monthlyTotal.toFixed(2)}</span>
+            `;
+        }
+
         function addNewActivity() {
             const name = document.getElementById('newActivityName').value.trim();
             const days = parseInt(document.getElementById('cooldownDays').value) || 0;
             const hours = parseInt(document.getElementById('cooldownHours').value) || 0;
             const minutes = parseInt(document.getElementById('cooldownMinutes').value) || 0;
+            const cost = parseFloat(document.getElementById('newActivityCost').value) || 0;
 
             if (!name) {
                 alert('Please enter an activity name');
@@ -464,18 +568,19 @@
                 return;
             }
 
-            // Convert all to minutes
             const totalMinutes = (days * 24 * 60) + (hours * 60) + minutes;
 
             const activity = {
                 name: name,
-                cooldown: totalMinutes
+                cooldown: totalMinutes,
+                cost: cost
             };
 
             customActivities.push(activity);
             localStorage.setItem('customActivities', JSON.stringify(customActivities));
             
             updateActivityOptions();
+            updateMonthlyCosts();
             clearNewActivityForm();
         }
 
@@ -484,6 +589,7 @@
             document.getElementById('cooldownDays').value = '';
             document.getElementById('cooldownHours').value = '';
             document.getElementById('cooldownMinutes').value = '';
+            document.getElementById('newActivityCost').value = '';
         }
 
         function openEditForm(activityName) {
@@ -500,6 +606,7 @@
             document.getElementById('editCooldownDays').value = days;
             document.getElementById('editCooldownHours').value = hours;
             document.getElementById('editCooldownMinutes').value = minutes;
+            document.getElementById('editActivityCost').value = activity.cost || '';
             
             document.getElementById('editOverlay').classList.add('active');
         }
@@ -516,6 +623,7 @@
             const days = parseInt(document.getElementById('editCooldownDays').value) || 0;
             const hours = parseInt(document.getElementById('editCooldownHours').value) || 0;
             const minutes = parseInt(document.getElementById('editCooldownMinutes').value) || 0;
+            const cost = parseFloat(document.getElementById('editActivityCost').value) || 0;
 
             if (!newName) {
                 alert('Please enter an activity name');
@@ -529,15 +637,14 @@
 
             const totalMinutes = (days * 24 * 60) + (hours * 60) + minutes;
 
-            // Update the activity
             const index = customActivities.findIndex(a => a.name === currentEditingActivity.name);
             if (index !== -1) {
                 customActivities[index] = {
                     name: newName,
-                    cooldown: totalMinutes
+                    cooldown: totalMinutes,
+                    cost: cost
                 };
                 
-                // Update any existing logged activities with the new name
                 activities = activities.map(a => {
                     if (a.type === currentEditingActivity.name) {
                         return { ...a, type: newName };
@@ -549,6 +656,7 @@
                 localStorage.setItem('customActivities', JSON.stringify(customActivities));
                 
                 updateActivityOptions();
+                updateMonthlyCosts();
                 updateCooldowns();
                 closeEditForm();
             }
@@ -565,13 +673,14 @@
                 localStorage.setItem('customActivities', JSON.stringify(customActivities));
                 
                 updateActivityOptions();
+                updateMonthlyCosts();
                 updateCooldowns();
                 closeEditForm();
             }
         }
 
-        // Initialize the options when page loads
         updateActivityOptions();
+        updateMonthlyCosts();
         setInterval(updateCooldowns, 1000);
         updateCooldowns();
     </script>

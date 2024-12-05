@@ -160,11 +160,25 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
         .activity-button:disabled {
-            background-color: #cccccc;
+            background: white !important;  /* Override any gradient */
+            color: #333;
             cursor: not-allowed;
+            border: 2px solid #eee;
+            opacity: 1;
+        }
+
+        .activity-button:disabled .cooldown-text {
+            color: #666;
+            background: none;
+        }
+
+        .activity-button:disabled .edit-button {
+            background: rgba(0, 0, 0, 0.1);
+            color: #666;
         }
 
         .activity-button .cooldown-text {
@@ -320,6 +334,29 @@
             color: #6c757d;
             font-style: italic;
         }
+
+        .activity-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-progress-fill {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: width 1s linear;
+        }
+
+        .activity-button:disabled .activity-progress {
+            background: #eee;
+        }
+
+        .activity-button:disabled .activity-progress-fill {
+            background: #ccc;
+        }
     </style>
 </head>
 <body>
@@ -466,6 +503,16 @@
                 const cooldownItem = document.createElement('div');
                 cooldownItem.className = 'cooldown-item';
                 
+                // Find or create progress bar
+                let progressBar = button.querySelector('.activity-progress');
+                if (!progressBar) {
+                    progressBar = document.createElement('div');
+                    progressBar.className = 'activity-progress';
+                    progressBar.innerHTML = '<div class="activity-progress-fill"></div>';
+                    button.appendChild(progressBar);
+                }
+                const progressFill = progressBar.querySelector('.activity-progress-fill');
+                
                 if (lastActivity) {
                     const lastTime = new Date(lastActivity.timestamp);
                     const cooldownEnd = new Date(lastTime.getTime() + cooldownMinutes * 60000);
@@ -473,6 +520,8 @@
                     if (cooldownEnd > now) {
                         const remainingSeconds = Math.ceil((cooldownEnd - now) / 1000);
                         const progressPercent = 100 - (remainingSeconds / (cooldownMinutes * 60) * 100);
+                        
+                        progressFill.style.width = `${progressPercent}%`;
                         
                         cooldownItem.innerHTML = `
                             <div class="cooldown-details">
@@ -485,6 +534,8 @@
                         `;
                         button.disabled = true;
                     } else {
+                        progressFill.style.width = '100%';
+                        
                         cooldownItem.innerHTML = `
                             <div class="cooldown-details">
                                 <span>${type}</span>
@@ -497,6 +548,8 @@
                         button.disabled = false;
                     }
                 } else {
+                    progressFill.style.width = '100%';
+                    
                     cooldownItem.innerHTML = `
                         <div class="cooldown-details">
                             <span>${type}</span>

@@ -19,19 +19,34 @@
 
         .container {
             background-color: rgba(255, 255, 255, 0.95);
-            padding: 30px;
+            padding: 0;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             backdrop-filter: blur(10px);
-            position: relative;
         }
 
-        h1 {
+        .top-bar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 20px 20px 0 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .top-controls {
+            position: static;
+            display: flex;
+            gap: 10px;
+        }
+
+        .page-title {
+            margin: 20px 0;
+            font-size: 2em;
             text-align: center;
             color: #34495e;
             font-weight: 600;
-            margin-bottom: 30px;
-            font-size: 2.5em;
         }
 
         .timer {
@@ -200,9 +215,13 @@
                 padding: 15px;
             }
 
-            h1 {
-                font-size: 1.8em;
-                margin: 35px 0 20px;
+            .top-bar {
+                padding: 10px 15px;
+                margin: -15px -15px 15px -15px;
+            }
+
+            .page-title {
+                font-size: 1.4em;
             }
 
             .timer {
@@ -219,7 +238,7 @@
                 padding: 10px 20px;
                 font-size: 16px;
                 flex: 1;
-                min-width: 100px;
+                min-width: 40px;
             }
 
             .select-wrapper {
@@ -409,6 +428,10 @@
                 transform: scale(1);
             }
         }
+
+        .main-content {
+            padding: 20px;
+        }
     </style>
     <audio id="achievementSound">
         <source src="bell sound.mp3" type="audio/mpeg">
@@ -422,55 +445,58 @@
 </head>
 <body>
     <div class="container">
-        <div class="top-controls">
-            <button class="reset-button" id="resetButton" title="Reset History">
-                <i class="fas fa-trash"></i>
-            </button>
-            <button class="test-sound-button" id="testSoundButton" title="Test Bell Sound">
-                <i class="fas fa-bell"></i>
-            </button>
-            <button class="mute-button" id="muteButton" title="Toggle Sound">
-                <i class="fas fa-volume-up"></i>
-            </button>
-        </div>
-        <h1>Meditation Tracker</h1>
-        
-        <div class="select-wrapper">
-            <select id="meditationType">
-                <option value="mindfulness">Mindfulness Meditation</option>
-                <option value="breathing">Breathing Meditation</option>
-                <option value="loving-kindness">Loving-Kindness Meditation</option>
-                <option value="body-scan">Body Scan Meditation</option>
-            </select>
-        </div>
-
-        <div class="timer" id="timer">00:00</div>
-        
-        <div class="controls">
-            <button id="start">Start</button>
-            <button id="stop">Stop</button>
-            <button id="cancel">Cancel</button>
-        </div>
-
-        <div class="history">
-            <div class="history-header">
-                <h2>Meditation History</h2>
+        <div class="top-bar">
+            <div class="top-controls">
+                <button class="reset-button" id="resetButton" title="Reset History">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="test-sound-button" id="testSoundButton" title="Test Bell Sound">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button class="mute-button" id="muteButton" title="Toggle Sound">
+                    <i class="fas fa-volume-up"></i>
+                </button>
             </div>
-            <div class="stats">
-                <div class="stat-box">
-                    <div class="stat-label">Total Time</div>
-                    <div class="stat-value" id="totalTime">0m</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Average Session</div>
-                    <div class="stat-value" id="averageTime">0m</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Sessions</div>
-                    <div class="stat-value" id="totalSessions">0</div>
-                </div>
+        </div>
+        <div class="main-content">
+            <h1 class="page-title">Meditation Tracker</h1>
+            <div class="select-wrapper">
+                <select id="meditationType">
+                    <option value="mindfulness">Mindfulness Meditation</option>
+                    <option value="breathing">Breathing Meditation</option>
+                    <option value="loving-kindness">Loving-Kindness Meditation</option>
+                    <option value="body-scan">Body Scan Meditation</option>
+                </select>
             </div>
-            <div id="sessionHistory"></div>
+
+            <div class="timer" id="timer">00:00</div>
+            
+            <div class="controls">
+                <button id="start">Start</button>
+                <button id="stop">Stop</button>
+                <button id="cancel">Cancel</button>
+            </div>
+
+            <div class="history">
+                <div class="history-header">
+                    <h2>Meditation History</h2>
+                </div>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Time</div>
+                        <div class="stat-value" id="totalTime">0m</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Average Session</div>
+                        <div class="stat-value" id="averageTime">0m</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Sessions</div>
+                        <div class="stat-value" id="totalSessions">0</div>
+                    </div>
+                </div>
+                <div id="sessionHistory"></div>
+            </div>
         </div>
     </div>
 

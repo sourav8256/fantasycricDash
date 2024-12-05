@@ -241,6 +241,9 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             z-index: 1000;
+            width: 90%;  /* Set width relative to viewport */
+            max-width: 400px;  /* Maximum width on larger screens */
+            margin: 0 auto;
         }
 
         .overlay {
@@ -356,6 +359,51 @@
 
         .activity-button:disabled .activity-progress-fill {
             background: #ccc;
+        }
+
+        /* Make inputs more responsive */
+        .cooldown-inputs {
+            display: flex;
+            flex-wrap: wrap;  /* Allow wrapping on small screens */
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .time-input {
+            flex: 1;  /* Allow inputs to grow */
+            min-width: 70px;  /* Minimum width for inputs */
+            max-width: calc(50% - 5px);  /* Maximum width on small screens */
+        }
+
+        /* Make edit form inputs full width */
+        .edit-form input[type="text"],
+        .edit-form input[type="number"] {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        /* Adjust button layout for small screens */
+        .edit-form-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .edit-form-buttons button {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        /* Add some responsive padding */
+        @media (max-width: 480px) {
+            .edit-form {
+                padding: 15px;
+            }
+
+            .cooldown-inputs {
+                gap: 8px;
+            }
         }
     </style>
 </head>

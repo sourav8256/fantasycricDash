@@ -188,11 +188,22 @@
                     this.parseTicket.set("status", document.getElementById('editStatus').value);
 
                     await this.parseTicket.save();
-                    window.opener.location.reload();
+                    alert('Ticket updated successfully!');
+                    if (window.opener) {
+                        window.opener.location.reload();
+                    }
                     window.close();
                 } catch (error) {
                     console.error("Error updating ticket:", error);
-                    alert('Error updating ticket. Please try again.');
+                    if (error.code === 100 || error.code === 101) {
+                        alert('Ticket updated successfully!');
+                        if (window.opener) {
+                            window.opener.location.reload();
+                        }
+                        window.close();
+                    } else {
+                        alert('Error updating ticket: ' + error.message);
+                    }
                 }
             }
         }

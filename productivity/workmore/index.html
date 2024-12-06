@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkMore - Measure Your Work Capacity</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .rating-input {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .history {
+            margin-top: 20px;
+        }
+
+        .chart {
+            height: 200px;
+            background-color: #f8f9fa;
+            margin: 10px 0;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Work Capacity Measurement</h1>
+        <p>Track your daily work capacity across key metrics</p>
+    </div>
+
+    <div class="container">
+        <h2>Today's Metrics</h2>
+        
+        <div class="metric-card">
+            <h3>Focus Duration</h3>
+            <p>How long can you maintain deep focus?</p>
+            <input type="range" class="rating-input" min="0" max="120" value="0" id="focusDuration">
+            <span class="score" id="focusScore">0 minutes</span>
+        </div>
+
+        <div class="metric-card">
+            <h3>Mental Energy</h3>
+            <p>Rate your mental energy level (1-10)</p>
+            <input type="range" class="rating-input" min="1" max="10" value="5" id="mentalEnergy">
+            <span class="score" id="energyScore">5/10</span>
+        </div>
+
+        <div class="metric-card">
+            <h3>Task Completion</h3>
+            <p>Number of complex tasks completed today</p>
+            <input type="number" min="0" id="taskCount" value="0">
+            <span class="score" id="taskScore">0 tasks</span>
+        </div>
+
+        <div class="metric-card">
+            <h3>Recovery Time</h3>
+            <p>Minutes needed between focused work sessions</p>
+            <input type="range" class="rating-input" min="0" max="60" value="15" id="recoveryTime">
+            <span class="score" id="recoveryScore">15 minutes</span>
+        </div>
+
+        <button onclick="saveMetrics()">Save Today's Metrics</button>
+    </div>
+
+    <div class="container">
+        <h2>Work Capacity Score</h2>
+        <div class="score" id="totalScore">0</div>
+        <p>Based on focus duration, energy levels, task completion, and recovery needs</p>
+    </div>
+
+    <div class="container">
+        <h2>7-Day History</h2>
+        <div class="chart" id="historyChart">
+            <!-- Chart will be rendered here -->
+        </div>
+    </div>
+
+    <script>
+        // Update scores in real-time
+        document.querySelectorAll('.rating-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const id = e.target.id;
+                const value = e.target.value;
+                
+                switch(id) {
+                    case 'focusDuration':
+                        document.getElementById('focusScore').textContent = `${value} minutes`;
+                        break;
+                    case 'mentalEnergy':
+                        document.getElementById('energyScore').textContent = `${value}/10`;
+                        break;
+                    case 'recoveryTime':
+                        document.getElementById('recoveryScore').textContent = `${value} minutes`;
+                        break;
+                }
+                calculateTotalScore();
+            });
+        });
+
+        document.getElementById('taskCount').addEventListener('input', (e) => {
+            document.getElementById('taskScore').textContent = `${e.target.value} tasks`;
+            calculateTotalScore();
+        });
+
+        function calculateTotalScore() {
+            const focus = parseInt(document.getElementById('focusDuration').value);
+            const energy = parseInt(document.getElementById('mentalEnergy').value);
+            const tasks = parseInt(document.getElementById('taskCount').value);
+            const recovery = parseInt(document.getElementById('recoveryTime').value);
+
+            // Calculate weighted score (example formula)
+            const score = Math.round(
+                (focus / 120 * 40) + // 40% weight to focus duration
+                (energy / 10 * 30) + // 30% weight to mental energy
+                (tasks * 5) + // Points per task
+                ((60 - recovery) / 60 * 20) // 20% weight to recovery (less is better)
+            );
+
+            document.getElementById('totalScore').textContent = score;
+        }
+
+        function saveMetrics() {
+            const today = new Date().toISOString().split('T')[0];
+            const metrics = {
+                date: today,
+                focus: document.getElementById('focusDuration').value,
+                energy: document.getElementById('mentalEnergy').value,
+                tasks: document.getElementById('taskCount').value,
+                recovery: document.getElementById('recoveryTime').value,
+                score: document.getElementById('totalScore').textContent
+            };
+
+            // Save to localStorage
+            const history = JSON.parse(localStorage.getItem('workCapacityHistory') || '[]');
+            history.push(metrics);
+            localStorage.setItem('workCapacityHistory', JSON.stringify(history));
+
+            alert('Metrics saved successfully!');
+        }
+    </script>
+</body>
+</html>

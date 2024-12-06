@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Ticket - Support Ticket Manager</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ticket-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+            margin-top: 20px;
+        }
+
+        .button-secondary {
+            background: #6c757d;
+        }
+
+        .button-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script>
+        const APP_ID = "IKmm8MbcH9movBK7et1DrQVyd8nJqfJq8bm548t6";
+        const JS_KEY = "6Ik3DvMj2RRikc52dWYqt6BJ9qDrjdUWI1nUCS3v";
+        const SERVER_URL = "https://parseapi.back4app.com/";
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Ticket <span id="ticketId"></span></h1>
+        <div class="ticket-form">
+            <form id="editTicketForm">
+                <div class="form-group">
+                    <label for="editSubject">Subject</label>
+                    <input type="text" id="editSubject" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPriority">Priority</label>
+                    <select id="editPriority" required>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editDescription">Description</label>
+                    <textarea id="editDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Status</label>
+                    <select id="editStatus" required>
+                        <option value="open">Open</option>
+                        <option value="pending">Pending</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button type="submit">Update Ticket</button>
+                    <button type="button" class="button-secondary" onclick="window.close()">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        Parse.initialize(APP_ID, JS_KEY);
+        Parse.serverURL = SERVER_URL;
+
+        class TicketEditor {
+            constructor() {
+                this.form = document.getElementById('editTicketForm');
+                this.ticketId = new URLSearchParams(window.location.search).get('ticket');
+                this.loadTicket();
+            }
+
+            async loadTicket() {
+                const TicketObject = Parse.Object.extend("Ticket");
+                const query = new Parse.Query(TicketObject);
+                query.equalTo("ticketId", this.ticketId);
+
+                try {
+                    const parseTicket = await query.first();
+                    if (!parseTicket) {
+                        alert('Ticket not found');
+                        window.close();
+                        return;
+                    }
+
+                    this.parseTicket = parseTicket;
+                    this.initializeForm(parseTicket);
+                    this.setupEventListeners();
+                } catch (error) {
+                    console.error("Error loading ticket:", error);
+                    alert('Error loading ticket. Please try again.');
+                    window.close();
+                }
+            }
+
+            initializeForm(ticket) {
+                document.getElementById('ticketId').textContent = ticket.get("ticketId");
+                document.getElementById('editSubject').value = ticket.get("subject");
+                document.getElementById('editPriority').value = ticket.get("priority");
+                document.getElementById('editDescription').value = ticket.get("description");
+                document.getElementById('editStatus').value = ticket.get("status");
+            }
+
+            setupEventListeners() {
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+            }
+
+            async handleSubmit(e) {
+                e.preventDefault();
+                
+                try {
+                    this.parseTicket.set("subject", document.getElementById('editSubject').value);
+                    this.parseTicket.set("priority", document.getElementById('editPriority').value);
+                    this.parseTicket.set("description", document.getElementById('editDescription').value);
+                    this.parseTicket.set("status", document.getElementById('editStatus').value);
+
+                    await this.parseTicket.save();
+                    window.opener.location.reload();
+                    window.close();
+                } catch (error) {
+                    console.error("Error updating ticket:", error);
+                    alert('Error updating ticket. Please try again.');
+                }
+            }
+        }
+
+        // Initialize the editor when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new TicketEditor();
+        });
+    </script>
+</body>
+</html> 

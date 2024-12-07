@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bio-Data (Compact)</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.4;
+            margin: 0;
+            padding: 15px;
+            font-size: 11pt;
+            max-width: 21cm;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 18pt;
+            margin: 0;
+        }
+
+        .bio-data {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .personal-info {
+            flex: 2;
+            line-height: 1.5;
+        }
+
+        .photo {
+            flex: 1;
+            max-width: 120px;
+        }
+
+        .photo img {
+            width: 120px;
+            height: 150px;
+            object-fit: cover;
+            border: 1px solid #2c3e50;
+            padding: 2px;
+        }
+
+        .section {
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #2c3e50;
+            border-bottom: 1px solid #3498db;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+            font-size: 12pt;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 10pt;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .name {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 5px;
+            align-items: baseline;
+        }
+
+        .info-label {
+            width: 90px;
+            font-weight: bold;
+        }
+
+        .info-colon {
+            margin: 0 5px;
+        }
+
+        .info-value {
+            flex: 1;
+        }
+
+        .career-objective {
+            background: #f8f9fa;
+            padding: 10px;
+            border-left: 3px solid #3498db;
+            font-size: 10pt;
+            margin-bottom: 12px;
+        }
+
+        .internship {
+            padding: 8px;
+            border: 1px solid #ddd;
+            font-size: 10pt;
+        }
+
+        .project-list {
+            list-style-type: none;
+            padding-left: 15px;
+            margin: 5px 0;
+            font-size: 10pt;
+        }
+
+        .project-list li {
+            margin-bottom: 3px;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .project-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+        }
+
+        .personal-details div {
+            margin-bottom: 4px;
+            font-size: 10pt;
+        }
+
+        .declaration {
+            font-size: 10pt;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #2c3e50;
+        }
+
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            font-size: 10pt;
+        }
+
+        .date-place {
+            line-height: 2;
+        }
+
+        .signature {
+            text-align: right;
+            border-top: 1px solid #333;
+            padding-top: 5px;
+            width: 150px;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .photo img {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Same HTML content as index.html but with these changes: -->
+    <!-- 1. Remove any extra spacing in the HTML -->
+    <!-- 2. Keep content more compact -->
+    <!-- 3. Use the same structure but with tighter formatting -->
+</body>
+</html> 

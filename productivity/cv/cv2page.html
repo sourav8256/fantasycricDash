@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bio-Data (2 Page)</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.3;
+            margin: 0;
+            padding: 12px;
+            font-size: 10.5pt;
+            max-width: 21cm;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #2c3e50;
+            padding-bottom: 8px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 16pt;
+            margin: 0;
+        }
+
+        .bio-data {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .personal-info {
+            flex: 2;
+            line-height: 1.4;
+        }
+
+        .photo {
+            flex: 1;
+            max-width: 110px;
+        }
+
+        .photo img {
+            width: 110px;
+            height: 140px;
+            object-fit: cover;
+            border: 1px solid #2c3e50;
+            padding: 2px;
+        }
+
+        .section {
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #2c3e50;
+            border-bottom: 1px solid #3498db;
+            padding-bottom: 2px;
+            margin-bottom: 6px;
+            font-size: 11pt;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+            font-size: 10pt;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px 6px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .name {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 4px;
+            align-items: baseline;
+        }
+
+        .info-label {
+            width: 85px;
+            font-weight: bold;
+        }
+
+        .info-colon {
+            margin: 0 4px;
+        }
+
+        .info-value {
+            flex: 1;
+        }
+
+        .career-objective {
+            background: #f8f9fa;
+            padding: 8px;
+            border-left: 2px solid #3498db;
+            font-size: 10pt;
+            margin-bottom: 10px;
+        }
+
+        .internship {
+            padding: 6px;
+            border: 1px solid #ddd;
+            font-size: 10pt;
+        }
+
+        .project-list {
+            list-style-type: none;
+            padding-left: 12px;
+            margin: 4px 0;
+            font-size: 10pt;
+        }
+
+        .project-list li {
+            margin-bottom: 2px;
+            position: relative;
+            padding-left: 12px;
+        }
+
+        .project-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+        }
+
+        .personal-details div {
+            margin-bottom: 3px;
+            font-size: 10pt;
+        }
+
+        .declaration {
+            font-size: 10pt;
+            padding: 8px;
+            margin: 8px 0;
+            border-left: 2px solid #2c3e50;
+        }
+
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            font-size: 10pt;
+        }
+
+        .date-place {
+            line-height: 1.8;
+        }
+
+        .signature {
+            text-align: right;
+            border-top: 1px solid #333;
+            padding-top: 4px;
+            width: 150px;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+        }
+
+        .registration-details div {
+            margin-bottom: 3px;
+            padding: 6px;
+            background: #f8f9fa;
+            border-radius: 3px;
+            font-size: 10pt;
+        }
+
+        .registration-details strong {
+            color: #2c3e50;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="cv-container">
+        <div class="header">
+            <h1>BIO-DATA</h1>
+        </div>
+        
+        <div class="bio-data">
+            <div class="personal-info">
+                <div class="name">ANINDITA KUNDU</div>
+                <div class="info-row">
+                    <span class="info-label">VILL</span>
+                    <span class="info-colon">:</span>
+                    <span class="info-value">NIRISHA</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">P.O.</span>
+                    <span class="info-colon">:</span>
+                    <span class="info-value">BHATTAPARA</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">P.S.</span>
+                    <span class="info-colon">:</span>
+                    <span class="info-value">BARJORA</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">DIST</span>
+                    <span class="info-colon">:</span>
+                    <span class="info-value">BANKURA</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">PIN</span>
+                    <span class="info-colon">:</span>
+                    <span class="info-value">722203</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">MOBILE NO</span>
+                    <span class="info-colon">:</span>
+                    <span class="info-value">9800740972</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">EMAIL</span>
+                    <span class="info-colon">:</span>
+                    <span class="info-value">msaninditakundu@gmail.com</span>
+                </div>
+            </div>
+            <div class="photo">
+                <img src="Picture 1.png" alt="Candidate Photo">
+            </div>
+        </div>
+
+        <div class="section career-objective">
+            <div class="section-title">Career Objective:</div>
+            <div>
+                I am nursing student at Central Hospital Katla, Asansol. Through my years I have developed
+                both practical skill and theoretical concepts. I am now looking further to develop my
+                knowledge and use my skills in places where it needed the most, specially in SNCU, OT Unit.
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">WORK EXPERIENCE:</div>
+            <table>
+                <tr>
+                    <th>Position</th>
+                    <th>Institution</th>
+                    <th>Duration</th>
+                </tr>
+                <tr>
+                    <td>STAFF NURSE</td>
+                    <td>GOURI DEVI HOSPITAL AND RESEARCH INSTITUTE</td>
+                    <td>15TH APRIL 2023 TO 3RD DEC 2024</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Internship</div>
+            <div class="internship">
+                Period: April 2022-September 2022<br>
+                Name of the Hospital: Central Hospital Katla, Asansol
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">EDUCATIONAL QUALIFICATION:</div>
+            <table>
+                <tr>
+                    <th>EXAMINATION</th>
+                    <th>BOARD/COUNCIL</th>
+                    <th>YEAR OF PASSING</th>
+                    <th>%OF MARKS</th>
+                    <th>GRADE/DIVISION</th>
+                </tr>
+                <tr>
+                    <td>MADHYAMIK</td>
+                    <td>W.B.B.S.E</td>
+                    <td>2016</td>
+                    <td>88.57%</td>
+                    <td>A+</td>
+                </tr>
+                <tr>
+                    <td>HIGHER SECONDARY</td>
+                    <td>W.B.C.H.S.E</td>
+                    <td>2018</td>
+                    <td>73.8%</td>
+                    <td>A</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">PROFESSIONAL QUALIFICATION:</div>
+            <table>
+                <tr>
+                    <th>EXAMINATION</th>
+                    <th>BOARD/COUNCIL</th>
+                    <th>Institute</th>
+                    <th>Year</th>
+                    <th>% of Marks</th>
+                </tr>
+                <tr>
+                    <td>GNM</td>
+                    <td>WBNC</td>
+                    <td>Central Hospital Katla, School of Nursing, Asansol</td>
+                    <td>2022</td>
+                    <td>
+                        1st: 75.6%<br>
+                        2nd: 70.57%<br>
+                        3rd: 68%
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">PROJECT:</div>
+            <div>Participated in group project of community on</div>
+            <ul class="project-list">
+                <li>a) Awareness programme on COVID-19</li>
+                <li>b) Awareness programme on Hypertension</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <div class="section-title">REGISTRATION DETAILS:</div>
+            <div class="registration-details">
+                <div><strong>STUDENT REG. NO:</strong> 073/2019 NST, 31st DEC, 2019</div>
+                <div><strong>WEST BENGAL NURSING COUNCIL REG. NO:</strong> 73657-NM</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">PERSONAL DETAILS:</div>
+            <div class="personal-details">
+                <div>FATHER'S NAME: TARAPADA KUNDU</div>
+                <div>MOTHER'S NAME: SABITA KUNDU</div>
+                <div>DATE OF BIRTH: 15 NOV 2000</div>
+                <div>GENDER: FEMALE</div>
+                <div>NATIONALITY: INDIAN</div>
+                <div>CASTE: UR</div>
+                <div>MARRITAL STATUS: UNMARRIED</div>
+                <div>RELIGION: HINDUISM</div>
+                <div>LANGUAGE KNOWN: BENGALI, HINDI, ENGLISH</div>
+                <div>BLOOD GROUP: A+ve</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">DECLARATION</div>
+            <div class="declaration">
+                I hereby declare that the above mentioned information is correct to the best of my knowledge that
+                I bear the responsibility for the correctness of these particulars.
+            </div>
+            <div class="signature-section">
+                <div class="date-place">
+                    <div>DATE:</div>
+                    <div>PLACE:</div>
+                </div>
+                <div class="signature">
+                    Signature
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

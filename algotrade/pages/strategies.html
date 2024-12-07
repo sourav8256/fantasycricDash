@@ -56,14 +56,74 @@
 
         <div class="card">
             <h5>Risk Management</h5>
+            
+
             <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Exit when total profit amounts to</label>
+                    <input type="text" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Exit when total loss amounts to</label>
+                    <input type="text" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">No Trade After</label>
+                    <input type="text" class="form-control">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <label class="form-label">Profit Management Options</label>
+                    <div class="d-flex">
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="radio" name="profitManagement" id="noTrailing" value="noTrailing" checked>
+                            <label class="form-check-label" for="noTrailing">No Trailing</label>
+                        </div>
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="radio" name="profitManagement" id="lockFixProfit" value="lockFixProfit">
+                            <label class="form-check-label" for="lockFixProfit">Lock Fix Profit</label>
+                        </div>
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="radio" name="profitManagement" id="totalProfit" value="totalProfit">
+                            <label class="form-check-label" for="totalProfit">Total Profit</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="profitManagement" id="lockAndTrail" value="lockAndTrail">
+                            <label class="form-check-label" for="lockAndTrail">Lock and Trail</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2" id="trailingOptions">
                 <div class="col-md-6">
-                    <label class="form-label">Stop Loss</label>
-                    <input type="number" class="form-control" placeholder="Points">
+                    <label class="form-label">Trail Amount</label>
+                    <div class="input-group">
+                        <span class="input-group-text">Increase by</span>
+                        <input type="number" class="form-control" id="trailStep" value="400" min="1">
+                        <span class="input-group-text">points</span>
+                    </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Target</label>
-                    <input type="number" class="form-control" placeholder="Points">
+                    <label class="form-label">Profit Threshold</label>
+                    <div class="input-group">
+                        <span class="input-group-text">For every</span>
+                        <input type="number" class="form-control" id="profitStep" value="800" min="1">
+                        <span class="input-group-text">points profit</span>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2" id="trailPreview">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small>
+                                <i class="fas fa-info-circle"></i> Preview: 
+                                <span id="previewText">Stop loss will increase by 400 points for every 800 points profit</span>
+                            </small>
+                            <button class="btn btn-sm btn-outline-primary" id="calculateBtn">Calculate</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -96,3 +156,52 @@
         </div>
     </div>
 </div> 
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const trailingSwitch = document.getElementById('enableTrailing');
+        const trailingOptions = document.getElementById('trailingOptions');
+        const trailPreview = document.getElementById('trailPreview');
+        const trailStep = document.getElementById('trailStep');
+        const profitStep = document.getElementById('profitStep');
+        const previewText = document.getElementById('previewText');
+        const calculateBtn = document.getElementById('calculateBtn');
+
+        trailingSwitch.addEventListener('change', function() {
+            trailingOptions.style.display = this.checked ? 'flex' : 'none';
+            trailPreview.style.display = this.checked ? 'flex' : 'none';
+            updatePreview();
+        });
+
+        // Update preview when values change
+        [trailStep, profitStep].forEach(input => {
+            input.addEventListener('input', updatePreview);
+        });
+
+        function updatePreview() {
+            const trail = parseInt(trailStep.value) || 0;
+            const profit = parseInt(profitStep.value) || 0;
+
+            if (trail && profit) {
+                previewText.innerHTML = `Stop loss will increase by ${trail} points for every ${profit} points profit`;
+            } else {
+                previewText.innerHTML = 'Please enter valid numbers for both fields';
+            }
+        }
+
+        calculateBtn.addEventListener('click', function() {
+            const currentProfit = prompt('Enter current profit in points:');
+            if (currentProfit !== null) {
+                const trail = parseInt(trailStep.value);
+                const profit = parseInt(profitStep.value);
+                const steps = Math.floor(parseInt(currentProfit) / profit);
+                const trailAmount = steps * trail;
+                
+                alert(`For ${currentProfit} points profit, stop loss would increase by ${trailAmount} points`);
+            }
+        });
+
+        // Initial preview update
+        updatePreview();
+    });
+</script> 

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eisenhower Matrix</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .quadrant {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 300px;
+        }
+
+        .quadrant h2 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+        }
+
+        #q1 h2 { border-color: #ff4444; }
+        #q2 h2 { border-color: #ffbb33; }
+        #q3 h2 { border-color: #00C851; }
+        #q4 h2 { border-color: #33b5e5; }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: move;
+            touch-action: none;
+        }
+
+        .task-item.dragging {
+            opacity: 0.5;
+            background: #e9ecef;
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .quadrant.drag-over {
+            background: #e9ecef;
+        }
+
+        .task-item button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-task {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .add-task input, 
+        .add-task select, 
+        .add-task button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px; /* Better for touch targets */
+        }
+
+        .add-task button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-task button:hover {
+            background: #0056b3;
+        }
+
+        .add-task select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background: white url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 1rem center;
+            background-size: 1em;
+            padding-right: 2.5rem;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .add-task select:hover {
+            border-color: #007bff;
+        }
+
+        .add-task select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .add-task input {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .add-task input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        /* Color-code the dropdown options */
+        .add-task select option[value="q1"] {
+            background-color: #fff0f0;
+        }
+
+        .add-task select option[value="q2"] {
+            background-color: #fff8e6;
+        }
+
+        .add-task select option[value="q3"] {
+            background-color: #f0fff0;
+        }
+
+        .add-task select option[value="q4"] {
+            background-color: #f0f8ff;
+        }
+
+        /* Update mobile layout for quadrants */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+
+            .matrix {
+                display: grid;
+                grid-template-columns: 1fr 1fr;  /* Keep 2x2 grid */
+                grid-gap: 10px;
+                height: calc(100vh - 200px);  /* Adjust height for better mobile view */
+                min-height: 400px;
+            }
+
+            .quadrant {
+                min-height: auto;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                font-size: 0.9rem;
+            }
+
+            .quadrant h2 {
+                font-size: 0.9rem;
+                margin-bottom: 8px;
+                padding-bottom: 5px;
+                text-align: center;
+            }
+
+            .task-list {
+                flex-grow: 1;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-right: 5px;
+            }
+
+            .task-item {
+                padding: 8px;
+                margin-bottom: 6px;
+                font-size: 0.9rem;
+            }
+
+            .task-item button {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+                min-height: 30px;
+            }
+
+            /* Adjust add task section for mobile */
+            .add-task {
+                position: sticky;
+                top: 0;
+                background: #f5f5f5;
+                padding: 10px;
+                z-index: 100;
+                margin-bottom: 10px;
+            }
+
+            .add-task input,
+            .add-task select,
+            .add-task button {
+                font-size: 1rem;
+                padding: 8px;
+                min-height: 40px;
+            }
+        }
+
+        /* Additional styles for very small screens */
+        @media (max-width: 380px) {
+            .matrix {
+                height: calc(100vh - 180px);
+                min-height: 350px;
+            }
+
+            .quadrant h2 {
+                font-size: 0.8rem;
+            }
+
+            .task-item {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Prevent text selection while dragging */
+        .task-item {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Make delete button easier to tap */
+        .task-item button {
+            margin-left: 10px;
+            min-height: 36px;
+        }
+
+        /* Add visual feedback for touch */
+        .task-item:active {
+            background: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Eisenhower Matrix</h1>
+        
+        <div class="add-task">
+            <input type="text" id="taskInput" placeholder="Enter a new task">
+            <select id="quadrantSelect">
+                <option value="q1">Urgent & Important</option>
+                <option value="q2">Important, Not Urgent</option>
+                <option value="q3">Urgent, Not Important</option>
+                <option value="q4">Not Urgent, Not Important</option>
+            </select>
+            <button onclick="addTask()">Add Task</button>
+        </div>
+
+        <div class="matrix">
+            <div class="quadrant" id="q1">
+                <h2>Urgent & Important</h2>
+                <ul class="task-list" id="q1-tasks"></ul>
+            </div>
+            <div class="quadrant" id="q2">
+                <h2>Important, Not Urgent</h2>
+                <ul class="task-list" id="q2-tasks"></ul>
+            </div>
+            <div class="quadrant" id="q3">
+                <h2>Urgent, Not Important</h2>
+                <ul class="task-list" id="q3-tasks"></ul>
+            </div>
+            <div class="quadrant" id="q4">
+                <h2>Not Urgent, Not Important</h2>
+                <ul class="task-list" id="q4-tasks"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load tasks from localStorage on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTasks();
+            initializeDragAndDrop();
+        });
+
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const quadrantSelect = document.getElementById('quadrantSelect');
+            const taskText = taskInput.value.trim();
+            const quadrant = quadrantSelect.value;
+
+            if (taskText === '') return;
+
+            const task = {
+                id: Date.now(),
+                text: taskText,
+                quadrant: quadrant
+            };
+
+            // Add task to localStorage
+            const tasks = getTasks();
+            tasks.push(task);
+            localStorage.setItem('eisenhowerTasks', JSON.stringify(tasks));
+
+            // Add task to DOM
+            addTaskToDOM(task);
+
+            // Clear input
+            taskInput.value = '';
+        }
+
+        function addTaskToDOM(task) {
+            const taskList = document.getElementById(`${task.quadrant}-tasks`);
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            li.draggable = true;
+            li.dataset.taskId = task.id;
+            li.innerHTML = `
+                ${task.text}
+                <button onclick="deleteTask(${task.id}, this)">Delete</button>
+            `;
+
+            li.addEventListener('dragstart', handleDragStart);
+            li.addEventListener('dragend', handleDragEnd);
+            taskList.appendChild(li);
+            return li;
+        }
+
+        function deleteTask(taskId, button) {
+            // Remove from localStorage
+            const tasks = getTasks().filter(task => task.id !== taskId);
+            localStorage.setItem('eisenhowerTasks', JSON.stringify(tasks));
+
+            // Remove from DOM
+            button.parentElement.remove();
+        }
+
+        function getTasks() {
+            return JSON.parse(localStorage.getItem('eisenhowerTasks') || '[]');
+        }
+
+        function loadTasks() {
+            const tasks = getTasks();
+            tasks.forEach(task => addTaskToDOM(task));
+        }
+
+        function initializeDragAndDrop() {
+            const quadrants = document.querySelectorAll('.quadrant');
+            const taskItems = document.querySelectorAll('.task-item');
+
+            // Desktop drag and drop
+            quadrants.forEach(quadrant => {
+                quadrant.addEventListener('dragover', handleDragOver);
+                quadrant.addEventListener('dragleave', handleDragLeave);
+                quadrant.addEventListener('drop', handleDrop);
+            });
+
+            // Touch events
+            let touchTask = null;
+            let initialY = 0;
+            let initialX = 0;
+            let initialScrollY = 0;
+
+            function initTouchEvents(taskItem) {
+                taskItem.addEventListener('touchstart', handleTouchStart, { passive: false });
+                taskItem.addEventListener('touchmove', handleTouchMove, { passive: false });
+                taskItem.addEventListener('touchend', handleTouchEnd, { passive: false });
+                taskItem.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+            }
+
+            function handleTouchStart(e) {
+                if (e.target.tagName === 'BUTTON') return; // Don't drag if touching delete button
+                e.preventDefault();
+                touchTask = e.target.closest('.task-item');
+                if (!touchTask) return;
+
+                const touch = e.touches[0];
+                initialX = touch.clientX;
+                initialY = touch.clientY;
+                initialScrollY = window.scrollY;
+
+                touchTask.classList.add('dragging');
+                
+                // Create a clone for visual feedback
+                const rect = touchTask.getBoundingClientRect();
+                touchTask.style.position = 'fixed';
+                touchTask.style.zIndex = '1000';
+                touchTask.style.top = rect.top + 'px';
+                touchTask.style.left = rect.left + 'px';
+                touchTask.style.width = rect.width + 'px';
+            }
+
+            function handleTouchMove(e) {
+                if (!touchTask) return;
+                e.preventDefault();
+
+                const touch = e.touches[0];
+                const deltaX = touch.clientX - initialX;
+                const deltaY = touch.clientY - initialY + (window.scrollY - initialScrollY);
+
+                touchTask.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+
+                // Find quadrant under touch point
+                const quadrants = document.querySelectorAll('.quadrant');
+                let targetQuadrant = null;
+
+                quadrants.forEach(quadrant => {
+                    const rect = quadrant.getBoundingClientRect();
+                    if (touch.clientX >= rect.left && 
+                        touch.clientX <= rect.right && 
+                        touch.clientY >= rect.top && 
+                        touch.clientY <= rect.bottom) {
+                        targetQuadrant = quadrant;
+                    }
+                });
+
+                // Remove previous drag-over class
+                document.querySelectorAll('.quadrant.drag-over').forEach(q => {
+                    if (q !== targetQuadrant) q.classList.remove('drag-over');
+                });
+
+                // Add drag-over class to current quadrant
+                if (targetQuadrant) {
+                    targetQuadrant.classList.add('drag-over');
+                }
+            }
+
+            function handleTouchEnd(e) {
+                if (!touchTask) return;
+                e.preventDefault();
+
+                const touch = e.changedTouches[0];
+                // Get all quadrants and find which one contains the touch point
+                const quadrants = document.querySelectorAll('.quadrant');
+                let targetQuadrant = null;
+
+                quadrants.forEach(quadrant => {
+                    const rect = quadrant.getBoundingClientRect();
+                    if (touch.clientX >= rect.left && 
+                        touch.clientX <= rect.right && 
+                        touch.clientY >= rect.top && 
+                        touch.clientY <= rect.bottom) {
+                        targetQuadrant = quadrant;
+                    }
+                });
+
+                if (targetQuadrant) {
+                    const taskId = parseInt(touchTask.dataset.taskId);
+                    const newQuadrantId = targetQuadrant.id;
+                    
+                    // Update task in localStorage
+                    const tasks = getTasks();
+                    const taskIndex = tasks.findIndex(task => task.id === taskId);
+                    
+                    if (taskIndex !== -1) {
+                        tasks[taskIndex].quadrant = newQuadrantId;
+                        localStorage.setItem('eisenhowerTasks', JSON.stringify(tasks));
+
+                        // Move to new quadrant
+                        const newTaskList = targetQuadrant.querySelector('.task-list');
+                        
+                        // Reset styles before moving
+                        touchTask.style.position = '';
+                        touchTask.style.top = '';
+                        touchTask.style.left = '';
+                        touchTask.style.width = '';
+                        touchTask.style.transform = '';
+                        touchTask.style.zIndex = '';
+                        
+                        newTaskList.appendChild(touchTask);
+                    }
+                } else {
+                    // Reset position if not dropped in a quadrant
+                    const originalQuadrant = document.getElementById(touchTask.closest('.quadrant').id);
+                    const taskList = originalQuadrant.querySelector('.task-list');
+                    
+                    // Reset styles
+                    touchTask.style.position = '';
+                    touchTask.style.top = '';
+                    touchTask.style.left = '';
+                    touchTask.style.width = '';
+                    touchTask.style.transform = '';
+                    touchTask.style.zIndex = '';
+                    
+                    taskList.appendChild(touchTask);
+                }
+
+                touchTask.classList.remove('dragging');
+
+                // Remove drag-over class from all quadrants
+                document.querySelectorAll('.quadrant.drag-over').forEach(q => {
+                    q.classList.remove('drag-over');
+                });
+
+                touchTask = null;
+            }
+
+            // Initialize touch events for existing tasks
+            taskItems.forEach(initTouchEvents);
+
+            // Modify addTaskToDOM to add touch events to new tasks
+            const originalAddTaskToDOM = addTaskToDOM;
+            addTaskToDOM = function(task) {
+                const taskElement = originalAddTaskToDOM(task);
+                initTouchEvents(taskElement);
+                return taskElement;
+            };
+        }
+
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.taskId);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const quadrant = e.currentTarget;
+            quadrant.classList.remove('drag-over');
+
+            const taskId = parseInt(e.dataTransfer.getData('text/plain'));
+            const newQuadrantId = quadrant.id;
+            
+            // Update task in localStorage
+            const tasks = getTasks();
+            const taskIndex = tasks.findIndex(task => task.id === taskId);
+            
+            if (taskIndex !== -1) {
+                tasks[taskIndex].quadrant = newQuadrantId;
+                localStorage.setItem('eisenhowerTasks', JSON.stringify(tasks));
+
+                // Move the task element to new quadrant
+                const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+                const newTaskList = quadrant.querySelector('.task-list');
+                newTaskList.appendChild(taskElement);
+            }
+        }
+    </script>
+</body>
+</html>

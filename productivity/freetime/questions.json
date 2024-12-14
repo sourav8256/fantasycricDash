@@ -1,0 +1,112 @@
+{
+    "javascript": [
+        {
+            "question": "What is closure in JavaScript?",
+            "answer": "A closure is the combination of a function and the lexical environment within which that function was declared. This environment consists of any local variables that were in-scope at the time the closure was created."
+        },
+        {
+            "question": "Explain event delegation",
+            "answer": "Event delegation is a technique where you attach an event listener to a parent element to handle events on its children, even those added dynamically. It's based on event bubbling and can improve performance."
+        }
+    ],
+    "react": [
+        {
+            "question": "What is the Virtual DOM?",
+            "answer": "The Virtual DOM is a lightweight copy of the actual DOM. React uses it to improve performance by minimizing direct manipulation of the DOM. It compares the virtual DOM with the real DOM and updates only what's necessary."
+        },
+        {
+            "question": "Explain React hooks",
+            "answer": "Hooks are functions that allow you to use state and other React features in functional components. Common hooks include useState, useEffect, useContext, and useRef."
+        }
+    ],
+    "general": [
+        {
+            "question": "What is REST?",
+            "answer": "REST (Representational State Transfer) is an architectural style for designing networked applications. It relies on stateless, client-server communication protocol, and is most commonly implemented using HTTP."
+        }
+    ],
+    "behavioral": [
+        {
+            "question": "Tell me about a challenging project you worked on",
+            "answer": "When answering this, focus on: 1) The specific challenge, 2) Your approach to solving it, 3) The actions you took, 4) The outcome and what you learned."
+        }
+    ],
+    "ibm_bpm": [
+        {
+            "question": "What is BPMN and what are its key elements?",
+            "answer": "BPMN (Business Process Model and Notation) is a standardized graphical notation for business process modeling.<br><br>Key elements include:<br><br>• Activities (Tasks and Sub-processes)<br>• Events (Start, Intermediate, End)<br>• Gateways (Exclusive, Parallel, Inclusive)<br>• Sequence Flows<br>• Pools and Lanes<br>• Data Objects<br>• Messages"
+        },
+        {
+            "question": "Explain what a Coach is in IBM BPM/BAW",
+            "answer": "A Coach is a web-based user interface in IBM BPM/BAW that allows users to interact with process applications.<br><br>Key aspects:<br><br>• Built using Coach Views<br>• Can contain multiple tabs and sections<br>• Supports validation rules<br>• Can be bound to process variables<br>• Supports complex UI patterns<br>• Can be customized using CSS and JavaScript"
+        },
+        {
+            "question": "What are Coach Views and what types are available?",
+            "answer": "Coach Views are reusable UI controls in IBM BPM/BAW.<br><br>Common types include:<br><br>• Text Input<br>• Number Input<br>• Date Picker<br>• Dropdown<br>• Radio Buttons<br>• Checkboxes<br>• Tables<br>• Sections<br>• Tabs<br>• Custom Coach Views (can be created using JavaScript/HTML)"
+        },
+        {
+            "question": "Explain Service Flow vs. Process Flow",
+            "answer": "Process Flow:<br><br>• Human-centric workflows<br>• Contains user tasks and coaches<br>• Tracks business KPIs<br>• Supports process optimization<br><br>Service Flow:<br><br>• System-centric automation<br>• No human tasks<br>• Faster execution<br>• Used for integration and data manipulation<br>• Can be called from Process Flows"
+        },
+        {
+            "question": "What are Heritage Human Services?",
+            "answer": "Heritage Human Services are predefined service components in IBM BPM that provide common functionality for human tasks:<br><br>• Start Task<br>• Complete Task<br>• Assign Task<br>• Suspend Task<br>• Resume Task<br>• Cancel Task<br>• Query Tasks<br><br>They are used to manage task lifecycle and assignment."
+        },
+        {
+            "question": "Explain different types of Gateways in BPMN",
+            "answer": "1. Exclusive Gateway (XOR):<br>• Only one path is chosen<br>• Based on conditions<br><br>2. Parallel Gateway (AND):<br>• All paths are executed simultaneously<br>• Synchronizes parallel flows<br><br>3. Inclusive Gateway (OR):<br>• One or more paths can be taken<br>• Based on conditions<br><br>4. Event-Based Gateway:<br>• Path chosen based on which event occurs first"
+        },
+        {
+            "question": "What are Business Objects in IBM BPM?",
+            "answer": "Business Objects are data structures that:<br><br>• Define process variables<br>• Can contain simple and complex data types<br>• Support nested structures<br>• Can be used across processes<br>• Can be exposed through web services<br>• Support validation rules<br>• Can be versioned"
+        },
+        {
+            "question": "Explain Integration Services in IBM BPM",
+            "answer": "Integration Services allow BPM processes to interact with external systems:<br><br>• Web Services (SOAP/REST)<br>• Database Integration<br>• Java Integration<br>• Server-side JavaScript<br>• Event handling<br>• File System operations<br>• Custom adapters"
+        },
+        {
+            "question": "What are Tracking Groups and how are they used?",
+            "answer": "Tracking Groups in IBM BPM:<br><br>• Monitor process metrics<br>• Track business data<br>• Create custom reports<br>• Support process optimization<br>• Enable KPI monitoring<br>• Can be used in dashboards<br>• Support business analytics"
+        },
+        {
+            "question": "Explain Process Application versioning",
+            "answer": "Process Application versioning in IBM BPM:<br><br>• Snapshot management<br>• Track changes<br>• Support multiple versions in production<br>• Migration strategies<br>• Instance migration<br>• Version compatibility<br>• Rollback capabilities"
+        },
+        {
+            "question": "What are Undercover Agents (UCAs) in IBM BPM?",
+            "answer": "Undercover Agents (UCAs) are:<br><br>• Background processes<br>• Timer-based execution<br>• Monitor system conditions<br>• Trigger automated actions<br>• Handle scheduled tasks<br>• Support process automation<br>• Can interact with external systems"
+        },
+        {
+            "question": "Explain Coach Validation in IBM BPM",
+            "answer": "Coach Validation includes:<br><br>• Client-side validation<br>• Server-side validation<br>• Custom validation rules<br>• Required field validation<br>• Complex business rules<br>• Cross-field validation<br>• Error message handling<br>• Validation events"
+        },
+        {
+            "question": "How do you implement a Custom Coach View with complex client-side behavior?",
+            "answer": "Steps to create a Custom Coach View:<br><br>1. Create the Coach View definition:<pre><code class='language-javascript'>tw.system.steps.myCustomView = {\n    initialize: function(options) {\n        this.options = options;\n        this.render();\n    },\n    render: function() {\n        var html = '<div class=\"custom-view\">';\n        html += '<input type=\"text\" class=\"form-control\" id=\"' + this.options.id + '\">';\n        html += '</div>';\n        this.element.innerHTML = html;\n        this.setupEventHandlers();\n    },\n    setupEventHandlers: function() {\n        var self = this;\n        this.element.querySelector('input').addEventListener('change', function(e) {\n            self.handleValueChange(e.target.value);\n        });\n    },\n    handleValueChange: function(value) {\n        this.setValue(value);\n        this.fireEvent('onChange');\n    }\n};</code></pre><br><br>2. Register the Coach View in Process Designer<br>3. Configure visibility/styling options<br>4. Implement data binding"
+        },
+        {
+            "question": "Explain how to implement a complex Service Flow with error handling and compensation",
+            "answer": "Complex Service Flow implementation requires:<br><br>1. Error Handling Pattern:<pre><code>try {\n    tw.local.success = false;\n    // Main integration logic\n    tw.local.response = tw.system.services.invokeRestService({\n        method: 'POST',\n        url: tw.local.serviceUrl,\n        body: tw.local.requestBody\n    });\n    \n    if (tw.local.response.statusCode === 200) {\n        tw.local.success = true;\n    } else {\n        throw new Error('Service failed: ' + tw.local.response.statusCode);\n    }\n} catch (error) {\n    // Error handling\n    tw.local.errorMsg = error.message;\n    // Trigger compensation logic\n    tw.system.services.compensateTransaction(tw.local.transactionId);\n} finally {\n    // Cleanup logic\n    tw.system.services.logActivity(tw.local.activityLog);\n}</code></pre><br><br>2. Implement compensation handlers<br>3. Set up transaction boundaries<br>4. Configure retry policies"
+        },
+        {
+            "question": "How do you implement complex Coach Validation with cross-field dependencies?",
+            "answer": "Implementation example:<br><br><pre><code>// Custom Validator definition\ntw.system.validators.complexValidator = {\n    validate: function(value, context) {\n        var valid = true;\n        var errors = [];\n        \n        // Get related field values\n        var startDate = context.getFieldValue('startDate');\n        var endDate = context.getFieldValue('endDate');\n        var amount = context.getFieldValue('amount');\n        \n        // Complex validation rules\n        if (new Date(startDate) > new Date(endDate)) {\n            errors.push('Start date must be before end date');\n            valid = false;\n        }\n        \n        if (amount > 10000 && !context.getFieldValue('approvalDocument')) {\n            errors.push('Approval document required for amounts over 10,000');\n            valid = false;\n        }\n        \n        return {\n            valid: valid,\n            errors: errors\n        };\n    }\n};</code></pre><br><br>Usage in Coach:<br>1. Register validator<br>2. Bind to fields<br>3. Handle validation events"
+        },
+        {
+            "question": "Explain how to implement a custom REST Service integration with OAuth authentication",
+            "answer": "Implementation steps:<br><br>1. OAuth Configuration:<pre><code>// OAuth token management\nfunction getOAuthToken() {\n    var tokenRequest = {\n        url: tw.local.authUrl,\n        method: 'POST',\n        headers: {\n            'Content-Type': 'application/x-www-form-urlencoded'\n        },\n        body: {\n            grant_type: 'client_credentials',\n            client_id: tw.local.clientId,\n            client_secret: tw.local.clientSecret\n        }\n    };\n    \n    var response = tw.system.services.invokeRestService(tokenRequest);\n    return response.body.access_token;\n}\n\n// Service invocation with OAuth\nfunction invokeSecureService(endpoint, payload) {\n    var token = getOAuthToken();\n    \n    return tw.system.services.invokeRestService({\n        url: endpoint,\n        method: 'POST',\n        headers: {\n            'Authorization': 'Bearer ' + token,\n            'Content-Type': 'application/json'\n        },\n        body: payload\n    });\n}</code></pre><br><br>2. Configure security settings<br>3. Implement token caching<br>4. Handle token expiration"
+        },
+        {
+            "question": "How do you implement a complex UCA pattern with event correlation?",
+            "answer": "Advanced UCA implementation:<br><br>1. Event Correlation:<pre><code>// UCA implementation\ntw.system.uca.correlateEvents = function() {\n    // Get pending events\n    var events = tw.system.services.getEventQueue();\n    \n    // Correlation logic\n    events.forEach(function(event) {\n        if (isMatchingEvent(event)) {\n            processCorrelatedEvent(event);\n        } else {\n            queueEventForLater(event);\n        }\n    });\n}\n\nfunction isMatchingEvent(event) {\n    return tw.local.correlationId === event.correlationId &&\n           tw.local.processInstanceId === event.processInstanceId;\n}\n\nfunction processCorrelatedEvent(event) {\n    // Process the correlated event\n    tw.local.eventProcessed = true;\n    tw.local.eventData = event.payload;\n    \n    // Trigger process continuation\n    tw.system.services.resumeProcess(tw.local.processInstanceId);\n}</code></pre><br><br>2. Configure event listeners<br>3. Set up correlation rules<br>4. Implement timeout handling"
+        },
+        {
+            "question": "Explain advanced Performance Optimization techniques in IBM BPM",
+            "answer": "Key optimization techniques:<br><br>1. Coach Performance:<pre><code>// Optimize Coach rendering\ntw.system.steps.optimizedView = {\n    initialize: function(options) {\n        this.options = options;\n        this.setupVirtualization();\n    },\n    setupVirtualization: function() {\n        // Virtual scrolling for large lists\n        var container = this.element.querySelector('.list-container');\n        var virtualScroller = new VirtualScroller({\n            container: container,\n            itemHeight: 50,\n            buffer: 10,\n            renderItem: this.renderListItem.bind(this)\n        });\n    },\n    renderListItem: function(item) {\n        // Efficient item rendering\n        return '<div class=\"list-item\">' + item.text + '</div>';\n    }\n};</code></pre><br><br>2. Service Flow optimization:<br><br>• Use batch processing<br>• Implement caching<br>• Optimize database queries<br>• Use parallel processing where possible"
+        },
+        {
+            "question": "How do you implement complex Business Rules with decision tables and scripting?",
+            "answer": "Implementation approach:<br><br>1. Decision Table Structure:<pre><code>// Rule engine implementation\nvar ruleEngine = {\n    evaluateRules: function(input) {\n        var result = {\n            approved: false,\n            reason: '',\n            nextStep: ''\n        };\n        \n        // Decision table logic\n        if (input.amount <= 1000 && input.creditScore > 700) {\n            result.approved = true;\n            result.nextStep = 'AutoApprove';\n        } else if (input.amount <= 5000 && input.creditScore > 600) {\n            result.nextStep = 'SupervisorReview';\n        } else {\n            result.approved = false;\n            result.reason = 'Does not meet criteria';\n            result.nextStep = 'Reject';\n        }\n        \n        return result;\n    }\n};\n\n// Usage in process\ntw.local.decision = ruleEngine.evaluateRules({\n    amount: tw.local.loanAmount,\n    creditScore: tw.local.creditScore\n});</code></pre><br><br>2. Configure rule conditions<br>3. Implement rule chaining<br>4. Handle rule conflicts"
+        }
+    ]
+} 

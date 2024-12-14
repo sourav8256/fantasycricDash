@@ -5,14 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editable Table</title>
     <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            padding-bottom: 80px;
+        }
+        
         table {
             border-collapse: collapse;
-            margin: 20px;
+            margin: 0;
+            width: 100%;
+            max-width: 100%;
         }
+        
         td {
             padding: 5px;
             border: 1px solid #ccc;
+            display: table-cell;
+            width: 100%;
         }
+        
+        @media (max-width: 600px) {
+            table {
+                font-size: 14px;
+            }
+            
+            td {
+                padding: 3px;
+            }
+        }
+        
         textarea {
             width: 100%;
             padding: 5px;
@@ -20,79 +42,395 @@
             box-sizing: border-box;
             min-height: 60px;
             resize: vertical;
+            font-size: inherit;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        /* Prevent zoom on focus for iOS */
+        @media screen and (-webkit-min-device-pixel-ratio:0) { 
+            select,
+            textarea,
+            input {
+                font-size: 16px;
+            }
+        }
+        
+        #row-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        
+        #row-controls button {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        #row-controls button:hover {
+            background: #e0e0e0;
+        }
+        
+        tr.active-row td {
+            background-color: #f8f8f8;
+        }
+        
+        #row-controls button.delete {
+            background: #fff0f0;
+            border-color: #ffcccb;
+        }
+        
+        #row-controls button.delete:hover {
+            background: #ffe0e0;
+        }
+        
+        .archived {
+            opacity: 0.5;
+            background: #f8f8f8;
+        }
+        
+        #row-controls button.delay {
+            background: #f0f8ff;
+            border-color: #add8e6;
+        }
+        
+        #row-controls button.delay:hover {
+            background: #e6f3ff;
+        }
+        
+        .deleted-section {
+            margin-top: 30px;
+            margin-bottom: 80px;
+            border-top: 2px solid #eee;
+            padding-top: 10px;
+        }
+        
+        .deleted-header {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .deleted-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #f8f8f8;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .deleted-date {
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .deleted-item button {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 3px;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        
+        .deleted-item button:hover {
+            background: #c8e6c9;
         }
     </style>
     <script>
-        function scrollToBottom(textarea) {
-            textarea.scrollTop = textarea.scrollHeight;
-        }
+        let activeRow = null;
 
-        // Load saved data when page loads
+        // Load saved data and check for items to permanently delete
         window.addEventListener('load', () => {
+            const table = document.querySelector('table');
+            
+            // Load regular data
             const savedData = localStorage.getItem('tableData');
             if (savedData) {
-                const textareas = document.querySelectorAll('textarea');
                 const data = JSON.parse(savedData);
-                textareas.forEach((textarea, index) => {
-                    textarea.value = data[index] || '';
-                    scrollToBottom(textarea);
+                
+                // Clear existing rows
+                table.innerHTML = '';
+                
+                // Create rows for each saved item
+                data.forEach(content => {
+                    const row = document.createElement('tr');
+                    const cell = document.createElement('td');
+                    const textarea = document.createElement('textarea');
+                    
+                    textarea.placeholder = 'Enter text';
+                    textarea.value = content;
+                    cell.appendChild(textarea);
+                    row.appendChild(cell);
+                    table.appendChild(row);
+                    
+                    textarea.scrollTop = textarea.scrollHeight;
                 });
             }
+            
+            // If no rows exist (no data or all deleted), create one empty row
+            if (table.children.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                const textarea = document.createElement('textarea');
+                
+                textarea.placeholder = 'Enter text';
+                cell.appendChild(textarea);
+                row.appendChild(cell);
+                table.appendChild(row);
+            }
+
+            // Check archived items for permanent deletion
+            const archivedData = JSON.parse(localStorage.getItem('archivedData') || '[]');
+            const currentTime = new Date().getTime();
+            const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+            
+            const remainingArchived = archivedData.filter(item => {
+                return (currentTime - item.deletedAt) < thirtyDaysInMs;
+            });
+
+            localStorage.setItem('archivedData', JSON.stringify(remainingArchived));
+
+            // Check for delayed items that should be restored
+            const delayedData = JSON.parse(localStorage.getItem('delayedData') || '[]');
+            
+            const [itemsToRestore, itemsToKeep] = delayedData.reduce(([restore, keep], item) => {
+                if (currentTime >= item.showAfter) {
+                    restore.push(item.content);
+                } else {
+                    keep.push(item);
+                }
+                return [restore, keep];
+            }, [[], []]);
+
+            // Restore items that have passed their delay time
+            if (itemsToRestore.length > 0) {
+                const existingData = JSON.parse(localStorage.getItem('tableData') || '[]');
+                const newData = [...itemsToRestore, ...existingData];
+                localStorage.setItem('tableData', JSON.stringify(newData));
+                
+                // Refresh the page to show the restored items
+                if (document.readyState === 'complete') {
+                    location.reload();
+                }
+            }
+
+            // Update delayed storage
+            localStorage.setItem('delayedData', JSON.stringify(itemsToKeep));
+
+            showDeletedItems();
         });
 
-        // Save data and scroll to bottom whenever any textarea changes
+        // Save data whenever any textarea changes
         document.addEventListener('input', (e) => {
             if (e.target.tagName === 'TEXTAREA') {
                 const textareas = document.querySelectorAll('textarea');
-                const data = Array.from(textareas).map(textarea => textarea.value);
+                const data = Array.from(textareas)
+                    .map(textarea => textarea.value)
+                    .filter(value => value.trim() !== ''); // Only save non-empty values
                 localStorage.setItem('tableData', JSON.stringify(data));
-                scrollToBottom(e.target);
+                e.target.scrollTop = e.target.scrollHeight;
             }
         });
+
+        function setActiveRow(row) {
+            // Remove active class from previous row
+            if (activeRow) {
+                activeRow.classList.remove('active-row');
+            }
+            // Set new active row
+            activeRow = row;
+            if (activeRow) {
+                activeRow.classList.add('active-row');
+            }
+        }
+
+        function insertRow(position = 'above') {
+            if (!activeRow) return;
+            
+            const newRow = document.createElement('tr');
+            const newCell = document.createElement('td');
+            const newTextarea = document.createElement('textarea');
+            
+            newTextarea.placeholder = 'Enter text';
+            newCell.appendChild(newTextarea);
+            newRow.appendChild(newCell);
+            
+            if (position === 'above') {
+                activeRow.parentNode.insertBefore(newRow, activeRow);
+            } else {
+                activeRow.parentNode.insertBefore(newRow, activeRow.nextSibling);
+            }
+            
+            // Update storage after inserting new row
+            const textareas = document.querySelectorAll('textarea');
+            const data = Array.from(textareas).map(textarea => textarea.value);
+            localStorage.setItem('tableData', JSON.stringify(data));
+            
+            // Set focus to new textarea
+            newTextarea.focus();
+        }
+
+        function archiveRow() {
+            if (!activeRow) return;
+            
+            // Get the content
+            const textarea = activeRow.querySelector('textarea');
+            const content = textarea.value;
+            
+            // Add to archived items
+            const archivedData = JSON.parse(localStorage.getItem('archivedData') || '[]');
+            archivedData.push({
+                content: content,
+                deletedAt: new Date().getTime()
+            });
+            localStorage.setItem('archivedData', JSON.stringify(archivedData));
+            
+            // Remove the row
+            activeRow.remove();
+            activeRow = null;
+            
+            // Update main storage
+            const textareas = document.querySelectorAll('textarea');
+            const data = Array.from(textareas).map(textarea => textarea.value);
+            localStorage.setItem('tableData', JSON.stringify(data));
+            
+            // Refresh deleted items display
+            const existingSection = document.querySelector('.deleted-section');
+            if (existingSection) existingSection.remove();
+            showDeletedItems();
+        }
+
+        function delayRow() {
+            if (!activeRow) return;
+            
+            // Get the content
+            const textarea = activeRow.querySelector('textarea');
+            const content = textarea.value;
+            
+            if (!content.trim()) return; // Don't delay empty rows
+            
+            // Add to delayed items
+            const delayedData = JSON.parse(localStorage.getItem('delayedData') || '[]');
+            delayedData.push({
+                content: content,
+                delayedAt: new Date().setHours(0, 0, 0, 0), // Start of today
+                showAfter: new Date().setHours(24, 0, 0, 0)  // Start of tomorrow
+            });
+            localStorage.setItem('delayedData', JSON.stringify(delayedData));
+            
+            // Remove the row
+            activeRow.remove();
+            activeRow = null;
+            
+            // Update main storage
+            const textareas = document.querySelectorAll('textarea');
+            const data = Array.from(textareas).map(textarea => textarea.value);
+            localStorage.setItem('tableData', JSON.stringify(data));
+        }
+
+        // Event listeners for row activation
+        document.addEventListener('focus', (e) => {
+            if (e.target.tagName === 'TEXTAREA') {
+                setActiveRow(e.target.closest('tr'));
+            }
+        }, true);
+
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'TEXTAREA') {
+                setActiveRow(e.target.closest('tr'));
+            }
+        });
+
+        function recoverItem(content) {
+            // Add item back to main table
+            const table = document.querySelector('table');
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            const textarea = document.createElement('textarea');
+            
+            textarea.placeholder = 'Enter text';
+            textarea.value = content;
+            cell.appendChild(textarea);
+            row.appendChild(cell);
+            table.appendChild(row);
+            
+            // Remove from archived items
+            const archivedData = JSON.parse(localStorage.getItem('archivedData') || '[]');
+            const updatedArchived = archivedData.filter(item => item.content !== content);
+            localStorage.setItem('archivedData', JSON.stringify(updatedArchived));
+            
+            // Update main storage
+            const textareas = document.querySelectorAll('textarea');
+            const data = Array.from(textareas).map(textarea => textarea.value);
+            localStorage.setItem('tableData', JSON.stringify(data));
+            
+            // Refresh deleted items display
+            const existingSection = document.querySelector('.deleted-section');
+            if (existingSection) existingSection.remove();
+            showDeletedItems();
+        }
+
+        function showDeletedItems() {
+            const deletedSection = document.createElement('div');
+            deletedSection.className = 'deleted-section';
+            
+            const archivedData = JSON.parse(localStorage.getItem('archivedData') || '[]');
+            if (archivedData.length === 0) return;
+            
+            const header = document.createElement('div');
+            header.className = 'deleted-header';
+            header.textContent = 'Deleted Items';
+            deletedSection.appendChild(header);
+            
+            archivedData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'deleted-item';
+                const date = new Date(item.deletedAt);
+                const daysAgo = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
+                
+                div.innerHTML = `
+                    <span>${item.content}</span>
+                    <span class="deleted-date">
+                        ${daysAgo} days ago
+                        <button onclick="recoverItem('${item.content.replace(/'/g, "\\'")}')">↩️ Recover</button>
+                    </span>
+                `;
+                deletedSection.appendChild(div);
+            });
+            
+            document.body.appendChild(deletedSection);
+        }
     </script>
 </head>
 <body>
     <table>
         <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
-        </tr>
-        <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
-        </tr>
-        <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
-        </tr>
-        <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
-        </tr>
-        <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
-        </tr>
-        <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
-        </tr>
-        <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
-        </tr>
-        <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
-        </tr>
-        <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
-        </tr>
-        <tr>
-            <td><textarea placeholder="Enter text"></textarea></td>
-            <td><textarea placeholder="Enter text"></textarea></td>
+            <td>
+                <textarea placeholder="Enter text"></textarea>
+            </td>
         </tr>
     </table>
+    
+    <div id="row-controls">
+        <button onclick="insertRow('above')">↑ Insert Above</button>
+        <button onclick="insertRow('below')">↓ Insert Below</button>
+        <button onclick="delayRow()" class="delay">⏰ Tomorrow</button>
+        <button onclick="archiveRow()" class="delete">🗑️ Delete</button>
+    </div>
 </body>
 </html>

@@ -809,26 +809,26 @@
             // Clear canvas
             ctx.clearRect(0, 0, rect.width, rect.height);
             
-            // Get last 20 days of interval data
             const dailyIntervals = getLast20DaysIntervals();
             if (dailyIntervals.length === 0) return;
 
             const maxInterval = Math.max(...dailyIntervals.map(d => d.avgInterval));
-            const padding = 35;
+            const padding = 40; // Match work count graph padding
             const barPadding = 2;
             const width = rect.width - (padding * 2);
             const height = rect.height - (padding * 2);
             const barWidth = (width / 20) - barPadding;
 
-            // Update text sizes with even smaller fonts
-            const smallFont = '6px Poppins';      // Reduced from 8px
-            const smallerFont = '5px Poppins';    // Reduced from 7px
-            
-            // Draw axes
+            // Draw Y-axis
             ctx.beginPath();
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.moveTo(padding, padding);
             ctx.lineTo(padding, height + padding);
+            ctx.stroke();
+
+            // Draw X-axis
+            ctx.beginPath();
+            ctx.moveTo(padding, height + padding);
             ctx.lineTo(width + padding, height + padding);
             ctx.stroke();
 
@@ -838,32 +838,31 @@
                 const barHeight = day.avgInterval ? (day.avgInterval / maxInterval) * height : 0;
                 const y = height + padding - barHeight;
 
-                // Draw bar
-                ctx.fillStyle = 'rgba(102, 126, 234, 0.6)';
+                // Draw bar with same style as work count graph
+                ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
                 ctx.fillRect(x, y, barWidth, barHeight);
 
-                // Draw date label with smaller font
+                // Draw date label
                 ctx.save();
-                ctx.translate(x + (barWidth / 2), height + padding + 2); // Reduced spacing
+                ctx.translate(x + (barWidth / 2), height + padding + 5);
                 ctx.rotate(-Math.PI / 4);
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-                ctx.font = smallerFont;
+                ctx.font = '10px Poppins';
                 ctx.textAlign = 'right';
-                // Simplified date format: just the day
-                ctx.fillText(day.date.getDate(), 0, 0);
+                ctx.fillText(day.date.getDate() + '/' + (day.date.getMonth() + 1), 0, 0);
                 ctx.restore();
             });
 
-            // Draw Y-axis labels with simplified time format
+            // Draw Y-axis labels
             ctx.textAlign = 'right';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.font = smallFont;
+            ctx.font = '10px Poppins';
             
+            // Draw 5 evenly spaced labels
             for (let i = 0; i <= 5; i++) {
                 const value = (maxInterval / 5) * i;
                 const y = height + padding - (height * (i / 5));
-                // Use simplified time format
-                ctx.fillText(formatShortTime(value), padding - 3, y + 2);
+                ctx.fillText(formatShortTime(value), padding - 5, y + 3);
             }
         }
 

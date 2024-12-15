@@ -176,17 +176,32 @@
 
         .trend-graph {
             margin-top: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
         }
 
         .trend-graph h2 {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             font-size: 1.2em;
         }
 
-        #trendCanvas {
+        .graphs-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .graph-item h3 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .graph-item canvas {
             width: 100%;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.1);
+            height: 150px;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
         }
 
@@ -258,42 +273,20 @@
             }
 
             .trend-graph {
-                margin-top: 20px;
-            }
-
-            .trend-graph h2 {
-                font-size: 1em;
-            }
-
-            #trendCanvas {
-                height: 150px;
-            }
-
-            /* Adjust notifications for mobile */
-            .notification-container {
-                top: 10px;
-                right: 10px;
-                left: 10px;
-            }
-
-            .notification {
-                width: 100%;
-                font-size: 0.9em;
-                padding: 8px 15px;
-            }
-
-            .section {
                 padding: 15px;
             }
 
-            .section h2 {
-                font-size: 1em;
-                margin-bottom: 10px;
+            .graphs-container {
+                gap: 15px;
             }
 
-            .stats {
-                grid-template-columns: 1fr;
-                gap: 10px;
+            .graph-item h3 {
+                font-size: 0.8em;
+                margin-bottom: 8px;
+            }
+
+            .graph-item canvas {
+                height: 120px;
             }
         }
 
@@ -417,13 +410,17 @@
         </div>
 
         <div class="trend-graph">
-            <h2>Daily Work Count</h2>
-            <canvas id="trendCanvas"></canvas>
-        </div>
-
-        <div class="trend-graph">
-            <h2>Daily Average Intervals</h2>
-            <canvas id="intervalTrendCanvas"></canvas>
+            <h2>Daily Statistics</h2>
+            <div class="graphs-container">
+                <div class="graph-item">
+                    <h3>Work Count</h3>
+                    <canvas id="trendCanvas"></canvas>
+                </div>
+                <div class="graph-item">
+                    <h3>Average Intervals</h3>
+                    <canvas id="intervalTrendCanvas"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -813,7 +810,7 @@
             if (dailyIntervals.length === 0) return;
 
             const maxInterval = Math.max(...dailyIntervals.map(d => d.avgInterval));
-            const padding = 40; // Match work count graph padding
+            const padding = 40; // Same padding as work count graph
             const barPadding = 2;
             const width = rect.width - (padding * 2);
             const height = rect.height - (padding * 2);
@@ -838,8 +835,8 @@
                 const barHeight = day.avgInterval ? (day.avgInterval / maxInterval) * height : 0;
                 const y = height + padding - barHeight;
 
-                // Draw bar with same style as work count graph
-                ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
+                // Draw bar
+                ctx.fillStyle = 'rgba(255, 215, 0, 0.6)'; // Same color as work count graph
                 ctx.fillRect(x, y, barWidth, barHeight);
 
                 // Draw date label
@@ -866,19 +863,19 @@
             }
         }
 
-        // Add this helper function for super-short time format
+        // Update formatShortTime to be even more compact
         function formatShortTime(ms) {
             const hours = Math.floor(ms / (1000 * 60 * 60));
             const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
             
             if (hours > 0) {
-                return `${hours}h${minutes}m`;
+                return hours + 'h';  // Only show hours if present
+            }
+            if (minutes > 0) {
+                return minutes + 'm';  // Only show minutes if no hours
             }
             const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-            if (minutes > 0) {
-                return `${minutes}m`;
-            }
-            return `${seconds}s`;
+            return seconds + 's';  // Show seconds if less than a minute
         }
 
         function getLast20DaysIntervals() {

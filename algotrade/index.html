@@ -6,6 +6,7 @@
     <title>AlgoTrade</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
             background-color: #f5f7fb;
@@ -362,10 +363,11 @@
                 }
                 const content = await response.text();
                 document.getElementById(sectionId).innerHTML = content;
-                console.log(`${sectionId} content loaded successfully`);
+                
+                // Update URL without reloading the page
+                history.pushState({section: sectionId}, '', `#${sectionId}`);
                 
                 if (typeof initializeCharts === 'function') {
-                    console.log('Initializing charts...');
                     setTimeout(initializeCharts, 100);
                 }
             } catch (error) {
@@ -402,7 +404,16 @@
 
         // Load home content when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            loadContent('home');
+            // Check if there's a hash in the URL
+            const hash = window.location.hash.slice(1);
+            const initialSection = hash || 'home';
+            showSection(initialSection);
+        });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (event) => {
+            const section = event.state?.section || 'home';
+            showSection(section);
         });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

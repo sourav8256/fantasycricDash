@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Interval Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .stat-card p {
+            font-size: 1.5em;
+            font-weight: 500;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #fff;
+            color: #764ba2;
+            font-size: 1.1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .history {
+            margin-top: 30px;
+        }
+
+        .history h2 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .history-list {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Add styles for the live timer section */
+        .live-timer {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .timer-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .timer-card h3 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .timer-card p {
+            font-size: 1.5em;
+            font-weight: 500;
+            color: #ffd700;
+        }
+
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .notification {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .trend-graph {
+            margin-top: 30px;
+        }
+
+        .trend-graph h2 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        #trendCanvas {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Work Interval Tracker</h1>
+        
+        <div class="live-timer">
+            <div class="timer-card">
+                <h3>Current Interval</h3>
+                <p id="currentTimer">00:00:00</p>
+            </div>
+            <div class="timer-card">
+                <h3>Projected Average</h3>
+                <p id="projectedAverage">--:--:--</p>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Average Interval</h3>
+                <p id="averageTime">--:--:--</p>
+            </div>
+            <div class="stat-card">
+                <h3>Last Interval</h3>
+                <p id="lastInterval">--:--:--</p>
+            </div>
+        </div>
+
+        <button id="recordButton" onclick="recordWork()">Record Work Completion</button>
+
+        <div class="history">
+            <h2>Recent History</h2>
+            <div class="history-list" id="historyList">
+                <!-- History items will be added here -->
+            </div>
+        </div>
+
+        <div class="trend-graph">
+            <h2>30-Day Trend</h2>
+            <canvas id="trendCanvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Notification container -->
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <script>
+        // Initialize workHistory with a default structure
+        const defaultWorkHistory = {
+            timestamps: [],
+            lastCleanup: new Date().getTime(),
+            allIntervals: []
+        };
+
+        // Initialize workHistory with proper error handling
+        let workHistory = defaultWorkHistory;
+        
+        try {
+            const stored = localStorage.getItem('workHistory');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Validate the parsed data has the correct structure
+                if (parsed && Array.isArray(parsed.timestamps)) {
+                    workHistory = parsed;
+                } else {
+                    console.log("Invalid stored data structure, using default");
+                }
+            } else {
+                console.log("No stored data found, using default");
+            }
+        } catch (e) {
+            console.error("Error loading work history:", e);
+        }
+
+        let timerInterval;
+
+        function recordWork() {
+            try {
+                const currentTime = new Date().getTime();
+                
+                // Calculate and store interval if this isn't the first entry
+                if (workHistory.timestamps.length > 0) {
+                    const lastTimestamp = workHistory.timestamps[workHistory.timestamps.length - 1];
+                    const interval = currentTime - lastTimestamp;
+                    if (!Array.isArray(workHistory.allIntervals)) {
+                        workHistory.allIntervals = [];
+                    }
+                    workHistory.allIntervals.push(interval);
+                }
+
+                // Clean old entries (only for display purposes)
+                cleanOldEntries(currentTime);
+                
+                // Add new timestamp
+                workHistory.timestamps.push(currentTime);
+                console.log("Work recorded at:", new Date(currentTime).toLocaleTimeString());
+                updateStats();
+                saveToLocalStorage();
+                startTimer();
+            } catch (e) {
+                console.error("Error in recordWork:", e);
+            }
+        }
+
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('workHistory', JSON.stringify(workHistory));
+                console.log("Data saved to localStorage");
+            } catch (e) {
+                console.error("Error saving to localStorage:", e);
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            timerInterval = setInterval(() => {
+                if (workHistory.timestamps.length > 0) {
+                    const lastWork = workHistory.timestamps[workHistory.timestamps.length - 1];
+                    const currentTime = new Date().getTime();
+                    const elapsed = currentTime - lastWork;
+                    
+                    document.getElementById('currentTimer').textContent = formatDuration(elapsed);
+                    
+                    if (workHistory.timestamps.length >= 2) {
+                        // Calculate projected average including all historical intervals
+                        const totalTime = workHistory.allIntervals.reduce((sum, interval) => sum + interval, 0) + elapsed;
+                        const projectedAvg = totalTime / (workHistory.allIntervals.length + 1);
+                        document.getElementById('projectedAverage').textContent = formatDuration(projectedAvg);
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateStats() {
+            if (workHistory.timestamps.length < 2) {
+                document.getElementById('averageTime').textContent = '--:--:--';
+                document.getElementById('lastInterval').textContent = '--:--:--';
+                return;
+            }
+
+            // Use all intervals for average calculation
+            const allIntervalsAverage = workHistory.allIntervals.reduce((sum, interval) => sum + interval, 0) / workHistory.allIntervals.length;
+            const lastInterval = workHistory.allIntervals[workHistory.allIntervals.length - 1];
+
+            document.getElementById('averageTime').textContent = formatDuration(allIntervalsAverage);
+            document.getElementById('lastInterval').textContent = formatDuration(lastInterval);
+
+            updateHistoryList();
+        }
+
+        function cleanOldEntries(currentTime) {
+            try {
+                // Only clean timestamps for display purposes
+                const oneDayAgo = currentTime - (24 * 60 * 60 * 1000);
+                workHistory.timestamps = workHistory.timestamps.filter(timestamp => timestamp > oneDayAgo);
+                workHistory.lastCleanup = currentTime;
+            } catch (e) {
+                console.error("Error in cleanOldEntries:", e);
+                workHistory = defaultWorkHistory;
+            }
+        }
+
+        function updateHistoryList() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+
+            // Show only recent intervals (last 24 hours)
+            const recentIntervals = workHistory.allIntervals.slice(-5).reverse();
+            const recentTimestamps = workHistory.timestamps.slice(-5).reverse();
+
+            recentIntervals.forEach((interval, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                const timeString = new Date(recentTimestamps[index]).toLocaleTimeString();
+                historyItem.textContent = `${timeString} - Interval: ${formatDuration(interval)}`;
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        function formatDuration(ms) {
+            const hours = Math.floor(ms / (1000 * 60 * 60));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+            return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
+        }
+
+        function padZero(num) {
+            return num.toString().padStart(2, '0');
+        }
+
+        // Initialize the app
+        try {
+            console.log("Initializing app...");
+            cleanOldEntries(new Date().getTime());
+            startTimer();
+            updateStats();
+            console.log("App initialized successfully");
+        } catch (e) {
+            console.error("Error during initialization:", e);
+            // Reset to default state if initialization fails
+            workHistory = defaultWorkHistory;
+            startTimer();
+            updateStats();
+        }
+
+        function showNotification(message) {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            container.appendChild(notification);
+
+            // Show the notification
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+
+            // Remove the notification after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+
+        // Override console.log to also show notifications
+        const originalConsoleLog = console.log;
+        console.log = function(message) {
+            originalConsoleLog.apply(console, arguments);
+            showNotification(message);
+        };
+
+        // Example usage
+        console.log("This is a test message");
+
+        function drawTrendGraph() {
+            const canvas = document.getElementById('trendCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size with proper scaling
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+        }
+    </script>
+</body>
+</html>

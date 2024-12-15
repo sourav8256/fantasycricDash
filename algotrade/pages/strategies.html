@@ -53,6 +53,47 @@
                 </div>
             </div>
         </div>
+        <div class="card">
+            <h5>Order Legs</h5>
+            <div id="legsContainer">
+                <div class="row leg-row">
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text">Leg 1</span>
+                            <select class="form-select">
+                                <option>Buy</option>
+                                <option>Sell</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text">Strike</span>
+                            <select class="form-select">
+                                <option>ATM</option>
+                                <option>ITM</option>
+                                <option>OTM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text">Option</span>
+                            <select class="form-select">
+                                <option>CE</option>
+                                <option>PE</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text">Qty</span>
+                            <input type="number" class="form-control" value="1" min="1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="card">
             <h5>Risk Management</h5>
@@ -159,6 +200,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Existing trailing stop loss functionality
         const trailingSwitch = document.getElementById('enableTrailing');
         const trailingOptions = document.getElementById('trailingOptions');
         const trailPreview = document.getElementById('trailPreview');
@@ -167,16 +209,21 @@
         const previewText = document.getElementById('previewText');
         const calculateBtn = document.getElementById('calculateBtn');
 
-        trailingSwitch.addEventListener('change', function() {
-            trailingOptions.style.display = this.checked ? 'flex' : 'none';
-            trailPreview.style.display = this.checked ? 'flex' : 'none';
-            updatePreview();
-        });
+        // Existing trailing stop loss event listeners
+        if (trailingSwitch) {
+            trailingSwitch.addEventListener('change', function() {
+                trailingOptions.style.display = this.checked ? 'flex' : 'none';
+                trailPreview.style.display = this.checked ? 'flex' : 'none';
+                updatePreview();
+            });
+        }
 
         // Update preview when values change
-        [trailStep, profitStep].forEach(input => {
-            input.addEventListener('input', updatePreview);
-        });
+        if (trailStep && profitStep) {
+            [trailStep, profitStep].forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+        }
 
         function updatePreview() {
             const trail = parseInt(trailStep.value) || 0;
@@ -189,19 +236,23 @@
             }
         }
 
-        calculateBtn.addEventListener('click', function() {
-            const currentProfit = prompt('Enter current profit in points:');
-            if (currentProfit !== null) {
-                const trail = parseInt(trailStep.value);
-                const profit = parseInt(profitStep.value);
-                const steps = Math.floor(parseInt(currentProfit) / profit);
-                const trailAmount = steps * trail;
-                
-                alert(`For ${currentProfit} points profit, stop loss would increase by ${trailAmount} points`);
-            }
-        });
+        if (calculateBtn) {
+            calculateBtn.addEventListener('click', function() {
+                const currentProfit = prompt('Enter current profit in points:');
+                if (currentProfit !== null) {
+                    const trail = parseInt(trailStep.value);
+                    const profit = parseInt(profitStep.value);
+                    const steps = Math.floor(parseInt(currentProfit) / profit);
+                    const trailAmount = steps * trail;
+                    
+                    alert(`For ${currentProfit} points profit, stop loss would increase by ${trailAmount} points`);
+                }
+            });
+        }
 
-        // Initial preview update
-        updatePreview();
+        // Initial preview update if elements exist
+        if (trailStep && profitStep) {
+            updatePreview();
+        }
     });
 </script> 

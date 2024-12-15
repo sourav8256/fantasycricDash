@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working Memory Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            margin: 10px auto;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .cell {
+            width: 100%;
+            aspect-ratio: 1;
+            background-color: #fff;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(18px, 5vw, 24px);
+            cursor: pointer;
+            transition: background-color 0.3s;
+            touch-action: manipulation;
+        }
+
+        .cell.revealed {
+            background-color: #e0e0e0;
+        }
+
+        .cell.matched {
+            background-color: #90EE90;
+        }
+
+        .stats {
+            margin: 0;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart {
+            margin: 0;
+            width: 100%;
+            box-sizing: border-box;
+            height: 250px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1, h2, p {
+            width: 100%;
+            text-align: center;
+            margin: 5px 0;
+        }
+
+        h1 {
+            font-size: clamp(24px, 5vw, 32px);
+        }
+
+        h2 {
+            font-size: clamp(18px, 4vw, 24px);
+        }
+
+        p {
+            font-size: clamp(14px, 3.5vw, 16px);
+            margin: 8px 0;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: clamp(14px, 4vw, 16px);
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        @media (max-width: 400px) {
+            .grid {
+                gap: 5px;
+            }
+
+            .cell {
+                border-width: 1px;
+            }
+
+            .stats, .chart {
+                padding: 10px;
+            }
+        }
+
+        .instructions {
+            max-width: 90%;
+            margin: 0 auto;
+        }
+
+        .controls {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            width: 100%;
+        }
+
+        .best-scores {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Working Memory Game</h1>
+        <p class="instructions">Match the numbers by remembering their positions. Try to complete with fewer moves!</p>
+        <div class="controls">
+            <button onclick="startNewGame()">New Game</button>
+        </div>
+        <div id="grid" class="grid"></div>
+        <div class="stats">
+            <h2>Current Game Stats</h2>
+            <p>Moves: <span id="moves">0</span></p>
+            <p>Matches Found: <span id="matches">0</span></p>
+            <p>Time: <span id="time">0</span> seconds</p>
+        </div>
+        <div class="stats-container">
+            <div class="best-scores">
+                <h2>Best Scores</h2>
+                <div id="bestScores"></div>
+                <p>Average Score: <span id="averageScore">0</span></p>
+                <p>Games Played: <span id="gamesPlayed">0</span></p>
+            </div>
+        </div>
+        <div class="chart">
+            <canvas id="progressChart"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let grid = [];
+        let revealed = [];
+        let matched = [];
+        let moves = 0;
+        let matchesFound = 0;
+        let gameStartTime;
+        let timerInterval;
+        let progressHistory = [];
+        let gameHistory = [];
+
+        function createGrid() {
+            const numbers = [];
+            // Create pairs of numbers 1-8
+            for (let i = 1; i <= 8; i++) {
+                numbers.push(i, i);
+            }
+            
+            // Shuffle the numbers
+            for (let i = numbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+            }
+            
+            return numbers;
+        }
+
+        function renderGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            
+            for (let i = 0; i < 16; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                
+                if (revealed.includes(i) || matched.includes(i)) {
+                    cell.textContent = grid[i];
+                }
+                
+                if (matched.includes(i)) {
+                    cell.classList.add('matched');
+                } else if (revealed.includes(i)) {
+                    cell.classList.add('revealed');
+                }
+                
+                cell.addEventListener('click', () => handleCellClick(i));
+                gridElement.appendChild(cell);
+            }
+        }
+
+        function handleCellClick(index) {
+            // Prevent double-tap zoom on mobile
+            event.preventDefault();
+            
+            if (revealed.length === 2 || revealed.includes(index) || matched.includes(index)) {
+                return;
+            }
+
+            revealed.push(index);
+            renderGrid();
+
+            if (revealed.length === 2) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+
+                if (grid[revealed[0]] === grid[revealed[1]]) {
+                    matched.push(...revealed);
+                    matchesFound++;
+                    document.getElementById('matches').textContent = matchesFound;
+                    revealed = [];
+                    
+                    if (matched.length === 16) {
+                        endGame();
+                    }
+                } else {
+                    setTimeout(() => {
+                        revealed = [];
+                        renderGrid();
+                    }, 1000);
+                }
+            }
+        }
+
+        function startNewGame() {
+            grid = createGrid();
+            revealed = [];
+            matched = [];
+            moves = 0;
+            matchesFound = 0;
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('matches').textContent = '0';
+            document.getElementById('time').textContent = '0';
+            
+            clearInterval(timerInterval);
+            gameStartTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            renderGrid();
+        }
+
+        function updateTimer() {
+            const seconds = Math.floor((Date.now() - gameStartTime) / 1000);
+            document.getElementById('time').textContent = seconds;
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            const timeSpent = Math.floor((Date.now() - gameStartTime) / 1000);
+            const score = calculateScore(moves, timeSpent);
+            
+            const gameData = {
+                moves: moves,
+                time: timeSpent,
+                score: score,
+                date: new Date().toISOString(),
+            };
+            
+            gameHistory.push(gameData);
+            progressHistory = gameHistory;
+            
+            saveProgress();
+            updateStats();
+            updateChart();
+            
+            setTimeout(() => {
+                alert(`Congratulations!\nMoves: ${moves}\nTime: ${timeSpent}s\nScore: ${score}`);
+            }, 300);
+        }
+
+        function calculateScore(moves, time) {
+            // Lower moves and time = higher score
+            return Math.round(1000 * (1 / moves) * (100 / time));
+        }
+
+        function updateChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if (window.progressChart) {
+                window.progressChart.destroy();
+            }
+            
+            const labels = gameHistory.map((_, index) => `Game ${index + 1}`);
+            const scores = gameHistory.map(game => game.score);
+            const movesData = gameHistory.map(game => game.moves);
+            
+            window.progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Score',
+                        data: scores,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Moves',
+                        data: movesData,
+                        borderColor: 'rgb(255, 99, 132)',
+                        tension: 0.1,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Score'
+                            }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Moves'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateStats() {
+            const bestScoresDiv = document.getElementById('bestScores');
+            const averageScoreSpan = document.getElementById('averageScore');
+            const gamesPlayedSpan = document.getElementById('gamesPlayed');
+
+            // Sort games by score (highest first)
+            const sortedGames = [...gameHistory].sort((a, b) => b.score - a.score);
+            
+            // Display top 5 scores
+            bestScoresDiv.innerHTML = sortedGames.slice(0, 5).map((game, index) => `
+                <div class="score-item">
+                    <span>#${index + 1}: ${game.score}</span>
+                    <span>${new Date(game.date).toLocaleDateString()} - ${game.moves} moves, ${game.time}s</span>
+                </div>
+            `).join('');
+
+            // Calculate and display average score
+            const avgScore = gameHistory.length > 0 
+                ? Math.round(gameHistory.reduce((sum, game) => sum + game.score, 0) / gameHistory.length)
+                : 0;
+            averageScoreSpan.textContent = avgScore;
+
+            // Update games played
+            gamesPlayedSpan.textContent = gameHistory.length;
+        }
+
+        function loadProgress() {
+            const savedHistory = localStorage.getItem('memoryGameHistory');
+            if (savedHistory) {
+                gameHistory = JSON.parse(savedHistory);
+                progressHistory = gameHistory; // Update the chart data
+                updateStats();
+                updateChart();
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('memoryGameHistory', JSON.stringify(gameHistory));
+        }
+
+        // Start first game when page loads
+        startNewGame();
+        loadProgress();
+    </script>
+</body>
+</html>

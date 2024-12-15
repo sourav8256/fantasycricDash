@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Long-Term Memory Training</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f4f8;
+        }
+
+        .game-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .memory-card {
+            background-color: #e9ecef;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .memory-card:hover {
+            background-color: #dee2e6;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Long-Term Memory Training</h1>
+        <p>Train your long-term memory using spaced repetition and active recall techniques.</p>
+        
+        <div class="controls">
+            <button onclick="startNewGame()">New Game</button>
+            <button onclick="showStats()">Show Statistics</button>
+        </div>
+
+        <div id="gameArea"></div>
+        <div id="stats" class="stats hidden"></div>
+    </div>
+
+    <script>
+        let cards = [];
+        let currentLevel = 1;
+        let score = 0;
+        let reviewQueue = [];
+
+        // Sample categories and items for memory training
+        const categories = {
+            'Historical Events': [
+                'French Revolution - 1789',
+                'World War II - 1939-1945',
+                'Moon Landing - 1969',
+                'Fall of Berlin Wall - 1989'
+            ],
+            'Scientific Concepts': [
+                'Photosynthesis Process',
+                'Theory of Relativity',
+                'DNA Structure',
+                'Quantum Mechanics'
+            ],
+            'Geography': [
+                'Capital Cities',
+                'Major Rivers',
+                'Mountain Ranges',
+                'Ocean Currents'
+            ]
+        };
+
+        function startNewGame() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '';
+            
+            // Create new set of cards based on current level
+            createCards();
+            displayCards();
+        }
+
+        function createCards() {
+            cards = [];
+            const categoryKeys = Object.keys(categories);
+            const selectedCategory = categoryKeys[Math.floor(Math.random() * categoryKeys.length)];
+            
+            categories[selectedCategory].forEach(item => {
+                cards.push({
+                    content: item,
+                    category: selectedCategory,
+                    lastReviewed: new Date(),
+                    reviewCount: 0
+                });
+            });
+        }
+
+        function displayCards() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '<h2>Memorize these items:</h2>';
+
+            cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'memory-card';
+                cardElement.innerHTML = `
+                    <h3>${card.content}</h3>
+                    <p>Category: ${card.category}</p>
+                `;
+                gameArea.appendChild(cardElement);
+            });
+
+            // After 10 seconds, hide cards and start quiz
+            setTimeout(() => {
+                startQuiz();
+            }, 10000);
+        }
+
+        function startQuiz() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '<h2>Test your memory:</h2>';
+
+            // Create quiz based on shown cards
+            const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
+            
+            shuffledCards.forEach((card, index) => {
+                const quizItem = document.createElement('div');
+                quizItem.className = 'memory-card';
+                quizItem.innerHTML = `
+                    <p>What was item #${index + 1} in category ${card.category}?</p>
+                    <input type="text" id="answer${index}" />
+                    <button onclick="checkAnswer(${index}, '${card.content}')">Check</button>
+                `;
+                gameArea.appendChild(quizItem);
+            });
+        }
+
+        function checkAnswer(index, correctAnswer) {
+            const userAnswer = document.getElementById(`answer${index}`).value.trim().toLowerCase();
+            const correct = userAnswer === correctAnswer.toLowerCase();
+            
+            if (correct) {
+                score += 10;
+                cards[index].reviewCount++;
+            } else {
+                // Add incorrect answers to review queue
+                reviewQueue.push(cards[index]);
+            }
+
+            // Update stats
+            updateStats();
+        }
+
+        function updateStats() {
+            const stats = document.getElementById('stats');
+            stats.innerHTML = `
+                <h3>Statistics</h3>
+                <p>Current Level: ${currentLevel}</p>
+                <p>Score: ${score}</p>
+                <p>Items for Review: ${reviewQueue.length}</p>
+            `;
+        }
+
+        function showStats() {
+            const stats = document.getElementById('stats');
+            stats.classList.toggle('hidden');
+        }
+
+        // Initialize game when page loads
+        window.onload = startNewGame;
+    </script>
+</body>
+</html>

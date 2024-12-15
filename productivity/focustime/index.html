@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Time Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+        }
+        #taskButton {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        #taskButton:hover {
+            background-color: #45a049;
+        }
+        .chart-container {
+            margin-top: 30px;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Focus Time Task Tracker</h1>
+        <button id="taskButton">Complete Task ✓</button>
+        <div class="chart-container">
+            <canvas id="taskChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Initialize task data
+        let taskData = JSON.parse(localStorage.getItem('taskData')) || {};
+        const ctx = document.getElementById('taskChart').getContext('2d');
+        let chart;
+
+        // Function to get today's date in YYYY-MM-DD format
+        function getToday() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // Function to update the chart
+        function updateChart() {
+            const today = new Date();
+            const dates = [];
+            const counts = [];
+
+            // Generate array of last 20 days
+            for (let i = 19; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                dates.push(dateStr);
+                counts.push(taskData[dateStr] || 0);
+            }
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Tasks Completed',
+                        data: counts,
+                        backgroundColor: '#4CAF50',
+                        borderColor: '#45a049',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize the chart
+        updateChart();
+
+        // Add event listener to the task button
+        document.getElementById('taskButton').addEventListener('click', () => {
+            const today = getToday();
+            taskData[today] = (taskData[today] || 0) + 1;
+            localStorage.setItem('taskData', JSON.stringify(taskData));
+            updateChart();
+        });
+    </script>
+</body>
+</html>

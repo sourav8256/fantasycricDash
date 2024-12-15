@@ -26,21 +26,34 @@
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 30px;
+            padding: 20px;
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            opacity: 0.9;
         }
 
         .stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 15px;
         }
 
         .stat-card {
@@ -176,31 +189,221 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
         }
+
+        /* Responsive grid layouts */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .live-timer {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-card h3 {
+                font-size: 0.8em;
+            }
+
+            .stat-card p {
+                font-size: 1.2em;
+            }
+
+            .timer-card {
+                padding: 12px;
+            }
+
+            .timer-card h3 {
+                font-size: 0.8em;
+            }
+
+            .timer-card p {
+                font-size: 1.2em;
+            }
+
+            button {
+                padding: 12px;
+                font-size: 1em;
+            }
+
+            .history {
+                margin-top: 20px;
+            }
+
+            .history h2 {
+                font-size: 1em;
+            }
+
+            .history-list {
+                max-height: 150px;
+            }
+
+            .history-item {
+                padding: 8px;
+                font-size: 0.9em;
+            }
+
+            .trend-graph {
+                margin-top: 20px;
+            }
+
+            .trend-graph h2 {
+                font-size: 1em;
+            }
+
+            #trendCanvas {
+                height: 150px;
+            }
+
+            /* Adjust notifications for mobile */
+            .notification-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+            }
+
+            .notification {
+                width: 100%;
+                font-size: 0.9em;
+                padding: 8px 15px;
+            }
+
+            .section {
+                padding: 15px;
+            }
+
+            .section h2 {
+                font-size: 1em;
+                margin-bottom: 10px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        /* Handle very small screens */
+        @media (max-width: 320px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .stat-card p, .timer-card p {
+                font-size: 1.1em;
+            }
+
+            .history-item {
+                font-size: 0.8em;
+            }
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            padding: 5px;
+            font-size: 1.2em;
+            width: auto;
+            transition: color 0.3s;
+        }
+
+        .toggle-btn:hover {
+            color: white;
+            transform: none;
+        }
+
+        .section-content {
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            max-height: 1000px;
+            opacity: 1;
+            overflow: hidden;
+        }
+
+        .section-content.hidden {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Work Interval Tracker</h1>
         
-        <div class="live-timer">
-            <div class="timer-card">
-                <h3>Current Interval</h3>
-                <p id="currentTimer">00:00:00</p>
+        <div class="section">
+            <div class="section-header">
+                <h2>Time Tracking</h2>
+                <button class="toggle-btn" onclick="toggleSection('timeTracking')">▼</button>
             </div>
-            <div class="timer-card">
-                <h3>Projected Average</h3>
-                <p id="projectedAverage">--:--:--</p>
+            <div id="timeTracking" class="section-content">
+                <div class="live-timer">
+                    <div class="timer-card">
+                        <h3>Current Interval</h3>
+                        <p id="currentTimer">00:00:00</p>
+                    </div>
+                    <div class="timer-card">
+                        <h3>Projected Average</h3>
+                        <p id="projectedAverage">--:--:--</p>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>Average Interval</h3>
+                        <p id="averageTime">--:--:--</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="stats">
-            <div class="stat-card">
-                <h3>Average Interval</h3>
-                <p id="averageTime">--:--:--</p>
+        <div class="section">
+            <div class="section-header">
+                <h2>Work Count</h2>
+                <button class="toggle-btn" onclick="toggleSection('workCount')">▼</button>
             </div>
-            <div class="stat-card">
-                <h3>Last Interval</h3>
-                <p id="lastInterval">--:--:--</p>
+            <div id="workCount" class="section-content">
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>Today's Count</h3>
+                        <p id="todayCount">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Daily Average</h3>
+                        <p id="dailyAverage">0</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -214,8 +417,13 @@
         </div>
 
         <div class="trend-graph">
-            <h2>30-Day Trend</h2>
+            <h2>Daily Work Count</h2>
             <canvas id="trendCanvas"></canvas>
+        </div>
+
+        <div class="trend-graph">
+            <h2>Daily Average Intervals</h2>
+            <canvas id="intervalTrendCanvas"></canvas>
         </div>
     </div>
 
@@ -315,18 +523,34 @@
         function updateStats() {
             if (workHistory.timestamps.length < 2) {
                 document.getElementById('averageTime').textContent = '--:--:--';
-                document.getElementById('lastInterval').textContent = '--:--:--';
-                return;
+            } else {
+                // Use all intervals for average calculation
+                const allIntervalsAverage = workHistory.allIntervals.reduce((sum, interval) => sum + interval, 0) / workHistory.allIntervals.length;
+                document.getElementById('averageTime').textContent = formatDuration(allIntervalsAverage);
             }
 
-            // Use all intervals for average calculation
-            const allIntervalsAverage = workHistory.allIntervals.reduce((sum, interval) => sum + interval, 0) / workHistory.allIntervals.length;
-            const lastInterval = workHistory.allIntervals[workHistory.allIntervals.length - 1];
+            // Update today's count
+            document.getElementById('todayCount').textContent = getTodayCount();
 
-            document.getElementById('averageTime').textContent = formatDuration(allIntervalsAverage);
-            document.getElementById('lastInterval').textContent = formatDuration(lastInterval);
+            // Update daily average (using historical data)
+            const days = {};
+            workHistory.timestamps.forEach(timestamp => {
+                const date = new Date(timestamp);
+                const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+                if (!days[dateKey]) {
+                    days[dateKey] = 0;
+                }
+                days[dateKey]++;
+            });
+
+            const totalDays = Object.keys(days).length || 1;
+            const totalWork = Object.values(days).reduce((sum, count) => sum + count, 0);
+            const averagePerDay = (totalWork / totalDays).toFixed(1);
+            document.getElementById('dailyAverage').textContent = averagePerDay;
 
             updateHistoryList();
+            drawTrendGraph();
+            drawIntervalTrendGraph();
         }
 
         function cleanOldEntries(currentTime) {
@@ -424,6 +648,280 @@
             const rect = canvas.getBoundingClientRect();
             canvas.width = rect.width * dpr;
             canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, rect.width, rect.height);
+            
+            // Get last 20 days of data
+            const dailyCounts = getLast20DaysCounts();
+            if (dailyCounts.length === 0) return;
+
+            const maxCount = Math.max(...dailyCounts.map(d => d.count));
+            const padding = 40; // Increased padding for labels
+            const barPadding = 2;
+            const width = rect.width - (padding * 2);
+            const height = rect.height - (padding * 2);
+            const barWidth = (width / 20) - barPadding;
+
+            // Draw Y-axis
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height + padding);
+            ctx.stroke();
+
+            // Draw X-axis
+            ctx.beginPath();
+            ctx.moveTo(padding, height + padding);
+            ctx.lineTo(width + padding, height + padding);
+            ctx.stroke();
+
+            // Draw bars
+            dailyCounts.forEach((day, index) => {
+                const x = padding + (index * (barWidth + barPadding));
+                const barHeight = (day.count / maxCount) * height;
+                const y = height + padding - barHeight;
+
+                // Draw bar
+                ctx.fillStyle = 'rgba(255, 215, 0, 0.6)'; // Semi-transparent gold
+                ctx.fillRect(x, y, barWidth, barHeight);
+
+                // Draw date label
+                ctx.save();
+                ctx.translate(x + (barWidth / 2), height + padding + 5);
+                ctx.rotate(-Math.PI / 4); // Rotate text for better readability
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = '10px Poppins';
+                ctx.textAlign = 'right';
+                ctx.fillText(day.date.getDate() + '/' + (day.date.getMonth() + 1), 0, 0);
+                ctx.restore();
+            });
+
+            // Draw Y-axis labels
+            ctx.textAlign = 'right';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = '10px Poppins';
+            
+            // Draw 5 evenly spaced labels
+            for (let i = 0; i <= 5; i++) {
+                const value = Math.round((maxCount / 5) * i);
+                const y = height + padding - (height * (i / 5));
+                ctx.fillText(value.toString(), padding - 5, y + 3);
+            }
+        }
+
+        function getLast20DaysCounts() {
+            const counts = [];
+            const now = new Date();
+            
+            // Initialize last 20 days with 0 counts
+            for (let i = 19; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                date.setHours(0, 0, 0, 0);
+                counts.push({
+                    date: new Date(date),
+                    count: 0
+                });
+            }
+
+            // Count work completions for each day
+            workHistory.timestamps.forEach(timestamp => {
+                const date = new Date(timestamp);
+                const dayIndex = counts.findIndex(d => 
+                    d.date.getDate() === date.getDate() &&
+                    d.date.getMonth() === date.getMonth() &&
+                    d.date.getFullYear() === date.getFullYear()
+                );
+                if (dayIndex !== -1) {
+                    counts[dayIndex].count++;
+                }
+            });
+
+            return counts;
+        }
+
+        function getTodayCount() {
+            const today = new Date();
+            const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+            
+            return workHistory.timestamps.filter(timestamp => timestamp >= startOfDay).length;
+        }
+
+        function getDailyAverage() {
+            const today = new Date();
+            const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+            const endOfDay = startOfDay + (24 * 60 * 60 * 1000);
+            const workIntervals = workHistory.allIntervals.filter(timestamp => timestamp >= startOfDay && timestamp < endOfDay);
+            const totalWorkTime = workIntervals.reduce((sum, interval) => sum + interval, 0);
+            const workCount = workIntervals.length;
+            const dailyAverage = workCount > 0 ? totalWorkTime / workCount : 0;
+            return dailyAverage;
+        }
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const button = section.previousElementSibling.querySelector('.toggle-btn');
+            
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                button.textContent = '▼';
+                localStorage.setItem(`${sectionId}Hidden`, 'false');
+            } else {
+                section.classList.add('hidden');
+                button.textContent = '▲';
+                localStorage.setItem(`${sectionId}Hidden`, 'true');
+            }
+        }
+
+        function initializeSectionStates() {
+            const sections = ['timeTracking', 'workCount'];
+            sections.forEach(sectionId => {
+                const isHidden = localStorage.getItem(`${sectionId}Hidden`) === 'true';
+                const section = document.getElementById(sectionId);
+                const button = section.previousElementSibling.querySelector('.toggle-btn');
+                
+                if (isHidden) {
+                    section.classList.add('hidden');
+                    button.textContent = '▲';
+                } else {
+                    section.classList.remove('hidden');
+                    button.textContent = '▼';
+                }
+            });
+        }
+
+        // Initialize section states
+        initializeSectionStates();
+
+        function drawIntervalTrendGraph() {
+            const canvas = document.getElementById('intervalTrendCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size with proper scaling
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, rect.width, rect.height);
+            
+            // Get last 20 days of interval data
+            const dailyIntervals = getLast20DaysIntervals();
+            if (dailyIntervals.length === 0) return;
+
+            const maxInterval = Math.max(...dailyIntervals.map(d => d.avgInterval));
+            const padding = 35;
+            const barPadding = 2;
+            const width = rect.width - (padding * 2);
+            const height = rect.height - (padding * 2);
+            const barWidth = (width / 20) - barPadding;
+
+            // Update text sizes with even smaller fonts
+            const smallFont = '6px Poppins';      // Reduced from 8px
+            const smallerFont = '5px Poppins';    // Reduced from 7px
+            
+            // Draw axes
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height + padding);
+            ctx.lineTo(width + padding, height + padding);
+            ctx.stroke();
+
+            // Draw bars
+            dailyIntervals.forEach((day, index) => {
+                const x = padding + (index * (barWidth + barPadding));
+                const barHeight = day.avgInterval ? (day.avgInterval / maxInterval) * height : 0;
+                const y = height + padding - barHeight;
+
+                // Draw bar
+                ctx.fillStyle = 'rgba(102, 126, 234, 0.6)';
+                ctx.fillRect(x, y, barWidth, barHeight);
+
+                // Draw date label with smaller font
+                ctx.save();
+                ctx.translate(x + (barWidth / 2), height + padding + 2); // Reduced spacing
+                ctx.rotate(-Math.PI / 4);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = smallerFont;
+                ctx.textAlign = 'right';
+                // Simplified date format: just the day
+                ctx.fillText(day.date.getDate(), 0, 0);
+                ctx.restore();
+            });
+
+            // Draw Y-axis labels with simplified time format
+            ctx.textAlign = 'right';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = smallFont;
+            
+            for (let i = 0; i <= 5; i++) {
+                const value = (maxInterval / 5) * i;
+                const y = height + padding - (height * (i / 5));
+                // Use simplified time format
+                ctx.fillText(formatShortTime(value), padding - 3, y + 2);
+            }
+        }
+
+        // Add this helper function for super-short time format
+        function formatShortTime(ms) {
+            const hours = Math.floor(ms / (1000 * 60 * 60));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (hours > 0) {
+                return `${hours}h${minutes}m`;
+            }
+            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+            if (minutes > 0) {
+                return `${minutes}m`;
+            }
+            return `${seconds}s`;
+        }
+
+        function getLast20DaysIntervals() {
+            const intervals = [];
+            const now = new Date();
+            
+            // Initialize last 20 days
+            for (let i = 19; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                date.setHours(0, 0, 0, 0);
+                intervals.push({
+                    date: new Date(date),
+                    avgInterval: 0
+                });
+            }
+
+            // Calculate average intervals for each day
+            const dailyIntervals = {};
+            workHistory.timestamps.forEach((timestamp, index) => {
+                if (index > 0) {
+                    const interval = timestamp - workHistory.timestamps[index - 1];
+                    const date = new Date(timestamp);
+                    const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+                    
+                    if (!dailyIntervals[dateKey]) {
+                        dailyIntervals[dateKey] = { total: 0, count: 0 };
+                    }
+                    dailyIntervals[dateKey].total += interval;
+                    dailyIntervals[dateKey].count++;
+                }
+            });
+
+            // Update intervals array with calculated averages
+            intervals.forEach(day => {
+                const dateKey = `${day.date.getFullYear()}-${day.date.getMonth()}-${day.date.getDate()}`;
+                if (dailyIntervals[dateKey]) {
+                    day.avgInterval = dailyIntervals[dateKey].total / dailyIntervals[dateKey].count;
+                }
+            });
+
+            return intervals;
         }
     </script>
 </body>

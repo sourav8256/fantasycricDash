@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remember List - Basic Version</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #display {
+            font-size: 24px;
+            margin: 20px 0;
+            min-height: 100px;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .score {
+            font-size: 20px;
+            margin: 20px 0;
+        }
+        .correct { color: green; }
+        .incorrect { color: red; }
+        .graph-container {
+            margin: 30px auto;
+            width: 100%;
+            height: 200px;
+            border-left: 2px solid #333;
+            border-bottom: 2px solid #333;
+            position: relative;
+            padding: 0 10px;
+        }
+        .bar {
+            position: absolute;
+            bottom: 0;
+            width: 30px;
+            background-color: #4CAF50;
+            transition: height 0.3s ease;
+            border-radius: 3px 3px 0 0;
+        }
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            width: 30px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .y-axis {
+            position: absolute;
+            left: -35px;
+            height: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Memory Test</h1>
+    <p>Remember the words shown and type them in order</p>
+    
+    <div id="display"></div>
+    <input type="text" id="answer" placeholder="Type words separated by spaces" style="display: none">
+    <div>
+        <button id="startBtn">Start Test</button>
+        <button id="checkBtn" style="display: none">Check Answer</button>
+    </div>
+    <div id="result"></div>
+    <div class="score">
+        Score: <span id="score">0</span>
+    </div>
+    <div class="graph-container">
+        <div class="y-axis">
+            <span>100</span>
+            <span>75</span>
+            <span>50</span>
+            <span>25</span>
+            <span>0</span>
+        </div>
+    </div>
+    <div class="instructions" style="margin-top: 20px; font-size: 14px; color: #666;">
+        * Your scores are automatically saved and will persist across page reloads
+    </div>
+    <div id="difficulty">
+        <label>Difficulty Level: </label>
+        <select id="difficultySelect">
+            <option value="easy">Easy (8 items, 12 seconds)</option>
+            <option value="medium">Medium (12 items, 15 seconds)</option>
+            <option value="hard">Hard (16 items, 20 seconds)</option>
+            <option value="expert">Expert (20 items, 25 seconds)</option>
+            <option value="master">Master (25 items, 30 seconds)</option>
+        </select>
+    </div>
+    <div id="limitSetting" style="margin: 15px 0;">
+        <label>Daily Attempts Limit: </label>
+        <input type="number" id="dailyLimitInput" min="1" max="50" value="10" style="width: 60px;">
+        <span id="attemptsLeft" style="margin-left: 10px; font-size: 14px;"></span>
+    </div>
+
+    <script>
+        const wordList = [
+            "cat", "dog", "bird", "fish", "tree", "book", "car", "house", "phone", "desk",
+            "cup", "door", "chair", "lamp", "pen", "sun", "moon", "star", "cloud", "rain",
+            "fire", "water", "earth", "wind", "leaf", "rock", "sand", "wave", "hill", "lake",
+            "ship", "plane", "train", "bike", "road", "wall", "roof", "floor", "sky", "sea",
+            "hand", "foot", "head", "eye", "nose", "mouth", "hair", "face", "arm", "leg"
+        ];
+        
+        let currentWords = [];
+        let score = 0;
+        let scoreHistory = [];
+        const maxBars = 10;
+        
+        const settings = {
+            difficulties: {
+                easy: { wordCount: 8, displayTime: 12000 },
+                medium: { wordCount: 12, displayTime: 15000 },
+                hard: { wordCount: 16, displayTime: 20000 },
+                expert: { wordCount: 20, displayTime: 25000 },
+                master: { wordCount: 25, displayTime: 30000 }
+            },
+            defaultDailyLimit: 10
+        };
+        
+        const display = document.getElementById('display');
+        const answer = document.getElementById('answer');
+        const startBtn = document.getElementById('startBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        const result = document.getElementById('result');
+        const difficultySelect = document.getElementById('difficultySelect');
+        const dailyLimitInput = document.getElementById('dailyLimitInput');
+        const attemptsLeft = document.getElementById('attemptsLeft');
+        
+        let dailyAttempts = 0;
+        let lastResetDate = null;
+        
+        function getRandomWords() {
+            const difficulty = settings.difficulties[difficultySelect.value];
+            const shuffled = [...wordList].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, difficulty.wordCount);
+        }
+        
+        function startTest() {
+            currentWords = getRandomWords();
+            display.textContent = currentWords.join(' ');
+            startBtn.style.display = 'none';
+            difficultySelect.disabled = true;
+            
+            const difficulty = settings.difficulties[difficultySelect.value];
+            setTimeout(() => {
+                display.textContent = "Now type the words you remember!";
+                answer.style.display = 'block';
+                checkBtn.style.display = 'inline';
+                answer.value = '';
+                answer.focus();
+            }, difficulty.displayTime);
+        }
+        
+        function updateGraph() {
+            const container = document.querySelector('.graph-container');
+            container.innerHTML = '';
+            
+            const recentScores = scoreHistory.slice(-maxBars);
+            
+            if (recentScores.length === 0) {
+                // If no scores yet, show minimal scale
+                const yAxis = document.createElement('div');
+                yAxis.className = 'y-axis';
+                for (let i = 0; i <= 5; i++) {
+                    const span = document.createElement('span');
+                    span.textContent = i;
+                    yAxis.appendChild(span);
+                }
+                container.appendChild(yAxis);
+                return;
+            }
+            
+            // Find the highest actual score
+            const highestScore = Math.max(...recentScores.map(score => score.correct));
+            
+            // Set graph maximum to next multiple of 5 above highest score
+            const graphMax = Math.ceil(highestScore / 5) * 5;
+            
+            // Create y-axis with scale based on actual scores
+            const yAxis = document.createElement('div');
+            yAxis.className = 'y-axis';
+            for (let i = 0; i <= graphMax; i += 5) {
+                const span = document.createElement('span');
+                span.textContent = i;
+                yAxis.appendChild(span);
+            }
+            container.appendChild(yAxis);
+            
+            // Create bars for recent attempts
+            recentScores.forEach((score, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                const heightPercent = (score.correct / graphMax) * 100;
+                bar.style.height = `${heightPercent}%`;
+                bar.style.left = `${40 + (index * 40)}px`;
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.innerHTML = `${score.correct}/${score.total}<br>${score.difficulty}`;
+                label.style.left = `${40 + (index * 40)}px`;
+                
+                container.appendChild(bar);
+                container.appendChild(label);
+            });
+        }
+        
+        function loadFromStorage() {
+            const savedScore = localStorage.getItem('memoryScore');
+            const savedHistory = localStorage.getItem('memoryScoreHistory');
+            const savedAttempts = localStorage.getItem('dailyAttempts');
+            const savedResetDate = localStorage.getItem('lastResetDate');
+            const savedLimit = localStorage.getItem('dailyLimit');
+            const savedDifficulty = localStorage.getItem('difficultyLevel');
+            
+            if (savedScore) score = parseInt(savedScore);
+            if (savedHistory) {
+                const history = JSON.parse(savedHistory);
+                // Convert old format to new format if necessary
+                scoreHistory = history.map(item => {
+                    if (typeof item === 'number') {
+                        return {
+                            correct: Math.round(item * settings.difficulties.easy.wordCount / 100),
+                            total: settings.difficulties.easy.wordCount,
+                            difficulty: 'easy'
+                        };
+                    }
+                    return item;
+                });
+            }
+            if (savedAttempts) dailyAttempts = parseInt(savedAttempts);
+            if (savedResetDate) lastResetDate = savedResetDate;
+            if (savedLimit) dailyLimitInput.value = savedLimit;
+            if (savedDifficulty) difficultySelect.value = savedDifficulty;
+            
+            resetDailyAttemptsIfNeeded();
+            updateAttemptsDisplay();
+            document.getElementById('score').textContent = score;
+            updateGraph();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('memoryScore', score);
+            localStorage.setItem('memoryScoreHistory', JSON.stringify(scoreHistory));
+            localStorage.setItem('dailyAttempts', dailyAttempts);
+            localStorage.setItem('lastResetDate', lastResetDate);
+            localStorage.setItem('dailyLimit', dailyLimitInput.value);
+            localStorage.setItem('difficultyLevel', difficultySelect.value);
+        }
+
+        // Add reset functionality
+        function resetStats() {
+            if (confirm('Are you sure you want to reset all stats?')) {
+                score = 0;
+                scoreHistory = [];
+                localStorage.removeItem('memoryScore');
+                localStorage.removeItem('memoryScoreHistory');
+                document.getElementById('score').textContent = '0';
+                updateGraph();
+            }
+        }
+
+        function checkAnswer() {
+            const userAnswer = answer.value.toLowerCase().trim().split(/\s+/);
+            let correct = 0;
+            let resultHtml = '<h3>Results:</h3>';
+            
+            for (let i = 0; i < currentWords.length; i++) {
+                if (userAnswer[i] === currentWords[i]) {
+                    correct++;
+                    resultHtml += `<div class="correct">${i + 1}. ${userAnswer[i]} ✓</div>`;
+                } else {
+                    resultHtml += `<div class="incorrect">${i + 1}. ${userAnswer[i] || '(missing)'} ✗ (correct: ${currentWords[i]})</div>`;
+                }
+            }
+            
+            // Store the number of correct words instead of percentage
+            scoreHistory.push({
+                correct: correct,
+                total: currentWords.length,
+                difficulty: difficultySelect.value
+            });
+            
+            const points = Math.round((correct / currentWords.length) * 100);
+            score += points;
+            
+            result.innerHTML = resultHtml;
+            document.getElementById('score').textContent = score;
+            updateGraph();
+            saveToStorage();
+            
+            // Reset for next round
+            answer.style.display = 'none';
+            checkBtn.style.display = 'none';
+            startBtn.style.display = 'inline';
+            difficultySelect.disabled = false;
+        }
+        
+        startBtn.addEventListener('click', startTest);
+        checkBtn.addEventListener('click', checkAnswer);
+        answer.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        // Add to the bottom of the script, before the event listeners
+        loadFromStorage();
+
+        // Add reset button event listener
+        document.addEventListener('DOMContentLoaded', () => {
+            const resetButton = document.createElement('button');
+            resetButton.textContent = 'Reset Stats';
+            resetButton.style.marginTop = '20px';
+            resetButton.addEventListener('click', resetStats);
+            document.querySelector('.graph-container').after(resetButton);
+        });
+
+        function updateAttemptsDisplay() {
+            const limit = parseInt(dailyLimitInput.value) || settings.defaultDailyLimit;
+            const remaining = limit - dailyAttempts;
+            attemptsLeft.textContent = `${remaining} attempts remaining today`;
+            
+            if (remaining <= 0) {
+                startBtn.disabled = true;
+                startBtn.title = "Daily limit reached. Try again tomorrow!";
+            } else {
+                startBtn.disabled = false;
+                startBtn.title = "";
+            }
+        }
+
+        function resetDailyAttemptsIfNeeded() {
+            const today = new Date().toLocaleDateString();
+            if (lastResetDate !== today) {
+                dailyAttempts = 0;
+                lastResetDate = today;
+                saveToStorage();
+            }
+        }
+
+        difficultySelect.addEventListener('change', () => {
+            saveToStorage();
+        });
+    </script>
+</body>
+</html>

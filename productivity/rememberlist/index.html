@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remember List Exercise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #itemList {
+            font-size: 24px;
+            margin: 20px 0;
+            min-height: 200px;
+        }
+        #userInput {
+            width: 80%;
+            margin: 10px auto;
+            padding: 10px;
+            font-size: 18px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        .correct {
+            color: green;
+        }
+        .incorrect {
+            color: red;
+        }
+        #stats {
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        #difficulty {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Remember List Exercise</h1>
+    <div id="difficulty">
+        <label>Difficulty Level: </label>
+        <select id="difficultySelect">
+            <option value="easy">Easy (5 items, 10 seconds)</option>
+            <option value="medium">Medium (8 items, 15 seconds)</option>
+            <option value="hard">Hard (12 items, 20 seconds)</option>
+        </select>
+    </div>
+    <div id="itemList"></div>
+    <input type="text" id="userInput" placeholder="Type the items in order, separated by commas" style="display: none">
+    <div>
+        <button id="startBtn">Start Exercise</button>
+        <button id="submitBtn" style="display: none">Submit Answer</button>
+    </div>
+    <div id="result"></div>
+    <div id="stats">
+        Correct: <span id="correctCount">0</span> | 
+        Total Attempts: <span id="totalAttempts">0</span> |
+        Success Rate: <span id="successRate">0</span>%
+    </div>
+
+    <script>
+        const words = [
+            "apple", "banana", "orange", "grape", "mango", "peach", "plum", "kiwi",
+            "lemon", "lime", "cherry", "pear", "melon", "fig", "date", "berry",
+            "coconut", "papaya", "guava", "apricot", "dragon", "house", "tree",
+            "car", "book", "phone", "computer", "chair", "table", "window"
+        ];
+
+        let currentList = [];
+        let stats = {
+            correct: 0,
+            total: 0
+        };
+
+        const difficultySettings = {
+            easy: { items: 5, time: 10 },
+            medium: { items: 8, time: 15 },
+            hard: { items: 12, time: 20 }
+        };
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generateList() {
+            const difficulty = difficultySettings[difficultySelect.value];
+            const shuffled = shuffleArray([...words]);
+            return shuffled.slice(0, difficulty.items);
+        }
+
+        function updateStats() {
+            document.getElementById('correctCount').textContent = stats.correct;
+            document.getElementById('totalAttempts').textContent = stats.total;
+            document.getElementById('successRate').textContent = 
+                Math.round((stats.correct / stats.total) * 100) || 0;
+        }
+
+        function startExercise() {
+            currentList = generateList();
+            itemList.innerHTML = currentList.join(', ');
+            startBtn.style.display = 'none';
+            difficultySelect.disabled = true;
+            
+            const difficulty = difficultySettings[difficultySelect.value];
+            setTimeout(() => {
+                itemList.innerHTML = 'Now type the items you remember, in order!';
+                userInput.style.display = 'block';
+                submitBtn.style.display = 'inline';
+                userInput.value = '';
+                userInput.focus();
+            }, difficulty.time * 1000);
+        }
+
+        function checkAnswer() {
+            const userAnswer = userInput.value.toLowerCase().split(',').map(item => item.trim());
+            let resultHTML = '<h3>Results:</h3>';
+            let isCorrect = true;
+
+            for (let i = 0; i < currentList.length; i++) {
+                if (userAnswer[i] === currentList[i]) {
+                    resultHTML += `<div class="correct">${i + 1}. ${userAnswer[i]} ✓</div>`;
+                } else {
+                    resultHTML += `<div class="incorrect">${i + 1}. ${userAnswer[i] || '(missing)'} ✗ (correct: ${currentList[i]})</div>`;
+                    isCorrect = false;
+                }
+            }
+
+            result.innerHTML = resultHTML;
+            stats.total++;
+            if (isCorrect) stats.correct++;
+            updateStats();
+
+            // Reset for next round
+            startBtn.style.display = 'inline';
+            submitBtn.style.display = 'none';
+            userInput.style.display = 'none';
+            difficultySelect.disabled = false;
+        }
+
+        // Event Listeners
+        startBtn.addEventListener('click', startExercise);
+        submitBtn.addEventListener('click', checkAnswer);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        // Initialize stats
+        updateStats();
+    </script>
+</body>
+</html>

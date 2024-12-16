@@ -292,7 +292,10 @@
                 }
             }
             
-            // Store the number of correct words instead of percentage
+            // Increment daily attempts
+            dailyAttempts++;
+            updateAttemptsDisplay();
+            
             scoreHistory.push({
                 correct: correct,
                 total: currentWords.length,
@@ -357,6 +360,25 @@
 
         difficultySelect.addEventListener('change', () => {
             saveToStorage();
+        });
+
+        // Add event listener for daily limit changes
+        dailyLimitInput.addEventListener('change', () => {
+            // Ensure the value is within bounds
+            const value = parseInt(dailyLimitInput.value);
+            if (value < 1) dailyLimitInput.value = 1;
+            if (value > 50) dailyLimitInput.value = 50;
+            
+            // Update display and save
+            updateAttemptsDisplay();
+            saveToStorage();
+        });
+
+        // Also add input validation
+        dailyLimitInput.addEventListener('input', () => {
+            const value = parseInt(dailyLimitInput.value);
+            if (value < 1) dailyLimitInput.value = 1;
+            if (value > 50) dailyLimitInput.value = 50;
         });
     </script>
 </body>

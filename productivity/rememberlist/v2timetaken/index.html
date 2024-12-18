@@ -136,19 +136,20 @@
     <input type="text" id="answer" placeholder="Type words separated by spaces" style="display: none">
     <div>
         <button id="startBtn">Start Test</button>
+        <button id="readyBtn" style="display: none;">I'm Ready</button>
         <button id="checkBtn" style="display: none">Check Answer</button>
     </div>
     <div id="result"></div>
     <div class="score">
         Score: <span id="score">0</span>
     </div>
-    <div class="graph-container">
+    <div class="graph-container" id="timeGraph">
         <div class="y-axis">
-            <span>100</span>
-            <span>75</span>
-            <span>50</span>
-            <span>25</span>
-            <span>0</span>
+            <span>60s</span>
+            <span>45s</span>
+            <span>30s</span>
+            <span>15s</span>
+            <span>0s</span>
         </div>
     </div>
     <div class="instructions" style="margin-top: 20px; font-size: 14px; color: #666;">
@@ -157,11 +158,11 @@
     <div id="difficulty">
         <label>Difficulty Level: </label>
         <select id="difficultySelect">
-            <option value="easy">Easy (8 items, 12 seconds)</option>
-            <option value="medium">Medium (12 items, 15 seconds)</option>
-            <option value="hard">Hard (16 items, 20 seconds)</option>
-            <option value="expert">Expert (20 items, 25 seconds)</option>
-            <option value="master">Master (25 items, 30 seconds)</option>
+            <option value="easy">Easy (8 items)</option>
+            <option value="medium">Medium (12 items)</option>
+            <option value="hard">Hard (16 items)</option>
+            <option value="expert">Expert (20 items)</option>
+            <option value="master">Master (25 items)</option>
         </select>
     </div>
     <div id="limitSetting" style="margin: 15px 0;">
@@ -187,11 +188,11 @@
         
         const settings = {
             difficulties: {
-                easy: { wordCount: 8, displayTime: 12000 },
-                medium: { wordCount: 12, displayTime: 15000 },
-                hard: { wordCount: 16, displayTime: 20000 },
-                expert: { wordCount: 20, displayTime: 25000 },
-                master: { wordCount: 25, displayTime: 30000 }
+                easy: { wordCount: 8 },
+                medium: { wordCount: 12 },
+                hard: { wordCount: 16 },
+                expert: { wordCount: 20 },
+                master: { wordCount: 25 }
             },
             defaultDailyLimit: 10
         };
@@ -208,6 +209,9 @@
         let dailyAttempts = 0;
         let lastResetDate = null;
         
+        // Add time tracking variables
+        let startTime = 0;
+        
         function getRandomWords() {
             const difficulty = settings.difficulties[difficultySelect.value];
             const shuffled = [...wordList].sort(() => 0.5 - Math.random());
@@ -218,26 +222,18 @@
             currentWords = getRandomWords();
             display.textContent = currentWords.join(' ');
             startBtn.style.display = 'none';
+            readyBtn.style.display = 'inline';
             difficultySelect.disabled = true;
-            
-            const difficulty = settings.difficulties[difficultySelect.value];
-            setTimeout(() => {
-                display.textContent = "Now type the words you remember!";
-                answer.style.display = 'block';
-                checkBtn.style.display = 'inline';
-                answer.value = '';
-                answer.focus();
-            }, difficulty.displayTime);
+            startTime = Date.now(); // Start timing
         }
         
         function updateGraph() {
-            const container = document.querySelector('.graph-container');
+            const container = document.querySelector('.graph-container:not(#timeGraph)');
             container.innerHTML = '';
             
             const recentScores = scoreHistory.slice(-maxBars);
             
             if (recentScores.length === 0) {
-                // If no scores yet, show minimal scale
                 const yAxis = document.createElement('div');
                 yAxis.className = 'y-axis';
                 for (let i = 0; i <= 5; i++) {
@@ -316,7 +312,7 @@
             resetDailyAttemptsIfNeeded();
             updateAttemptsDisplay();
             document.getElementById('score').textContent = score;
-            updateGraph();
+            updateTimeGraph();
         }
 
         function saveToStorage() {
@@ -330,17 +326,18 @@
 
         // Add reset functionality
         function resetStats() {
-            if (confirm('Are you sure you want to reset all stats?')) {
+            if (confirm('Are you sure you want to reset all stats? This is recommended to fix any issues with the time tracking graph.')) {
                 score = 0;
                 scoreHistory = [];
                 localStorage.removeItem('memoryScore');
                 localStorage.removeItem('memoryScoreHistory');
                 document.getElementById('score').textContent = '0';
-                updateGraph();
+                updateTimeGraph();
             }
         }
 
         function checkAnswer() {
+            const timeTaken = (Date.now() - startTime) / 1000; // Convert to seconds
             const userAnswer = answer.value.toLowerCase().trim().split(/\s+/);
             let correct = 0;
             let resultHtml = '<h3>Results:</h3>';
@@ -354,25 +351,24 @@
                 }
             }
             
-            // Increment daily attempts
             dailyAttempts++;
             updateAttemptsDisplay();
             
             scoreHistory.push({
                 correct: correct,
                 total: currentWords.length,
-                difficulty: difficultySelect.value
+                difficulty: difficultySelect.value,
+                timeTaken: timeTaken // Add time taken to history
             });
             
             const points = Math.round((correct / currentWords.length) * 100);
             score += points;
             
-            result.innerHTML = resultHtml;
+            result.innerHTML = resultHtml + `<div>Time taken: ${timeTaken.toFixed(1)} seconds</div>`;
             document.getElementById('score').textContent = score;
-            updateGraph();
+            updateTimeGraph(); // Add call to update time graph
             saveToStorage();
             
-            // Reset for next round
             answer.style.display = 'none';
             checkBtn.style.display = 'none';
             startBtn.style.display = 'inline';
@@ -394,7 +390,7 @@
             resetButton.textContent = 'Reset Stats';
             resetButton.style.marginTop = '20px';
             resetButton.addEventListener('click', resetStats);
-            document.querySelector('.graph-container').after(resetButton);
+            document.getElementById('timeGraph').after(resetButton);
         });
 
         function updateAttemptsDisplay() {
@@ -445,6 +441,80 @@
             const value = parseInt(dailyLimitInput.value);
             if (value < 0) dailyLimitInput.value = 0;
         });
+
+        // Add event listener for the ready button
+        const readyBtn = document.getElementById('readyBtn');
+        readyBtn.addEventListener('click', () => {
+            readyBtn.style.display = 'none';
+            display.textContent = "Now type the words you remember!";
+            answer.style.display = 'block';
+            checkBtn.style.display = 'inline';
+            answer.value = '';
+            answer.focus();
+        });
+
+        // Add new function to update time graph
+        function updateTimeGraph() {
+            const container = document.getElementById('timeGraph');
+            container.innerHTML = '';
+            
+            // Filter out scores that don't have timeTaken property
+            const recentScores = scoreHistory
+                .filter(score => score.timeTaken !== undefined)
+                .slice(-maxBars);
+            
+            if (recentScores.length === 0) {
+                const yAxis = document.createElement('div');
+                yAxis.className = 'y-axis';
+                // Default scale of 0-60 seconds for empty graph
+                for (let i = 60; i >= 0; i -= 15) {
+                    const span = document.createElement('span');
+                    span.textContent = i + 's';
+                    yAxis.appendChild(span);
+                }
+                container.appendChild(yAxis);
+                return;
+            }
+            
+            // Find the highest time
+            const highestTime = Math.max(...recentScores.map(score => score.timeTaken));
+            // Round up to nearest 15 seconds
+            const graphMax = Math.ceil(highestTime / 15) * 15;
+            
+            // Create y-axis with 5 evenly spaced intervals
+            const yAxis = document.createElement('div');
+            yAxis.className = 'y-axis';
+            const interval = graphMax / 4;
+            for (let i = graphMax; i >= 0; i -= interval) {
+                const span = document.createElement('span');
+                span.textContent = Math.round(i) + 's';
+                yAxis.appendChild(span);
+            }
+            container.appendChild(yAxis);
+            
+            // Create bars for recent attempts
+            recentScores.forEach((score, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                const heightPercent = (score.timeTaken / graphMax) * 100;
+                bar.style.height = `${heightPercent}%`;
+                bar.style.left = `${40 + (index * 40)}px`;
+                
+                const isAllCorrect = score.correct === score.total;
+                bar.style.backgroundColor = isAllCorrect ? '#2196F3' : '#ff9800';
+                
+                // Show time with one decimal place
+                bar.textContent = score.timeTaken.toFixed(1);
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.innerHTML = `${score.timeTaken.toFixed(1)}s<br>${score.difficulty}`;
+                label.style.left = `${40 + (index * 40)}px`;
+                
+                container.appendChild(bar);
+                container.appendChild(label);
+            });
+        }
     </script>
 </body>
 </html>

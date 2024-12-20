@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .topic-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .topic-list {
+            margin-top: 20px;
+        }
+        .topic-item {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .progress-container {
+            width: 200px;
+            background-color: #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Learning Tracker</h1>
+        
+        <div class="topic-input">
+            <input type="text" id="topicInput" placeholder="Enter technology/topic to learn">
+            <button onclick="addTopic()">Add Topic</button>
+        </div>
+
+        <div class="topic-list" id="topicList">
+            <!-- Topics will be added here dynamically -->
+        </div>
+    </div>
+
+    <script>
+        let topics = JSON.parse(localStorage.getItem('learningTopics')) || [];
+
+        function addTopic() {
+            const input = document.getElementById('topicInput');
+            const topic = input.value.trim();
+            
+            if (topic) {
+                topics.push({
+                    name: topic,
+                    progress: 0,
+                    dateAdded: new Date().toISOString(),
+                    lastUpdated: new Date().toISOString()
+                });
+                saveTopic();
+                input.value = '';
+                displayTopics();
+            }
+        }
+
+        function updateProgress(index, change) {
+            topics[index].progress = Math.max(0, Math.min(100, topics[index].progress + change));
+            topics[index].lastUpdated = new Date().toISOString();
+            saveTopic();
+            displayTopics();
+        }
+
+        function deleteTopic(index) {
+            topics.splice(index, 1);
+            saveTopic();
+            displayTopics();
+        }
+
+        function saveTopic() {
+            localStorage.setItem('learningTopics', JSON.stringify(topics));
+        }
+
+        function displayTopics() {
+            const topicList = document.getElementById('topicList');
+            topicList.innerHTML = '';
+
+            topics.forEach((topic, index) => {
+                const topicElement = document.createElement('div');
+                topicElement.className = 'topic-item';
+                
+                const dateAdded = new Date(topic.dateAdded).toLocaleDateString();
+                const lastUpdated = new Date(topic.lastUpdated).toLocaleDateString();
+
+                topicElement.innerHTML = `
+                    <div>
+                        <h3>${topic.name}</h3>
+                        <small>Added: ${dateAdded} | Last Updated: ${lastUpdated}</small>
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${topic.progress}%"></div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button onclick="updateProgress(${index}, -10)">-10%</button>
+                        <button onclick="updateProgress(${index}, 10)">+10%</button>
+                        <button onclick="deleteTopic(${index})" style="background-color: #ff4444;">Delete</button>
+                    </div>
+                `;
+                
+                topicList.appendChild(topicElement);
+            });
+        }
+
+        // Initial display
+        displayTopics();
+    </script>
+</body>
+</html>

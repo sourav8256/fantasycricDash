@@ -131,13 +131,14 @@
 <body>
     <h1>Memory Test</h1>
     <p>Remember the words shown and type them in order</p>
+    <div id="phaseDisplay" style="color: #666; font-size: 14px; margin-bottom: 10px;"></div>
     
     <div id="display"></div>
-    <input type="text" id="answer" placeholder="Type words separated by spaces" style="display: none">
+    <input type="text" id="answer" placeholder="Type words separated by spaces">
     <div>
-        <button id="startBtn">Start Test</button>
-        <button id="readyBtn" style="display: none;">I'm Ready</button>
-        <button id="checkBtn" style="display: none">Check Answer</button>
+        <button id="startBtn">Start Game</button>
+        <button id="readyBtn">I'm Ready</button>
+        <button id="checkBtn">Check Answer</button>
     </div>
     <div id="result"></div>
     <div class="score">
@@ -172,6 +173,10 @@
         <span id="attemptsLeft" style="margin-left: 10px; font-size: 14px;"></span>
     </div>
 
+    <div style="margin: 15px 0;">
+        <button onclick="clearAllData()" style="background-color: #f44336;">Clear All Data</button>
+    </div>
+
     <script>
         const wordList = [
             "cat", "dog", "bird", "fish", "tree", "book", "car", "house", "phone", "desk",
@@ -199,18 +204,26 @@
         
         const display = document.getElementById('display');
         const answer = document.getElementById('answer');
-        const startBtn = document.getElementById('startBtn');
+        const readyBtn = document.getElementById('readyBtn');
         const checkBtn = document.getElementById('checkBtn');
         const result = document.getElementById('result');
         const difficultySelect = document.getElementById('difficultySelect');
         const dailyLimitInput = document.getElementById('dailyLimitInput');
         const attemptsLeft = document.getElementById('attemptsLeft');
+        const startBtn = document.getElementById('startBtn');
         
         let dailyAttempts = 0;
         let lastResetDate = null;
         
         // Add time tracking variables
         let startTime = 0;
+        
+        // Add these variables at the top of the script section, with the other let declarations
+        let isReadyPhase = false;
+        let wasStarted = false;
+        
+        // Add initial phase display update
+        updatePhaseDisplay();
         
         function getRandomWords() {
             const difficulty = settings.difficulties[difficultySelect.value];
@@ -221,10 +234,14 @@
         function startTest() {
             currentWords = getRandomWords();
             display.textContent = currentWords.join(' ');
+            startTime = Date.now();
             startBtn.style.display = 'none';
+            wasStarted = true;
+            isReadyPhase = true;  // Set ready phase when starting
             readyBtn.style.display = 'inline';
-            difficultySelect.disabled = true;
-            startTime = Date.now(); // Start timing
+            checkBtn.style.display = 'none';  // Hide check button initially
+            updatePhaseDisplay();
+            saveToStorage();
         }
         
         function updateGraph() {
@@ -292,7 +309,6 @@
             if (savedScore) score = parseInt(savedScore);
             if (savedHistory) {
                 const history = JSON.parse(savedHistory);
-                // Convert old format to new format if necessary
                 scoreHistory = history.map(item => {
                     if (typeof item === 'number') {
                         return {
@@ -313,6 +329,30 @@
             updateAttemptsDisplay();
             document.getElementById('score').textContent = score;
             updateTimeGraph();
+            
+            // Initialize test state
+            isReadyPhase = false;
+            wasStarted = false;
+            
+            // Load game state
+            const savedGameState = localStorage.getItem('gameState');
+            if (savedGameState) {
+                const gameState = JSON.parse(savedGameState);
+                if (gameState.wasStarted) {
+                    isReadyPhase = gameState.isReadyPhase;
+                    currentWords = gameState.currentWords;
+                    wasStarted = gameState.wasStarted;
+                    startTime = gameState.startTime;
+                    
+                    if (!isReadyPhase) {
+                        display.textContent = currentWords.join(' ');
+                    } else {
+                        display.textContent = "Now type the words you remember!";
+                        answer.focus();
+                    }
+                }
+            }
+            updateUI();
         }
 
         function saveToStorage() {
@@ -322,6 +362,18 @@
             localStorage.setItem('lastResetDate', lastResetDate);
             localStorage.setItem('dailyLimit', dailyLimitInput.value);
             localStorage.setItem('difficultyLevel', difficultySelect.value);
+            
+            
+
+            // Save game state
+            const gameState = {
+                isReadyPhase,
+                currentWords,
+                startTime,
+                wasStarted
+            };
+            console.log('wasStarted set to true in saveToStorage', wasStarted);
+            localStorage.setItem('gameState', JSON.stringify(gameState));
         }
 
         // Add reset functionality
@@ -329,15 +381,21 @@
             if (confirm('Are you sure you want to reset all stats? This is recommended to fix any issues with the time tracking graph.')) {
                 score = 0;
                 scoreHistory = [];
+                isReadyPhase = false;
                 localStorage.removeItem('memoryScore');
                 localStorage.removeItem('memoryScoreHistory');
+                console.log('wasStarted being removed in resetStats');
+                localStorage.removeItem('gameState');
                 document.getElementById('score').textContent = '0';
                 updateTimeGraph();
+                display.textContent = '';
+                startBtn.style.display = 'inline';
             }
+            updatePhaseDisplay();
         }
 
         function checkAnswer() {
-            const timeTaken = (Date.now() - startTime) / 1000; // Convert to seconds
+            const timeTaken = (Date.now() - startTime) / 1000;
             const userAnswer = answer.value.toLowerCase().trim().split(/\s+/);
             let correct = 0;
             let resultHtml = '<h3>Results:</h3>';
@@ -358,7 +416,7 @@
                 correct: correct,
                 total: currentWords.length,
                 difficulty: difficultySelect.value,
-                timeTaken: timeTaken // Add time taken to history
+                timeTaken: timeTaken
             });
             
             const points = Math.round((correct / currentWords.length) * 100);
@@ -366,16 +424,14 @@
             
             result.innerHTML = resultHtml + `<div>Time taken: ${timeTaken.toFixed(1)} seconds</div>`;
             document.getElementById('score').textContent = score;
-            updateTimeGraph(); // Add call to update time graph
-            saveToStorage();
+            updateTimeGraph();
             
-            answer.style.display = 'none';
-            checkBtn.style.display = 'none';
-            startBtn.style.display = 'inline';
-            difficultySelect.disabled = false;
+            wasStarted = false;
+            isReadyPhase = false;
+            updateUI();
+            localStorage.removeItem('gameState');
         }
         
-        startBtn.addEventListener('click', startTest);
         checkBtn.addEventListener('click', checkAnswer);
         answer.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') checkAnswer();
@@ -398,21 +454,11 @@
             
             if (limit <= 0) {
                 attemptsLeft.textContent = "Unlimited attempts";
-                startBtn.disabled = false;
-                startBtn.title = "";
                 return;
             }
             
             const remaining = limit - dailyAttempts;
             attemptsLeft.textContent = `${remaining} attempts remaining today`;
-            
-            if (remaining <= 0) {
-                startBtn.disabled = true;
-                startBtn.title = "Daily limit reached. Try again tomorrow!";
-            } else {
-                startBtn.disabled = false;
-                startBtn.title = "";
-            }
         }
 
         function resetDailyAttemptsIfNeeded() {
@@ -443,14 +489,13 @@
         });
 
         // Add event listener for the ready button
-        const readyBtn = document.getElementById('readyBtn');
         readyBtn.addEventListener('click', () => {
-            readyBtn.style.display = 'none';
+            isReadyPhase = true;
             display.textContent = "Now type the words you remember!";
-            answer.style.display = 'block';
-            checkBtn.style.display = 'inline';
             answer.value = '';
             answer.focus();
+            updateUI();
+            saveToStorage();
         });
 
         // Add new function to update time graph
@@ -515,6 +560,103 @@
                 container.appendChild(label);
             });
         }
+
+        // Add this new function near the resetStats function
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear ALL data? This will remove your game state, scores, and all settings.')) {
+                // Clear only this app's localStorage items first
+                localStorage.removeItem('memoryScore');
+                localStorage.removeItem('memoryScoreHistory');
+                localStorage.removeItem('dailyAttempts');
+                localStorage.removeItem('lastResetDate');
+                localStorage.removeItem('dailyLimit');
+                localStorage.removeItem('difficultyLevel');
+                
+                // Save game state with wasStarted set to false
+                const gameState = {
+                    wasStarted: false,
+                    isReadyPhase: false,
+                    currentWords: [],
+                    startTime: 0
+                };
+                console.log('wasStarted set to false in clearAllData');
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+                
+                // Reset all state variables
+                isReadyPhase = false;
+                currentWords = [];
+                startTime = 0;
+                score = 0;
+                scoreHistory = [];
+                dailyAttempts = 0;
+                lastResetDate = null;
+                
+                // Clear display
+                display.textContent = '';
+                result.innerHTML = '';
+                answer.value = '';
+                
+                // Show start button
+                startBtn.style.display = 'inline';
+                
+                // Update UI
+                updatePhaseDisplay();
+                updateTimeGraph();
+                document.getElementById('score').textContent = '0';
+                
+                // Reload page
+                location.reload();
+            }
+        }
+
+        // Add this function after the other function declarations
+        function updatePhaseDisplay() {
+            const phaseDisplay = document.getElementById('phaseDisplay');
+            const savedGameState = localStorage.getItem('gameState');
+            const gameState = savedGameState ? JSON.parse(savedGameState) : { wasStarted: false };
+            phaseDisplay.textContent = `Test In Progress: ${gameState.wasStarted} | Ready Phase: ${isReadyPhase === undefined ? 'undefined' : isReadyPhase}`;
+            phaseDisplay.style.backgroundColor = '#f5f5f5';
+            phaseDisplay.style.padding = '5px';
+            phaseDisplay.style.border = '1px solid #ddd';
+        }
+
+        // Add this new function to control all button visibility
+        function updateUI() {
+            // Start button is visible only when game is not in progress
+            startBtn.style.display = wasStarted ? 'none' : 'inline';
+            
+            // Ready button is visible only when game started and in ready phase
+            readyBtn.style.display = (wasStarted && !isReadyPhase) ? 'inline' : 'none';
+            
+            // Check button is visible only when game started and not in ready phase
+            checkBtn.style.display = (wasStarted && isReadyPhase) ? 'inline' : 'none';
+            
+            // Show/hide the answer input field based on ready phase
+            answer.style.display = isReadyPhase ? 'block' : 'none';
+            
+            // Update phase display
+            updatePhaseDisplay();
+        }
+
+        // Modify all button click handlers to use updateUI
+        startBtn.addEventListener('click', () => {
+            wasStarted = true;
+            isReadyPhase = false;
+            currentWords = getRandomWords();
+            display.textContent = currentWords.join(' ');
+            startTime = Date.now();
+            updateUI();
+            saveToStorage();
+        });
+
+        readyBtn.addEventListener('click', () => {
+            isReadyPhase = true;
+            display.textContent = "Now type the words you remember!";
+            answer.value = '';
+            answer.focus();
+            updateUI();
+            saveToStorage();
+        });
     </script>
 </body>
 </html>

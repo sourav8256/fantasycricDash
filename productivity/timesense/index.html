@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Sense Training</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .item {
+            background-color: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+
+        .item:hover {
+            background-color: #f8f8f8;
+        }
+
+        .item.expired {
+            background-color: #ffebee;
+        }
+
+        .item.correct {
+            background-color: #e8f5e9;
+        }
+
+        .stats {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+
+        .item .target-time {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="stats" id="stats">
+        Correct: 0 | Missed: 0 | Ratio: 0:0
+    </div>
+    <div id="itemsList"></div>
+
+    <script>
+        const ITEMS = [
+            "Take a deep breath",
+            "Stretch your arms",
+            "Stand up",
+            "Drink water",
+            "Look away from screen",
+            "Roll your shoulders",
+            "Flex your fingers",
+            "Blink your eyes",
+            "Fix your posture",
+            "Rotate your neck"
+        ];
+
+        let state = {
+            items: [],
+            correct: 0,
+            missed: 0
+        };
+
+        function loadState() {
+            const savedState = localStorage.getItem('timeSenseState');
+            if (savedState) {
+                state = JSON.parse(savedState);
+                updateStats();
+                renderItems();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('timeSenseState', JSON.stringify(state));
+        }
+
+        function updateStats() {
+            // Calculate GCD for simplifying the ratio
+            function gcd(a, b) {
+                return b === 0 ? a : gcd(b, a % b);
+            }
+
+            let correct = state.correct;
+            let missed = state.missed;
+            
+            // Handle case where both are 0
+            if (correct === 0 && missed === 0) {
+                document.getElementById('stats').textContent = 
+                    `Correct: 0 | Missed: 0 | Ratio: 0:0`;
+                return;
+            }
+
+            // Handle case where one is 0
+            if (correct === 0) {
+                document.getElementById('stats').textContent = 
+                    `Correct: 0 | Missed: ${missed} | Ratio: 0:1`;
+                return;
+            }
+            if (missed === 0) {
+                document.getElementById('stats').textContent = 
+                    `Correct: ${correct} | Missed: 0 | Ratio: 1:0`;
+                return;
+            }
+
+            // Calculate simplified ratio
+            const divisor = gcd(correct, missed);
+            const simplifiedCorrect = correct / divisor;
+            const simplifiedMissed = missed / divisor;
+
+            document.getElementById('stats').textContent = 
+                `Correct: ${correct} | Missed: ${missed} | Ratio: ${simplifiedCorrect}:${simplifiedMissed}`;
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        function generateNewItems() {
+            const activeItems = state.items.filter(item => !item.expired && !item.clicked);
+            const itemsToGenerate = 5 - activeItems.length;
+
+            if (itemsToGenerate <= 0) return;
+
+            for (let i = 0; i < itemsToGenerate; i++) {
+                const randomItem = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+                const randomMinutes = Math.floor(Math.random() * (240 - 5 + 1)) + 5;
+                const now = Date.now();
+                
+                state.items.push({
+                    text: randomItem,
+                    targetTime: now + (randomMinutes * 60 * 1000)
+                });
+            }
+
+            // Sort items by target time
+            state.items.sort((a, b) => a.targetTime - b.targetTime);
+            saveState();
+        }
+
+        function checkExpiredItems() {
+            const now = Date.now();
+            let hasChanges = false;
+
+            // Remove expired items from the array
+            state.items = state.items.filter(item => {
+                if (now > item.targetTime + (5 * 60 * 1000)) {
+                    state.missed++;
+                    hasChanges = true;
+                    return false; // Remove from array
+                }
+                return true; // Keep in array
+            });
+
+            if (hasChanges) {
+                saveState();
+                updateStats();
+            }
+        }
+
+        function handleClick(index) {
+            const item = state.items[index];
+            const now = Date.now();
+            const timeDiff = Math.abs(now - item.targetTime) / (60 * 1000); // Minutes difference
+
+            if (timeDiff <= 5) { // Within 5 minutes of target time
+                state.correct++;
+            } else {
+                state.missed++;
+            }
+
+            // Remove the clicked item
+            state.items.splice(index, 1);
+            
+            saveState();
+            updateStats();
+            renderItems();
+        }
+
+        function renderItems() {
+            checkExpiredItems();
+            generateNewItems();
+
+            const itemsList = document.getElementById('itemsList');
+            itemsList.innerHTML = '';
+
+            state.items.forEach((item, index) => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'item';
+                
+                const timeUntil = Math.round((item.targetTime - Date.now()) / (60 * 1000));
+                const timeStatus = timeUntil > 0 ? 
+                    `in ${timeUntil} minutes` : 
+                    `${Math.abs(timeUntil)} minutes ago`;
+                
+                itemElement.innerHTML = `
+                    ${item.text}
+                    <div class="target-time">
+                        Click at: ${formatTime(item.targetTime)} (${timeStatus})
+                    </div>
+                `;
+                itemElement.onclick = () => handleClick(index);
+                itemsList.appendChild(itemElement);
+            });
+        }
+
+        // Check for expired items and generate new ones every minute
+        setInterval(() => {
+            checkExpiredItems();
+            generateNewItems();
+        }, 60000);
+
+        // Update display more frequently to show accurate time remaining
+        setInterval(() => {
+            renderItems();
+        }, 10000); // Update every 10 seconds
+
+        // Initial load and generate first items
+        loadState();
+        generateNewItems();
+    </script>
+</body>
+</html>

@@ -62,11 +62,44 @@
             color: #666;
             margin-top: 5px;
         }
+
+        .graph-container {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 150px;
+        }
+
+        .graph-bar {
+            fill: #4CAF50;
+            transition: height 0.3s;
+        }
+
+        .graph-bar:hover {
+            fill: #45a049;
+        }
+
+        .graph-axis {
+            stroke: #666;
+            stroke-width: 1;
+        }
+
+        .graph-label {
+            font-size: 12px;
+            fill: #666;
+        }
     </style>
 </head>
 <body>
     <div class="stats" id="stats">
         Correct: 0 | Missed: 0 | Ratio: 0:0
+    </div>
+    <div class="graph-container">
+        <svg id="ratioGraph" width="100%" height="100%" preserveAspectRatio="none">
+            <g id="graphContent"></g>
+        </svg>
     </div>
     <div id="itemsList"></div>
 
@@ -87,23 +120,28 @@
         let state = {
             items: [],
             correct: 0,
-            missed: 0
+            missed: 0,
+            history: []
         };
 
         function loadState() {
             const savedState = localStorage.getItem('timeSenseState');
             if (savedState) {
                 state = JSON.parse(savedState);
+                if (!state.history) {
+                    state.history = [];
+                }
                 updateStats();
                 renderItems();
             }
+            updateGraph();
         }
 
         function saveState() {
             localStorage.setItem('timeSenseState', JSON.stringify(state));
         }
 
-        function updateStats() {
+        function updateStats(addToHistory = false) {
             // Calculate GCD for simplifying the ratio
             function gcd(a, b) {
                 return b === 0 ? a : gcd(b, a % b);
@@ -138,6 +176,24 @@
 
             document.getElementById('stats').textContent = 
                 `Correct: ${correct} | Missed: ${missed} | Ratio: ${simplifiedCorrect}:${simplifiedMissed}`;
+
+            // Only add to history if explicitly requested
+            if (addToHistory) {
+                const timestamp = Date.now();
+                state.history.push({
+                    timestamp,
+                    correct: state.correct,
+                    missed: state.missed,
+                    ratio: state.missed === 0 ? 1 : state.correct / state.missed
+                });
+
+                // Keep only last 15 data points instead of 20
+                if (state.history.length > 15) {
+                    state.history.shift();
+                }
+            }
+
+            updateGraph();
         }
 
         function formatTime(timestamp) {
@@ -185,7 +241,7 @@
 
             if (hasChanges) {
                 saveState();
-                updateStats();
+                updateStats(true);
             }
         }
 
@@ -204,7 +260,7 @@
             state.items.splice(index, 1);
             
             saveState();
-            updateStats();
+            updateStats(true);
             renderItems();
         }
 
@@ -235,6 +291,77 @@
             });
         }
 
+        function updateGraph() {
+            const svg = document.getElementById('ratioGraph');
+            const content = document.getElementById('graphContent');
+            const width = svg.clientWidth;
+            const height = svg.clientHeight;
+            const padding = { left: 40, right: 10, top: 10, bottom: 20 };  // Adjusted padding
+
+            content.innerHTML = '';
+
+            // Draw axes
+            content.innerHTML += `
+                <line class="graph-axis" 
+                      x1="${padding.left}" y1="${height - padding.bottom}" 
+                      x2="${width - padding.right}" y2="${height - padding.bottom}"/>
+                <line class="graph-axis" 
+                      x1="${padding.left}" y1="${padding.top}" 
+                      x2="${padding.left}" y2="${height - padding.bottom}"/>
+            `;
+
+            if (state.history.length === 0) {
+                content.innerHTML += `
+                    <text class="graph-label" 
+                          x="${padding.left - 5}" 
+                          y="${height - padding.bottom}" 
+                          text-anchor="end" 
+                          alignment-baseline="middle">
+                        0.00
+                    </text>
+                `;
+                return;
+            }
+
+            const displayHistory = state.history.slice(-15);
+
+            // Calculate scales
+            const xScale = (width - padding.left - padding.right) / Math.max(1, displayHistory.length - 1);
+            const maxRatio = Math.max(1, Math.max(...displayHistory.map(h => h.ratio)));
+            const yScale = (height - padding.top - padding.bottom) / maxRatio;
+
+            // Draw bars
+            displayHistory.forEach((point, index) => {
+                const x = padding.left + (index * xScale);
+                const barHeight = point.ratio * yScale;
+                const y = height - padding.bottom - barHeight;
+
+                content.innerHTML += `
+                    <rect class="graph-bar" 
+                          x="${x - 8}" 
+                          y="${y}"
+                          width="16" 
+                          height="${barHeight}"
+                          title="${new Date(point.timestamp).toLocaleTimeString()}"
+                    />
+                `;
+            });
+
+            // Add ratio labels on y-axis
+            for (let i = 0; i <= maxRatio; i += maxRatio / 4) {
+                const y = height - padding.bottom - (i * yScale);
+                content.innerHTML += `
+                    <text class="graph-label" 
+                          x="${padding.left - 5}" 
+                          y="${y}" 
+                          text-anchor="end" 
+                          alignment-baseline="middle">
+                        ${i.toFixed(2)}
+                    </text>
+                `;
+            }
+        }
+
         // Check for expired items and generate new ones every minute
         setInterval(() => {
             checkExpiredItems();
@@ -245,6 +372,9 @@
         setInterval(() => {
             renderItems();
         }, 10000); // Update every 10 seconds
+
+        // Add resize handler for responsive graph
+        window.addEventListener('resize', updateGraph);
 
         // Initial load and generate first items
         loadState();

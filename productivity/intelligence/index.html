@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Intelligence Training</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .exercise-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #f9f9f9;
+        }
+        .practice-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .timer {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Productivity Intelligence Training</h1>
+    <p>This training program helps you develop natural productivity habits without relying on apps. Each exercise builds fundamental skills that transfer to real-world scenarios.</p>
+
+    <div class="exercise-card">
+        <h2>Exercise 1: Time Estimation Training</h2>
+        <p>Goal: Improve your natural sense of time passing</p>
+        <p>Instructions: Click start and estimate when 2 minutes have passed. Practice this daily to build an internal clock.</p>
+        <div id="timer1" class="timer">00:00</div>
+        <button class="practice-btn" onclick="startTimeEstimation()">Start Practice</button>
+        <div id="result1" class="hidden"></div>
+    </div>
+
+    <div class="exercise-card">
+        <h2>Exercise 2: Task Chunking</h2>
+        <p>Goal: Learn to break down large tasks naturally</p>
+        <textarea id="taskInput" placeholder="Enter a large task here..." rows="3" style="width: 100%"></textarea>
+        <button class="practice-btn" onclick="analyzeTask()">Break Down Task</button>
+        <div id="taskAnalysis" class="hidden"></div>
+    </div>
+
+    <div class="exercise-card">
+        <h2>Exercise 3: Focus Training</h2>
+        <p>Goal: Build natural focus without timers</p>
+        <p>Instructions: Choose an activity and work until you naturally feel the need to break. Log your observations below.</p>
+        <textarea id="focusLog" placeholder="What did you notice about your natural focus patterns?" rows="3" style="width: 100%"></textarea>
+        <button class="practice-btn" onclick="saveFocusLog()">Save Observation</button>
+    </div>
+
+    <script>
+        let timerInterval;
+        let startTime;
+
+        function startTimeEstimation() {
+            const timerDisplay = document.getElementById('timer1');
+            const resultDiv = document.getElementById('result1');
+            const startBtn = event.target;
+            
+            if (startBtn.textContent === 'Start Practice') {
+                startTime = Date.now();
+                startBtn.textContent = 'Stop (when you think 2 minutes passed)';
+                resultDiv.classList.add('hidden');
+                timerDisplay.textContent = '00:00';
+            } else {
+                const elapsed = (Date.now() - startTime) / 1000;
+                const accuracy = Math.abs(120 - elapsed);
+                resultDiv.textContent = `You stopped at ${elapsed.toFixed(1)} seconds. 
+                    ${accuracy <= 10 ? 'Great job!' : 'Keep practicing!'}`;
+                resultDiv.classList.remove('hidden');
+                startBtn.textContent = 'Start Practice';
+            }
+        }
+
+        function analyzeTask() {
+            const task = document.getElementById('taskInput').value;
+            const analysis = document.getElementById('taskAnalysis');
+            
+            if (task.trim() === '') {
+                alert('Please enter a task first');
+                return;
+            }
+
+            analysis.innerHTML = `
+                <h3>Suggested Breakdown:</h3>
+                <ol>
+                    <li>Define the end goal clearly</li>
+                    <li>Identify the major components (2-3 main parts)</li>
+                    <li>Break each component into 15-30 minute tasks</li>
+                    <li>Order tasks by priority and dependencies</li>
+                </ol>
+                <p>Practice this breakdown method until it becomes natural thinking.</p>
+            `;
+            analysis.classList.remove('hidden');
+        }
+
+        function saveFocusLog() {
+            const log = document.getElementById('focusLog');
+            if (log.value.trim() === '') {
+                alert('Please enter your observations first');
+                return;
+            }
+            alert('Observation saved! Review your patterns to understand your natural focus rhythm.');
+            log.value = '';
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

@@ -165,6 +165,59 @@
             width: 200px;
             margin-right: 0.5rem;
         }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .counter-item {
+                padding: 1rem;
+            }
+
+            .money-adjust {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .money-adjust input,
+            .money-adjust button {
+                width: 100%;
+                margin: 0.25rem 0;
+            }
+
+            .rate {
+                font-size: 1rem;
+                word-break: break-word;
+            }
+
+            input {
+                width: 100%;
+                margin: 0.25rem 0;
+            }
+
+            button {
+                width: 100%;
+                margin: 0.25rem 0;
+            }
+
+            .new-counter-form {
+                padding: 1rem;
+            }
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
@@ -333,7 +386,7 @@
                                 <button class="add-money" onclick="event.stopPropagation(); adjustCounter('${this.name}', true)">Add</button>
                                 <button class="subtract-money" onclick="event.stopPropagation(); adjustCounter('${this.name}', false)">Subtract</button>
                             </div>
-                            <div>
+                            <div class="button-group">
                                 <button onclick="event.stopPropagation(); toggleCounter('${this.name}')" id="toggle-${this.name}">Stop</button>
                                 <button onclick="event.stopPropagation(); resetCounter('${this.name}')">Reset</button>
                             </div>
@@ -346,6 +399,7 @@
                                     </div>
                                 `).join('')}
                             </div>
+                            <button class="delete-btn" onclick="event.stopPropagation(); deleteCounter('${this.name}')">Delete Counter</button>
                         </div>
                     </li>
                 `;
@@ -492,6 +546,29 @@
             // Clear the inputs
             document.getElementById(`adjust-amount-${name}`).value = '';
             document.getElementById(`adjust-reason-${name}`).value = '';
+        }
+
+        function deleteCounter(name) {
+            if (confirm(`Are you sure you want to delete the "${name}" counter? This cannot be undone.`)) {
+                // Stop the counter if it's running
+                if (counters[name].isRunning) {
+                    counters[name].stop();
+                }
+
+                // Remove from localStorage
+                localStorage.removeItem(`counter_${name}`);
+                localStorage.removeItem(`transactions_${name}`);
+                localStorage.removeItem(`lastSaved_${name}`);
+
+                // Remove from counters object
+                delete counters[name];
+
+                // Remove from DOM
+                const element = document.getElementById(`counter-${name}`);
+                if (element) {
+                    element.remove();
+                }
+            }
         }
 
         // Initialize the page

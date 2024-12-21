@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memorize Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        #game-container {
+            margin: 10px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 300px;
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            background-color: #ddd;
+            border: 1px solid #999;
+            border-radius: 5px;
+            aspect-ratio: 1;
+        }
+
+        .cell.active {
+            background-color: #2ecc71;
+        }
+
+        #controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        #controls button {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+        }
+
+        #stats {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #stats p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Memorize Game</h1>
+        <div id="controls">
+            <button id="start-btn">Start Game</button>
+            <button id="match-btn" disabled>Match</button>
+        </div>
+        <div id="grid"></div>
+        <div id="stats">
+            <p>Score: <span id="score">0</span></p>
+            <p>Correct: <span id="correct">0</span></p>
+            <p>Incorrect: <span id="incorrect">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const startBtn = document.getElementById('start-btn');
+        const matchBtn = document.getElementById('match-btn');
+        const scoreSpan = document.getElementById('score');
+        const correctSpan = document.getElementById('correct');
+        const incorrectSpan = document.getElementById('incorrect');
+
+        let sequence = [];
+        let currentIndex = 0;
+        let score = 0;
+        let correct = 0;
+        let incorrect = 0;
+        let gameInterval;
+        let isPlaying = false;
+
+        // Create grid cells
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            grid.appendChild(cell);
+        }
+
+        function resetStats() {
+            score = 0;
+            correct = 0;
+            incorrect = 0;
+            updateStats();
+        }
+
+        function updateStats() {
+            scoreSpan.textContent = score;
+            correctSpan.textContent = correct;
+            incorrectSpan.textContent = incorrect;
+        }
+
+        function generateSequence(length = 20) {
+            return Array.from({length}, () => Math.floor(Math.random() * 9));
+        }
+
+        function showPosition(position) {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => cell.classList.remove('active'));
+            cells[position].classList.add('active');
+        }
+
+        function checkMatch() {
+            const isMatch = sequence[currentIndex] === sequence[currentIndex - 1];
+            if (isMatch) {
+                score += 10;
+                correct++;
+            } else {
+                score = Math.max(0, score - 5);
+                incorrect++;
+            }
+            updateStats();
+        }
+
+        function startGame() {
+            if (isPlaying) {
+                clearInterval(gameInterval);
+                startBtn.textContent = 'Start Game';
+                matchBtn.disabled = true;
+                isPlaying = false;
+                return;
+            }
+
+            resetStats();
+            sequence = generateSequence();
+            currentIndex = 0;
+            startBtn.textContent = 'Stop Game';
+            matchBtn.disabled = false;
+            isPlaying = true;
+
+            gameInterval = setInterval(() => {
+                if (currentIndex >= sequence.length) {
+                    clearInterval(gameInterval);
+                    startBtn.textContent = 'Start Game';
+                    matchBtn.disabled = true;
+                    isPlaying = false;
+                    return;
+                }
+
+                showPosition(sequence[currentIndex]);
+                currentIndex++;
+            }, 3000); // Show each position for 3 seconds
+        }
+
+        startBtn.addEventListener('click', startGame);
+        matchBtn.addEventListener('click', checkMatch);
+    </script>
+</body>
+</html>

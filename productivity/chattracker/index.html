@@ -537,6 +537,9 @@
             messageDiv.textContent = message;
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Keep focus on the input field
+            messageInput.focus();
         }
 
         function renderChatList() {

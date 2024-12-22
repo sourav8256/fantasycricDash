@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .task-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .subtask {
+            background: #f8f8f8;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtask.completed {
+            background: #e8f5e9;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #2196f3;
+            color: white;
+        }
+
+        button:hover {
+            background: #1976d2;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: #4caf50;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="task-container">
+        <h2>Task Breakdown</h2>
+        <input type="text" id="mainTask" placeholder="Enter your main task">
+        <button onclick="addMainTask()">Create Task</button>
+
+        <div id="currentTask">
+            <h3 id="taskTitle"></h3>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <input type="text" id="subtask" placeholder="Add a subtask">
+            <button onclick="addSubtask()">Add Subtask</button>
+            <div id="subtaskList"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentTask = {
+            title: '',
+            subtasks: []
+        };
+
+        function addMainTask() {
+            const taskInput = document.getElementById('mainTask');
+            currentTask.title = taskInput.value;
+            currentTask.subtasks = [];
+            taskInput.value = '';
+            document.getElementById('taskTitle').textContent = currentTask.title;
+            updateLocalStorage();
+            updateUI();
+        }
+
+        function addSubtask() {
+            const subtaskInput = document.getElementById('subtask');
+            if (subtaskInput.value.trim()) {
+                currentTask.subtasks.push({
+                    text: subtaskInput.value,
+                    completed: false
+                });
+                subtaskInput.value = '';
+                updateLocalStorage();
+                updateUI();
+            }
+        }
+
+        function toggleSubtask(index) {
+            currentTask.subtasks[index].completed = !currentTask.subtasks[index].completed;
+            updateLocalStorage();
+            updateUI();
+        }
+
+        function updateUI() {
+            const subtaskList = document.getElementById('subtaskList');
+            subtaskList.innerHTML = '';
+            
+            currentTask.subtasks.forEach((subtask, index) => {
+                const div = document.createElement('div');
+                div.className = `subtask ${subtask.completed ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <input type="checkbox" ${subtask.completed ? 'checked' : ''} 
+                           onclick="toggleSubtask(${index})">
+                    <span>${subtask.text}</span>
+                `;
+                subtaskList.appendChild(div);
+            });
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const total = currentTask.subtasks.length;
+            const completed = currentTask.subtasks.filter(t => t.completed).length;
+            const progress = total === 0 ? 0 : (completed / total) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        function updateLocalStorage() {
+            localStorage.setItem('currentTask', JSON.stringify(currentTask));
+        }
+
+        // Load saved task on page load
+        window.onload = function() {
+            const saved = localStorage.getItem('currentTask');
+            if (saved) {
+                currentTask = JSON.parse(saved);
+                document.getElementById('taskTitle').textContent = currentTask.title;
+                updateUI();
+            }
+        };
+    </script>
+</body>
+</html>

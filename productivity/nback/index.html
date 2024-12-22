@@ -3,281 +3,383 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-Back Game</title>
+    <title>N-Back Game | Train Your Memory</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 10px;
             min-height: 100vh;
-            box-sizing: border-box;
+            margin: 0;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
         }
 
-        #game-container {
-            margin: 10px;
-            padding: 15px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 500px;
-            box-sizing: border-box;
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin: 2rem;
         }
 
         h1 {
-            font-size: 1.5rem;
-            margin: 10px 0;
-            text-align: center;
-        }
-
-        #grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 5px;
-            margin: 20px auto;
-            width: 100%;
-            max-width: 300px;
-            aspect-ratio: 1;
-        }
-
-        .cell {
-            background-color: #ddd;
-            border: 1px solid #999;
-            border-radius: 5px;
-            aspect-ratio: 1;
-            touch-action: manipulation;
-        }
-
-        #controls {
-            margin: 15px 0;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-
-        #controls > div {
-            margin: 5px 0;
-        }
-
-        button {
-            padding: 12px 24px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
-            background-color: #4CAF50;
             color: white;
-            cursor: pointer;
-            font-size: 1rem;
-            min-width: 120px;
-            touch-action: manipulation;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .display-number {
+            font-size: 6rem;
+            margin: 2rem 0;
+            min-height: 9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            margin: 1rem 0;
         }
 
         select {
-            padding: 8px;
+            padding: 0.5rem;
             font-size: 1rem;
-            border-radius: 5px;
-            border: 1px solid #999;
+            border-radius: 8px;
+            border: none;
+            background: white;
+            margin: 0 1rem;
         }
 
-        .feedback {
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 5px;
-            display: none;
-            font-size: 0.9rem;
-            text-align: center;
+        .number-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
         }
 
-        @media (max-width: 480px) {
-            body {
-                padding: 5px;
-            }
-
-            #game-container {
-                margin: 5px;
-                padding: 10px;
-            }
-
-            button {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-            }
-
-            #stats {
-                font-size: 0.9rem;
-            }
-
-            .feedback {
-                padding: 8px;
-                font-size: 0.8rem;
-            }
+        .number-btn {
+            font-size: 1.5rem;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            color: #6e8efb;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
         }
 
-        .active {
-            background-color: #4CAF50;
+        .number-btn:hover {
+            transform: translateY(-2px);
+            background: #f0f0f0;
         }
 
-        #stats {
-            margin: 20px 0;
-            text-align: center;
+        .start-btn {
+            font-size: 1.2rem;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 25px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
 
-        .match-feedback {
-            background-color: #dff0d8;
-            color: #3c763d;
-            border: 1px solid #d6e9c6;
+        .start-btn:hover {
+            transform: scale(1.05);
         }
 
-        .no-match-feedback {
-            background-color: #f2dede;
-            color: #a94442;
-            border: 1px solid #ebccd1;
+        .reset-btn {
+            font-size: 1.2rem;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 25px;
+            background: #ff6b6b;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-left: 1rem;
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .score {
+            font-size: 1.2rem;
+            margin: 1rem 0;
+        }
+
+        .high-score {
+            font-size: 1.1rem;
+            color: #ffd700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            margin-top: 0.5rem;
+        }
+
+        .high-scores-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <h1>N-Back Game</h1>
-        <div id="controls">
-            <label for="n-select">N-Back Level:</label>
-            <select id="n-select">
+    <div class="container">
+        <h1>Memory Master: N-Back Challenge</h1>
+        
+        <div class="controls">
+            <label for="nback" id="nbackLabel">N-Back Level:</label>
+            <select id="nback">
                 <option value="1">1-Back</option>
                 <option value="2">2-Back</option>
                 <option value="3">3-Back</option>
+                <option value="4">4-Back</option>
+                <option value="5">5-Back</option>
             </select>
-            <button id="start-btn">Start Game</button>
-            <button id="match-btn" disabled>Match</button>
-            <div>
-                <label>
-                    <input type="checkbox" id="guided-mode"> Guided Mode
-                </label>
+            <button class="start-btn" id="startBtn" onclick="startGame()">Start Game</button>
+            <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+        </div>
+
+        <div class="display-number" id="currentNumber">?</div>
+
+        <div class="score">
+            Score: <span id="score">0</span> | Streak: <span id="streak">0</span>
+        </div>
+        <div class="high-scores-container">
+            <div class="high-score">
+                Today's Highest: <span id="highScore">0</span>
+            </div>
+            <div class="high-score">
+                Monthly Highest: <span id="monthHighScore">0</span>
+            </div>
+            <div class="high-score">
+                Yearly Highest: <span id="yearHighScore">0</span>
             </div>
         </div>
-        <div id="feedback" class="feedback"></div>
-        <div id="grid"></div>
-        <div id="stats">
-            <p>Score: <span id="score">0</span></p>
-            <p>Correct: <span id="correct">0</span></p>
-            <p>Incorrect: <span id="incorrect">0</span></p>
+
+        <div class="number-buttons">
+            <button class="number-btn" onclick="checkAnswer(1)">1</button>
+            <button class="number-btn" onclick="checkAnswer(2)">2</button>
+            <button class="number-btn" onclick="checkAnswer(3)">3</button>
+            <button class="number-btn" onclick="checkAnswer(4)">4</button>
+            <button class="number-btn" onclick="checkAnswer(5)">5</button>
+            <button class="number-btn" onclick="checkAnswer(6)">6</button>
+            <button class="number-btn" onclick="checkAnswer(7)">7</button>
+            <button class="number-btn" onclick="checkAnswer(8)">8</button>
+            <button class="number-btn" onclick="checkAnswer(9)">9</button>
         </div>
     </div>
 
     <script>
-        const grid = document.getElementById('grid');
-        const startBtn = document.getElementById('start-btn');
-        const matchBtn = document.getElementById('match-btn');
-        const nSelect = document.getElementById('n-select');
-        const scoreSpan = document.getElementById('score');
-        const correctSpan = document.getElementById('correct');
-        const incorrectSpan = document.getElementById('incorrect');
-        const guidedMode = document.getElementById('guided-mode');
-        const feedback = document.getElementById('feedback');
-
-        let sequence = [];
-        let currentIndex = 0;
+        let numberHistory = [];
+        let currentNumber = null;
+        let isGameRunning = false;
         let score = 0;
-        let correct = 0;
-        let incorrect = 0;
+        let streak = 0;
+        let waitingForInput = false;
         let gameInterval;
-        let isPlaying = false;
 
-        // Create grid cells
-        for (let i = 0; i < 9; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            grid.appendChild(cell);
-        }
+        // Load today's high score when page loads
+        document.addEventListener('DOMContentLoaded', loadTodayHighScore);
 
-        function resetStats() {
-            score = 0;
-            correct = 0;
-            incorrect = 0;
-            updateStats();
-        }
+        function loadTodayHighScore() {
+            const today = new Date();
+            const dateStr = today.toLocaleDateString();
+            const monthStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'numeric' });
+            const yearStr = today.getFullYear().toString();
 
-        function updateStats() {
-            scoreSpan.textContent = score;
-            correctSpan.textContent = correct;
-            incorrectSpan.textContent = incorrect;
-        }
-
-        function generateSequence(length = 20) {
-            return Array.from({length}, () => Math.floor(Math.random() * 9));
-        }
-
-        function showPosition(position) {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => cell.classList.remove('active'));
-            cells[position].classList.add('active');
-
-            if (guidedMode.checked && currentIndex >= parseInt(nSelect.value)) {
-                const n = parseInt(nSelect.value);
-                const isMatch = sequence[currentIndex] === sequence[currentIndex - n];
-                feedback.style.display = 'block';
-                feedback.className = `feedback ${isMatch ? 'match-feedback' : 'no-match-feedback'}`;
-                feedback.textContent = isMatch ? 
-                    `Match! Current position matches position from ${n} steps ago` : 
-                    `No match - Current position is different from ${n} steps ago`;
+            // Load daily high score
+            const savedScore = localStorage.getItem('nback_highscore');
+            const savedData = savedScore ? JSON.parse(savedScore) : null;
+            
+            if (savedData && savedData.date === dateStr) {
+                document.getElementById('highScore').textContent = savedData.score;
             } else {
-                feedback.style.display = 'none';
+                localStorage.setItem('nback_highscore', JSON.stringify({
+                    date: dateStr,
+                    score: 0
+                }));
+                document.getElementById('highScore').textContent = '0';
+            }
+
+            // Load monthly high score
+            const savedMonthScore = localStorage.getItem('nback_month_highscore');
+            const savedMonthData = savedMonthScore ? JSON.parse(savedMonthScore) : null;
+            
+            if (savedMonthData && savedMonthData.month === monthStr) {
+                document.getElementById('monthHighScore').textContent = savedMonthData.score;
+            } else {
+                localStorage.setItem('nback_month_highscore', JSON.stringify({
+                    month: monthStr,
+                    score: 0
+                }));
+                document.getElementById('monthHighScore').textContent = '0';
+            }
+
+            // Load yearly high score
+            const savedYearScore = localStorage.getItem('nback_year_highscore');
+            const savedYearData = savedYearScore ? JSON.parse(savedYearScore) : null;
+            
+            if (savedYearData && savedYearData.year === yearStr) {
+                document.getElementById('yearHighScore').textContent = savedYearData.score;
+            } else {
+                localStorage.setItem('nback_year_highscore', JSON.stringify({
+                    year: yearStr,
+                    score: 0
+                }));
+                document.getElementById('yearHighScore').textContent = '0';
             }
         }
 
-        function checkMatch() {
-            const n = parseInt(nSelect.value);
-            if (currentIndex >= n) {
-                const isMatch = sequence[currentIndex] === sequence[currentIndex - n];
-                if (isMatch) {
-                    score += 10;
-                    correct++;
-                } else {
-                    score = Math.max(0, score - 5);
-                    incorrect++;
-                }
-                updateStats();
+        function updateHighScore() {
+            const today = new Date();
+            const dateStr = today.toLocaleDateString();
+            const monthStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'numeric' });
+            const yearStr = today.getFullYear().toString();
+
+            // Update daily high score
+            const savedScore = localStorage.getItem('nback_highscore');
+            const savedData = savedScore ? JSON.parse(savedScore) : { date: dateStr, score: 0 };
+            
+            if (savedData.date !== dateStr) {
+                savedData.date = dateStr;
+                savedData.score = 0;
+            }
+            
+            if (score > savedData.score) {
+                savedData.score = score;
+                localStorage.setItem('nback_highscore', JSON.stringify(savedData));
+                document.getElementById('highScore').textContent = score;
+            }
+
+            // Update monthly high score
+            const savedMonthScore = localStorage.getItem('nback_month_highscore');
+            const savedMonthData = savedMonthScore ? JSON.parse(savedMonthScore) : { month: monthStr, score: 0 };
+            
+            if (savedMonthData.month !== monthStr) {
+                savedMonthData.month = monthStr;
+                savedMonthData.score = 0;
+            }
+            
+            if (score > savedMonthData.score) {
+                savedMonthData.score = score;
+                localStorage.setItem('nback_month_highscore', JSON.stringify(savedMonthData));
+                document.getElementById('monthHighScore').textContent = score;
+            }
+
+            // Update yearly high score
+            const savedYearScore = localStorage.getItem('nback_year_highscore');
+            const savedYearData = savedYearScore ? JSON.parse(savedYearScore) : { year: yearStr, score: 0 };
+            
+            if (savedYearData.year !== yearStr) {
+                savedYearData.year = yearStr;
+                savedYearData.score = 0;
+            }
+            
+            if (score > savedYearData.score) {
+                savedYearData.score = score;
+                localStorage.setItem('nback_year_highscore', JSON.stringify(savedYearData));
+                document.getElementById('yearHighScore').textContent = score;
             }
         }
 
         function startGame() {
-            if (isPlaying) {
-                clearInterval(gameInterval);
-                startBtn.textContent = 'Start Game';
-                matchBtn.disabled = true;
-                isPlaying = false;
-                feedback.style.display = 'none';
-                return;
-            }
-
-            resetStats();
-            sequence = generateSequence();
-            currentIndex = 0;
-            startBtn.textContent = 'Stop Game';
-            matchBtn.disabled = false;
-            isPlaying = true;
-
-            gameInterval = setInterval(() => {
-                if (currentIndex >= sequence.length) {
-                    clearInterval(gameInterval);
-                    startBtn.textContent = 'Start Game';
-                    matchBtn.disabled = true;
-                    isPlaying = false;
-                    return;
+            // Reset game state
+            numberHistory = [];
+            score = 0;
+            streak = 0;
+            updateScore();
+            isGameRunning = true;
+            waitingForInput = false;
+            
+            // Hide start button and disable n-back selection
+            document.getElementById('startBtn').classList.add('hidden');
+            document.getElementById('nback').disabled = true;
+            
+            const nBackLevel = parseInt(document.getElementById('nback').value);
+            
+            // Show consecutive numbers with a delay
+            let count = 0;
+            const showNumbers = () => {
+                if (count <= nBackLevel) {
+                    showNextNumber();
+                    count++;
+                    setTimeout(showNumbers, 1000); // Show a number every second
+                } else {
+                    waitingForInput = true;
                 }
-
-                showPosition(sequence[currentIndex]);
-                currentIndex++;
-            }, 3000); // Show each position for 3 seconds
+            };
+            
+            showNumbers();
         }
 
-        startBtn.addEventListener('click', startGame);
-        matchBtn.addEventListener('click', checkMatch);
+        function showNextNumber() {
+            currentNumber = Math.floor(Math.random() * 9) + 1;
+            document.getElementById('currentNumber').textContent = currentNumber;
+            numberHistory.push(currentNumber);
+        }
+
+        function resetGame() {
+            isGameRunning = false;
+            waitingForInput = false;
+            numberHistory = [];
+            score = 0;
+            streak = 0;
+            updateScore();
+            document.getElementById('currentNumber').textContent = '?';
+            document.getElementById('startBtn').classList.remove('hidden');
+            document.getElementById('nback').disabled = false;
+            if (gameInterval) clearInterval(gameInterval);
+            document.body.style.background = 'linear-gradient(135deg, #6e8efb, #a777e3)';
+            loadTodayHighScore(); // Reload high score when game is reset
+        }
+
+        function checkAnswer(selectedNumber) {
+            if (!isGameRunning || !waitingForInput) return;
+
+            const nBackLevel = parseInt(document.getElementById('nback').value);
+            
+            if (numberHistory.length <= nBackLevel) return;
+
+            const targetNumber = numberHistory[numberHistory.length - (nBackLevel + 1)];
+            
+            if (selectedNumber === targetNumber) {
+                score += 10;
+                streak++;
+                // Visual feedback for correct answer
+                document.body.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                setTimeout(() => {
+                    document.body.style.background = 'linear-gradient(135deg, #6e8efb, #a777e3)';
+                }, 300);
+            } else {
+                streak = 0;
+                // Visual feedback for wrong answer
+                document.body.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
+                setTimeout(() => {
+                    document.body.style.background = 'linear-gradient(135deg, #6e8efb, #a777e3)';
+                }, 300);
+            }
+            
+            updateScore();
+            updateHighScore(); // Add this line to update high score after each answer
+            
+            // Show next number after player input
+            showNextNumber();
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = streak;
+        }
     </script>
 </body>
 </html>

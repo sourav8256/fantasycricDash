@@ -15,6 +15,8 @@
             font-family: Arial, sans-serif;
             margin: 0 auto;
             background-color: #f0f2f5;
+            height: 100vh;
+            overflow: hidden;
         }
 
         .container {
@@ -22,6 +24,7 @@
             height: 100vh;
             max-width: 1600px;
             margin: 0 auto;
+            overflow: hidden;
         }
 
         @media (max-width: 767px) {
@@ -121,7 +124,7 @@
         }
 
         .chat-item {
-            padding: 1rem 1.25rem;
+            padding: 0.75rem 1rem;
             border-bottom: 1px solid #e0e0e0;
             cursor: pointer;
             transition: background-color 0.2s;
@@ -129,6 +132,7 @@
             justify-content: space-between;
             align-items: center;
             position: relative;
+            gap: 1rem;
         }
 
         .chat-item:hover {
@@ -256,6 +260,7 @@
             background: rgba(0,0,0,0.5);
             align-items: center;
             justify-content: center;
+            z-index: 1000;
         }
 
         .modal.active {
@@ -268,6 +273,7 @@
             border-radius: 8px;
             width: 90%;
             max-width: 400px;
+            position: relative;
         }
 
         .modal input {
@@ -305,18 +311,49 @@
                 width: 350px;
                 min-width: 350px;
                 border-right: 1px solid #e0e0e0;
+                height: 100vh;
+                overflow: hidden;
             }
 
             #chatScreen {
-                width: calc(100% - 350px);
-                max-width: 1250px;
+                flex: 1;
+                min-width: 0;  /* Allow flex item to shrink below content size */
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            .messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 1rem;
+                background: #e5ddd5;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                height: 0;  /* Allow flex item to shrink */
+                min-height: 0;  /* Allow flex item to shrink in Firefox */
+            }
+
+            .message-input {
+                padding: 0.75rem;
+                background: white;
+                border-top: 1px solid #e0e0e0;
+                display: flex;
+                gap: 0.5rem;
+                width: 100%;
             }
         }
 
         /* Add a centered layout for very wide screens */
         @media (min-width: 1600px) {
             .container {
-                padding: 0 2rem;
+                padding: 0;
+                max-width: 1600px;
+                margin: 0 auto;
+                height: 100vh;
+                overflow: hidden;
             }
         }
 
@@ -411,6 +448,58 @@
             background: rgba(0, 0, 0, 0.05);
             border-radius: 50%;
         }
+
+        .chat-info {
+            flex: 1;
+            min-width: 0;  /* Enable text truncation */
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .chat-name {
+            font-weight: 500;
+            color: #000;
+        }
+
+        .chat-last-message {
+            color: #666;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .chat-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chat-time {
+            font-size: 0.8rem;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;  /* Align to right for sent messages */
+            margin: 0.25rem 0;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 0.2rem;
+            margin-right: 0.4rem;
+        }
+
+        .message {
+            margin: 0;  /* Remove margin as it's handled by container */
+        }
     </style>
 </head>
 <body>
@@ -466,30 +555,88 @@
         let chats = JSON.parse(localStorage.getItem('chats')) || [];
         let currentChatId = null;
 
+        // Add these variables at the start of your script
+        let lastSyncTime = localStorage.getItem('lastSyncTime') || 0;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close modal when clicking outside
+            document.getElementById('newChatModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideNewChatModal();
+                }
+            });
+
+            // Handle enter key in chat name input
+            document.getElementById('chatNameInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    createNewChat();
+                }
+            });
+
+            // Handle enter key in message input
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Initial render
+            renderChatList();
+
+            // Initial sync
+            syncWithDatabase();
+
+            // Set up automatic sync every minute
+            logSync('AUTO_SYNC_SETUP', {
+                interval: '60 seconds'
+            });
+            
+            setInterval(() => {
+                logSync('AUTO_SYNC_TRIGGERED', {
+                    timestamp: new Date().toISOString()
+                });
+                syncWithDatabase();
+            }, 60000); // 60000 ms = 1 minute
+        });
+
+        // Update the modal functions
         function showNewChatModal() {
-            document.getElementById('newChatModal').classList.add('active');
-            document.getElementById('chatNameInput').focus();
+            const modal = document.getElementById('newChatModal');
+            modal.classList.add('active');
+            document.getElementById('chatNameInput').value = '';  // Clear previous input
+            setTimeout(() => document.getElementById('chatNameInput').focus(), 100);  // Focus with slight delay
         }
 
         function hideNewChatModal() {
-            document.getElementById('newChatModal').classList.remove('active');
+            const modal = document.getElementById('newChatModal');
+            modal.classList.remove('active');
             document.getElementById('chatNameInput').value = '';
         }
 
         function createNewChat() {
-            const chatName = document.getElementById('chatNameInput').value.trim();
-            if (!chatName) return;
+            const chatNameInput = document.getElementById('chatNameInput');
+            const chatName = chatNameInput.value.trim();
+            
+            if (!chatName) {
+                alert('Please enter a chat name');
+                return;
+            }
 
             const newChat = {
                 id: Date.now().toString(),
                 name: chatName,
-                messages: []
+                messages: [],
+                lastModified: Date.now(),
+                lastUpdated: Date.now()
             };
 
             chats.push(newChat);
             localStorage.setItem('chats', JSON.stringify(chats));
             hideNewChatModal();
             renderChatList();
+            
+            // Sync with database
+            syncWithDatabase();
         }
 
         function showChatList() {
@@ -499,6 +646,13 @@
             }
         }
 
+        // Add this helper function for message time formatting
+        function formatMessageTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Update the showChat function to use existing timestamps only
         function showChat(chatId) {
             const chat = chats.find(c => c.id === chatId);
             if (!chat) return;
@@ -512,13 +666,28 @@
             messagesContainer.innerHTML = '';
             chat.messages.forEach(msg => {
                 const messageDiv = document.createElement('div');
-                messageDiv.className = 'message sent';
-                messageDiv.textContent = typeof msg === 'string' ? msg : msg.text;
+                messageDiv.className = 'message-container';
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = 'message sent';
+                textDiv.textContent = typeof msg === 'string' ? msg : msg.text;
+                
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                // Only use existing timestamp, don't create new ones
+                const timestamp = typeof msg === 'string' ? null : msg.timestamp;
+                if (timestamp) {
+                    timeDiv.textContent = formatMessageTime(timestamp);
+                    messageDiv.appendChild(timeDiv);
+                }
+                
+                messageDiv.appendChild(textDiv);
                 messagesContainer.appendChild(messageDiv);
             });
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
+        // Update sendMessage function to ensure timestamp is set only when sending
         function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
@@ -527,81 +696,157 @@
             const chat = chats.find(c => c.id === currentChatId);
             if (!chat) return;
 
-            chat.messages.push(message);
+            const timestamp = Date.now();  // Record timestamp when sending
+            const messageObj = {
+                text: message,
+                timestamp: timestamp  // Always include timestamp for new messages
+            };
+
+            chat.messages.push(messageObj);
+            chat.lastModified = timestamp;
+            chat.lastUpdated = timestamp;
             localStorage.setItem('chats', JSON.stringify(chats));
             messageInput.value = '';
 
             const messagesContainer = document.getElementById('messages');
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'message sent';
-            messageDiv.textContent = message;
+            messageDiv.className = 'message-container';
+            
+            const textDiv = document.createElement('div');
+            textDiv.className = 'message sent';
+            textDiv.textContent = message;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = formatMessageTime(timestamp);
+            
+            messageDiv.appendChild(textDiv);
+            messageDiv.appendChild(timeDiv);
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            // Keep focus on the input field
             messageInput.focus();
+            renderChatList();
+            syncWithDatabase();
         }
 
         function renderChatList() {
             const chatList = document.getElementById('chatList');
             chatList.innerHTML = '';
             
-            // Close any open menus when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.chat-item-menu') && !e.target.closest('.menu-btn')) {
-                    document.querySelectorAll('.chat-item-menu.show').forEach(menu => {
-                        menu.classList.remove('show');
-                    });
-                }
-            });
+            // Sort chats by last updated time and filter out deleted ones
+            const sortedChats = [...chats]
+                .filter(chat => !chat.isDeleted)  // Filter out deleted chats
+                .sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
             
-            chats.forEach(chat => {
+            sortedChats.forEach(chat => {
                 const chatDiv = document.createElement('div');
                 chatDiv.className = 'chat-item';
                 
+                // Create chat info container
+                const chatInfo = document.createElement('div');
+                chatInfo.className = 'chat-info';
+                
                 // Chat name
                 const nameSpan = document.createElement('span');
+                nameSpan.className = 'chat-name';
                 nameSpan.textContent = chat.name;
-                chatDiv.appendChild(nameSpan);
+                chatInfo.appendChild(nameSpan);
+                
+                // Last message
+                const lastMessage = document.createElement('span');
+                lastMessage.className = 'chat-last-message';
+                const lastMsg = chat.messages[chat.messages.length - 1];
+                lastMessage.textContent = lastMsg ? 
+                    (typeof lastMsg === 'string' ? lastMsg : lastMsg.text) : 
+                    'No messages yet';
+                chatInfo.appendChild(lastMessage);
+                
+                chatDiv.appendChild(chatInfo);
+                
+                // Time and menu container
+                const rightSection = document.createElement('div');
+                rightSection.className = 'chat-right';
+                
+                // Time
+                if (chat.lastUpdated) {
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'chat-time';
+                    timeSpan.textContent = formatTime(chat.lastUpdated);
+                    rightSection.appendChild(timeSpan);
+                }
                 
                 // Menu button
                 const menuBtn = document.createElement('button');
                 menuBtn.className = 'menu-btn';
-                menuBtn.innerHTML = '⋮';  // Three dots menu icon
+                menuBtn.innerHTML = '⋮';
                 menuBtn.onclick = (e) => {
                     e.stopPropagation();
-                    // Close other menus
                     document.querySelectorAll('.chat-item-menu.show').forEach(menu => {
                         if (menu !== chatDiv.querySelector('.chat-item-menu')) {
                             menu.classList.remove('show');
                         }
                     });
-                    // Toggle this menu
                     const menu = chatDiv.querySelector('.chat-item-menu');
                     menu.classList.toggle('show');
                 };
-                chatDiv.appendChild(menuBtn);
+                rightSection.appendChild(menuBtn);
+                
+                chatDiv.appendChild(rightSection);
                 
                 // Dropdown menu
                 const menu = document.createElement('div');
                 menu.className = 'chat-item-menu';
                 
-                // Delete option
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'delete';
                 deleteBtn.innerHTML = '🗑️ Delete';
-                deleteBtn.onclick = (e) => {
+                deleteBtn.onclick = async (e) => {
                     e.stopPropagation();
                     if (confirm('Are you sure you want to delete this chat?')) {
-                        chats = chats.filter(c => c.id !== chat.id);
-                        localStorage.setItem('chats', JSON.stringify(chats));
-                        renderChatList();
+                        try {
+                            // Mark as deleted locally first
+                            const chatToDelete = chats.find(c => c.id === chat.id);
+                            if (chatToDelete) {
+                                chatToDelete.isDeleted = true;
+                                chatToDelete.deletedAt = Date.now();
+                            }
+                            
+                            // Mark as deleted in Parse
+                            const Chat = Parse.Object.extend("Chat");
+                            const query = new Parse.Query(Chat);
+                            query.equalTo("name", chat.name);
+                            const parseChat = await query.first();
+                            
+                            if (parseChat) {
+                                logSync('MARKING_CHAT_AS_DELETED', {
+                                    chatName: chat.name,
+                                    parseObjectId: parseChat.id
+                                });
+                                parseChat.set('isDeleted', true);
+                                parseChat.set('deletedAt', Date.now());
+                                await parseChat.save();
+                                logSync('CHAT_MARKED_AS_DELETED', {
+                                    chatName: chat.name
+                                });
+                            }
+
+                            // Save local changes
+                            localStorage.setItem('chats', JSON.stringify(chats));
+                            renderChatList();
+                        } catch (error) {
+                            logSync('DELETE_ERROR', {
+                                chatName: chat.name,
+                                error: error.message
+                            });
+                            console.error('Failed to delete chat:', error);
+                            alert('Failed to delete chat. Please try again.');
+                        }
                     }
                 };
                 menu.appendChild(deleteBtn);
                 chatDiv.appendChild(menu);
 
-                // Click handler for chat item
                 chatDiv.onclick = () => {
                     showChat(chat.id);
                 };
@@ -610,22 +855,279 @@
             });
         }
 
-        // Handle enter key in message input
-        document.getElementById('messageInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+        // Add this helper function for formatting time
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const isToday = date.toDateString() === now.toDateString();
+            
+            if (isToday) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             }
-        });
+            return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
 
-        // Handle enter key in chat name input
-        document.getElementById('chatNameInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                createNewChat();
+        // Add this helper function for logging
+        function logSync(action, details) {
+            const timestamp = new Date().toISOString();
+            console.log(`[${timestamp}] ${action}:`, details);
+        }
+
+        // Update sync functions with logging
+        async function syncWithDatabase() {
+            try {
+                logSync('SYNC_START', {
+                    lastSyncTime: lastSyncTime ? new Date(parseInt(lastSyncTime)).toISOString() : 'never'
+                });
+
+                // Upload local changes first
+                await uploadLocalChanges();
+                // Then download remote changes
+                await downloadRemoteChanges();
+                
+                // Update last sync time
+                lastSyncTime = Date.now();
+                localStorage.setItem('lastSyncTime', lastSyncTime);
+
+                logSync('SYNC_COMPLETE', {
+                    newLastSyncTime: new Date(lastSyncTime).toISOString()
+                });
+            } catch (error) {
+                logSync('SYNC_ERROR', {
+                    error: error.message,
+                    stack: error.stack
+                });
+                console.error('Sync failed:', error);
             }
-        });
+        }
 
-        // Initial render
-        renderChatList();
+        async function uploadLocalChanges() {
+            // Get all chats from Parse to check for deletions
+            const Chat = Parse.Object.extend("Chat");
+            const query = new Parse.Query(Chat);
+            const allParseChats = await query.find();
+            
+            // Create maps for faster lookups
+            const parseChatsMap = new Map(allParseChats.map(chat => [chat.get('name').toLowerCase(), chat]));
+            const localChatsMap = new Map(chats.map(chat => [chat.name.toLowerCase(), chat]));
+
+            logSync('UPLOAD_START', {
+                localChats: chats.length,
+                remoteChats: allParseChats.length
+            });
+
+            // Handle deletions - if a chat exists in Parse but not locally, mark it as deleted
+            for (const parseChat of allParseChats) {
+                const parseChatName = parseChat.get('name').toLowerCase();
+                if (!localChatsMap.has(parseChatName) && !parseChat.get('isDeleted')) {
+                    logSync('MARKING_REMOTE_CHAT_AS_DELETED', {
+                        chatName: parseChat.get('name'),
+                        parseObjectId: parseChat.id
+                    });
+                    parseChat.set('isDeleted', true);
+                    parseChat.set('deletedAt', Date.now());
+                    await parseChat.save();
+                }
+            }
+
+            // Handle updates and new chats
+            const localChats = chats.filter(chat => {
+                return !chat.lastModified || 
+                       chat.lastModified > lastSyncTime || 
+                       !lastSyncTime;
+            });
+
+            for (const chat of localChats) {
+                try {
+                    logSync('UPLOADING_CHAT', {
+                        chatName: chat.name,
+                        messageCount: chat.messages.length
+                    });
+
+                    let parseChat = parseChatsMap.get(chat.name.toLowerCase());
+
+                    if (parseChat) {
+                        // If the chat was previously marked as deleted but exists locally, undelete it
+                        if (parseChat.get('isDeleted')) {
+                            logSync('UNDELETING_CHAT', {
+                                chatName: chat.name,
+                                parseObjectId: parseChat.id
+                            });
+                            parseChat.set('isDeleted', false);
+                            parseChat.unset('deletedAt');
+                        }
+
+                        // Merge messages
+                        const existingMessages = new Map(
+                            parseChat.get('messages')?.map(msg => [msg.timestamp, msg]) || []
+                        );
+                        
+                        chat.messages.forEach(msg => {
+                            const msgObj = typeof msg === 'string' ? 
+                                { text: msg, timestamp: Date.now() } : msg;
+                            if (!existingMessages.has(msgObj.timestamp)) {
+                                existingMessages.set(msgObj.timestamp, msgObj);
+                            }
+                        });
+                        
+                        parseChat.set('messages', Array.from(existingMessages.values()));
+                    } else {
+                        logSync('CREATING_NEW_CHAT', {
+                            chatName: chat.name
+                        });
+                        parseChat = new Chat();
+                        parseChat.set('name', chat.name);
+                        parseChat.set('messages', chat.messages.map(msg => 
+                            typeof msg === 'string' ? 
+                                { text: msg, timestamp: Date.now() } : msg
+                        ));
+                    }
+
+                    parseChat.set('lastModified', Date.now());
+                    const savedChat = await parseChat.save();
+                    logSync('CHAT_SAVED', {
+                        chatName: chat.name,
+                        parseObjectId: savedChat.id
+                    });
+                    
+                    // Update local chat with server timestamp
+                    chat.lastModified = Date.now();
+                } catch (error) {
+                    logSync('UPLOAD_CHAT_ERROR', {
+                        chatName: chat.name,
+                        error: error.message
+                    });
+                }
+            }
+            
+            // Save updated timestamps
+            localStorage.setItem('chats', JSON.stringify(chats));
+        }
+
+        async function downloadRemoteChanges() {
+            try {
+                logSync('DOWNLOAD_START', {
+                    lastSyncTime: lastSyncTime ? new Date(parseInt(lastSyncTime)).toISOString() : 'never'
+                });
+
+                const Chat = Parse.Object.extend("Chat");
+                const query = new Parse.Query(Chat);
+                if (lastSyncTime) {
+                    query.greaterThan('lastModified', parseInt(lastSyncTime));
+                }
+                const results = await query.find();
+
+                logSync('FOUND_REMOTE_CHATS', {
+                    count: results.length,
+                    chatNames: results.map(chat => chat.get('name'))
+                });
+
+                let hasChanges = false;
+                let mergedChats = 0;
+                let newChats = 0;
+                let deletedChats = 0;
+                
+                // Create a map of existing chats by name for faster lookup
+                const existingChatsByName = new Map(chats.map(chat => [chat.name.toLowerCase(), chat]));
+                
+                // Process all chats, including deletions
+                for (const parseChat of results) {
+                    const remoteName = parseChat.get('name');
+                    const localChat = existingChatsByName.get(remoteName.toLowerCase());
+                    const isDeleted = parseChat.get('isDeleted');
+
+                    if (isDeleted) {
+                        if (localChat && !localChat.isDeleted) {
+                            logSync('MARKING_LOCAL_CHAT_AS_DELETED', {
+                                chatName: remoteName,
+                                deletedAt: parseChat.get('deletedAt')
+                            });
+                            localChat.isDeleted = true;
+                            localChat.deletedAt = parseChat.get('deletedAt');
+                            hasChanges = true;
+                            deletedChats++;
+                        }
+                        continue;
+                    }
+
+                    if (!localChat) {
+                        // Only add if we don't have a chat with this name and it's not deleted
+                        if (!existingChatsByName.has(remoteName.toLowerCase()) && !isDeleted) {
+                            logSync('NEW_REMOTE_CHAT', {
+                                chatName: remoteName
+                            });
+                            newChats++;
+                            
+                            const newChat = {
+                                id: Date.now().toString(),
+                                name: remoteName,
+                                messages: parseChat.get('messages') || [],
+                                lastModified: parseChat.get('lastModified'),
+                                lastUpdated: Date.now(),
+                                parseObjectId: parseChat.id,
+                                isDeleted: false
+                            };
+                            
+                            chats.push(newChat);
+                            existingChatsByName.set(remoteName.toLowerCase(), newChat);
+                            hasChanges = true;
+                        }
+                    } else if (!localChat.isDeleted) {
+                        // Only merge if neither chat is deleted
+                        logSync('MERGING_CHAT', {
+                            chatName: remoteName,
+                            localMessages: localChat.messages.length,
+                            remoteMessages: parseChat.get('messages')?.length || 0
+                        });
+                        mergedChats++;
+
+                        // Create a map of existing messages by timestamp
+                        const existingMessages = new Map();
+                        localChat.messages.forEach(msg => {
+                            const msgObj = typeof msg === 'string' ? 
+                                { text: msg, timestamp: Date.now() } : msg;
+                            existingMessages.set(msgObj.timestamp, msgObj);
+                        });
+
+                        // Add remote messages if they don't exist locally
+                        const remoteMessages = parseChat.get('messages') || [];
+                        remoteMessages.forEach(msg => {
+                            if (!existingMessages.has(msg.timestamp)) {
+                                existingMessages.set(msg.timestamp, msg);
+                                hasChanges = true;
+                            }
+                        });
+
+                        if (hasChanges) {
+                            localChat.messages = Array.from(existingMessages.values())
+                                .sort((a, b) => a.timestamp - b.timestamp);
+                            localChat.lastModified = parseChat.get('lastModified');
+                            localChat.lastUpdated = Date.now();
+                            localChat.parseObjectId = parseChat.id;
+                        }
+                    }
+                }
+
+                if (hasChanges) {
+                    logSync('DOWNLOAD_CHANGES_APPLIED', {
+                        newChats,
+                        mergedChats,
+                        deletedChats
+                    });
+                    localStorage.setItem('chats', JSON.stringify(chats));
+                    renderChatList();
+                } else {
+                    logSync('NO_CHANGES_NEEDED', {
+                        remoteChatsChecked: results.length
+                    });
+                }
+            } catch (error) {
+                logSync('DOWNLOAD_ERROR', {
+                    error: error.message,
+                    stack: error.stack
+                });
+            }
+        }
     </script>
 </body>
 </html>

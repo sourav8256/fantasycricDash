@@ -355,27 +355,60 @@
     <script>
         async function loadContent(sectionId) {
             console.log('Loading section:', sectionId);
+            const contentDiv = document.getElementById(sectionId);
+            if (!contentDiv) {
+                console.error('Content div not found:', sectionId);
+                return;
+            }
+
             try {
+                console.log('Fetching content from:', `pages/${sectionId}.html`);
                 const response = await fetch(`pages/${sectionId}.html`);
-                console.log('Response status:', response.status);
+                console.log('Response:', response);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                
                 const content = await response.text();
-                document.getElementById(sectionId).innerHTML = content;
+                console.log('Content loaded, length:', content.length);
+                
+                contentDiv.innerHTML = content;
+                console.log('Content set to div');
                 
                 // Update URL without reloading the page
                 history.pushState({section: sectionId}, '', `#${sectionId}`);
+                
+                // Initialize Bootstrap components
+                if (typeof bootstrap !== 'undefined') {
+                    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
+                    
+                    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+                    popoverTriggerList.map(function (popoverTriggerEl) {
+                        return new bootstrap.Popover(popoverTriggerEl);
+                    });
+                }
                 
                 if (typeof initializeCharts === 'function') {
                     setTimeout(initializeCharts, 100);
                 }
             } catch (error) {
-                console.error(`Error loading ${sectionId} content:`, error);
+                console.error('Error details:', error);
+                contentDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Error loading content</h5>
+                        <p>${error.message}</p>
+                        <p>Please make sure you're running a local server to serve the files.</p>
+                    </div>`;
             }
         }
 
         function showSection(sectionId) {
+            console.log('Showing section:', sectionId);
+            
             // Hide all sections
             const sections = document.querySelectorAll('.content-section');
             sections.forEach(section => {
@@ -386,6 +419,9 @@
             const selectedSection = document.getElementById(sectionId);
             if (selectedSection) {
                 selectedSection.style.display = 'block';
+            } else {
+                console.error('Selected section not found:', sectionId);
+                return;
             }
 
             // Update navigation
@@ -398,7 +434,7 @@
                 activeLink.classList.add('active');
             }
 
-            // Load content if needed
+            // Load content
             loadContent(sectionId);
         }
 
@@ -408,6 +444,15 @@
             const hash = window.location.hash.slice(1);
             const initialSection = hash || 'home';
             showSection(initialSection);
+
+            // Add click event listeners to all navigation links
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const sectionId = link.getAttribute('href').slice(1);
+                    showSection(sectionId);
+                });
+            });
         });
 
         // Handle browser back/forward buttons

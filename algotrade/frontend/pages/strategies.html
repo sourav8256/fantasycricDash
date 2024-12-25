@@ -306,6 +306,7 @@
     // Initialize leg counter and saved strategies array
     let legCount = 1;
     let savedStrategies = [];
+    let editingStrategyId = null; // Track which strategy is being edited
 
     // Helper functions for safe value retrieval
     function getElementValue(selector, defaultValue = '') {
@@ -318,11 +319,96 @@
         return radio ? radio.id : defaultValue;
     }
 
+    // Function to edit a strategy
+    function editStrategy(id) {
+        const strategy = savedStrategies.find(s => s.id === id);
+        if (!strategy) return;
+
+        editingStrategyId = id;
+        
+        // Switch to create tab
+        document.querySelector('#create-tab').click();
+        
+        // Fill in the form with strategy data
+        document.querySelector(`input[name="strategy"][id="${strategy.type}"]`).checked = true;
+        document.querySelector('.form-select').value = strategy.instrument;
+        document.querySelector('input[type="number"][value="25"]').value = strategy.lotSize;
+        
+        // Clear existing legs
+        document.getElementById('legsContainer').innerHTML = '';
+        legCount = 0;
+        
+        // Add each leg
+        strategy.legs.forEach(leg => {
+            legCount++;
+            const legHtml = `
+                <div class="row leg-row mb-3" data-leg="${leg.legNumber}">
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text">Leg ${leg.legNumber}</span>
+                            <select class="form-select">
+                                <option ${leg.type === 'Buy' ? 'selected' : ''}>Buy</option>
+                                <option ${leg.type === 'Sell' ? 'selected' : ''}>Sell</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text">Strike</span>
+                            <select class="form-select">
+                                <option ${leg.strike === 'ATM' ? 'selected' : ''}>ATM</option>
+                                <option ${leg.strike === 'ITM' ? 'selected' : ''}>ITM</option>
+                                <option ${leg.strike === 'OTM' ? 'selected' : ''}>OTM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text">Option</span>
+                            <select class="form-select">
+                                <option ${leg.option === 'CE' ? 'selected' : ''}>CE</option>
+                                <option ${leg.option === 'PE' ? 'selected' : ''}>PE</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="input-group">
+                            <span class="input-group-text">Qty</span>
+                            <input type="number" class="form-control" value="${leg.quantity}" min="1">
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-outline-danger btn-sm w-100" onclick="removeLeg(this)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('legsContainer').insertAdjacentHTML('beforeend', legHtml);
+        });
+        
+        // Fill in risk management data
+        document.querySelector('input[placeholder*="profit"]').value = strategy.riskManagement.profitTarget;
+        document.querySelector('input[placeholder*="loss"]').value = strategy.riskManagement.stopLoss;
+        document.querySelector('input[placeholder*="Trade"]').value = strategy.riskManagement.noTradeTime;
+        document.querySelector(`input[name="profitManagement"][value="${strategy.riskManagement.profitManagement}"]`).checked = true;
+        document.getElementById('trailStep').value = strategy.riskManagement.trailAmount;
+        document.getElementById('profitStep').value = strategy.riskManagement.profitThreshold;
+        
+        // Set strategy name
+        document.querySelector('input[placeholder="Enter a name for your strategy"]').value = strategy.strategyName;
+        
+        // Update save button text
+        document.getElementById('saveStrategyBtn').textContent = 'Update Strategy';
+        
+        updateRemoveButtons();
+    }
+
     // Function to save strategy
     function saveStrategy() {
         try {
             const strategyData = {
-                id: Date.now(), // Add unique ID for each strategy
+                id: editingStrategyId || Date.now(),
                 type: document.querySelector('input[name="strategy"]:checked')?.id || 'time',
                 instrument: document.querySelector('.form-select')?.value || 'NIFTY 50',
                 lotSize: document.querySelector('input[type="number"][value="25"]')?.value || '25',
@@ -338,7 +424,8 @@
                     profitThreshold: document.getElementById('profitStep')?.value || '800'
                 },
                 strategyName: document.querySelector('input[placeholder="Enter a name for your strategy"]')?.value || 'Untitled Strategy',
-                createdAt: new Date().toLocaleString()
+                createdAt: editingStrategyId ? savedStrategies.find(s => s.id === editingStrategyId)?.createdAt : new Date().toLocaleString(),
+                updatedAt: editingStrategyId ? new Date().toLocaleString() : null
             };
 
             // Collect legs data with error handling
@@ -366,24 +453,30 @@
                         });
                     }
                 });
-            } else {
-                console.warn('No legs found, adding default leg');
-                strategyData.legs.push({
-                    legNumber: 1,
-                    type: 'Buy',
-                    strike: 'ATM',
-                    option: 'CE',
-                    quantity: '1'
-                });
             }
 
-            // Save strategy to array and localStorage
-            savedStrategies.push(strategyData);
+            if (editingStrategyId) {
+                // Update existing strategy
+                const index = savedStrategies.findIndex(s => s.id === editingStrategyId);
+                if (index !== -1) {
+                    savedStrategies[index] = strategyData;
+                }
+                editingStrategyId = null; // Reset editing state
+                document.getElementById('saveStrategyBtn').textContent = 'Save Strategy';
+            } else {
+                // Add new strategy
+                savedStrategies.push(strategyData);
+            }
+
             localStorage.setItem('savedStrategies', JSON.stringify(savedStrategies));
             
             console.log('Strategy Data:', strategyData);
-            displaySavedStrategies(); // Update the display
-            alert('Strategy saved successfully!');
+            displaySavedStrategies();
+            
+            // Switch to My Strategies tab after saving
+            document.querySelector('#my-tab').click();
+            
+            alert(editingStrategyId ? 'Strategy updated successfully!' : 'Strategy saved successfully!');
             
             return strategyData;
         } catch (error) {
@@ -462,11 +555,6 @@
             localStorage.setItem('savedStrategies', JSON.stringify(savedStrategies));
             displaySavedStrategies();
         }
-    }
-
-    // Function to edit a strategy (placeholder for now)
-    function editStrategy(id) {
-        alert('Edit functionality coming soon!');
     }
 
     // Add leg function

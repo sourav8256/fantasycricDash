@@ -509,16 +509,8 @@
             const today = new Date().toLocaleDateString();
             if (lastResetDate !== today) {
                 dailyAttempts = 0;
-                completedDoses = 0;
                 lastResetDate = today;
                 saveToStorage();
-                saveDoseState();
-                
-                // Update the display
-                const completedDisplay = document.getElementById('completedDosesDisplay');
-                if (completedDisplay) {
-                    completedDisplay.textContent = '0';
-                }
             }
         }
 

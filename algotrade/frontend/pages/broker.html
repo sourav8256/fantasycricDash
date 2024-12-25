@@ -1,160 +1,330 @@
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <h5>Connect Broker</h5>
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Select Broker</label>
-                    <select class="form-select">
-                        <option value="">Choose your broker...</option>
-                        <option>Zerodha</option>
-                        <option>Angel One</option>
-                        <option>Upstox</option>
-                        <option>5paisa</option>
-                        <option>ICICI Direct</option>
-                    </select>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Client ID</label>
-                    <input type="text" class="form-control" placeholder="Enter your client ID">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">API Key</label>
-                    <input type="password" class="form-control" placeholder="Enter your API key">
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">API Secret</label>
-                    <input type="password" class="form-control" placeholder="Enter your API secret">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Redirect URL</label>
-                    <input type="text" class="form-control" value="https://algotrade.com/redirect" readonly>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button class="btn btn-primary w-100">Connect Broker</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broker Settings - AlgoTrade</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="../css/common.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            color: #2c3e50;
+        }
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <h5>Connected Brokers</h5>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Broker</th>
-                            <th>Client ID</th>
-                            <th>Status</th>
-                            <th>Last Connected</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <img src="assets/zerodha-logo.png" alt="Zerodha" width="24" class="me-2">
-                                    Zerodha
-                                </div>
-                            </td>
-                            <td>ZD1234</td>
-                            <td><span class="badge bg-success">Connected</span></td>
-                            <td>2024-03-15 09:15:00</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-danger">Disconnect</button>
-                                <button class="btn btn-sm btn-outline-primary">Refresh</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <img src="assets/angelone-logo.png" alt="Angel One" width="24" class="me-2">
-                                    Angel One
-                                </div>
-                            </td>
-                            <td>AN5678</td>
-                            <td><span class="badge bg-warning">Session Expired</span></td>
-                            <td>2024-03-14 15:30:00</td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary">Reconnect</button>
-                                <button class="btn btn-sm btn-outline-danger">Remove</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
+        .card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <h5>Broker Settings</h5>
-            <div class="mb-3">
-                <label class="form-label">Default Broker</label>
-                <select class="form-select">
-                    <option>Zerodha</option>
-                    <option>Angel One</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Auto Reconnect</label>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="autoReconnect" checked>
-                    <label class="form-check-label" for="autoReconnect">Automatically reconnect when session expires</label>
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card h5 {
+            color: #1a237e;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #283593 0%, #1a237e 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,35,126,0.2);
+        }
+
+        .btn-outline-primary {
+            border: 1.5px solid #1a237e;
+            color: #1a237e;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+        }
+
+        .btn-outline-primary:hover {
+            background: #1a237e;
+        }
+
+        .broker-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .broker-card:hover {
+            border-color: #1a237e;
+            transform: translateY(-2px);
+        }
+
+        .broker-card.active {
+            border-color: #1a237e;
+            background: rgba(26, 35, 126, 0.02);
+        }
+
+        .broker-logo {
+            width: 120px;
+            height: 40px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+        }
+
+        .broker-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .status-connected {
+            background: rgba(0, 200, 83, 0.1);
+            color: #00c853;
+        }
+
+        .status-disconnected {
+            background: rgba(255, 23, 68, 0.1);
+            color: #ff1744;
+        }
+
+        .broker-details {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .broker-details label {
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+
+        .broker-details p {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .api-key-field {
+            position: relative;
+        }
+
+        .api-key-field .toggle-visibility {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .api-key-field .toggle-visibility:hover {
+            color: #1a237e;
+        }
+
+        .connection-log {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .log-entry:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: #666;
+            margin-right: 0.5rem;
+        }
+
+        .log-success {
+            color: #00c853;
+        }
+
+        .log-error {
+            color: #ff1744;
+        }
+
+        .log-info {
+            color: #1a237e;
+        }
+
+        @media (max-width: 576px) {
+            .card {
+                padding: 1rem;
+            }
+            .broker-card {
+                padding: 1rem;
+            }
+            .btn-group {
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+            .input-group > * {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <h5>Connected Brokers</h5>
+                <div class="broker-card active">
+                    <img src="https://zerodha.com/static/images/logo.svg" alt="Zerodha" class="broker-logo">
+                    <div class="broker-status status-connected">
+                        <i class="fas fa-check-circle"></i> Connected
+                    </div>
+                    <div class="broker-details">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>User ID</label>
+                                <p>AB1234</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Account Type</label>
+                                <p>Individual</p>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <label>API Key</label>
+                                <div class="api-key-field">
+                                    <p>••••••••••••••••</p>
+                                    <button class="toggle-visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Last Connected</label>
+                                <p>Today, 9:15 AM</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-sync-alt"></i> Reconnect
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-unlink"></i> Disconnect
+                        </button>
+                    </div>
+                </div>
+
+                <div class="broker-card">
+                    <img src="https://upstox.com/open-api/img/upstox-logo.svg" alt="Upstox" class="broker-logo">
+                    <div class="broker-status status-disconnected">
+                        <i class="fas fa-times-circle"></i> Disconnected
+                    </div>
+                    <p class="text-muted">Click connect to add your Upstox account</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plug"></i> Connect Account
+                    </button>
                 </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Session Timeout</label>
-                <select class="form-select">
-                    <option>1 hour</option>
-                    <option>4 hours</option>
-                    <option>8 hours</option>
-                    <option>24 hours</option>
-                </select>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <h5>Connection Log</h5>
+                <div class="connection-log">
+                    <div class="log-entry">
+                        <span class="log-time">09:15:00</span>
+                        <span class="log-success">Connected to Zerodha</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">09:14:58</span>
+                        <span class="log-info">Authenticating...</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">09:14:55</span>
+                        <span class="log-info">Initializing connection...</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">09:00:00</span>
+                        <span class="log-error">Session expired</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <h5>Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-key"></i> Update API Keys
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-cog"></i> Broker Settings
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-question-circle"></i> Connection Help
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card">
-            <h5>API Limits</h5>
-            <div class="metrics-grid">
-                <div class="metric-item">
-                    <small>Orders/min</small>
-                    <span>40/100</span>
-                    <div class="progress mt-1" style="height: 4px;">
-                        <div class="progress-bar" style="width: 40%"></div>
-                    </div>
-                </div>
-                <div class="metric-item">
-                    <small>Margin API Calls</small>
-                    <span>150/300</span>
-                    <div class="progress mt-1" style="height: 4px;">
-                        <div class="progress-bar" style="width: 50%"></div>
-                    </div>
-                </div>
-                <div class="metric-item">
-                    <small>Position API Calls</small>
-                    <span>80/200</span>
-                    <div class="progress mt-1" style="height: 4px;">
-                        <div class="progress-bar" style="width: 40%"></div>
-                    </div>
-                </div>
-                <div class="metric-item">
-                    <small>WebSocket Connections</small>
-                    <span>2/5</span>
-                    <div class="progress mt-1" style="height: 4px;">
-                        <div class="progress-bar" style="width: 40%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle API Key visibility
+            document.querySelectorAll('.toggle-visibility').forEach(button => {
+                button.addEventListener('click', function() {
+                    const keyField = this.previousElementSibling;
+                    const icon = this.querySelector('i');
+                    if (keyField.textContent === '••••••••••••••••') {
+                        keyField.textContent = 'ABC123XYZ789';
+                        icon.classList.replace('fa-eye', 'fa-eye-slash');
+                    } else {
+                        keyField.textContent = '••••••••••••••••';
+                        icon.classList.replace('fa-eye-slash', 'fa-eye');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

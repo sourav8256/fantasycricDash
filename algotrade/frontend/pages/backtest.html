@@ -1,122 +1,349 @@
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <h5>Create Backtest</h5>
-            <div class="row">
-                <div class="col-md-4">
-                    <label class="form-label">Select Strategy</label>
-                    <select class="form-select mb-3">
-                        <option value="">Choose a strategy...</option>
-                        <option>Advanced Delta Neutral</option>
-                        <option>1% SL Strangle BNF</option>
-                        <option>Intraday Momentum</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Time Period</label>
-                    <select class="form-select mb-3">
-                        <option>Last 1 Month</option>
-                        <option>Last 3 Months</option>
-                        <option>Last 6 Months</option>
-                        <option>Last 1 Year</option>
-                        <option>Custom Range</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Capital</label>
-                    <div class="input-group mb-3">
-                        <span class="input-group-text">₹</span>
-                        <input type="number" class="form-control" value="500000">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <label class="form-label">Risk Per Trade</label>
-                    <div class="input-group mb-3">
-                        <input type="number" class="form-control" value="1">
-                        <span class="input-group-text">%</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Max Drawdown Limit</label>
-                    <div class="input-group mb-3">
-                        <input type="number" class="form-control" value="10">
-                        <span class="input-group-text">%</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Target ROI</label>
-                    <div class="input-group mb-3">
-                        <input type="number" class="form-control" value="20">
-                        <span class="input-group-text">%</span>
-                    </div>
-                </div>
-            </div>
-            <div class="text-end">
-                <button class="btn btn-primary">Run Backtest</button>
-            </div>
-        </div>
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtest - AlgoTrade</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="../css/common.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            color: #2c3e50;
+        }
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <h5>Performance Metrics</h5>
-            <canvas id="backtestPerformanceChart"></canvas>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <h5>Trade Distribution</h5>
-            <canvas id="backtestDistributionChart"></canvas>
-        </div>
-    </div>
-</div>
+        .card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <h5>Trade Log</h5>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Instrument</th>
-                            <th>Strategy</th>
-                            <th>Entry</th>
-                            <th>Exit</th>
-                            <th>Quantity</th>
-                            <th>P&L</th>
-                            <th>ROI</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>2024-03-15</td>
-                            <td>NIFTY 24MAR 22500 CE</td>
-                            <td>Delta Neutral</td>
-                            <td>₹125.50</td>
-                            <td>₹145.75</td>
-                            <td>50</td>
-                            <td class="text-success">+₹1,012.50</td>
-                            <td class="text-success">+1.62%</td>
-                        </tr>
-                        <tr>
-                            <td>2024-03-15</td>
-                            <td>BANKNIFTY 24MAR 48000 PE</td>
-                            <td>Delta Neutral</td>
-                            <td>₹185.25</td>
-                            <td>₹165.50</td>
-                            <td>25</td>
-                            <td class="text-danger">-₹493.75</td>
-                            <td class="text-danger">-0.79%</td>
-                        </tr>
-                    </tbody>
-                </table>
+        .card h5 {
+            color: #1a237e;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #283593 0%, #1a237e 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,35,126,0.2);
+        }
+
+        .form-control {
+            border: 1.5px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #1a237e;
+            box-shadow: 0 0 0 0.2rem rgba(26,35,126,0.1);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 0.7rem;
+        }
+
+        .backtest-results {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .metric-card h6 {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1a237e;
+        }
+
+        .metric-card .change {
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+        }
+
+        .change.positive {
+            color: #00c853;
+        }
+
+        .change.negative {
+            color: #ff1744;
+        }
+
+        .trade-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .trade-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+
+        .trade-item:hover {
+            background-color: rgba(26, 35, 126, 0.02);
+        }
+
+        .trade-item:last-child {
+            border-bottom: none;
+        }
+
+        .trade-time {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .trade-details {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .trade-pnl {
+            font-weight: 600;
+        }
+
+        .trade-pnl.profit {
+            color: #00c853;
+        }
+
+        .trade-pnl.loss {
+            color: #ff1744;
+        }
+
+        canvas {
+            width: 100% !important;
+            max-height: 300px;
+            margin: 1rem 0;
+        }
+
+        .date-range {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .strategy-params {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 576px) {
+            .card {
+                padding: 1rem;
+            }
+            .metric-card {
+                padding: 0.8rem;
+            }
+            .date-range {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .strategy-params {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <h5>Backtest Parameters</h5>
+                <form id="backtestForm">
+                    <div class="mb-3">
+                        <label class="form-label">Strategy</label>
+                        <select class="form-control">
+                            <option>Advanced Delta Neutral</option>
+                            <option>1% SL Strangle BNF</option>
+                            <option>Iron Butterfly</option>
+                        </select>
+                    </div>
+
+                    <div class="date-range">
+                        <div class="mb-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="strategy-params">
+                        <div class="mb-3">
+                            <label class="form-label">Capital</label>
+                            <input type="number" class="form-control" value="500000">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Stop Loss (%)</label>
+                            <input type="number" class="form-control" value="1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Target (%)</label>
+                            <input type="number" class="form-control" value="2">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-play"></i> Run Backtest
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <h5>Backtest Results</h5>
+                <div class="backtest-results">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <h6>Total P&L</h6>
+                                <span class="value">₹52,840</span>
+                                <span class="change positive">+10.57%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <h6>Win Rate</h6>
+                                <span class="value">68%</span>
+                                <span class="change">(34/50)</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <h6>Max Drawdown</h6>
+                                <span class="value">₹15,420</span>
+                                <span class="change negative">-3.08%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <h6>Sharpe Ratio</h6>
+                                <span class="value">1.85</span>
+                                <span class="change positive">Good</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <canvas id="equityCurve"></canvas>
+
+                    <div class="trade-list">
+                        <div class="trade-item">
+                            <div class="trade-time">2024-03-15 09:30:00</div>
+                            <div class="trade-details">
+                                BUY 1 lot NIFTY 22000 CE @ 150
+                                <span class="trade-pnl profit">+₹2,500</span>
+                            </div>
+                        </div>
+                        <div class="trade-item">
+                            <div class="trade-time">2024-03-15 10:15:00</div>
+                            <div class="trade-details">
+                                SELL 1 lot NIFTY 21800 PE @ 80
+                                <span class="trade-pnl loss">-₹1,200</span>
+                            </div>
+                        </div>
+                        <div class="trade-item">
+                            <div class="trade-time">2024-03-15 11:00:00</div>
+                            <div class="trade-details">
+                                BUY 1 lot NIFTY 22200 CE @ 95
+                                <span class="trade-pnl profit">+₹1,800</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div> 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Equity Curve Chart
+            new Chart(document.getElementById('equityCurve'), {
+                type: 'line',
+                data: {
+                    labels: ['9:15', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '15:30'],
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: [500000, 502500, 504800, 503600, 506900, 508400, 510200, 512840],
+                        borderColor: '#1a237e',
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(26, 35, 126, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Handle form submission
+            document.getElementById('backtestForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Add your backtest logic here
+            });
+        });
+    </script>
+</body>
+</html> 

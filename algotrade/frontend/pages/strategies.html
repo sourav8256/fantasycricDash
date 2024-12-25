@@ -1,73 +1,126 @@
-<div class="strategy-container" style="width: 100%; box-sizing: border-box; overflow-x: hidden;">
-    <div class="nav nav-pills" id="strategyTabs" role="tablist">
-        <button class="nav-link active" id="create-tab" data-bs-toggle="pill" data-bs-target="#create" type="button" role="tab">Create Strategy</button>
-        <button class="nav-link" id="my-tab" data-bs-toggle="pill" data-bs-target="#my" type="button" role="tab">My Strategies</button>
-        <button class="nav-link" id="deployed-tab" data-bs-toggle="pill" data-bs-target="#deployed" type="button" role="tab">Deployed Strategies</button>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Builder</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            width: 100%;
+        }
+        .card h5 {
+            color: #1a237e;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+        }
+        .form-control, .form-select {
+            border: 1.5px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #1a237e;
+            box-shadow: 0 0 0 0.2rem rgba(26,35,126,0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+        }
+        .btn-outline-primary {
+            border: 1.5px solid #1a237e;
+            color: #1a237e;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+        }
+        .input-group-text {
+            background: #f8f9fa;
+            border: 1.5px solid #e0e6ed;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .nav-pills {
+            background: white;
+            padding: 0.8rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+        .nav-pills .nav-link {
+            color: #1a237e;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            margin-right: 0.8rem;
+            font-weight: 500;
+        }
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+        }
+        .leg-row {
+            transition: all 0.3s ease;
+        }
+        .leg-row:hover {
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="strategy-container">
+        <div class="nav nav-pills" id="strategyTabs" role="tablist">
+            <button class="nav-link active" id="create-tab" data-bs-toggle="pill" data-bs-target="#create" type="button" role="tab">Create Strategy</button>
+            <button class="nav-link" id="my-tab" data-bs-toggle="pill" data-bs-target="#my" type="button" role="tab">My Strategies</button>
+            <button class="nav-link" id="deployed-tab" data-bs-toggle="pill" data-bs-target="#deployed" type="button" role="tab">Deployed Strategies</button>
+        </div>
 
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="create" role="tabpanel">
-            <div class="card">
-                <h5>Strategy Type</h5>
-                <div class="btn-group" role="group">
-                    <input type="radio" class="btn-check" name="strategy" id="time" checked>
-                    <label class="btn btn-outline-primary" for="time">Time Based</label>
-                    
-                    <input type="radio" class="btn-check" name="strategy" id="indicator">
-                    <label class="btn btn-outline-primary" for="indicator">Indicator Based</label>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="create" role="tabpanel">
+                <div class="card">
+                    <h5>Strategy Type</h5>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="strategy" id="time" checked>
+                        <label class="btn btn-outline-primary" for="time">Time Based</label>
+                        
+                        <input type="radio" class="btn-check" name="strategy" id="indicator">
+                        <label class="btn btn-outline-primary" for="indicator">Indicator Based</label>
+                    </div>
                 </div>
-            </div>
 
-            <div class="card">
-                <h5>Select Instruments</h5>
-                <select class="form-select mb-3">
-                    <option>NIFTY 50</option>
-                    <option>BANKNIFTY</option>
-                    <option>FINNIFTY</option>
-                </select>
+                <div class="card">
+                    <h5>Select Instruments</h5>
+                    <select class="form-select mb-3">
+                        <option>NIFTY 50</option>
+                        <option>BANKNIFTY</option>
+                        <option>FINNIFTY</option>
+                    </select>
 
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="input-group">
-                            <span class="input-group-text">Lot Size</span>
-                            <input type="number" class="form-control" value="25" style="margin: 0;">
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="input-group">
-                            <span class="input-group-text">Strike</span>
-                            <select class="form-select">
-                                <option>ATM</option>
-                                <option>ITM</option>
-                                <option>OTM</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="input-group">
-                            <span class="input-group-text">Option</span>
-                            <select class="form-select">
-                                <option>CE</option>
-                                <option>PE</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <h5>Order Legs</h5>
-                <div id="legsContainer">
-                    <div class="row leg-row">
-                        <div class="col-md-3">
+                    <div class="row">
+                        <div class="col-md-4">
                             <div class="input-group">
-                                <span class="input-group-text">Leg 1</span>
-                                <select class="form-select">
-                                    <option>Buy</option>
-                                    <option>Sell</option>
-                                </select>
+                                <span class="input-group-text">Lot Size</span>
+                                <input type="number" class="form-control" value="25" style="margin: 0;">
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="input-group">
                                 <span class="input-group-text">Strike</span>
                                 <select class="form-select">
@@ -77,7 +130,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="input-group">
                                 <span class="input-group-text">Option</span>
                                 <select class="form-select">
@@ -86,222 +139,415 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Order Legs</h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="addLeg()" type="button">
+                            <i class="fas fa-plus"></i> Add Leg
+                        </button>
+                    </div>
+                    <div id="legsContainer">
+                        <div class="row leg-row mb-3" data-leg="1">
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <span class="input-group-text">Leg 1</span>
+                                    <select class="form-select">
+                                        <option>Buy</option>
+                                        <option>Sell</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <span class="input-group-text">Strike</span>
+                                    <select class="form-select">
+                                        <option>ATM</option>
+                                        <option>ITM</option>
+                                        <option>OTM</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <span class="input-group-text">Option</span>
+                                    <select class="form-select">
+                                        <option>CE</option>
+                                        <option>PE</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">Qty</span>
+                                    <input type="number" class="form-control" value="1" min="1">
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-outline-danger btn-sm w-100">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h5>Risk Management</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Exit when total profit amounts to</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Exit when total loss amounts to</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">No Trade After</label>
+                            <input type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Profit Management Options</label>
+                            <div class="d-flex">
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" name="profitManagement" id="noTrailing" value="noTrailing" checked>
+                                    <label class="form-check-label" for="noTrailing">No Trailing</label>
+                                </div>
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" name="profitManagement" id="lockFixProfit" value="lockFixProfit">
+                                    <label class="form-check-label" for="lockFixProfit">Lock Fix Profit</label>
+                                </div>
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" name="profitManagement" id="totalProfit" value="totalProfit">
+                                    <label class="form-check-label" for="totalProfit">Total Profit</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="profitManagement" id="lockAndTrail" value="lockAndTrail">
+                                    <label class="form-check-label" for="lockAndTrail">Lock and Trail</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2" id="trailingOptions">
+                        <div class="col-md-6">
+                            <label class="form-label">Trail Amount</label>
                             <div class="input-group">
-                                <span class="input-group-text">Qty</span>
-                                <input type="number" class="form-control" value="1" min="1">
+                                <span class="input-group-text">Increase by</span>
+                                <input type="number" class="form-control" id="trailStep" value="400" min="1">
+                                <span class="input-group-text">points</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Profit Threshold</label>
+                            <div class="input-group">
+                                <span class="input-group-text">For every</span>
+                                <input type="number" class="form-control" id="profitStep" value="800" min="1">
+                                <span class="input-group-text">points profit</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2" id="trailPreview">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small>
+                                        <i class="fas fa-info-circle"></i> Preview: 
+                                        <span id="previewText">Stop loss will increase by 400 points for every 800 points profit</span>
+                                    </small>
+                                    <button class="btn btn-sm btn-outline-primary" id="calculateBtn">Calculate</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h5>Save Strategy</h5>
+                    <div class="row align-items-end">
+                        <div class="col-md-8">
+                            <label class="form-label">Strategy Name</label>
+                            <input type="text" class="form-control" placeholder="Enter a name for your strategy">
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                <button class="btn btn-primary" id="saveStrategyBtn" onclick="saveStrategy()">Save Strategy</button>
+                                <button class="btn btn-success">Deploy Strategy</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h5>Risk Management</h5>
-                
-
-                <div class="row">
-                    <div class="col-md-4">
-                        <label class="form-label">Exit when total profit amounts to</label>
-                        <input type="text" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Exit when total loss amounts to</label>
-                        <input type="text" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">No Trade After</label>
-                        <input type="text" class="form-control">
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <label class="form-label">Profit Management Options</label>
-                        <div class="d-flex">
-                            <div class="form-check me-3">
-                                <input class="form-check-input" type="radio" name="profitManagement" id="noTrailing" value="noTrailing" checked>
-                                <label class="form-check-label" for="noTrailing">No Trailing</label>
-                            </div>
-                            <div class="form-check me-3">
-                                <input class="form-check-input" type="radio" name="profitManagement" id="lockFixProfit" value="lockFixProfit">
-                                <label class="form-check-label" for="lockFixProfit">Lock Fix Profit</label>
-                            </div>
-                            <div class="form-check me-3">
-                                <input class="form-check-input" type="radio" name="profitManagement" id="totalProfit" value="totalProfit">
-                                <label class="form-check-label" for="totalProfit">Total Profit</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="profitManagement" id="lockAndTrail" value="lockAndTrail">
-                                <label class="form-check-label" for="lockAndTrail">Lock and Trail</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-2" id="trailingOptions">
-                    <div class="col-md-6">
-                        <label class="form-label">Trail Amount</label>
-                        <div class="input-group">
-                            <span class="input-group-text">Increase by</span>
-                            <input type="number" class="form-control" id="trailStep" value="400" min="1">
-                            <span class="input-group-text">points</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Profit Threshold</label>
-                        <div class="input-group">
-                            <span class="input-group-text">For every</span>
-                            <input type="number" class="form-control" id="profitStep" value="800" min="1">
-                            <span class="input-group-text">points profit</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-2" id="trailPreview">
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small>
-                                    <i class="fas fa-info-circle"></i> Preview: 
-                                    <span id="previewText">Stop loss will increase by 400 points for every 800 points profit</span>
-                                </small>
-                                <button class="btn btn-sm btn-outline-primary" id="calculateBtn">Calculate</button>
-                            </div>
-                        </div>
-                    </div>
+            <div class="tab-pane fade" id="my" role="tabpanel">
+                <div class="card">
+                    <h5>My Saved Strategies</h5>
+                    <p>No strategies saved yet</p>
                 </div>
             </div>
 
-            <div class="card">
-                <h5>Save Strategy</h5>
-                <div class="row align-items-end">
-                    <div class="col-md-8">
-                        <label class="form-label">Strategy Name</label>
-                        <input type="text" class="form-control" placeholder="Enter a name for your strategy">
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div class="btn-group">
-                            <button class="btn btn-primary">Save Strategy</button>
-                            <button class="btn btn-success">Deploy Strategy</button>
-                        </div>
-                    </div>
+            <div class="tab-pane fade" id="deployed" role="tabpanel">
+                <div class="card">
+                    <h5>Currently Deployed</h5>
+                    <p>No strategies deployed</p>
                 </div>
             </div>
-        </div>
+        </div> 
+    </div>
 
-        <div class="tab-pane fade" id="my" role="tabpanel">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    console.log('Strategy page script starting...');
+
+    // Initialize leg counter and saved strategies array
+    let legCount = 1;
+    let savedStrategies = [];
+
+    // Helper functions for safe value retrieval
+    function getElementValue(selector, defaultValue = '') {
+        const element = document.querySelector(selector);
+        return element ? element.value : defaultValue;
+    }
+
+    function getCheckedRadioValue(name, defaultValue = '') {
+        const radio = document.querySelector(`input[name="${name}"]:checked`);
+        return radio ? radio.id : defaultValue;
+    }
+
+    // Function to save strategy
+    function saveStrategy() {
+        try {
+            const strategyData = {
+                id: Date.now(), // Add unique ID for each strategy
+                type: document.querySelector('input[name="strategy"]:checked')?.id || 'time',
+                instrument: document.querySelector('.form-select')?.value || 'NIFTY 50',
+                lotSize: document.querySelector('input[type="number"][value="25"]')?.value || '25',
+                strike: document.querySelector('.input-group .form-select option:checked')?.value || 'ATM',
+                option: document.querySelector('.input-group select:last-of-type')?.value || 'CE',
+                legs: [],
+                riskManagement: {
+                    profitTarget: document.querySelector('input[placeholder*="profit"]')?.value || '0',
+                    stopLoss: document.querySelector('input[placeholder*="loss"]')?.value || '0',
+                    noTradeTime: document.querySelector('input[placeholder*="Trade"]')?.value || '15:30',
+                    profitManagement: document.querySelector('input[name="profitManagement"]:checked')?.value || 'noTrailing',
+                    trailAmount: document.getElementById('trailStep')?.value || '400',
+                    profitThreshold: document.getElementById('profitStep')?.value || '800'
+                },
+                strategyName: document.querySelector('input[placeholder="Enter a name for your strategy"]')?.value || 'Untitled Strategy',
+                createdAt: new Date().toLocaleString()
+            };
+
+            // Collect legs data with error handling
+            const legRows = document.querySelectorAll('.leg-row');
+            if (legRows && legRows.length > 0) {
+                legRows.forEach((leg, index) => {
+                    try {
+                        const selects = leg.querySelectorAll('select');
+                        const legData = {
+                            legNumber: index + 1,
+                            type: selects[0]?.value || 'Buy',
+                            strike: selects[1]?.value || 'ATM',
+                            option: selects[2]?.value || 'CE',
+                            quantity: leg.querySelector('input[type="number"]')?.value || '1'
+                        };
+                        strategyData.legs.push(legData);
+                    } catch (legError) {
+                        console.error(`Error processing leg ${index + 1}:`, legError);
+                        strategyData.legs.push({
+                            legNumber: index + 1,
+                            type: 'Buy',
+                            strike: 'ATM',
+                            option: 'CE',
+                            quantity: '1'
+                        });
+                    }
+                });
+            } else {
+                console.warn('No legs found, adding default leg');
+                strategyData.legs.push({
+                    legNumber: 1,
+                    type: 'Buy',
+                    strike: 'ATM',
+                    option: 'CE',
+                    quantity: '1'
+                });
+            }
+
+            // Save strategy to array and localStorage
+            savedStrategies.push(strategyData);
+            localStorage.setItem('savedStrategies', JSON.stringify(savedStrategies));
+            
+            console.log('Strategy Data:', strategyData);
+            displaySavedStrategies(); // Update the display
+            alert('Strategy saved successfully!');
+            
+            return strategyData;
+        } catch (error) {
+            console.error('Error saving strategy:', error);
+            alert('There was an error saving the strategy. Please check all fields are filled correctly.');
+        }
+    }
+
+    // Function to display saved strategies
+    function displaySavedStrategies() {
+        const myStrategiesDiv = document.querySelector('#my');
+        if (!myStrategiesDiv) return;
+
+        if (savedStrategies.length === 0) {
+            myStrategiesDiv.innerHTML = `
+                <div class="card">
+                    <h5>My Saved Strategies</h5>
+                    <p>No strategies saved yet</p>
+                </div>
+            `;
+            return;
+        }
+
+        let strategiesHtml = `
             <div class="card">
                 <h5>My Saved Strategies</h5>
-                <p>No strategies saved yet</p>
-            </div>
-        </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Instrument</th>
+                                <th>Legs</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
 
-        <div class="tab-pane fade" id="deployed" role="tabpanel">
-            <div class="card">
-                <h5>Currently Deployed</h5>
-                <p>No strategies deployed</p>
-            </div>
-        </div>
-    </div> 
-</div>
+        savedStrategies.forEach(strategy => {
+            strategiesHtml += `
+                <tr>
+                    <td>${strategy.strategyName}</td>
+                    <td>${strategy.type}</td>
+                    <td>${strategy.instrument}</td>
+                    <td>${strategy.legs.length} legs</td>
+                    <td>${strategy.createdAt}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" onclick="editStrategy(${strategy.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStrategy(${strategy.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
 
-<script>
+        strategiesHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        myStrategiesDiv.innerHTML = strategiesHtml;
+    }
+
+    // Function to delete a strategy
+    function deleteStrategy(id) {
+        if (confirm('Are you sure you want to delete this strategy?')) {
+            savedStrategies = savedStrategies.filter(s => s.id !== id);
+            localStorage.setItem('savedStrategies', JSON.stringify(savedStrategies));
+            displaySavedStrategies();
+        }
+    }
+
+    // Function to edit a strategy (placeholder for now)
+    function editStrategy(id) {
+        alert('Edit functionality coming soon!');
+    }
+
+    // Add leg function
+    function addLeg() {
+        console.log('addLeg function executing...');
+        legCount++;
+        
+        const newLeg = `
+            <div class="row leg-row mb-3" data-leg="${legCount}">
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text">Leg ${legCount}</span>
+                        <select class="form-select">
+                            <option>Buy</option>
+                            <option>Sell</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text">Strike</span>
+                        <select class="form-select">
+                            <option>ATM</option>
+                            <option>ITM</option>
+                            <option>OTM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text">Option</span>
+                        <select class="form-select">
+                            <option>CE</option>
+                            <option>PE</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="input-group">
+                        <span class="input-group-text">Qty</span>
+                        <input type="number" class="form-control" value="1" min="1">
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-outline-danger btn-sm w-100" onclick="removeLeg(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('legsContainer').insertAdjacentHTML('beforeend', newLeg);
+        updateRemoveButtons();
+    }
+
+    // Remove leg function
+    function removeLeg(button) {
+        button.closest('.leg-row').remove();
+        legCount--;
+        updateRemoveButtons();
+    }
+
+    // Update remove buttons function
+    function updateRemoveButtons() {
+        const buttons = document.querySelectorAll('.btn-outline-danger');
+        buttons.forEach(btn => {
+            btn.style.display = legCount > 1 ? 'block' : 'none';
+        });
+    }
+
+    // Initial setup
     document.addEventListener('DOMContentLoaded', function() {
-        // Existing trailing stop loss functionality
-        const trailingSwitch = document.getElementById('enableTrailing');
-        const trailingOptions = document.getElementById('trailingOptions');
-        const trailPreview = document.getElementById('trailPreview');
-        const trailStep = document.getElementById('trailStep');
-        const profitStep = document.getElementById('profitStep');
-        const previewText = document.getElementById('previewText');
-        const calculateBtn = document.getElementById('calculateBtn');
-
-        // Existing trailing stop loss event listeners
-        if (trailingSwitch) {
-            trailingSwitch.addEventListener('change', function() {
-                trailingOptions.style.display = this.checked ? 'flex' : 'none';
-                trailPreview.style.display = this.checked ? 'flex' : 'none';
-                updatePreview();
-            });
+        // Load saved strategies from localStorage
+        const savedStrategiesJson = localStorage.getItem('savedStrategies');
+        if (savedStrategiesJson) {
+            savedStrategies = JSON.parse(savedStrategiesJson);
         }
-
-        // Update preview when values change
-        if (trailStep && profitStep) {
-            [trailStep, profitStep].forEach(input => {
-                input.addEventListener('input', updatePreview);
-            });
-        }
-
-        function updatePreview() {
-            const trail = parseInt(trailStep.value) || 0;
-            const profit = parseInt(profitStep.value) || 0;
-
-            if (trail && profit) {
-                previewText.innerHTML = `Stop loss will increase by ${trail} points for every ${profit} points profit`;
-            } else {
-                previewText.innerHTML = 'Please enter valid numbers for both fields';
-            }
-        }
-
-        if (calculateBtn) {
-            calculateBtn.addEventListener('click', function() {
-                const currentProfit = prompt('Enter current profit in points:');
-                if (currentProfit !== null) {
-                    const trail = parseInt(trailStep.value);
-                    const profit = parseInt(profitStep.value);
-                    const steps = Math.floor(parseInt(currentProfit) / profit);
-                    const trailAmount = steps * trail;
-                    
-                    alert(`For ${currentProfit} points profit, stop loss would increase by ${trailAmount} points`);
-                }
-            });
-        }
-
-        // Initial preview update if elements exist
-        if (trailStep && profitStep) {
-            updatePreview();
-        }
+        
+        updateRemoveButtons();
+        displaySavedStrategies();
     });
-</script> 
-
-<style>
-    .strategy-container {
-        max-width: 100%;
-        padding: 0;
-        overflow-x: hidden;
-    }
-    .strategy-container .card {
-        margin-bottom: 1rem;
-        width: 100%;
-        box-sizing: border-box;
-        overflow: hidden;
-    }
-    .strategy-container .row {
-        margin-right: 0;
-        margin-left: 0;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .strategy-container .input-group {
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    /* Add responsive fixes */
-    @media (max-width: 768px) {
-        .strategy-container .btn-group {
-            width: 100%;
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .strategy-container .btn-group .btn {
-            flex: 1;
-            min-width: fit-content;
-        }
-        .strategy-container .input-group {
-            flex-wrap: wrap;
-        }
-        .strategy-container .input-group > * {
-            flex: 1 1 auto;
-        }
-    }
-</style> 
+    </script>
+</body>
+</html>

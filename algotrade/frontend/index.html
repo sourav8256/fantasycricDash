@@ -125,13 +125,14 @@
             box-shadow: 0 4px 12px rgba(26,35,126,0.2);
         }
         .main-content {
-            padding: 25px;
+            padding: 5px;
             margin-left: 250px;
             margin-top: 130px;
-            overflow-x: hidden;
+            overflow: hidden;
             max-width: calc(100vw - 250px);
             box-sizing: border-box;
             position: relative;
+            height: calc(100vh - 130px);
         }
         .sidebar {
             height: 100%;
@@ -315,6 +316,24 @@
             width: 100%;
             box-sizing: border-box;
         }
+        .content-section {
+            width: 100%;
+            height: calc(100vh - 180px);
+            position: relative;
+            display: none;
+            margin: 0;
+            padding: 0;
+        }
+        .content-section iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -398,39 +417,35 @@
             }
 
             try {
-                console.log('Fetching content from:', `pages/${sectionId}.html`);
-                const response = await fetch(`pages/${sectionId}.html`);
-                console.log('Response:', response);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const content = await response.text();
-                console.log('Content loaded, length:', content.length);
-                
-                contentDiv.innerHTML = content;
-                console.log('Content set to div');
-                
-                // Update URL without reloading the page
-                history.pushState({section: sectionId}, '', `#${sectionId}`);
-                
-                // Initialize Bootstrap components
-                if (typeof bootstrap !== 'undefined') {
-                    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                    tooltipTriggerList.map(function (tooltipTriggerEl) {
-                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                // Create iframe if it doesn't exist
+                let iframe = contentDiv.querySelector('iframe');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    
+                    // Set proper styles for the iframe
+                    Object.assign(iframe.style, {
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        position: 'absolute',
+                        top: '0',
+                        left: '0',
+                        right: '0',
+                        bottom: '0'
                     });
                     
-                    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-                    popoverTriggerList.map(function (popoverTriggerEl) {
-                        return new bootstrap.Popover(popoverTriggerEl);
-                    });
+                    contentDiv.innerHTML = ''; // Clear existing content
+                    contentDiv.appendChild(iframe);
                 }
-                
-                if (typeof initializeCharts === 'function') {
-                    setTimeout(initializeCharts, 100);
-                }
+
+                // Set iframe source
+                const pagePath = `pages/${sectionId}.html`;
+                console.log('Loading page:', pagePath);
+                iframe.src = pagePath;
+
+                // Update URL without reloading the page
+                history.pushState({section: sectionId}, '', `#${sectionId}`);
+
             } catch (error) {
                 console.error('Error details:', error);
                 contentDiv.innerHTML = `

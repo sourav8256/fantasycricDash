@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Remember List - Basic Version</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+        #display {
+            font-size: clamp(16px, 4vw, 24px);
+            margin: 20px 0;
+            min-height: 100px;
+            word-wrap: break-word;
+        }
+        input {
+            width: 90%;
+            max-width: 400px;
+            padding: 10px;
+            margin: 10px auto;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            touch-action: manipulation;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .score {
+            font-size: clamp(16px, 4vw, 20px);
+            margin: 20px 0;
+        }
+        .correct { color: #4CAF50; }
+        .incorrect { color: #f44336; }
+        .graph-container {
+            margin: 30px auto;
+            width: 95%;
+            height: 200px;
+            border-left: 2px solid #333;
+            border-bottom: 2px solid #333;
+            position: relative;
+            padding: 0 10px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .bar {
+            position: absolute;
+            bottom: 0;
+            width: clamp(20px, 5vw, 30px);
+            background-color: #4CAF50;
+            transition: height 0.3s ease;
+            border-radius: 3px 3px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            min-height: 20px;
+        }
+        .bar-label {
+            position: absolute;
+            bottom: -35px;
+            width: clamp(20px, 5vw, 30px);
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+        .y-axis {
+            position: absolute;
+            left: -35px;
+            height: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        #difficulty, #limitSetting {
+            margin: 15px 0;
+        }
+        select, #dailyLimitInput {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        #dailyLimitInput {
+            width: 60px;
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                margin: 10px;
+            }
+            .graph-container {
+                margin: 40px auto;
+            }
+            .bar {
+                margin: 0 2px;
+            }
+            #difficulty select {
+                max-width: 100%;
+                margin: 5px 0;
+            }
+            .instructions {
+                font-size: 12px !important;
+            }
+            #result {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Memory Test</h1>
+    <p>Remember the words shown and type them in order</p>
+    
+    <div id="display"></div>
+    <input type="text" id="answer" placeholder="Type words separated by spaces" style="display: none">
+    <div>
+        <button id="startBtn">Start Test</button>
+        <button id="checkBtn" style="display: none">Check Answer</button>
+    </div>
+    <div id="result"></div>
+    <div class="score">
+        Score: <span id="score">0</span>
+    </div>
+    <div class="graph-container">
+        <div class="y-axis">
+            <span>100</span>
+            <span>75</span>
+            <span>50</span>
+            <span>25</span>
+            <span>0</span>
+        </div>
+    </div>
+    <div class="instructions" style="margin-top: 20px; font-size: 14px; color: #666;">
+        * Your scores are automatically saved and will persist across page reloads
+    </div>
+    <div id="difficulty">
+        <label>Difficulty Level: </label>
+        <select id="difficultySelect">
+            <option value="easy">Easy (8 items, 12 seconds)</option>
+            <option value="medium">Medium (12 items, 15 seconds)</option>
+            <option value="hard">Hard (16 items, 20 seconds)</option>
+            <option value="expert">Expert (20 items, 25 seconds)</option>
+            <option value="master">Master (25 items, 30 seconds)</option>
+        </select>
+    </div>
+    <div id="limitSetting" style="margin: 15px 0;">
+        <label>Daily Attempts Limit: </label>
+        <input type="number" id="dailyLimitInput" min="0" value="10" style="width: 80px;">
+        <span style="font-size: 12px; color: #666;">(0 for unlimited)</span>
+        <span id="attemptsLeft" style="margin-left: 10px; font-size: 14px;"></span>
+    </div>
+
+    <script>
+        const wordList = [
+            "cat", "dog", "bird", "fish", "tree", "book", "car", "house", "phone", "desk",
+            "cup", "door", "chair", "lamp", "pen", "sun", "moon", "star", "cloud", "rain",
+            "fire", "water", "earth", "wind", "leaf", "rock", "sand", "wave", "hill", "lake",
+            "ship", "plane", "train", "bike", "road", "wall", "roof", "floor", "sky", "sea",
+            "hand", "foot", "head", "eye", "nose", "mouth", "hair", "face", "arm", "leg"
+        ];
+        
+        let currentWords = [];
+        let score = 0;
+        let scoreHistory = [];
+        const maxBars = 10;
+        
+        const settings = {
+            difficulties: {
+                easy: { wordCount: 8, displayTime: 12000 },
+                medium: { wordCount: 12, displayTime: 15000 },
+                hard: { wordCount: 16, displayTime: 20000 },
+                expert: { wordCount: 20, displayTime: 25000 },
+                master: { wordCount: 25, displayTime: 30000 }
+            },
+            defaultDailyLimit: 10
+        };
+        
+        const display = document.getElementById('display');
+        const answer = document.getElementById('answer');
+        const startBtn = document.getElementById('startBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        const result = document.getElementById('result');
+        const difficultySelect = document.getElementById('difficultySelect');
+        const dailyLimitInput = document.getElementById('dailyLimitInput');
+        const attemptsLeft = document.getElementById('attemptsLeft');
+        
+        let dailyAttempts = 0;
+        let lastResetDate = null;
+        let doseRate = 1; // doses per hour
+        let pendingDoses = 0;
+        let lastDoseCheck = Date.now();
+        let timerInterval = null;
+        
+        function getRandomWords() {
+            const difficulty = settings.difficulties[difficultySelect.value];
+            const shuffled = [...wordList].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, difficulty.wordCount);
+        }
+        
+        function startTest() {
+            currentWords = getRandomWords();
+            display.textContent = currentWords.join(' ');
+            startBtn.style.display = 'none';
+            difficultySelect.disabled = true;
+            
+            const difficulty = settings.difficulties[difficultySelect.value];
+            const endTime = Date.now() + difficulty.displayTime;
+            
+            // Clear any existing timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            // Start the timer
+            updateTimer(endTime);
+            
+            setTimeout(() => {
+                display.textContent = "Now type the words you remember!";
+                answer.style.display = 'block';
+                checkBtn.style.display = 'inline';
+                answer.value = '';
+                answer.focus();
+                
+                // Clear the timer when time's up
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    document.getElementById('timerDisplay').textContent = '';
+                }
+            }, difficulty.displayTime);
+        }
+        
+        function updateGraph() {
+            const container = document.querySelector('.graph-container');
+            container.innerHTML = '';
+            
+            const recentScores = scoreHistory.slice(-maxBars);
+            
+            if (recentScores.length === 0) {
+                // If no scores yet, show minimal scale
+                const yAxis = document.createElement('div');
+                yAxis.className = 'y-axis';
+                for (let i = 0; i <= 5; i++) {
+                    const span = document.createElement('span');
+                    span.textContent = i;
+                    yAxis.appendChild(span);
+                }
+                container.appendChild(yAxis);
+                return;
+            }
+            
+            // Find the highest actual score
+            const highestScore = Math.max(...recentScores.map(score => score.correct));
+            
+            // Set graph maximum to next multiple of 5 above highest score
+            const graphMax = Math.ceil(highestScore / 5) * 5;
+            
+            // Create y-axis with scale based on actual scores
+            const yAxis = document.createElement('div');
+            yAxis.className = 'y-axis';
+            for (let i = 0; i <= graphMax; i += 5) {
+                const span = document.createElement('span');
+                span.textContent = i;
+                yAxis.appendChild(span);
+            }
+            container.appendChild(yAxis);
+            
+            // Create bars for recent attempts
+            recentScores.forEach((score, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                const heightPercent = (score.correct / graphMax) * 100;
+                bar.style.height = `${heightPercent}%`;
+                bar.style.left = `${40 + (index * 40)}px`;
+                
+                bar.textContent = score.correct;
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.innerHTML = `${score.correct}/${score.total}<br>${score.difficulty}`;
+                label.style.left = `${40 + (index * 40)}px`;
+                
+                container.appendChild(bar);
+                container.appendChild(label);
+            });
+        }
+        
+        function loadFromStorage() {
+            const savedScore = localStorage.getItem('memoryDose_score');
+            const savedHistory = localStorage.getItem('memoryDose_scoreHistory');
+            const savedAttempts = localStorage.getItem('memoryDose_dailyAttempts');
+            const savedResetDate = localStorage.getItem('memoryDose_lastResetDate');
+            const savedLimit = localStorage.getItem('memoryDose_dailyLimit');
+            const savedDifficulty = localStorage.getItem('memoryDose_difficultyLevel');
+            
+            if (savedScore) score = parseInt(savedScore);
+            if (savedHistory) {
+                const history = JSON.parse(savedHistory);
+                // Convert old format to new format if necessary
+                scoreHistory = history.map(item => {
+                    if (typeof item === 'number') {
+                        return {
+                            correct: Math.round(item * settings.difficulties.easy.wordCount / 100),
+                            total: settings.difficulties.easy.wordCount,
+                            difficulty: 'easy'
+                        };
+                    }
+                    return item;
+                });
+            }
+            if (savedAttempts) dailyAttempts = parseInt(savedAttempts);
+            if (savedResetDate) lastResetDate = savedResetDate;
+            if (savedLimit) dailyLimitInput.value = savedLimit;
+            if (savedDifficulty) difficultySelect.value = savedDifficulty;
+            
+            resetDailyAttemptsIfNeeded();
+            updateAttemptsDisplay();
+            document.getElementById('score').textContent = score;
+            updateGraph();
+            loadDoseState();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('memoryDose_score', score);
+            localStorage.setItem('memoryDose_scoreHistory', JSON.stringify(scoreHistory));
+            localStorage.setItem('memoryDose_dailyAttempts', dailyAttempts);
+            localStorage.setItem('memoryDose_lastResetDate', lastResetDate);
+            localStorage.setItem('memoryDose_dailyLimit', dailyLimitInput.value);
+            localStorage.setItem('memoryDose_difficultyLevel', difficultySelect.value);
+        }
+
+        // Add reset functionality
+        function resetStats() {
+            if (confirm('Are you sure you want to reset all stats?')) {
+                score = 0;
+                scoreHistory = [];
+                localStorage.removeItem('memoryDose_score');
+                localStorage.removeItem('memoryDose_scoreHistory');
+                document.getElementById('score').textContent = '0';
+                updateGraph();
+                
+                // Reset dose tracking as well
+                pendingDoses = 0;
+                lastDoseCheck = Date.now();
+                document.getElementById('pendingDosesDisplay').textContent = '0';
+                saveDoseState();
+            }
+        }
+
+        function checkAnswer() {
+            const userAnswer = answer.value.toLowerCase().trim().split(/\s+/);
+            let correct = 0;
+            let resultHtml = '<h3>Results:</h3>';
+            
+            for (let i = 0; i < currentWords.length; i++) {
+                if (userAnswer[i] === currentWords[i]) {
+                    correct++;
+                    resultHtml += `<div class="correct">${i + 1}. ${userAnswer[i]} ✓</div>`;
+                } else {
+                    resultHtml += `<div class="incorrect">${i + 1}. ${userAnswer[i] || '(missing)'} ✗ (correct: ${currentWords[i]})</div>`;
+                }
+            }
+            
+            // Increment daily attempts
+            dailyAttempts++;
+            updateAttemptsDisplay();
+            
+            scoreHistory.push({
+                correct: correct,
+                total: currentWords.length,
+                difficulty: difficultySelect.value
+            });
+            
+            const points = Math.round((correct / currentWords.length) * 100);
+            score += points;
+            
+            result.innerHTML = resultHtml;
+            document.getElementById('score').textContent = score;
+            updateGraph();
+            saveToStorage();
+            
+            // Reset for next round
+            answer.style.display = 'none';
+            checkBtn.style.display = 'none';
+            startBtn.style.display = 'inline';
+            difficultySelect.disabled = false;
+            
+            if (correct >= 4 && pendingDoses > 0) {
+                pendingDoses = Math.max(0, pendingDoses - 1);
+                document.getElementById('pendingDosesDisplay').textContent = pendingDoses.toFixed(1);
+                saveDoseState();
+            }
+        }
+        
+        startBtn.addEventListener('click', startTest);
+        checkBtn.addEventListener('click', checkAnswer);
+        answer.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        // Add to the bottom of the script, before the event listeners
+        loadFromStorage();
+
+        // Add reset button event listener
+        document.addEventListener('DOMContentLoaded', () => {
+            const resetButton = document.createElement('button');
+            resetButton.textContent = 'Reset Stats';
+            resetButton.style.marginTop = '20px';
+            resetButton.addEventListener('click', resetStats);
+            document.querySelector('.graph-container').after(resetButton);
+        });
+
+        function updateAttemptsDisplay() {
+            const limit = parseInt(dailyLimitInput.value);
+            
+            if (limit <= 0) {
+                attemptsLeft.textContent = "Unlimited attempts";
+                startBtn.disabled = false;
+                startBtn.title = "";
+                return;
+            }
+            
+            const remaining = limit - dailyAttempts;
+            attemptsLeft.textContent = `${remaining} attempts remaining today`;
+            
+            if (remaining <= 0) {
+                startBtn.disabled = true;
+                startBtn.title = "Daily limit reached. Try again tomorrow!";
+            } else {
+                startBtn.disabled = false;
+                startBtn.title = "";
+            }
+        }
+
+        function resetDailyAttemptsIfNeeded() {
+            const today = new Date().toLocaleDateString();
+            if (lastResetDate !== today) {
+                dailyAttempts = 0;
+                lastResetDate = today;
+                saveToStorage();
+            }
+        }
+
+        difficultySelect.addEventListener('change', () => {
+            saveToStorage();
+        });
+
+        // Add event listener for daily limit changes
+        dailyLimitInput.addEventListener('change', () => {
+            const value = parseInt(dailyLimitInput.value);
+            if (value < 0) dailyLimitInput.value = 0;
+            updateAttemptsDisplay();
+            saveToStorage();
+        });
+
+        // Also add input validation
+        dailyLimitInput.addEventListener('input', () => {
+            const value = parseInt(dailyLimitInput.value);
+            if (value < 0) dailyLimitInput.value = 0;
+        });
+
+        function addDoseTracker() {
+            const doseTrackerHTML = `
+            <div id="doseTracker" style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                <div style="margin-bottom: 10px;">
+                    <label>Hourly Dose Rate: </label>
+                    <input type="number" id="doseRateInput" min="0.1" step="0.1" style="width: 60px;">
+                    <span style="font-size: 12px; color: #666;"> doses/hour</span>
+                </div>
+                <div style="font-size: 16px; color: #333;">
+                    Pending Doses: <span id="pendingDosesDisplay">0</span>
+                </div>
+            </div>`;
+            
+            const startBtnDiv = document.querySelector('#startBtn').parentElement;
+            startBtnDiv.insertAdjacentHTML('afterend', doseTrackerHTML);
+        }
+
+        function updateDoseTracking() {
+            const now = Date.now();
+            const hoursPassed = (now - lastDoseCheck) / (1000 * 60 * 60);
+            const newDoses = Math.floor(hoursPassed * doseRate);
+            pendingDoses += newDoses;
+            lastDoseCheck = now;
+            
+            document.getElementById('pendingDosesDisplay').textContent = pendingDoses.toFixed(1);
+            saveDoseState();
+        }
+
+        function saveDoseState() {
+            localStorage.setItem('memoryDose_doseRate', doseRate);
+            localStorage.setItem('memoryDose_pendingDoses', pendingDoses);
+            localStorage.setItem('memoryDose_lastDoseCheck', lastDoseCheck);
+        }
+
+        function loadDoseState() {
+            const savedDoseRate = localStorage.getItem('memoryDose_doseRate');
+            const savedPendingDoses = localStorage.getItem('memoryDose_pendingDoses');
+            const savedLastCheck = localStorage.getItem('memoryDose_lastDoseCheck');
+            
+            if (savedDoseRate) {
+                doseRate = parseFloat(savedDoseRate);
+                document.getElementById('doseRateInput').value = doseRate;
+            }
+            if (savedPendingDoses) {
+                pendingDoses = parseFloat(savedPendingDoses);
+            }
+            if (savedLastCheck) {
+                lastDoseCheck = parseInt(savedLastCheck);
+                updateDoseTracking(); // Calculate missed doses
+            }
+        }
+
+        // Add these event listeners after the document is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            addDoseTracker();
+            
+            const doseRateInput = document.getElementById('doseRateInput');
+            doseRateInput.value = doseRate;
+            
+            doseRateInput.addEventListener('change', () => {
+                doseRate = parseFloat(doseRateInput.value);
+                if (doseRate < 0.1) doseRate = 0.1;
+                saveDoseState();
+            });
+            
+            loadDoseState();
+            
+            // Update tracking every minute
+            setInterval(updateDoseTracking, 60000);
+        });
+
+        function updateTimer(endTime) {
+            const timerDisplay = document.getElementById('timerDisplay');
+            
+            timerInterval = setInterval(() => {
+                const now = Date.now();
+                const timeLeft = Math.max(0, endTime - now);
+                
+                if (timeLeft === 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.textContent = '';
+                    return;
+                }
+                
+                const secondsLeft = Math.ceil(timeLeft / 1000);
+                timerDisplay.textContent = `Time left: ${secondsLeft}s`;
+            }, 100);
+        }
+
+        function addTimerDisplay() {
+            const timerHTML = `
+            <div id="timerDisplay" style="
+                font-size: 18px;
+                color: #666;
+                margin: 10px 0;
+                font-weight: bold;
+            "></div>`;
+            
+            const displayDiv = document.getElementById('display');
+            displayDiv.insertAdjacentHTML('afterend', timerHTML);
+        }
+
+        // Add timer initialization to the DOMContentLoaded event listener
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... existing code ...
+            addTimerDisplay();
+            // ... rest of existing code ...
+        });
+    </script>
+</body>
+</html>

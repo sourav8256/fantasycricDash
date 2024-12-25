@@ -211,6 +211,7 @@
         let pendingDoses = 0;
         let lastDoseCheck = Date.now();
         let timerInterval = null;
+        let completedDoses = 0;
         
         function getRandomWords() {
             const difficulty = settings.difficulties[difficultySelect.value];
@@ -312,11 +313,11 @@
             const savedResetDate = localStorage.getItem('memoryDose_lastResetDate');
             const savedLimit = localStorage.getItem('memoryDose_dailyLimit');
             const savedDifficulty = localStorage.getItem('memoryDose_difficultyLevel');
+            const savedCompletedDoses = localStorage.getItem('memoryDose_completedDoses');
             
             if (savedScore) score = parseInt(savedScore);
             if (savedHistory) {
                 const history = JSON.parse(savedHistory);
-                // Convert old format to new format if necessary
                 scoreHistory = history.map(item => {
                     if (typeof item === 'number') {
                         return {
@@ -332,12 +333,14 @@
             if (savedResetDate) lastResetDate = savedResetDate;
             if (savedLimit) dailyLimitInput.value = savedLimit;
             if (savedDifficulty) difficultySelect.value = savedDifficulty;
+            if (savedCompletedDoses) {
+                completedDoses = parseInt(savedCompletedDoses);
+            }
             
             resetDailyAttemptsIfNeeded();
             updateAttemptsDisplay();
             document.getElementById('score').textContent = score;
             updateGraph();
-            loadDoseState();
         }
 
         function saveToStorage() {
@@ -347,6 +350,7 @@
             localStorage.setItem('memoryDose_lastResetDate', lastResetDate);
             localStorage.setItem('memoryDose_dailyLimit', dailyLimitInput.value);
             localStorage.setItem('memoryDose_difficultyLevel', difficultySelect.value);
+            localStorage.setItem('memoryDose_completedDoses', completedDoses);
         }
 
         // Add reset functionality
@@ -405,10 +409,22 @@
             startBtn.style.display = 'inline';
             difficultySelect.disabled = false;
             
-            if (correct >= 4 && pendingDoses > 0) {
-                pendingDoses = Math.max(0, pendingDoses - 1);
-                document.getElementById('pendingDosesDisplay').textContent = pendingDoses.toFixed(1);
+            // Update completed doses if score is good enough
+            console.log(`Score check - Correct answers: ${correct}, Required: 4`);
+            if (correct >= 4) {
+                console.log('Success! Incrementing completed doses');
+                completedDoses++;
+                console.log(`New completed doses count: ${completedDoses}`);
+                document.getElementById('completedDosesDisplay').textContent = completedDoses;
+                
+                // Also handle pending doses reduction if available
+                if (pendingDoses > 0) {
+                    pendingDoses = Math.max(0, pendingDoses - 1);
+                    document.getElementById('pendingDosesDisplay').textContent = pendingDoses.toFixed(1);
+                }
                 saveDoseState();
+            } else {
+                console.log('Not enough correct answers to increment completed doses');
             }
         }
         
@@ -419,15 +435,47 @@
         });
 
         // Add to the bottom of the script, before the event listeners
-        loadFromStorage();
-
-        // Add reset button event listener
         document.addEventListener('DOMContentLoaded', () => {
+            // First load the basic stats
+            loadFromStorage();
+            
+            // Then add UI elements
+            addTimerDisplay();
+            addDoseTracker();
+            
+            // Now update displays after elements exist
+            updateDisplays();
+            
+            // Create container for reset buttons
+            const resetContainer = document.createElement('div');
+            resetContainer.style.marginTop = '20px';
+            resetContainer.style.display = 'flex';
+            resetContainer.style.gap = '10px';
+            resetContainer.style.justifyContent = 'center';
+            
+            // Add reset stats button
             const resetButton = document.createElement('button');
             resetButton.textContent = 'Reset Stats';
-            resetButton.style.marginTop = '20px';
             resetButton.addEventListener('click', resetStats);
-            document.querySelector('.graph-container').after(resetButton);
+            
+            // Add reset all button
+            const resetAllButton = document.createElement('button');
+            resetAllButton.textContent = 'Reset Everything';
+            resetAllButton.style.backgroundColor = '#dc3545';
+            resetAllButton.addEventListener('click', resetAllStorage);
+            
+            // Add buttons to container
+            resetContainer.appendChild(resetButton);
+            resetContainer.appendChild(resetAllButton);
+            
+            // Add container after graph
+            document.querySelector('.graph-container').after(resetContainer);
+            
+            // Now that elements exist, load dose state
+            loadDoseState();
+            
+            // Start the update interval
+            setInterval(updateDoseTracking, 60000);
         });
 
         function updateAttemptsDisplay() {
@@ -456,8 +504,16 @@
             const today = new Date().toLocaleDateString();
             if (lastResetDate !== today) {
                 dailyAttempts = 0;
+                completedDoses = 0;
                 lastResetDate = today;
                 saveToStorage();
+                saveDoseState();
+                
+                // Update the display
+                const completedDisplay = document.getElementById('completedDosesDisplay');
+                if (completedDisplay) {
+                    completedDisplay.textContent = '0';
+                }
             }
         }
 
@@ -487,54 +543,18 @@
                     <input type="number" id="doseRateInput" min="0.1" step="0.1" style="width: 60px;">
                     <span style="font-size: 12px; color: #666;"> doses/hour</span>
                 </div>
-                <div style="font-size: 16px; color: #333;">
+                <div style="font-size: 16px; color: #333; margin-bottom: 5px;">
                     Pending Doses: <span id="pendingDosesDisplay">0</span>
+                </div>
+                <div style="font-size: 16px; color: #4CAF50;">
+                    Completed Today: <span id="completedDosesDisplay">0</span>
                 </div>
             </div>`;
             
             const startBtnDiv = document.querySelector('#startBtn').parentElement;
             startBtnDiv.insertAdjacentHTML('afterend', doseTrackerHTML);
-        }
 
-        function updateDoseTracking() {
-            const now = Date.now();
-            const hoursPassed = (now - lastDoseCheck) / (1000 * 60 * 60);
-            const newDoses = Math.floor(hoursPassed * doseRate);
-            pendingDoses += newDoses;
-            lastDoseCheck = now;
-            
-            document.getElementById('pendingDosesDisplay').textContent = pendingDoses.toFixed(1);
-            saveDoseState();
-        }
-
-        function saveDoseState() {
-            localStorage.setItem('memoryDose_doseRate', doseRate);
-            localStorage.setItem('memoryDose_pendingDoses', pendingDoses);
-            localStorage.setItem('memoryDose_lastDoseCheck', lastDoseCheck);
-        }
-
-        function loadDoseState() {
-            const savedDoseRate = localStorage.getItem('memoryDose_doseRate');
-            const savedPendingDoses = localStorage.getItem('memoryDose_pendingDoses');
-            const savedLastCheck = localStorage.getItem('memoryDose_lastDoseCheck');
-            
-            if (savedDoseRate) {
-                doseRate = parseFloat(savedDoseRate);
-                document.getElementById('doseRateInput').value = doseRate;
-            }
-            if (savedPendingDoses) {
-                pendingDoses = parseFloat(savedPendingDoses);
-            }
-            if (savedLastCheck) {
-                lastDoseCheck = parseInt(savedLastCheck);
-                updateDoseTracking(); // Calculate missed doses
-            }
-        }
-
-        // Add these event listeners after the document is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            addDoseTracker();
-            
+            // Add event listener for dose rate changes
             const doseRateInput = document.getElementById('doseRateInput');
             doseRateInput.value = doseRate;
             
@@ -543,12 +563,88 @@
                 if (doseRate < 0.1) doseRate = 0.1;
                 saveDoseState();
             });
+
+            // Also add input validation
+            doseRateInput.addEventListener('input', () => {
+                const value = parseFloat(doseRateInput.value);
+                if (value < 0.1) doseRateInput.value = 0.1;
+            });
+        }
+
+        function updateDoseTracking() {
+            const now = Date.now();
+            const hoursPassed = (now - lastDoseCheck) / (1000 * 60 * 60);
+            const newDoses = hoursPassed * doseRate;
             
-            loadDoseState();
+            console.log('Calculating pending doses:');
+            console.log('Current time:', new Date(now).toLocaleString());
+            console.log('Last check:', new Date(lastDoseCheck).toLocaleString());
+            console.log('Hours passed:', hoursPassed.toFixed(3));
+            console.log('Dose rate:', doseRate);
+            console.log('New doses to add:', newDoses.toFixed(3));
+            console.log('Current pending doses:', pendingDoses.toFixed(3));
             
-            // Update tracking every minute
-            setInterval(updateDoseTracking, 60000);
-        });
+            pendingDoses += newDoses;
+            lastDoseCheck = now;
+            
+            console.log('Updated pending doses:', pendingDoses.toFixed(3));
+            
+            // Update display
+            const displayElement = document.getElementById('pendingDosesDisplay');
+            if (displayElement) {
+                displayElement.textContent = pendingDoses.toFixed(1);
+                console.log('Display updated to:', displayElement.textContent);
+            }
+            
+            saveDoseState();
+        }
+
+        function saveDoseState() {
+            localStorage.setItem('memoryDose_doseRate', doseRate);
+            localStorage.setItem('memoryDose_pendingDoses', pendingDoses);
+            localStorage.setItem('memoryDose_lastDoseCheck', lastDoseCheck);
+            localStorage.setItem('memoryDose_completedDoses', completedDoses);
+        }
+
+        function loadDoseState() {
+            const savedDoseRate = localStorage.getItem('memoryDose_doseRate');
+            const savedPendingDoses = localStorage.getItem('memoryDose_pendingDoses');
+            const savedLastCheck = localStorage.getItem('memoryDose_lastDoseCheck');
+            const savedCompletedDoses = localStorage.getItem('memoryDose_completedDoses');
+            
+            console.log('Loading initial dose state:');
+            console.log('Saved dose rate:', savedDoseRate);
+            console.log('Saved pending doses:', savedPendingDoses);
+            console.log('Saved last check:', savedLastCheck ? new Date(parseInt(savedLastCheck)).toLocaleString() : 'none');
+            
+            if (savedDoseRate) {
+                doseRate = parseFloat(savedDoseRate);
+                document.getElementById('doseRateInput').value = doseRate;
+                console.log('Loaded dose rate:', doseRate);
+            }
+            if (savedPendingDoses) {
+                pendingDoses = parseFloat(savedPendingDoses);
+                console.log('Loaded pending doses:', pendingDoses);
+            }
+            if (savedLastCheck) {
+                lastDoseCheck = parseInt(savedLastCheck);
+                console.log('Loaded last check time:', new Date(lastDoseCheck).toLocaleString());
+            }
+            if (savedCompletedDoses) {
+                completedDoses = parseInt(savedCompletedDoses);
+                console.log('Loaded completed doses:', completedDoses);
+            }
+
+            // Update both displays
+            document.getElementById('pendingDosesDisplay').textContent = pendingDoses.toFixed(1);
+            document.getElementById('completedDosesDisplay').textContent = completedDoses;
+            
+            console.log('Initial displays updated:');
+            console.log('Pending doses display:', pendingDoses.toFixed(1));
+            console.log('Completed doses display:', completedDoses);
+            
+            updateDoseTracking();
+        }
 
         function updateTimer(endTime) {
             const timerDisplay = document.getElementById('timerDisplay');
@@ -581,12 +677,52 @@
             displayDiv.insertAdjacentHTML('afterend', timerHTML);
         }
 
-        // Add timer initialization to the DOMContentLoaded event listener
-        document.addEventListener('DOMContentLoaded', () => {
-            // ... existing code ...
-            addTimerDisplay();
-            // ... rest of existing code ...
-        });
+        // Add this function to handle complete reset
+        function resetAllStorage() {
+            if (confirm('WARNING: This will reset ALL data including settings and dose tracking. Are you sure?')) {
+                // Clear all memoryDose related items from localStorage
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('memoryDose_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                
+                // Reset all variables to default
+                score = 0;
+                scoreHistory = [];
+                dailyAttempts = 0;
+                lastResetDate = null;
+                doseRate = 1;
+                pendingDoses = 0;
+                lastDoseCheck = Date.now();
+                completedDoses = 0;
+                
+                // Reset UI elements
+                document.getElementById('score').textContent = '0';
+                document.getElementById('doseRateInput').value = '1';
+                document.getElementById('pendingDosesDisplay').textContent = '0';
+                document.getElementById('completedDosesDisplay').textContent = '0';
+                document.getElementById('dailyLimitInput').value = settings.defaultDailyLimit;
+                difficultySelect.value = 'easy';
+                
+                // Update displays
+                updateGraph();
+                updateAttemptsDisplay();
+            }
+        }
+
+        // Add this function to update displays after elements are created
+        function updateDisplays() {
+            const completedDisplay = document.getElementById('completedDosesDisplay');
+            const pendingDisplay = document.getElementById('pendingDosesDisplay');
+            
+            if (completedDisplay) {
+                completedDisplay.textContent = completedDoses;
+            }
+            if (pendingDisplay) {
+                pendingDisplay.textContent = pendingDoses.toFixed(1);
+            }
+        }
     </script>
 </body>
 </html>

@@ -212,6 +212,7 @@
         let lastDoseCheck = Date.now();
         let timerInterval = null;
         let completedDoses = 0;
+        let correctThreshold = 4; // default threshold
         
         function getRandomWords() {
             const difficulty = settings.difficulties[difficultySelect.value];
@@ -314,6 +315,7 @@
             const savedLimit = localStorage.getItem('memoryDose_dailyLimit');
             const savedDifficulty = localStorage.getItem('memoryDose_difficultyLevel');
             const savedCompletedDoses = localStorage.getItem('memoryDose_completedDoses');
+            const savedThreshold = localStorage.getItem('memoryDose_threshold');
             
             if (savedScore) score = parseInt(savedScore);
             if (savedHistory) {
@@ -335,6 +337,9 @@
             if (savedDifficulty) difficultySelect.value = savedDifficulty;
             if (savedCompletedDoses) {
                 completedDoses = parseInt(savedCompletedDoses);
+            }
+            if (savedThreshold) {
+                correctThreshold = parseInt(savedThreshold);
             }
             
             resetDailyAttemptsIfNeeded();
@@ -410,8 +415,8 @@
             difficultySelect.disabled = false;
             
             // Update completed doses if score is good enough
-            console.log(`Score check - Correct answers: ${correct}, Required: 4`);
-            if (correct >= 4) {
+            console.log(`Score check - Correct answers: ${correct}, Required: ${correctThreshold}`);
+            if (correct >= correctThreshold) {
                 console.log('Success! Incrementing completed doses');
                 completedDoses++;
                 console.log(`New completed doses count: ${completedDoses}`);
@@ -424,7 +429,7 @@
                 }
                 saveDoseState();
             } else {
-                console.log('Not enough correct answers to increment completed doses');
+                console.log(`Not enough correct answers (need ${correctThreshold})`);
             }
         }
         
@@ -543,6 +548,11 @@
                     <input type="number" id="doseRateInput" min="0.1" step="0.1" style="width: 60px;">
                     <span style="font-size: 12px; color: #666;"> doses/hour</span>
                 </div>
+                <div style="margin-bottom: 10px;">
+                    <label>Success Threshold: </label>
+                    <input type="number" id="thresholdInput" min="1" step="1" style="width: 60px;">
+                    <span style="font-size: 12px; color: #666;"> correct words required</span>
+                </div>
                 <div style="font-size: 16px; color: #333; margin-bottom: 5px;">
                     Pending Doses: <span id="pendingDosesDisplay">0</span>
                 </div>
@@ -554,7 +564,7 @@
             const startBtnDiv = document.querySelector('#startBtn').parentElement;
             startBtnDiv.insertAdjacentHTML('afterend', doseTrackerHTML);
 
-            // Add event listener for dose rate changes
+            // Set up dose rate input
             const doseRateInput = document.getElementById('doseRateInput');
             doseRateInput.value = doseRate;
             
@@ -564,10 +574,25 @@
                 saveDoseState();
             });
 
-            // Also add input validation
+            // Set up threshold input
+            const thresholdInput = document.getElementById('thresholdInput');
+            thresholdInput.value = correctThreshold;
+            
+            thresholdInput.addEventListener('change', () => {
+                correctThreshold = Math.max(1, parseInt(thresholdInput.value));
+                thresholdInput.value = correctThreshold;
+                saveDoseState();
+            });
+
+            // Add input validation
             doseRateInput.addEventListener('input', () => {
                 const value = parseFloat(doseRateInput.value);
                 if (value < 0.1) doseRateInput.value = 0.1;
+            });
+
+            thresholdInput.addEventListener('input', () => {
+                const value = parseInt(thresholdInput.value);
+                if (value < 1) thresholdInput.value = 1;
             });
         }
 
@@ -604,6 +629,7 @@
             localStorage.setItem('memoryDose_pendingDoses', pendingDoses);
             localStorage.setItem('memoryDose_lastDoseCheck', lastDoseCheck);
             localStorage.setItem('memoryDose_completedDoses', completedDoses);
+            localStorage.setItem('memoryDose_threshold', correctThreshold);
         }
 
         function loadDoseState() {

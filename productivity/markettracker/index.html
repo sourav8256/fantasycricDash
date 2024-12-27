@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Tracker - Indian Stocks</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .stock-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .stock-card:hover {
+            transform: translateY(-2px);
+        }
+        .price-up {
+            color: #28a745;
+        }
+        .price-down {
+            color: #dc3545;
+        }
+        .last-updated {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .stop-loss {
+            font-weight: bold;
+        }
+        .upper-stop {
+            color: #dc3545;
+        }
+        .lower-stop {
+            color: #28a745;
+        }
+        .watch-button {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: none;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .watch-button.active {
+            background: #28a745;
+        }
+        .add-ticker-form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .remove-ticker {
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+            padding: 0 5px;
+        }
+        .signal {
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        .signal-sell {
+            background-color: #dc3545;
+            color: white;
+        }
+        .signal-buy {
+            background-color: #28a745;
+            color: white;
+        }
+        .signal-neutral {
+            background-color: #6c757d;
+            color: white;
+        }
+        .action-required {
+            animation: pulse 2s infinite;
+            background-color: #ffc107;
+            border: none;
+            border-radius: 4px;
+            color: #000;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .action-taken {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Indian Market Tracker</h1>
+        
+        <!-- Add new ticker form -->
+        <div class="add-ticker-form">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group mb-3">
+                        <input type="text" id="newTicker" class="form-control" placeholder="Enter ticker symbol (e.g., RELIANCE)" aria-label="Ticker symbol">
+                        <button class="btn btn-primary" type="button" onclick="addNewTicker()">Add Ticker</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="stockGrid">
+            <!-- Stock cards will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Initialize stocks array from localStorage or use default stocks
+        let stocks = JSON.parse(localStorage.getItem('stocks')) || [
+            'RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK',
+            'HINDUNILVR', 'SBIN', 'BHARTIARTL', 'ITC', 'KOTAKBANK'
+        ];
+
+        // Store stop-loss data for each stock
+        const stockData = {};
+
+        function saveStocks() {
+            localStorage.setItem('stocks', JSON.stringify(stocks));
+        }
+
+        function addNewTicker() {
+            const input = document.getElementById('newTicker');
+            const ticker = input.value.trim().toUpperCase();
+            
+            if (ticker && !stocks.includes(ticker)) {
+                stocks.push(ticker);
+                saveStocks();
+                const stockGrid = document.getElementById('stockGrid');
+                stockGrid.innerHTML += createStockCard(ticker);
+                input.value = '';
+                // Fetch data for the new ticker immediately
+                fetchStockData(ticker);
+            } else if (stocks.includes(ticker)) {
+                alert('This ticker is already being tracked!');
+            } else {
+                alert('Please enter a valid ticker symbol!');
+            }
+        }
+
+        function removeTicker(symbol) {
+            if (confirm(`Are you sure you want to remove ${symbol}?`)) {
+                stocks = stocks.filter(s => s !== symbol);
+                saveStocks();
+                const card = document.getElementById(`${symbol}-card`).parentElement;
+                card.remove();
+                delete stockData[symbol];
+            }
+        }
+
+        function initializeStockData(symbol, price) {
+            if (!stockData[symbol]) {
+                stockData[symbol] = {
+                    isWatching: false,
+                    initialPrice: price,
+                    upperStopLoss: null,
+                    lowerStopLoss: null,
+                    highestPrice: price,
+                    lowestPrice: price,
+                    lastPrice: price,
+                    lastSignal: null,
+                    actionRequired: false,
+                    actionTaken: false
+                };
+            }
+        }
+
+        function calculateStopLoss(price, type) {
+            return type === 'upper' ? price * 1.05 : price * 0.95;
+        }
+
+        function adjustStopLoss(symbol, currentPrice) {
+            const data = stockData[symbol];
+            if (!data.isWatching) return;
+
+            // Initialize stop-loss levels if not set
+            if (!data.upperStopLoss) {
+                data.upperStopLoss = calculateStopLoss(currentPrice, 'upper');
+                data.lowerStopLoss = calculateStopLoss(currentPrice, 'lower');
+                data.highestPrice = currentPrice;
+                data.lowestPrice = currentPrice;
+            }
+
+            const priceChange = currentPrice - data.lastPrice;
+            
+            // Upper stop-loss adjustment
+            if (currentPrice > data.highestPrice) {
+                const priceDiff = currentPrice - data.highestPrice;
+                const adjustmentPoints = Math.floor(priceDiff / 100) * 50;
+                if (currentPrice > data.upperStopLoss) {
+                    data.upperStopLoss += adjustmentPoints;
+                }
+                data.highestPrice = currentPrice;
+            }
+
+            // Lower stop-loss adjustment
+            if (currentPrice < data.lowestPrice) {
+                const priceDiff = data.lowestPrice - currentPrice;
+                const adjustmentPoints = Math.floor(priceDiff / 100) * 50;
+                if (currentPrice < data.lowerStopLoss) {
+                    data.lowerStopLoss -= adjustmentPoints;
+                }
+                data.lowestPrice = currentPrice;
+            }
+
+            data.lastPrice = currentPrice;
+            return {
+                upperStopLoss: data.upperStopLoss,
+                lowerStopLoss: data.lowerStopLoss
+            };
+        }
+
+        function createStockCard(symbol) {
+            return `
+                <div class="col-md-4 mb-3">
+                    <div class="stock-card" id="${symbol}-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <h3 class="mb-0">${symbol}</h3>
+                                <span class="remove-ticker ms-2" onclick="removeTicker('${symbol}')">&times;</span>
+                                <span class="signal" id="${symbol}-signal">--</span>
+                                <button class="action-required d-none" id="${symbol}-action" onclick="confirmAction('${symbol}')">
+                                    Action Required
+                                </button>
+                            </div>
+                            <button class="watch-button" id="${symbol}-watch" onclick="toggleWatch('${symbol}')">Watch</button>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-1">Price: <span id="${symbol}-price">--</span></p>
+                                <p class="mb-1">Change: <span id="${symbol}-change">--</span></p>
+                                <p class="mb-1 stop-loss upper-stop">Upper Stop: <span id="${symbol}-upper-stop">--</span></p>
+                                <p class="mb-1 stop-loss lower-stop">Lower Stop: <span id="${symbol}-lower-stop">--</span></p>
+                            </div>
+                            <div class="text-end">
+                                <p class="mb-1">High: <span id="${symbol}-high">--</span></p>
+                                <p class="mb-1">Low: <span id="${symbol}-low">--</span></p>
+                            </div>
+                        </div>
+                        <p class="last-updated mb-0" id="${symbol}-updated">Last updated: --</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleWatch(symbol) {
+            const data = stockData[symbol];
+            if (data) {
+                data.isWatching = !data.isWatching;
+                const button = document.getElementById(`${symbol}-watch`);
+                button.classList.toggle('active');
+                button.textContent = data.isWatching ? 'Watching' : 'Watch';
+
+                if (!data.isWatching) {
+                    // Reset all values when stopping watch
+                    data.upperStopLoss = null;
+                    data.lowerStopLoss = null;
+                    data.lastSignal = null;
+                    data.actionRequired = false;
+                    data.actionTaken = false;
+                    updateStopLossDisplay(symbol, null, null);
+                    const actionButton = document.getElementById(`${symbol}-action`);
+                    actionButton.classList.add('d-none');
+                }
+            }
+        }
+
+        function updateStopLossDisplay(symbol, upperStop, lowerStop) {
+            const upperStopElement = document.getElementById(`${symbol}-upper-stop`);
+            const lowerStopElement = document.getElementById(`${symbol}-lower-stop`);
+            
+            upperStopElement.textContent = upperStop ? `₹${upperStop.toFixed(2)}` : '--';
+            lowerStopElement.textContent = lowerStop ? `₹${lowerStop.toFixed(2)}` : '--';
+        }
+
+        function initializeStockGrid() {
+            const stockGrid = document.getElementById('stockGrid');
+            stockGrid.innerHTML = ''; // Clear existing cards
+            stocks.forEach(symbol => {
+                stockGrid.innerHTML += createStockCard(symbol);
+            });
+        }
+
+        async function fetchStockData(singleSymbol = null) {
+            try {
+                const apiKey = 'YOUR_API_KEY';
+                const symbolsToFetch = singleSymbol ? [singleSymbol] : stocks;
+                
+                for (const symbol of symbolsToFetch) {
+                    const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}.BSE&apikey=${apiKey}`);
+                    const data = await response.json();
+                    
+                    if (data['Global Quote']) {
+                        const quote = data['Global Quote'];
+                        const price = parseFloat(quote['05. price']);
+                        
+                        initializeStockData(symbol, price);
+                        const stopLoss = adjustStopLoss(symbol, price);
+                        
+                        updateStockCard(symbol, {
+                            price: price.toFixed(2),
+                            change: parseFloat(quote['09. change']).toFixed(2),
+                            changePercent: quote['10. change percent'],
+                            high: parseFloat(quote['03. high']).toFixed(2),
+                            low: parseFloat(quote['04. low']).toFixed(2),
+                            upperStopLoss: stopLoss?.upperStopLoss,
+                            lowerStopLoss: stopLoss?.lowerStopLoss
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+            }
+        }
+
+        function updateStockCard(symbol, data) {
+            const priceElement = document.getElementById(`${symbol}-price`);
+            const changeElement = document.getElementById(`${symbol}-change`);
+            const highElement = document.getElementById(`${symbol}-high`);
+            const lowElement = document.getElementById(`${symbol}-low`);
+            const updatedElement = document.getElementById(`${symbol}-updated`);
+            const signalElement = document.getElementById(`${symbol}-signal`);
+            const actionButton = document.getElementById(`${symbol}-action`);
+
+            priceElement.textContent = `₹${data.price}`;
+            changeElement.textContent = `${data.change} (${data.changePercent})`;
+            changeElement.className = parseFloat(data.change) >= 0 ? 'price-up' : 'price-down';
+            highElement.textContent = `₹${data.high}`;
+            lowElement.textContent = `₹${data.low}`;
+            updatedElement.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+            if (stockData[symbol]?.isWatching) {
+                updateStopLossDisplay(symbol, data.upperStopLoss, data.lowerStopLoss);
+                
+                // Update signal based on price position relative to stop-loss levels
+                const currentPrice = parseFloat(data.price);
+                const { upperStopLoss, lowerStopLoss } = stockData[symbol];
+                
+                if (upperStopLoss && lowerStopLoss) {
+                    let newSignal = 'HOLD';
+                    if (currentPrice <= lowerStopLoss) {
+                        newSignal = 'SELL';
+                        signalElement.textContent = newSignal;
+                        signalElement.className = 'signal signal-sell';
+                        // Check for signal change
+                        if (stockData[symbol].lastSignal !== newSignal) {
+                            stockData[symbol].actionRequired = true;
+                            stockData[symbol].actionTaken = false;
+                            actionButton.classList.remove('d-none');
+                            showNotification(symbol, newSignal, currentPrice, lowerStopLoss);
+                        }
+                    } else if (currentPrice >= upperStopLoss) {
+                        newSignal = 'BUY';
+                        signalElement.textContent = newSignal;
+                        signalElement.className = 'signal signal-buy';
+                        // Check for signal change
+                        if (stockData[symbol].lastSignal !== newSignal) {
+                            stockData[symbol].actionRequired = true;
+                            stockData[symbol].actionTaken = false;
+                            actionButton.classList.remove('d-none');
+                            showNotification(symbol, newSignal, currentPrice, upperStopLoss);
+                        }
+                    } else {
+                        signalElement.textContent = newSignal;
+                        signalElement.className = 'signal signal-neutral';
+                        // If returning to HOLD, hide action button
+                        if (stockData[symbol].lastSignal !== newSignal) {
+                            actionButton.classList.add('d-none');
+                            stockData[symbol].actionRequired = false;
+                        }
+                    }
+                    stockData[symbol].lastSignal = newSignal;
+                } else {
+                    signalElement.textContent = '--';
+                    signalElement.className = 'signal';
+                    actionButton.classList.add('d-none');
+                }
+            } else {
+                signalElement.textContent = '--';
+                signalElement.className = 'signal';
+                actionButton.classList.add('d-none');
+            }
+        }
+
+        function showNotification(symbol, action, price, stopLevel) {
+            // Check if browser supports notifications
+            if (!("Notification" in window)) return;
+
+            const message = `${symbol}: ${action} Signal - Price ${action === 'SELL' ? 'below' : 'above'} ${action === 'SELL' ? 'lower' : 'upper'} stop-loss (₹${stopLevel.toFixed(2)}) at ₹${price.toFixed(2)}`;
+
+            // Request permission and show notification
+            if (Notification.permission === "granted") {
+                new Notification(message);
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        new Notification(message);
+                    }
+                });
+            }
+        }
+
+        function confirmAction(symbol) {
+            const data = stockData[symbol];
+            const actionButton = document.getElementById(`${symbol}-action`);
+            
+            if (confirm(`Confirm that you've taken ${data.lastSignal} action for ${symbol}?`)) {
+                data.actionRequired = false;
+                data.actionTaken = true;
+                actionButton.classList.add('d-none');
+            }
+        }
+
+        // Initialize the grid and start fetching data
+        initializeStockGrid();
+        fetchStockData();
+        // Update every minute
+        setInterval(fetchStockData, 60000);
+
+        // Add keyboard shortcut for adding new ticker
+        document.getElementById('newTicker').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addNewTicker();
+            }
+        });
+    </script>
+</body>
+</html>

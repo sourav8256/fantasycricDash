@@ -103,12 +103,29 @@
             background-color: #6c757d;
             color: white;
         }
+        .data-source-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1 class="mb-4">Indian Market Tracker</h1>
         
+        <!-- Data source toggle -->
+        <div class="data-source-toggle">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="mockDataToggle" checked>
+                <label class="form-check-label" for="mockDataToggle">Use Mock Data</label>
+            </div>
+        </div>
+
         <!-- Add new ticker form -->
         <div class="add-ticker-form">
             <div class="row">
@@ -127,6 +144,70 @@
     </div>
 
     <script>
+        // Configuration
+        const USE_MOCK_DATA = true; // Default to mock data
+        const MOCK_UPDATE_INTERVAL = 5000; // Update mock data every 2 seconds
+        const API_UPDATE_INTERVAL = 60000; // Update API data every minute
+        const PRICE_TREND_UP = 0.002; // 0.2% upward trend per update
+
+        // Store the last mock prices
+        const lastMockPrices = {};
+
+        // Mock data generation
+        function generateMockPrice(symbol, basePrice) {
+            if (!lastMockPrices[symbol]) {
+                lastMockPrices[symbol] = basePrice;
+            }
+
+            // Add upward trend plus small random fluctuation
+            const trend = lastMockPrices[symbol] * PRICE_TREND_UP; // 0.2% upward trend
+            const randomFluctuation = (Math.random() - 0.3) * (basePrice * 0.005); // Biased slightly upward
+            const newPrice = lastMockPrices[symbol] + trend + randomFluctuation;
+            
+            return newPrice;  // Don't update lastMockPrices here
+        }
+
+        function generateMockData(symbol) {
+            const basePrices = {
+                'RELIANCE': 2500,
+                'TCS': 3500,
+                'HDFCBANK': 1600,
+                'INFY': 1400,
+                'ICICIBANK': 900,
+                'HINDUNILVR': 2700,
+                'SBIN': 600,
+                'BHARTIARTL': 850,
+                'ITC': 440,
+                'KOTAKBANK': 1750
+            };
+
+            const basePrice = basePrices[symbol] || 1000;
+            const previousPrice = lastMockPrices[symbol] || basePrice;
+            const currentPrice = generateMockPrice(symbol, basePrice);
+            
+            console.log(`${symbol} - Previous Price: ${previousPrice.toFixed(2)}`);
+            console.log(`${symbol} - Current Price: ${currentPrice.toFixed(2)}`);
+            
+            const change = currentPrice - previousPrice;
+            console.log(`${symbol} - Absolute Change: ${change.toFixed(2)}`);
+            
+            const changePercent = ((change / previousPrice) * 100).toFixed(2);
+            console.log(`${symbol} - Change Percent: ${changePercent}%`);
+            
+            // Update lastMockPrices only once, here
+            lastMockPrices[symbol] = currentPrice;
+            
+            return {
+                'Global Quote': {
+                    '05. price': currentPrice.toFixed(2),
+                    '09. change': change.toFixed(2),
+                    '10. change percent': changePercent + '%',
+                    '03. high': (currentPrice * 1.01).toFixed(2),
+                    '04. low': (currentPrice * 0.99).toFixed(2)
+                }
+            };
+        }
+
         // Initialize stocks array from localStorage or use default stocks
         let stocks = JSON.parse(localStorage.getItem('stocks')) || [
             'RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK',
@@ -152,6 +233,12 @@
                 input.value = '';
                 // Fetch data for the new ticker immediately
                 fetchStockData(ticker);
+                // Update the watch button to show active state
+                const watchButton = document.getElementById(`${ticker}-watch`);
+                if (watchButton) {
+                    watchButton.classList.add('active');
+                    watchButton.textContent = 'Watching';
+                }
             } else if (stocks.includes(ticker)) {
                 alert('This ticker is already being tracked!');
             } else {
@@ -172,10 +259,10 @@
         function initializeStockData(symbol, price) {
             if (!stockData[symbol]) {
                 stockData[symbol] = {
-                    isWatching: false,
+                    isWatching: true,  // Set to true by default
                     initialPrice: price,
-                    upperStopLoss: null,
-                    lowerStopLoss: null,
+                    upperStopLoss: calculateStopLoss(price, 'upper'),  // Initialize stop-loss immediately
+                    lowerStopLoss: calculateStopLoss(price, 'lower'),  // Initialize stop-loss immediately
                     highestPrice: price,
                     lowestPrice: price,
                     lastPrice: price,
@@ -187,44 +274,44 @@
         }
 
         function calculateStopLoss(price, type) {
-            return type === 'upper' ? price * 1.05 : price * 0.95;
+            return type === 'upper' ? price * 1.03 : price * 0.97;
         }
 
         function adjustStopLoss(symbol, currentPrice) {
             const data = stockData[symbol];
-            if (!data.isWatching) return;
+            if (!data.isWatching) {
+                return {
+                    upperStopLoss: null,
+                    lowerStopLoss: null
+                };
+            }
 
-            // Initialize stop-loss levels if not set
             if (!data.upperStopLoss) {
                 data.upperStopLoss = calculateStopLoss(currentPrice, 'upper');
                 data.lowerStopLoss = calculateStopLoss(currentPrice, 'lower');
-                data.highestPrice = currentPrice;
-                data.lowestPrice = currentPrice;
+                data.lastPrice = currentPrice;
+                return {
+                    upperStopLoss: data.upperStopLoss,
+                    lowerStopLoss: data.lowerStopLoss
+                };
             }
 
             const priceChange = currentPrice - data.lastPrice;
-            
-            // Upper stop-loss adjustment
-            if (currentPrice > data.highestPrice) {
-                const priceDiff = currentPrice - data.highestPrice;
-                const adjustmentPoints = Math.floor(priceDiff / 100) * 50;
-                if (currentPrice > data.upperStopLoss) {
-                    data.upperStopLoss += adjustmentPoints;
-                }
-                data.highestPrice = currentPrice;
+
+            if (currentPrice > data.upperStopLoss && priceChange > 0) {
+                const adjustment = priceChange * 0.5;
+                const newUpperStopLoss = data.upperStopLoss + adjustment;
+                data.upperStopLoss = newUpperStopLoss;
             }
 
-            // Lower stop-loss adjustment
-            if (currentPrice < data.lowestPrice) {
-                const priceDiff = data.lowestPrice - currentPrice;
-                const adjustmentPoints = Math.floor(priceDiff / 100) * 50;
-                if (currentPrice < data.lowerStopLoss) {
-                    data.lowerStopLoss -= adjustmentPoints;
-                }
-                data.lowestPrice = currentPrice;
+            if (currentPrice < data.lowerStopLoss && priceChange < 0) {
+                const adjustment = Math.abs(priceChange) * 0.5;
+                const newLowerStopLoss = data.lowerStopLoss - adjustment;
+                data.lowerStopLoss = newLowerStopLoss;
             }
 
             data.lastPrice = currentPrice;
+            
             return {
                 upperStopLoss: data.upperStopLoss,
                 lowerStopLoss: data.lowerStopLoss
@@ -244,7 +331,7 @@
                                     Action Required
                                 </button>
                             </div>
-                            <button class="watch-button" id="${symbol}-watch" onclick="toggleWatch('${symbol}')">Watch</button>
+                            <button class="watch-button active" id="${symbol}-watch" onclick="toggleWatch('${symbol}')">Watching</button>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -282,6 +369,19 @@
                     updateStopLossDisplay(symbol, null, null);
                     const actionButton = document.getElementById(`${symbol}-action`);
                     actionButton.classList.add('d-none');
+                } else {
+                    // Initialize stop-loss values when starting to watch
+                    const priceText = document.getElementById(`${symbol}-price`).textContent;
+                    const price = parseFloat(priceText.replace('₹', ''));
+                    
+                    // Calculate and set initial stop-loss values
+                    data.upperStopLoss = calculateStopLoss(price, 'upper');
+                    data.lowerStopLoss = calculateStopLoss(price, 'lower');
+                    data.highestPrice = price;
+                    data.lowestPrice = price;
+                    data.lastPrice = price;
+                    
+                    updateStopLossDisplay(symbol, data.upperStopLoss, data.lowerStopLoss);
                 }
             }
         }
@@ -289,6 +389,8 @@
         function updateStopLossDisplay(symbol, upperStop, lowerStop) {
             const upperStopElement = document.getElementById(`${symbol}-upper-stop`);
             const lowerStopElement = document.getElementById(`${symbol}-lower-stop`);
+            
+            if (!upperStopElement || !lowerStopElement) return;
             
             upperStopElement.textContent = upperStop ? `₹${upperStop.toFixed(2)}` : '--';
             lowerStopElement.textContent = lowerStop ? `₹${lowerStop.toFixed(2)}` : '--';
@@ -304,12 +406,19 @@
 
         async function fetchStockData(singleSymbol = null) {
             try {
-                const apiKey = 'YOUR_API_KEY';
+                const useMockData = document.getElementById('mockDataToggle').checked;
                 const symbolsToFetch = singleSymbol ? [singleSymbol] : stocks;
                 
                 for (const symbol of symbolsToFetch) {
-                    const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}.BSE&apikey=${apiKey}`);
-                    const data = await response.json();
+                    let data;
+                    
+                    if (useMockData) {
+                        data = generateMockData(symbol);
+                    } else {
+                        const apiKey = 'YOUR_API_KEY';
+                        const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}.BSE&apikey=${apiKey}`);
+                        data = await response.json();
+                    }
                     
                     if (data['Global Quote']) {
                         const quote = data['Global Quote'];
@@ -324,13 +433,13 @@
                             changePercent: quote['10. change percent'],
                             high: parseFloat(quote['03. high']).toFixed(2),
                             low: parseFloat(quote['04. low']).toFixed(2),
-                            upperStopLoss: stopLoss?.upperStopLoss,
-                            lowerStopLoss: stopLoss?.lowerStopLoss
+                            upperStopLoss: stopLoss.upperStopLoss,
+                            lowerStopLoss: stopLoss.lowerStopLoss
                         });
                     }
                 }
             } catch (error) {
-                console.error('Error fetching stock data:', error);
+                console.error('Error in fetchStockData:', error);
             }
         }
 
@@ -343,6 +452,12 @@
             const signalElement = document.getElementById(`${symbol}-signal`);
             const actionButton = document.getElementById(`${symbol}-action`);
 
+            if (!priceElement) return;
+
+            console.log(`${symbol} - Updating card with:`, data);
+            console.log(`${symbol} - Change value:`, data.change);
+            console.log(`${symbol} - Change percent:`, data.changePercent);
+
             priceElement.textContent = `₹${data.price}`;
             changeElement.textContent = `${data.change} (${data.changePercent})`;
             changeElement.className = parseFloat(data.change) >= 0 ? 'price-up' : 'price-down';
@@ -353,7 +468,6 @@
             if (stockData[symbol]?.isWatching) {
                 updateStopLossDisplay(symbol, data.upperStopLoss, data.lowerStopLoss);
                 
-                // Update signal based on price position relative to stop-loss levels
                 const currentPrice = parseFloat(data.price);
                 const { upperStopLoss, lowerStopLoss } = stockData[symbol];
                 
@@ -363,7 +477,6 @@
                         newSignal = 'SELL';
                         signalElement.textContent = newSignal;
                         signalElement.className = 'signal signal-sell';
-                        // Check for signal change
                         if (stockData[symbol].lastSignal !== newSignal) {
                             stockData[symbol].actionRequired = true;
                             stockData[symbol].actionTaken = false;
@@ -374,7 +487,6 @@
                         newSignal = 'BUY';
                         signalElement.textContent = newSignal;
                         signalElement.className = 'signal signal-buy';
-                        // Check for signal change
                         if (stockData[symbol].lastSignal !== newSignal) {
                             stockData[symbol].actionRequired = true;
                             stockData[symbol].actionTaken = false;
@@ -384,7 +496,6 @@
                     } else {
                         signalElement.textContent = newSignal;
                         signalElement.className = 'signal signal-neutral';
-                        // If returning to HOLD, hide action button
                         if (stockData[symbol].lastSignal !== newSignal) {
                             actionButton.classList.add('d-none');
                             stockData[symbol].actionRequired = false;
@@ -432,11 +543,32 @@
             }
         }
 
-        // Initialize the grid and start fetching data
-        initializeStockGrid();
-        fetchStockData();
-        // Update every minute
-        setInterval(fetchStockData, 60000);
+        // Make sure the grid is initialized before starting updates
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeStockGrid();
+            fetchStockData();
+            updateDataInterval();
+        });
+
+        // Update interval based on data source
+        let updateInterval;
+        function updateDataInterval() {
+            const useMockData = document.getElementById('mockDataToggle').checked;
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+            const interval = useMockData ? MOCK_UPDATE_INTERVAL : API_UPDATE_INTERVAL;
+            updateInterval = setInterval(fetchStockData, interval);
+        }
+
+        // Add event listener for toggle switch
+        document.getElementById('mockDataToggle').addEventListener('change', function() {
+            updateDataInterval();
+            fetchStockData(); // Fetch immediately when switching
+        });
+
+        // Initial interval setup
+        updateDataInterval();
 
         // Add keyboard shortcut for adding new ticker
         document.getElementById('newTicker').addEventListener('keypress', function(e) {

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Number Memory Training</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+        #display {
+            font-size: clamp(24px, 6vw, 36px);
+            margin: 20px 0;
+            min-height: 100px;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        input {
+            width: 90%;
+            max-width: 400px;
+            padding: 10px;
+            margin: 10px auto;
+            font-size: 16px;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            touch-action: manipulation;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .score {
+            font-size: clamp(16px, 4vw, 20px);
+            margin: 20px 0;
+        }
+        .correct { color: #4CAF50; }
+        .incorrect { color: #f44336; }
+        .graph-container {
+            margin: 30px auto;
+            width: 95%;
+            height: 200px;
+            border-left: 2px solid #333;
+            border-bottom: 2px solid #333;
+            position: relative;
+            padding: 0 10px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .bar {
+            position: absolute;
+            bottom: 0;
+            width: clamp(20px, 5vw, 30px);
+            background-color: #4CAF50;
+            transition: height 0.3s ease;
+            border-radius: 3px 3px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            min-height: 20px;
+        }
+        .bar-label {
+            position: absolute;
+            bottom: -35px;
+            width: clamp(20px, 5vw, 30px);
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.2;
+            word-wrap: break-word;
+        }
+        .y-axis {
+            position: absolute;
+            left: -35px;
+            height: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        #difficulty, #limitSetting, #rateSettings {
+            margin: 15px 0;
+        }
+        select, #dailyLimitInput, #hourlyRateInput {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        #dailyLimitInput, #hourlyRateInput {
+            width: 60px;
+        }
+        #timerDisplay {
+            font-size: 20px;
+            margin: 10px 0;
+            color: #666;
+        }
+        #pendingTests {
+            font-size: 18px;
+            margin: 15px 0;
+            color: #666;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Number Memory Test</h1>
+    <p>Remember the sequence of numbers shown and type them in order</p>
+    
+    <div id="display"></div>
+    <div id="timerDisplay"></div>
+    <div id="pendingTests"></div>
+    <input type="text" id="answer" placeholder="Type numbers without spaces (e.g. 123456)" style="display: none">
+    <div>
+        <button id="startBtn">Start Test</button>
+        <button id="checkBtn" style="display: none">Check Answer</button>
+    </div>
+    <div id="result"></div>
+    <div class="score">
+        Score: <span id="score">0</span>
+    </div>
+    <div class="graph-container">
+        <div class="y-axis">
+            <span>100</span>
+            <span>75</span>
+            <span>50</span>
+            <span>25</span>
+            <span>0</span>
+        </div>
+    </div>
+    <div id="difficulty">
+        <label>Difficulty Level: </label>
+        <select id="difficultySelect">
+            <option value="easy">Easy (5 numbers, 8 seconds)</option>
+            <option value="medium">Medium (8 numbers, 12 seconds)</option>
+            <option value="hard">Hard (12 numbers, 15 seconds)</option>
+            <option value="expert">Expert (15 numbers, 20 seconds)</option>
+            <option value="master">Master (20 numbers, 25 seconds)</option>
+        </select>
+    </div>
+    <div id="limitSetting">
+        <label>Daily Attempts Limit: </label>
+        <input type="number" id="dailyLimitInput" min="0" value="10">
+        <span style="font-size: 12px; color: #666;">(0 for unlimited)</span>
+        <span id="attemptsLeft" style="margin-left: 10px; font-size: 14px;"></span>
+    </div>
+    <div id="rateSettings">
+        <label>Tests Per Hour: </label>
+        <input type="number" id="hourlyRateInput" min="1" value="4" step="1">
+        <button id="resetPendingBtn" style="padding: 8px; margin-left: 10px;">Reset Pending Count</button>
+    </div>
+
+    <script>
+        const STORAGE_PREFIX = 'memorydosenum_';
+        
+        function getStorageKey(key) {
+            return STORAGE_PREFIX + key;
+        }
+
+        function getFromStorage(key, defaultValue = null) {
+            const value = localStorage.getItem(getStorageKey(key));
+            return value !== null ? value : defaultValue;
+        }
+
+        function saveToStorage(key, value) {
+            localStorage.setItem(getStorageKey(key), value);
+        }
+
+        let currentNumbers = [];
+        let score = parseInt(getFromStorage('score', '0'));
+        let scoreHistory = JSON.parse(getFromStorage('scoreHistory', '[]'));
+        const maxBars = 10;
+        
+        const settings = {
+            difficulties: {
+                easy: { numberCount: 5, displayTime: 8000 },
+                medium: { numberCount: 8, displayTime: 12000 },
+                hard: { numberCount: 12, displayTime: 15000 },
+                expert: { numberCount: 15, displayTime: 20000 },
+                master: { numberCount: 20, displayTime: 25000 }
+            },
+            defaultDailyLimit: parseInt(getFromStorage('dailyLimit', '10')),
+            defaultHourlyRate: parseInt(getFromStorage('hourlyRate', '4'))
+        };
+        
+        const display = document.getElementById('display');
+        const answer = document.getElementById('answer');
+        const startBtn = document.getElementById('startBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        const result = document.getElementById('result');
+        const difficultySelect = document.getElementById('difficultySelect');
+        const dailyLimitInput = document.getElementById('dailyLimitInput');
+        const hourlyRateInput = document.getElementById('hourlyRateInput');
+        const attemptsLeft = document.getElementById('attemptsLeft');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const pendingTests = document.getElementById('pendingTests');
+        const resetPendingBtn = document.getElementById('resetPendingBtn');
+        
+        let dailyAttempts = parseInt(getFromStorage('dailyAttempts', '0'));
+        let lastResetDate = getFromStorage('lastResetDate');
+        let timerInterval = null;
+        let lastCheckTime = parseInt(getFromStorage('lastCheckTime', Date.now().toString()));
+        let pendingTestCount = parseInt(getFromStorage('pendingTestCount', '0'));
+
+        function updateTimer(endTime) {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                const remaining = Math.max(0, endTime - Date.now());
+                const seconds = Math.ceil(remaining / 1000);
+                timerDisplay.textContent = `Time remaining: ${seconds}s`;
+                
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.textContent = '';
+                }
+            }, 100);
+        }
+
+        function generateRandomNumbers() {
+            const difficulty = settings.difficulties[difficultySelect.value];
+            const numbers = [];
+            for (let i = 0; i < difficulty.numberCount; i++) {
+                numbers.push(Math.floor(Math.random() * 10)); // Random number 0-9
+            }
+            return numbers;
+        }
+
+        function formatNumberSequence(numbers) {
+            return numbers.join('');
+        }
+
+        function parseUserInput(input) {
+            const numberStr = input.trim();
+            const numbers = [];
+            for (let i = 0; i < numberStr.length; i++) {
+                numbers.push(parseInt(numberStr[i]));
+            }
+            return numbers;
+        }
+
+        function updatePendingTests() {
+            const now = Date.now();
+            const hoursPassed = (now - lastCheckTime) / (1000 * 60 * 60);
+            const hourlyRate = parseInt(hourlyRateInput.value);
+            const newTests = Math.floor(hoursPassed * hourlyRate);
+            
+            if (newTests > 0) {
+                pendingTestCount += newTests;
+                lastCheckTime = now;
+                saveToStorage('lastCheckTime', lastCheckTime);
+                saveToStorage('pendingTestCount', pendingTestCount);
+            }
+            
+            pendingTests.textContent = `Pending tests: ${pendingTestCount}`;
+        }
+
+        function resetPendingTests() {
+            pendingTestCount = 0;
+            lastCheckTime = Date.now();
+            saveToStorage('lastCheckTime', lastCheckTime);
+            saveToStorage('pendingTestCount', pendingTestCount);
+            updatePendingTests();
+        }
+        
+        function startTest() {
+            if (checkDailyLimit()) {
+                currentNumbers = generateRandomNumbers();
+                display.textContent = formatNumberSequence(currentNumbers);
+                startBtn.style.display = 'none';
+                difficultySelect.disabled = true;
+                
+                const difficulty = settings.difficulties[difficultySelect.value];
+                const endTime = Date.now() + difficulty.displayTime;
+                
+                updateTimer(endTime);
+                
+                setTimeout(() => {
+                    display.textContent = "Now type the numbers you remember!";
+                    answer.style.display = 'block';
+                    checkBtn.style.display = 'inline';
+                    answer.value = '';
+                    answer.focus();
+                    timerDisplay.textContent = '';
+                }, difficulty.displayTime);
+            }
+        }
+        
+        function checkAnswer() {
+            const userAnswer = parseUserInput(answer.value);
+            const correct = userAnswer.length === currentNumbers.length &&
+                          userAnswer.every((num, i) => num === currentNumbers[i]);
+            
+            result.textContent = correct ? "Correct! Well done!" : "Incorrect. Try again!";
+            result.className = correct ? "correct" : "incorrect";
+            
+            if (correct) {
+                score++;
+                saveToStorage('score', score);
+                if (pendingTestCount > 0) {
+                    pendingTestCount--;
+                    saveToStorage('pendingTestCount', pendingTestCount);
+                }
+            }
+            document.getElementById('score').textContent = score;
+            
+            updateGraph(correct ? 100 : 0);
+            updateDailyAttempts();
+            updatePendingTests();
+            
+            // Reset UI
+            answer.style.display = 'none';
+            checkBtn.style.display = 'none';
+            startBtn.style.display = 'inline';
+            difficultySelect.disabled = false;
+            display.textContent = correct ? 
+                "Correct! The sequence was: " + formatNumberSequence(currentNumbers) :
+                "Incorrect. The sequence was: " + formatNumberSequence(currentNumbers);
+        }
+        
+        function updateGraph(value) {
+            scoreHistory.push(value);
+            if (scoreHistory.length > maxBars) {
+                scoreHistory.shift();
+            }
+            saveToStorage('scoreHistory', JSON.stringify(scoreHistory));
+            
+            const container = document.querySelector('.graph-container');
+            container.innerHTML = '<div class="y-axis"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div>';
+            
+            const barWidth = clamp(20, 5, 30);
+            const spacing = 5;
+            const totalWidth = scoreHistory.length * (barWidth + spacing);
+            
+            scoreHistory.forEach((score, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${score}%`;
+                bar.style.left = `${index * (barWidth + spacing) + 40}px`;
+                bar.style.width = `${barWidth}px`;
+                bar.textContent = `${score}%`;
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.style.left = `${index * (barWidth + spacing) + 40}px`;
+                label.textContent = `#${index + 1}`;
+                
+                container.appendChild(bar);
+                container.appendChild(label);
+            });
+        }
+        
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+        
+        function checkDailyLimit() {
+            const currentDate = new Date().toDateString();
+            const dailyLimit = parseInt(dailyLimitInput.value);
+            
+            if (lastResetDate !== currentDate) {
+                dailyAttempts = 0;
+                lastResetDate = currentDate;
+                saveToStorage('lastResetDate', lastResetDate);
+            }
+            
+            if (dailyLimit === 0 || dailyAttempts < dailyLimit) {
+                return true;
+            }
+            
+            display.textContent = "Daily limit reached. Try again tomorrow!";
+            return false;
+        }
+        
+        function updateDailyAttempts() {
+            dailyAttempts++;
+            saveToStorage('dailyAttempts', dailyAttempts);
+            saveToStorage('dailyLimit', dailyLimitInput.value);
+            updateAttemptsDisplay();
+        }
+        
+        function updateAttemptsDisplay() {
+            const dailyLimit = parseInt(dailyLimitInput.value);
+            saveToStorage('dailyLimit', dailyLimit);
+            if (dailyLimit > 0) {
+                attemptsLeft.textContent = `Attempts left today: ${dailyLimit - dailyAttempts}`;
+            } else {
+                attemptsLeft.textContent = '';
+            }
+        }
+        
+        // Event Listeners
+        startBtn.addEventListener('click', startTest);
+        checkBtn.addEventListener('click', checkAnswer);
+        answer.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+        dailyLimitInput.addEventListener('change', () => {
+            saveToStorage('dailyLimit', dailyLimitInput.value);
+            updateAttemptsDisplay();
+        });
+        resetPendingBtn.addEventListener('click', resetPendingTests);
+        hourlyRateInput.addEventListener('change', () => {
+            saveToStorage('hourlyRate', hourlyRateInput.value);
+            settings.defaultHourlyRate = parseInt(hourlyRateInput.value);
+        });
+        
+        // Initialize
+        const savedDailyLimit = getFromStorage('dailyLimit');
+        if (savedDailyLimit !== null) {
+            dailyLimitInput.value = savedDailyLimit;
+            settings.defaultDailyLimit = parseInt(savedDailyLimit);
+        }
+        updateAttemptsDisplay();
+        document.getElementById('score').textContent = score;
+        hourlyRateInput.value = settings.defaultHourlyRate;
+        difficultySelect.value = getFromStorage('difficulty', 'easy');
+        updatePendingTests();
+        
+        // Save settings when changed
+        difficultySelect.addEventListener('change', () => {
+            saveToStorage('difficulty', difficultySelect.value);
+        });
+        
+        // Update pending tests periodically
+        setInterval(updatePendingTests, 60000); // Check every minute
+    </script>
+</body>
+</html>

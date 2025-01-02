@@ -132,8 +132,9 @@
         let currentSession = null;
         let startTime = null;
         let totalDuration = 0;
-        let sessionsStarted = 0;
-        let sessionsCompleted = 0;
+        let sessionsStarted = parseInt(localStorage.getItem('sessionsStarted')) || 0;
+        let sessionsCompleted = parseInt(localStorage.getItem('sessionsCompleted')) || 0;
+        let totalTimeCompleted = parseInt(localStorage.getItem('totalTimeCompleted')) || 0;
         let dailyProgress = 0;
         let dailyGoal = parseInt(localStorage.getItem('dailyGoal')) || 120;
         let pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || 0;
@@ -198,6 +199,7 @@
             }
 
             sessionsStarted++;
+            localStorage.setItem('sessionsStarted', sessionsStarted);
             currentSession = minutes * 60; // Convert to seconds
             startTime = new Date();
             totalDuration = minutes * 60;
@@ -210,6 +212,7 @@
 
             startTimer();
             saveTimerState();
+            updateStats();
         }
 
         function cancelSession() {
@@ -233,8 +236,14 @@
             startTime = null;
             sessionsCompleted++;
             const sessionMinutes = Math.floor(totalDuration / 60);
+            totalTimeCompleted += sessionMinutes;
             dailyProgress += sessionMinutes;
             pendingBoringTime = Math.max(0, pendingBoringTime - sessionMinutes);
+            
+            // Save statistics
+            localStorage.setItem('sessionsCompleted', sessionsCompleted);
+            localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
+            
             updateStats();
             updateButtons(false);
             updateTimer(0);
@@ -267,8 +276,7 @@
         }
 
         function updateStats() {
-            document.getElementById('totalTime').textContent = 
-                Math.floor(sessionsCompleted * totalDuration / 60);
+            document.getElementById('totalTime').textContent = totalTimeCompleted;
             document.getElementById('sessionsCompleted').textContent = sessionsCompleted;
             document.getElementById('completionRate').textContent = 
                 Math.round((sessionsCompleted / sessionsStarted) * 100);

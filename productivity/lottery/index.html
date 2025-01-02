@@ -283,6 +283,13 @@
             const savedLastRewardTime = localStorage.getItem('lottery_last_reward_time');
             const savedInterval = localStorage.getItem('lottery_interval');
 
+            // First time initialization
+            if (!savedRewards && !savedLastRewardTime) {
+                lastRewardTime = new Date(); // Set current time as last reward time
+                saveState(); // Save this initial state
+                return; // Exit early as this is first time setup
+            }
+
             if (savedRewards) rewards = JSON.parse(savedRewards);
             if (savedPendingRewards) {
                 pendingRewards = JSON.parse(savedPendingRewards).map(reward => ({
@@ -304,9 +311,9 @@
             if (savedLastRewardTime) {
                 lastRewardTime = new Date(savedLastRewardTime);
             } else if (rewards.length > 0) {
-                // If no last reward time but we have rewards, set it to now minus interval
-                // This ensures first reward happens immediately
-                lastRewardTime = new Date(new Date().getTime() - rewardInterval);
+                // If no last reward time but we have rewards, set it to current time
+                lastRewardTime = new Date();
+                saveState();
             }
 
             // Always check for missed rewards after loading state
@@ -412,8 +419,7 @@
         function selectRandomReward() {
             if (rewards.length === 0) return null;
             
-            const totalProbability = rewards.reduce((sum, reward) => sum + reward.probability, 0);
-            const randomValue = Math.random() * totalProbability;
+            const randomValue = Math.random() * 100; // Use 100 instead of total probability
             let currentSum = 0;
 
             for (const reward of rewards) {
@@ -422,7 +428,9 @@
                     return reward;
                 }
             }
-            return rewards[rewards.length - 1]; // Fallback to last reward
+            
+            // If no reward is selected (due to total probability < 100), return null
+            return null;
         }
 
         function updateNextRewardTimer() {
@@ -555,6 +563,13 @@
                 return;
             }
 
+            // Check if adding this probability would exceed 100%
+            const currentTotal = rewards.reduce((sum, reward) => sum + reward.probability, 0);
+            if (currentTotal + probability > 100) {
+                alert('Total probability cannot exceed 100%. Current total: ' + currentTotal + '%');
+                return;
+            }
+
             rewards.push({ name, probability });
             document.getElementById('reward-name').value = '';
             document.getElementById('reward-probability').value = '';
@@ -571,7 +586,8 @@
             const radius = Math.min(centerX, centerY) - 10;
 
             let startAngle = 0;
-            const totalProbability = rewards.reduce((sum, reward) => sum + reward.probability, 0);
+            // Use fixed 100 for total probability instead of summing
+            const totalProbability = 100;
 
             rewards.forEach((reward, index) => {
                 const sliceAngle = (reward.probability / totalProbability) * Math.PI * 2;
@@ -592,16 +608,40 @@
                 ctx.textAlign = 'right';
                 ctx.fillStyle = 'white';
                 ctx.font = '12px Arial';
-                ctx.fillText(reward.name, radius - 10, 5);
+                ctx.fillText(`${reward.name} (${reward.probability}%)`, radius - 10, 5);
                 ctx.restore();
 
                 startAngle += sliceAngle;
             });
+
+            // Draw empty space if total probability < 100%
+            const totalUsedProbability = rewards.reduce((sum, reward) => sum + reward.probability, 0);
+            if (totalUsedProbability < 100) {
+                const remainingAngle = ((100 - totalUsedProbability) / 100) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + remainingAngle);
+                ctx.closePath();
+                ctx.fillStyle = '#e0e0e0';
+                ctx.fill();
+                ctx.stroke();
+
+                // Add text for empty space
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + remainingAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Arial';
+                ctx.fillText(`Empty (${100 - totalUsedProbability}%)`, radius - 10, 5);
+                ctx.restore();
+            }
         }
 
         function calculateFinalAngle(selectedReward) {
             let angle = 0;
-            const totalProbability = rewards.reduce((sum, reward) => sum + reward.probability, 0);
+            // Use fixed 100 for total probability
+            const totalProbability = 100;
             
             for (const reward of rewards) {
                 const sliceAngle = (reward.probability / totalProbability) * Math.PI * 2;

@@ -419,7 +419,7 @@
         function selectRandomReward() {
             if (rewards.length === 0) return null;
             
-            const randomValue = Math.random() * 100; // Use 100 instead of total probability
+            const randomValue = Math.random() * 100;
             let currentSum = 0;
 
             for (const reward of rewards) {
@@ -429,8 +429,12 @@
                 }
             }
             
-            // If no reward is selected (due to total probability < 100), return null
-            return null;
+            // If random value falls in empty space, return an empty reward
+            return {
+                name: "Empty",
+                probability: 100 - currentSum,
+                isEmpty: true
+            };
         }
 
         function updateNextRewardTimer() {
@@ -512,6 +516,9 @@
         }
 
         function handleWin(reward) {
+            // Don't process null rewards
+            if (!reward) return;
+
             lastRewardTime = new Date();
             
             // Animate the wheel for visual feedback
@@ -543,7 +550,8 @@
                     // Add the reward after animation completes
                     pendingRewards.push({
                         name: reward.name,
-                        timestamp: lastRewardTime
+                        timestamp: lastRewardTime,
+                        isEmpty: reward.isEmpty
                     });
                     updatePendingRewards();
                     saveState();
@@ -640,7 +648,6 @@
 
         function calculateFinalAngle(selectedReward) {
             let angle = 0;
-            // Use fixed 100 for total probability
             const totalProbability = 100;
             
             for (const reward of rewards) {
@@ -650,6 +657,13 @@
                 }
                 angle += sliceAngle;
             }
+
+            // If it's an empty reward, calculate angle to point to empty space
+            if (selectedReward.isEmpty) {
+                const emptySliceAngle = (selectedReward.probability / totalProbability) * Math.PI * 2;
+                return -angle - (emptySliceAngle / 2);
+            }
+
             return 0;
         }
 
@@ -691,6 +705,20 @@
                 manageRewardsList.appendChild(li);
             });
 
+            // Show total probability used
+            const totalUsedProbability = rewards.reduce((sum, reward) => sum + reward.probability, 0);
+            if (totalUsedProbability < 100) {
+                const li = document.createElement('li');
+                li.className = 'manage-reward-item';
+                li.innerHTML = `
+                    <div class="reward-info">
+                        <span>Empty</span>
+                        <span class="probability-badge">${100 - totalUsedProbability}%</span>
+                    </div>
+                `;
+                manageRewardsList.appendChild(li);
+            }
+
             // Update combined rewards list
             const rewardsList = document.getElementById('rewards-list');
             rewardsList.innerHTML = '';
@@ -719,7 +747,7 @@
                     const pendingIndex = pendingRewards.findIndex(pr => pr.timestamp === reward.timestamp);
                     li.innerHTML = `
                         <div>
-                            <div>${reward.name}</div>
+                            <div>${reward.name}${reward.isEmpty ? ' (Empty)' : ''}</div>
                             <div class="timestamp">Won: ${formatDate(reward.timestamp)}</div>
                         </div>
                         <button class="complete-button" onclick="completeReward(${pendingIndex})">Complete</button>
@@ -727,7 +755,7 @@
                 } else {
                     li.innerHTML = `
                         <div>
-                            <div>${reward.name}</div>
+                            <div>${reward.name}${reward.isEmpty ? ' (Empty)' : ''}</div>
                             <div class="timestamp">Won: ${formatDate(reward.wonAt)}</div>
                             <div class="timestamp">Completed: ${formatDate(reward.completedAt)}</div>
                         </div>

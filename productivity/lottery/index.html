@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lottery Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #1a1a1a;
+            margin-bottom: 15px;
+        }
+
+        /* Wheel Section */
+        #wheel-section {
+            text-align: center;
+        }
+
+        #wheel-canvas {
+            max-width: 100%;
+            margin: 20px 0;
+        }
+
+        #spin-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #spin-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* Create Reward Section */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .interval-info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .next-reward-time {
+            color: #2196F3;
+            font-weight: bold;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 1s linear;
+            border-radius: 4px;
+        }
+
+        .progress-bar.ready {
+            background-color: #4CAF50;
+            width: 100% !important;
+        }
+
+        .progress-bar.waiting {
+            background-color: #2196F3;
+        }
+
+        /* Input with unit */
+        .input-with-unit {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-with-unit input {
+            flex: 1;
+        }
+
+        .unit-label {
+            color: #666;
+            white-space: nowrap;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        input[type="text"], 
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Manage Rewards Section */
+        .manage-reward-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .manage-reward-item:last-child {
+            border-bottom: none;
+        }
+
+        .remove-button {
+            background: #f44336;
+        }
+
+        .reward-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .probability-badge {
+            background: #e0e0e0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Rewards Lists */
+        .rewards-list {
+            list-style: none;
+        }
+
+        .reward-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reward-item:last-child {
+            border-bottom: none;
+        }
+
+        .complete-button {
+            background: #4CAF50;
+            font-size: 12px;
+        }
+
+        /* History Section */
+        .history-item {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .timestamp {
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="wheel-section" class="section">
+        <h2>Spin the Wheel</h2>
+        <canvas id="wheel-canvas" width="300" height="300"></canvas>
+        <br>
+        <button id="spin-button">SPIN!</button>
+        <div class="interval-info">
+            Next reward in: <span id="next-reward-time" class="next-reward-time">--:--:--</span>
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar ready"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="interval-section" class="section">
+        <h2>Reward Interval Settings</h2>
+        <div class="form-group">
+            <label for="reward-interval">Time between rewards:</label>
+            <div class="input-with-unit">
+                <input type="number" id="reward-interval" min="1" placeholder="Enter time">
+                <select id="interval-unit">
+                    <option value="minutes">Minutes</option>
+                    <option value="hours">Hours</option>
+                    <option value="days">Days</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="updateInterval()">Update Interval</button>
+    </div>
+
+    <div id="create-reward-section" class="section">
+        <h2>Create New Reward</h2>
+        <div class="form-group">
+            <label for="reward-name">Reward Name:</label>
+            <input type="text" id="reward-name" placeholder="Enter reward name">
+        </div>
+        <div class="form-group">
+            <label for="reward-probability">Probability (%):</label>
+            <input type="number" id="reward-probability" min="0" max="100" placeholder="Enter probability">
+        </div>
+        <button onclick="addReward()">Add Reward</button>
+    </div>
+
+    <div id="manage-rewards-section" class="section">
+        <h2>Manage Rewards</h2>
+        <ul id="manage-rewards-list" class="rewards-list">
+            <!-- Manage rewards will be added here -->
+        </ul>
+    </div>
+
+    <div id="rewards-list-section" class="section">
+        <h2>Rewards List</h2>
+        <ul id="rewards-list" class="rewards-list">
+            <!-- All rewards will be added here -->
+        </ul>
+    </div>
+
+    <script>
+        let rewards = [];
+        let pendingRewards = [];
+        let history = [];
+        let lastRewardTime = null;
+        let rewardInterval = 24 * 60 * 60 * 1000; // Default: 24 hours in milliseconds
+        const canvas = document.getElementById('wheel-canvas');
+        const ctx = canvas.getContext('2d');
+        let isSpinning = false;
+        let nextRewardTimeout;
+
+        // Load state from localStorage
+        function loadState() {
+            const savedRewards = localStorage.getItem('lottery_rewards');
+            const savedPendingRewards = localStorage.getItem('lottery_pending_rewards');
+            const savedHistory = localStorage.getItem('lottery_history');
+            const savedLastRewardTime = localStorage.getItem('lottery_last_reward_time');
+            const savedInterval = localStorage.getItem('lottery_interval');
+
+            if (savedRewards) rewards = JSON.parse(savedRewards);
+            if (savedPendingRewards) {
+                pendingRewards = JSON.parse(savedPendingRewards).map(reward => ({
+                    ...reward,
+                    timestamp: new Date(reward.timestamp)
+                }));
+            }
+            if (savedHistory) {
+                history = JSON.parse(savedHistory).map(item => ({
+                    ...item,
+                    completedAt: new Date(item.completedAt),
+                    wonAt: new Date(item.wonAt)
+                }));
+            }
+            if (savedInterval) {
+                rewardInterval = parseInt(savedInterval);
+                displayIntervalSettings();
+            }
+            if (savedLastRewardTime) {
+                lastRewardTime = new Date(savedLastRewardTime);
+            } else if (rewards.length > 0) {
+                // If no last reward time but we have rewards, set it to now minus interval
+                // This ensures first reward happens immediately
+                lastRewardTime = new Date(new Date().getTime() - rewardInterval);
+            }
+
+            // Always check for missed rewards after loading state
+            checkMissedRewards();
+            drawWheel();
+            updatePendingRewards();
+            updateHistory();
+            updateNextRewardTimer();
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            localStorage.setItem('lottery_rewards', JSON.stringify(rewards));
+            localStorage.setItem('lottery_pending_rewards', JSON.stringify(pendingRewards));
+            localStorage.setItem('lottery_history', JSON.stringify(history));
+            localStorage.setItem('lottery_last_reward_time', lastRewardTime?.toISOString());
+            localStorage.setItem('lottery_interval', rewardInterval.toString());
+        }
+
+        function displayIntervalSettings() {
+            const intervalInput = document.getElementById('reward-interval');
+            const intervalUnit = document.getElementById('interval-unit');
+            
+            if (rewardInterval >= 24 * 60 * 60 * 1000) {
+                intervalInput.value = rewardInterval / (24 * 60 * 60 * 1000);
+                intervalUnit.value = 'days';
+            } else if (rewardInterval >= 60 * 60 * 1000) {
+                intervalInput.value = rewardInterval / (60 * 60 * 1000);
+                intervalUnit.value = 'hours';
+            } else {
+                intervalInput.value = rewardInterval / (60 * 1000);
+                intervalUnit.value = 'minutes';
+            }
+        }
+
+        function updateInterval() {
+            const intervalValue = parseFloat(document.getElementById('reward-interval').value);
+            const intervalUnit = document.getElementById('interval-unit').value;
+            
+            if (!intervalValue || intervalValue <= 0) {
+                alert('Please enter a valid interval');
+                return;
+            }
+
+            switch (intervalUnit) {
+                case 'minutes':
+                    rewardInterval = intervalValue * 60 * 1000;
+                    break;
+                case 'hours':
+                    rewardInterval = intervalValue * 60 * 60 * 1000;
+                    break;
+                case 'days':
+                    rewardInterval = intervalValue * 24 * 60 * 60 * 1000;
+                    break;
+            }
+
+            // When interval is updated, check for any rewards that should have happened
+            if (!lastRewardTime && rewards.length > 0) {
+                lastRewardTime = new Date(new Date().getTime() - rewardInterval);
+            }
+            checkMissedRewards();
+            saveState();
+            updateNextRewardTimer();
+        }
+
+        function checkMissedRewards() {
+            if (!lastRewardTime || rewards.length === 0) return;
+
+            const now = new Date().getTime();
+            const lastRewardTimeMs = lastRewardTime.getTime();
+            const timeDiff = now - lastRewardTimeMs;
+            const missedRewards = Math.floor(timeDiff / rewardInterval);
+
+            console.log('Checking missed rewards:', {
+                now: new Date(now),
+                lastRewardTime: new Date(lastRewardTimeMs),
+                timeDiff,
+                missedRewards,
+                rewardInterval
+            });
+
+            if (missedRewards > 0) {
+                console.log(`Found ${missedRewards} missed rewards`);
+                for (let i = 0; i < missedRewards; i++) {
+                    const missedTime = new Date(lastRewardTimeMs + (i + 1) * rewardInterval);
+                    const selectedReward = selectRandomReward();
+                    if (selectedReward) {
+                        console.log(`Adding missed reward: ${selectedReward.name} at ${missedTime}`);
+                        pendingRewards.push({
+                            name: selectedReward.name,
+                            timestamp: missedTime
+                        });
+                    }
+                }
+                // Update last reward time to the most recent missed reward
+                lastRewardTime = new Date(lastRewardTimeMs + (missedRewards * rewardInterval));
+                updatePendingRewards();
+                saveState();
+                updateNextRewardTimer();
+            }
+        }
+
+        function selectRandomReward() {
+            if (rewards.length === 0) return null;
+            
+            const totalProbability = rewards.reduce((sum, reward) => sum + reward.probability, 0);
+            const randomValue = Math.random() * totalProbability;
+            let currentSum = 0;
+
+            for (const reward of rewards) {
+                currentSum += reward.probability;
+                if (randomValue <= currentSum) {
+                    return reward;
+                }
+            }
+            return rewards[rewards.length - 1]; // Fallback to last reward
+        }
+
+        function updateNextRewardTimer() {
+            if (nextRewardTimeout) {
+                clearTimeout(nextRewardTimeout);
+            }
+
+            const nextRewardTimeSpan = document.getElementById('next-reward-time');
+            const progressBar = document.getElementById('progress-bar');
+            const spinButton = document.getElementById('spin-button');
+            
+            // Hide spin button as we're doing automatic spins
+            spinButton.style.display = 'none';
+            
+            if (!lastRewardTime || !rewardInterval) {
+                nextRewardTimeSpan.textContent = 'Calculating next reward...';
+                // Do initial spin if no last reward time
+                if (rewards.length > 0) {
+                    const selectedReward = selectRandomReward();
+                    if (selectedReward) {
+                        handleWin(selectedReward);
+                    }
+                }
+                return;
+            }
+
+            const now = new Date().getTime();
+            const lastRewardTimeMs = lastRewardTime.getTime();
+            const nextRewardTimeMs = lastRewardTimeMs + rewardInterval;
+            const timeUntilNext = nextRewardTimeMs - now;
+
+            if (timeUntilNext <= 0) {
+                // Time for a new spin
+                const selectedReward = selectRandomReward();
+                if (selectedReward) {
+                    handleWin(selectedReward);
+                }
+                return;
+            }
+
+            progressBar.className = 'progress-bar waiting';
+            
+            function updateTimer() {
+                const currentTime = new Date().getTime();
+                const timeLeft = nextRewardTimeMs - currentTime;
+
+                if (timeLeft <= 0) {
+                    // Time for a new spin
+                    const selectedReward = selectRandomReward();
+                    if (selectedReward) {
+                        handleWin(selectedReward);
+                    }
+                    return;
+                }
+
+                // Calculate progress based on elapsed time
+                const elapsedTime = currentTime - lastRewardTimeMs;
+                const progress = Math.min((elapsedTime / rewardInterval) * 100, 100);
+                progressBar.style.width = `${progress}%`;
+
+                // Calculate time components
+                const hours = Math.floor(timeLeft / (60 * 60 * 1000));
+                const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+                const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
+
+                // Format time string with validation
+                if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+                    nextRewardTimeSpan.textContent = 'Calculating next reward...';
+                    return;
+                }
+
+                nextRewardTimeSpan.textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                nextRewardTimeout = setTimeout(updateTimer, 1000);
+            }
+
+            updateTimer();
+        }
+
+        function handleWin(reward) {
+            lastRewardTime = new Date();
+            
+            // Animate the wheel for visual feedback
+            let spins = 5 * Math.PI * 2;
+            const finalAngle = calculateFinalAngle(reward);
+            const totalSpinAngle = spins + finalAngle;
+            let currentAngle = 0;
+            let startTime = null;
+            const spinDuration = 3000;
+
+            function animate(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / spinDuration, 1);
+
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                currentAngle = easeOut * totalSpinAngle;
+
+                ctx.save();
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(currentAngle);
+                ctx.translate(-canvas.width / 2, -canvas.height / 2);
+                drawWheel();
+                ctx.restore();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    // Add the reward after animation completes
+                    pendingRewards.push({
+                        name: reward.name,
+                        timestamp: lastRewardTime
+                    });
+                    updatePendingRewards();
+                    saveState();
+                    updateNextRewardTimer();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function addReward() {
+            const name = document.getElementById('reward-name').value;
+            const probability = parseFloat(document.getElementById('reward-probability').value);
+
+            if (!name || !probability) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            rewards.push({ name, probability });
+            document.getElementById('reward-name').value = '';
+            document.getElementById('reward-probability').value = '';
+            drawWheel();
+            saveState();
+        }
+
+        function drawWheel() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (rewards.length === 0) return;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 10;
+
+            let startAngle = 0;
+            const totalProbability = rewards.reduce((sum, reward) => sum + reward.probability, 0);
+
+            rewards.forEach((reward, index) => {
+                const sliceAngle = (reward.probability / totalProbability) * Math.PI * 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+                ctx.closePath();
+
+                ctx.fillStyle = `hsl(${(index * 360) / rewards.length}, 70%, 50%)`;
+                ctx.fill();
+                ctx.stroke();
+
+                // Add text
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.fillText(reward.name, radius - 10, 5);
+                ctx.restore();
+
+                startAngle += sliceAngle;
+            });
+        }
+
+        function calculateFinalAngle(selectedReward) {
+            let angle = 0;
+            const totalProbability = rewards.reduce((sum, reward) => sum + reward.probability, 0);
+            
+            for (const reward of rewards) {
+                const sliceAngle = (reward.probability / totalProbability) * Math.PI * 2;
+                if (reward === selectedReward) {
+                    return -angle - (sliceAngle / 2);
+                }
+                angle += sliceAngle;
+            }
+            return 0;
+        }
+
+        function completeReward(index) {
+            const reward = pendingRewards[index];
+            history.push({
+                name: reward.name,
+                completedAt: new Date(),
+                wonAt: reward.timestamp
+            });
+            pendingRewards.splice(index, 1);
+            updatePendingRewards();
+            updateHistory();
+            saveState();
+        }
+
+        function updatePendingRewards() {
+            updateRewardsList();
+        }
+
+        function updateHistory() {
+            updateRewardsList();
+        }
+
+        function updateRewardsList() {
+            // Update manage rewards list
+            const manageRewardsList = document.getElementById('manage-rewards-list');
+            manageRewardsList.innerHTML = '';
+            rewards.forEach((reward, index) => {
+                const li = document.createElement('li');
+                li.className = 'manage-reward-item';
+                li.innerHTML = `
+                    <div class="reward-info">
+                        <span>${reward.name}</span>
+                        <span class="probability-badge">${reward.probability}%</span>
+                    </div>
+                    <button class="remove-button" onclick="removeReward(${index})">Remove</button>
+                `;
+                manageRewardsList.appendChild(li);
+            });
+
+            // Update combined rewards list
+            const rewardsList = document.getElementById('rewards-list');
+            rewardsList.innerHTML = '';
+
+            // Combine pending rewards and history
+            const allRewards = [
+                ...pendingRewards.map(reward => ({
+                    ...reward,
+                    status: 'pending'
+                })),
+                ...history.map(reward => ({
+                    ...reward,
+                    status: 'completed'
+                }))
+            ].sort((a, b) => {
+                const dateA = a.status === 'pending' ? a.timestamp : a.completedAt;
+                const dateB = b.status === 'pending' ? b.timestamp : b.completedAt;
+                return dateB - dateA;
+            });
+
+            allRewards.forEach((reward, index) => {
+                const li = document.createElement('li');
+                li.className = `reward-item ${reward.status === 'completed' ? 'history-item' : ''}`;
+                
+                if (reward.status === 'pending') {
+                    const pendingIndex = pendingRewards.findIndex(pr => pr.timestamp === reward.timestamp);
+                    li.innerHTML = `
+                        <div>
+                            <div>${reward.name}</div>
+                            <div class="timestamp">Won: ${formatDate(reward.timestamp)}</div>
+                        </div>
+                        <button class="complete-button" onclick="completeReward(${pendingIndex})">Complete</button>
+                    `;
+                } else {
+                    li.innerHTML = `
+                        <div>
+                            <div>${reward.name}</div>
+                            <div class="timestamp">Won: ${formatDate(reward.wonAt)}</div>
+                            <div class="timestamp">Completed: ${formatDate(reward.completedAt)}</div>
+                        </div>
+                    `;
+                }
+                rewardsList.appendChild(li);
+            });
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleString();
+        }
+
+        function removeReward(index) {
+            if (confirm(`Are you sure you want to remove "${rewards[index].name}"?`)) {
+                rewards.splice(index, 1);
+                drawWheel();
+                updateRewardsList();
+                saveState();
+            }
+        }
+
+        // Load saved state when page loads
+        loadState();
+        drawWheel();
+    </script>
+</body>
+</html>

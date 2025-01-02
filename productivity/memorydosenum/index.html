@@ -330,9 +330,13 @@
             checkBtn.style.display = 'none';
             startBtn.style.display = 'inline';
             difficultySelect.disabled = false;
-            display.textContent = correct ? 
-                "Correct! The sequence was: " + formatNumberSequence(currentNumbers) :
-                "Incorrect. The sequence was: " + formatNumberSequence(currentNumbers);
+            
+            // Show both sequences in result
+            const correctSeq = formatNumberSequence(currentNumbers);
+            const userSeq = formatNumberSequence(userAnswer);
+            display.innerHTML = correct ? 
+                `Correct! <br>Your answer: ${userSeq}<br>Sequence was: ${correctSeq}` :
+                `Incorrect. <br>Your answer: ${userSeq}<br>Sequence was: ${correctSeq}`;
         }
         
         function updateGraph(value) {

@@ -179,16 +179,17 @@
         function startTimer() {
             timer = setInterval(() => {
                 const now = new Date();
-                const elapsed = Math.floor((now - startTime) / 1000);
-                const remaining = currentSession - elapsed;
+                const elapsedSeconds = Math.floor((now - startTime) / 1000);
+                const remainingSeconds = currentSession - elapsedSeconds;
 
-                if (remaining <= 0) {
+                if (remainingSeconds <= 0) {
                     sessionComplete();
                 } else {
-                    updateTimer(remaining);
-                    updateProgress((remaining / totalDuration) * 100);
+                    updateTimer(remainingSeconds);
+                    const progressPercent = (remainingSeconds / totalDuration) * 100;
+                    updateProgress(progressPercent);
                 }
-            }, 1000);
+            }, 100);
         }
 
         function startSession(minutes) {
@@ -200,10 +201,11 @@
             currentSession = minutes * 60; // Convert to seconds
             startTime = new Date();
             totalDuration = minutes * 60;
-            updateButtons(true);
-            updateProgress(100);
             
-            // Show cancel button
+            // Initial display update
+            updateTimer(currentSession);
+            updateProgress(100);
+            updateButtons(true);
             document.getElementById('cancelButton').style.display = 'block';
 
             startTimer();
@@ -256,7 +258,7 @@
         }
 
         function updateProgress(percentage) {
-            document.getElementById('progress').style.width = `${100 - percentage}%`;
+            document.getElementById('progress').style.width = `${Math.max(0, Math.min(100 - percentage, 100))}%`;
         }
 
         function updateButtons(disabled) {

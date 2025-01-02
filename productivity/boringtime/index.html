@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boring Time Tracker</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .timer {
+            text-align: center;
+            font-size: 48px;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #333;
+        }
+        .stats {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 1s linear;
+        }
+        .daily-goal {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .daily-goal input {
+            padding: 8px;
+            width: 80px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .daily-goal button {
+            padding: 8px 15px;
+        }
+        .cancel-button {
+            background-color: #dc3545;
+            margin-top: 10px;
+            display: none;
+        }
+        .cancel-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Boring Time Tracker</h1>
+        
+        <div class="daily-goal">
+            <label>Daily Boring Time Goal: 
+                <input type="number" id="dailyGoal" min="0" value="120" step="30"> minutes
+            </label>
+            <button onclick="setDailyGoal()">Set Goal</button>
+            <p style="margin-top: 10px; font-weight: bold;">Total Pending Boring Time: <span id="pendingTime">0</span> minutes</p>
+        </div>
+
+        <div class="buttons">
+            <button onclick="startSession(30)">30 Minutes</button>
+            <button onclick="startSession(60)">60 Minutes</button>
+            <button onclick="startSession(120)">2 Hours</button>
+            <button onclick="startSession(180)">3 Hours</button>
+        </div>
+
+        <div class="timer" id="timer">00:00:00</div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <button class="cancel-button" id="cancelButton" onclick="cancelSession()">Cancel Session</button>
+
+        <div class="stats">
+            <h2>Statistics</h2>
+            <p>Total Boring Time: <span id="totalTime">0</span> minutes</p>
+            <p>Sessions Completed: <span id="sessionsCompleted">0</span></p>
+            <p>Completion Rate: <span id="completionRate">0</span>%</p>
+        </div>
+    </div>
+
+    <script>
+        let timer = null;
+        let currentSession = null;
+        let startTime = null;
+        let totalDuration = 0;
+        let sessionsStarted = 0;
+        let sessionsCompleted = 0;
+        let dailyProgress = 0;
+        let dailyGoal = parseInt(localStorage.getItem('dailyGoal')) || 120; // Load saved goal or default to 2 hours
+        let pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || 0; // Load pending time
+
+        function updatePendingTime() {
+            // Add today's remaining time to existing pending time
+            pendingBoringTime = dailyGoal;
+            localStorage.setItem('pendingBoringTime', pendingBoringTime);
+            document.getElementById('pendingTime').textContent = pendingBoringTime;
+        }
+
+        // Check if it's a new day
+        function checkNewDay() {
+            const lastDate = localStorage.getItem('lastDate');
+            const today = new Date().toDateString();
+            
+            if (lastDate !== today) {
+                // Carry over pending time from previous day
+                const previousPending = parseInt(localStorage.getItem('pendingBoringTime')) || 0;
+                dailyGoal = parseInt(localStorage.getItem('dailyGoal')) || 120;
+                dailyProgress = 0;
+                // Add new day's goal to previous pending time
+                pendingBoringTime = previousPending + dailyGoal;
+                localStorage.setItem('lastDate', today);
+                localStorage.setItem('pendingBoringTime', pendingBoringTime);
+            } else {
+                // Load saved progress if it's the same day
+                dailyProgress = parseInt(localStorage.getItem('dailyProgress')) || 0;
+                pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || dailyGoal;
+            }
+            
+            // Update input field with saved goal and pending time
+            document.getElementById('dailyGoal').value = dailyGoal;
+            document.getElementById('pendingTime').textContent = pendingBoringTime;
+        }
+
+        function setDailyGoal() {
+            const newGoal = parseInt(document.getElementById('dailyGoal').value);
+            if (newGoal >= 0) {
+                const oldGoal = dailyGoal;
+                dailyGoal = newGoal;
+                // Adjust pending time by the difference in goals
+                pendingBoringTime = pendingBoringTime - oldGoal + newGoal;
+                localStorage.setItem('dailyGoal', dailyGoal);
+                localStorage.setItem('pendingBoringTime', pendingBoringTime);
+                document.getElementById('pendingTime').textContent = pendingBoringTime;
+            }
+        }
+
+        function startSession(minutes) {
+            if (timer) {
+                clearInterval(timer);
+            }
+
+            sessionsStarted++;
+            currentSession = minutes * 60; // Convert to seconds
+            startTime = new Date();
+            totalDuration = minutes * 60;
+            updateButtons(true);
+            updateProgress(100);
+            
+            // Show cancel button
+            document.getElementById('cancelButton').style.display = 'block';
+
+            timer = setInterval(() => {
+                const now = new Date();
+                const elapsed = Math.floor((now - startTime) / 1000);
+                const remaining = currentSession - elapsed;
+
+                if (remaining <= 0) {
+                    sessionComplete();
+                } else {
+                    updateTimer(remaining);
+                    updateProgress((remaining / totalDuration) * 100);
+                }
+            }, 1000);
+        }
+
+        function cancelSession() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+                currentSession = null;
+                updateButtons(false);
+                updateTimer(0);
+                updateProgress(0);
+                document.getElementById('cancelButton').style.display = 'none';
+            }
+        }
+
+        function sessionComplete() {
+            clearInterval(timer);
+            timer = null;
+            currentSession = null;
+            sessionsCompleted++;
+            const sessionMinutes = Math.floor(totalDuration / 60);
+            dailyProgress += sessionMinutes;
+            pendingBoringTime = Math.max(0, pendingBoringTime - sessionMinutes);
+            updateStats();
+            updateButtons(false);
+            updateTimer(0);
+            updateProgress(0);
+            document.getElementById('cancelButton').style.display = 'none';
+            alert('Boring time session completed!');
+            
+            // Save progress and pending time
+            localStorage.setItem('dailyProgress', dailyProgress);
+            localStorage.setItem('pendingBoringTime', pendingBoringTime);
+            document.getElementById('pendingTime').textContent = pendingBoringTime;
+        }
+
+        function updateTimer(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            document.getElementById('timer').textContent = 
+                `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function updateProgress(percentage) {
+            document.getElementById('progress').style.width = `${100 - percentage}%`;
+        }
+
+        function updateButtons(disabled) {
+            const buttons = document.querySelectorAll('.buttons button, .daily-goal button');
+            buttons.forEach(button => button.disabled = disabled);
+        }
+
+        function updateStats() {
+            document.getElementById('totalTime').textContent = 
+                Math.floor(sessionsCompleted * totalDuration / 60);
+            document.getElementById('sessionsCompleted').textContent = sessionsCompleted;
+            document.getElementById('completionRate').textContent = 
+                Math.round((sessionsCompleted / sessionsStarted) * 100);
+        }
+
+        // Initialize
+        checkNewDay();
+        updateTimer(0);
+    </script>
+</body>
+</html>

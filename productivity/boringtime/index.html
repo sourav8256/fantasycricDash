@@ -413,7 +413,11 @@
 
         function checkHourlyAddition() {
             const now = Date.now();
-            const hoursSinceLastCheck = Math.floor((now - lastTimeCheck) / (1000 * 60 * 60));
+            // Round down to the last hour
+            const currentHour = now - (now % (60 * 60 * 1000));
+            // Round down lastTimeCheck to the last hour
+            const lastCheckHour = lastTimeCheck - (lastTimeCheck % (60 * 60 * 1000));
+            const hoursSinceLastCheck = Math.floor((currentHour - lastCheckHour) / (1000 * 60 * 60));
             
             if (hoursSinceLastCheck > 0) {
                 // Get the value that was set when each hour passed
@@ -422,7 +426,7 @@
                 
                 // Add entries for each missed hour
                 for (let i = 0; i < hoursSinceLastCheck; i++) {
-                    const hourTime = lastTimeCheck + ((i + 1) * 60 * 60 * 1000);
+                    const hourTime = lastCheckHour + ((i + 1) * 60 * 60 * 1000);
                     const entryTime = new Date(hourTime);
                     
                     // Use old value for hours that passed before the new value was set
@@ -431,7 +435,7 @@
                     pendingBoringTime += valueToAdd;
                 }
                 
-                lastTimeCheck = now;
+                lastTimeCheck = currentHour;
                 
                 // Save the updated values
                 localStorage.setItem('pendingBoringTime', pendingBoringTime);

@@ -102,8 +102,8 @@
             <p style="margin-top: 10px; font-weight: bold;">Total Pending Boring Time: <span id="pendingTime">0</span> minutes</p>
             <div style="margin-top: 10px;">
                 <label>Minutes to add per hour: 
-                    <input type="number" id="hourlyAddition" min="0" value="15" style="width: 60px; padding: 5px; margin: 0 5px;"> 
-                    <button onclick="setHourlyAddition()" style="padding: 5px 10px;">Set</button>
+                    <input type="number" id="hourlyAddition" min="0" value="15" style="width: 60px; padding: 5px; margin: 0 5px;" 
+                           oninput="setHourlyAddition(this.value)"> 
                 </label>
             </div>
         </div>
@@ -142,8 +142,8 @@
         let lastTimeCheck = parseInt(localStorage.getItem('lastTimeCheck')) || Date.now();
         let hourlyAddition = parseInt(localStorage.getItem('hourlyAddition')) || 15; // Default 15 minutes
 
-        function setHourlyAddition() {
-            const newValue = parseInt(document.getElementById('hourlyAddition').value);
+        function setHourlyAddition(value) {
+            const newValue = parseInt(value);
             if (newValue >= 0) {
                 hourlyAddition = newValue;
                 localStorage.setItem('hourlyAddition', hourlyAddition);
@@ -295,12 +295,13 @@
         // Function to check and add time every hour
         function checkHourlyAddition() {
             const now = Date.now();
+            // Calculate hours since last check, even if page was closed
             const hoursSinceLastCheck = Math.floor((now - lastTimeCheck) / (1000 * 60 * 60));
             
             if (hoursSinceLastCheck > 0) {
                 // Add hourlyAddition minutes for each hour passed
                 pendingBoringTime += hourlyAddition * hoursSinceLastCheck;
-                lastTimeCheck = now - ((now - lastTimeCheck) % (1000 * 60 * 60)); // Round to last hour
+                lastTimeCheck = now; // Update to current time
                 
                 // Save the updated values
                 localStorage.setItem('pendingBoringTime', pendingBoringTime);
@@ -318,6 +319,7 @@
         restoreTimerState();
         updateStats();
         document.getElementById('hourlyAddition').value = hourlyAddition; // Set initial value
+        document.getElementById('pendingTime').textContent = pendingBoringTime; // Update display
     </script>
 </body>
 </html>

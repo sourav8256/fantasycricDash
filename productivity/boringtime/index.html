@@ -191,6 +191,7 @@
             if (newValue >= 0) {
                 hourlyAddition = newValue;
                 localStorage.setItem('hourlyAddition', hourlyAddition);
+                localStorage.setItem('hourlyAdditionSetTime', Date.now());
             }
         }
 
@@ -397,11 +398,19 @@
             const hoursSinceLastCheck = Math.floor((now - lastTimeCheck) / (1000 * 60 * 60));
             
             if (hoursSinceLastCheck > 0) {
+                // Get the value that was set when each hour passed
+                const valueSetTime = parseInt(localStorage.getItem('hourlyAdditionSetTime')) || lastTimeCheck;
+                const oldValue = parseInt(localStorage.getItem('hourlyAddition')) || 15;
+                
                 // Add entries for each missed hour
                 for (let i = 0; i < hoursSinceLastCheck; i++) {
-                    const entryTime = new Date(lastTimeCheck + ((i + 1) * 60 * 60 * 1000));
-                    addLogEntry('addition', hourlyAddition, entryTime);
-                    pendingBoringTime += hourlyAddition;
+                    const hourTime = lastTimeCheck + ((i + 1) * 60 * 60 * 1000);
+                    const entryTime = new Date(hourTime);
+                    
+                    // Use old value for hours that passed before the new value was set
+                    const valueToAdd = hourTime <= valueSetTime ? oldValue : hourlyAddition;
+                    addLogEntry('addition', valueToAdd, entryTime);
+                    pendingBoringTime += valueToAdd;
                 }
                 
                 lastTimeCheck = now;

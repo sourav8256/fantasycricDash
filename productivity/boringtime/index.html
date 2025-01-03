@@ -127,6 +127,16 @@
             color: #6c757d;
             font-style: italic;
         }
+        .update-message {
+            color: #28a745;
+            font-size: 12px;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .update-message.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -139,6 +149,7 @@
                 <label>Minutes to add per hour: 
                     <input type="number" id="hourlyAddition" min="0" value="15" style="width: 60px; padding: 5px;" 
                            oninput="setHourlyAddition(this.value)"> 
+                    <span class="update-message" id="updateMessage">✓ Updated</span>
                 </label>
             </div>
         </div>
@@ -192,6 +203,13 @@
                 hourlyAddition = newValue;
                 localStorage.setItem('hourlyAddition', hourlyAddition);
                 localStorage.setItem('hourlyAdditionSetTime', Date.now());
+                
+                // Show update message
+                const message = document.getElementById('updateMessage');
+                message.classList.add('show');
+                setTimeout(() => {
+                    message.classList.remove('show');
+                }, 1000);
             }
         }
 

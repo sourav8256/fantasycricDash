@@ -114,6 +114,9 @@
         .addition-log {
             color: #007bff;
         }
+        .cancelled-log {
+            color: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -273,19 +276,30 @@
             timer = null;
             currentSession = null;
             startTime = null;
-            sessionsCompleted++;
             const sessionMinutes = Math.floor(totalDuration / 60);
-            totalTimeCompleted += sessionMinutes;
-            dailyProgress += sessionMinutes;
-            pendingBoringTime = Math.max(0, pendingBoringTime - sessionMinutes);
             
-            // Save statistics
-            localStorage.setItem('sessionsCompleted', sessionsCompleted);
-            localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
-            localStorage.setItem('pendingBoringTime', pendingBoringTime);
-            
-            // Log the completed session
-            addLogEntry('session', sessionMinutes);
+            // Ask for confirmation
+            if (confirm(`Did you complete these ${sessionMinutes} minutes without any dopamine-inducing activities? Click OK if you were faithful, Cancel if you weren't.`)) {
+                // If confirmed, count the session
+                sessionsCompleted++;
+                totalTimeCompleted += sessionMinutes;
+                dailyProgress += sessionMinutes;
+                pendingBoringTime = Math.max(0, pendingBoringTime - sessionMinutes);
+                
+                // Save statistics
+                localStorage.setItem('sessionsCompleted', sessionsCompleted);
+                localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
+                localStorage.setItem('pendingBoringTime', pendingBoringTime);
+                
+                // Log the completed session
+                addLogEntry('session', sessionMinutes);
+                
+                // Update display
+                document.getElementById('pendingTime').textContent = pendingBoringTime;
+            } else {
+                // If not confirmed, log it as cancelled
+                addLogEntry('cancelled', sessionMinutes);
+            }
             
             updateStats();
             updateButtons(false);
@@ -293,10 +307,6 @@
             updateProgress(0);
             document.getElementById('cancelButton').style.display = 'none';
             saveTimerState();
-            alert('Boring time session completed!');
-            
-            // Update display
-            document.getElementById('pendingTime').textContent = pendingBoringTime;
         }
 
         function updateTimer(seconds) {
@@ -342,8 +352,21 @@
             logContainer.innerHTML = activityLog.map(entry => {
                 const date = new Date(entry.timestamp);
                 const timeStr = date.toLocaleString();
-                const cssClass = entry.type === 'session' ? 'session-log' : 'addition-log';
-                const action = entry.type === 'session' ? 'Completed session' : 'Added time';
+                let cssClass, action;
+                switch(entry.type) {
+                    case 'session':
+                        cssClass = 'session-log';
+                        action = 'Completed session';
+                        break;
+                    case 'addition':
+                        cssClass = 'addition-log';
+                        action = 'Added time';
+                        break;
+                    case 'cancelled':
+                        cssClass = 'cancelled-log';
+                        action = 'Cancelled session';
+                        break;
+                }
                 return `<div class="log-entry ${cssClass}">
                     ${timeStr} - ${action}: ${entry.minutes} minutes
                 </div>`;

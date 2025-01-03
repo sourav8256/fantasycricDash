@@ -99,11 +99,13 @@
         <h1>Boring Time Tracker</h1>
         
         <div class="daily-goal">
-            <label>Daily Boring Time Goal: 
-                <input type="number" id="dailyGoal" min="0" value="120" step="30"> minutes
-            </label>
-            <button onclick="setDailyGoal()">Set Goal</button>
             <p style="margin-top: 10px; font-weight: bold;">Total Pending Boring Time: <span id="pendingTime">0</span> minutes</p>
+            <div style="margin-top: 10px;">
+                <label>Minutes to add per hour: 
+                    <input type="number" id="hourlyAddition" min="0" value="15" style="width: 60px; padding: 5px; margin: 0 5px;"> 
+                    <button onclick="setHourlyAddition()" style="padding: 5px 10px;">Set</button>
+                </label>
+            </div>
         </div>
 
         <div class="buttons">
@@ -136,8 +138,17 @@
         let sessionsCompleted = parseInt(localStorage.getItem('sessionsCompleted')) || 0;
         let totalTimeCompleted = parseInt(localStorage.getItem('totalTimeCompleted')) || 0;
         let dailyProgress = 0;
-        let dailyGoal = parseInt(localStorage.getItem('dailyGoal')) || 120;
-        let pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || 0;
+        let pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || 15;
+        let lastTimeCheck = parseInt(localStorage.getItem('lastTimeCheck')) || Date.now();
+        let hourlyAddition = parseInt(localStorage.getItem('hourlyAddition')) || 15; // Default 15 minutes
+
+        function setHourlyAddition() {
+            const newValue = parseInt(document.getElementById('hourlyAddition').value);
+            if (newValue >= 0) {
+                hourlyAddition = newValue;
+                localStorage.setItem('hourlyAddition', hourlyAddition);
+            }
+        }
 
         // Function to save timer state
         function saveTimerState() {
@@ -243,6 +254,7 @@
             // Save statistics
             localStorage.setItem('sessionsCompleted', sessionsCompleted);
             localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
+            localStorage.setItem('pendingBoringTime', pendingBoringTime);
             
             updateStats();
             updateButtons(false);
@@ -252,9 +264,7 @@
             saveTimerState();
             alert('Boring time session completed!');
             
-            // Save progress and pending time
-            localStorage.setItem('dailyProgress', dailyProgress);
-            localStorage.setItem('pendingBoringTime', pendingBoringTime);
+            // Update display
             document.getElementById('pendingTime').textContent = pendingBoringTime;
         }
 
@@ -271,7 +281,7 @@
         }
 
         function updateButtons(disabled) {
-            const buttons = document.querySelectorAll('.buttons button, .daily-goal button');
+            const buttons = document.querySelectorAll('.buttons button');
             buttons.forEach(button => button.disabled = disabled);
         }
 
@@ -282,55 +292,32 @@
                 Math.round((sessionsCompleted / sessionsStarted) * 100);
         }
 
-        function updatePendingTime() {
-            // Add today's remaining time to existing pending time
-            pendingBoringTime = dailyGoal;
-            localStorage.setItem('pendingBoringTime', pendingBoringTime);
-            document.getElementById('pendingTime').textContent = pendingBoringTime;
-        }
-
-        // Check if it's a new day
-        function checkNewDay() {
-            const lastDate = localStorage.getItem('lastDate');
-            const today = new Date().toDateString();
+        // Function to check and add time every hour
+        function checkHourlyAddition() {
+            const now = Date.now();
+            const hoursSinceLastCheck = Math.floor((now - lastTimeCheck) / (1000 * 60 * 60));
             
-            if (lastDate !== today) {
-                // Carry over pending time from previous day
-                const previousPending = parseInt(localStorage.getItem('pendingBoringTime')) || 0;
-                dailyGoal = parseInt(localStorage.getItem('dailyGoal')) || 120;
-                dailyProgress = 0;
-                // Add new day's goal to previous pending time
-                pendingBoringTime = previousPending + dailyGoal;
-                localStorage.setItem('lastDate', today);
+            if (hoursSinceLastCheck > 0) {
+                // Add hourlyAddition minutes for each hour passed
+                pendingBoringTime += hourlyAddition * hoursSinceLastCheck;
+                lastTimeCheck = now - ((now - lastTimeCheck) % (1000 * 60 * 60)); // Round to last hour
+                
+                // Save the updated values
                 localStorage.setItem('pendingBoringTime', pendingBoringTime);
-            } else {
-                // Load saved progress if it's the same day
-                dailyProgress = parseInt(localStorage.getItem('dailyProgress')) || 0;
-                pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || dailyGoal;
-            }
-            
-            // Update input field with saved goal and pending time
-            document.getElementById('dailyGoal').value = dailyGoal;
-            document.getElementById('pendingTime').textContent = pendingBoringTime;
-        }
-
-        function setDailyGoal() {
-            const newGoal = parseInt(document.getElementById('dailyGoal').value);
-            if (newGoal >= 0) {
-                const oldGoal = dailyGoal;
-                dailyGoal = newGoal;
-                // Adjust pending time by the difference in goals
-                pendingBoringTime = pendingBoringTime - oldGoal + newGoal;
-                localStorage.setItem('dailyGoal', dailyGoal);
-                localStorage.setItem('pendingBoringTime', pendingBoringTime);
+                localStorage.setItem('lastTimeCheck', lastTimeCheck);
                 document.getElementById('pendingTime').textContent = pendingBoringTime;
             }
         }
 
+        // Check for hourly additions periodically
+        setInterval(checkHourlyAddition, 60000); // Check every minute
+
         // Initialize
-        checkNewDay();
+        checkHourlyAddition(); // Check for missed hours on page load
         updateTimer(0);
         restoreTimerState();
+        updateStats();
+        document.getElementById('hourlyAddition').value = hourlyAddition; // Set initial value
     </script>
 </body>
 </html>

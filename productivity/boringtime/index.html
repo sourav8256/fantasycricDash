@@ -92,6 +92,28 @@
         .cancel-button:hover {
             background-color: #c82333;
         }
+        .log-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .session-log {
+            color: #28a745;
+        }
+        .addition-log {
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -127,6 +149,11 @@
             <p>Sessions Completed: <span id="sessionsCompleted">0</span></p>
             <p>Completion Rate: <span id="completionRate">0</span>%</p>
         </div>
+
+        <div class="log-section">
+            <h2>Activity Log</h2>
+            <div id="logEntries"></div>
+        </div>
     </div>
 
     <script>
@@ -141,6 +168,7 @@
         let pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || 15;
         let lastTimeCheck = parseInt(localStorage.getItem('lastTimeCheck')) || Date.now();
         let hourlyAddition = parseInt(localStorage.getItem('hourlyAddition')) || 15; // Default 15 minutes
+        let activityLog = JSON.parse(localStorage.getItem('activityLog')) || [];
 
         function setHourlyAddition(value) {
             const newValue = parseInt(value);
@@ -256,6 +284,9 @@
             localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
             localStorage.setItem('pendingBoringTime', pendingBoringTime);
             
+            // Log the completed session
+            addLogEntry('session', sessionMinutes);
+            
             updateStats();
             updateButtons(false);
             updateTimer(0);
@@ -292,21 +323,49 @@
                 Math.round((sessionsCompleted / sessionsStarted) * 100);
         }
 
-        // Function to check and add time every hour
+        function addLogEntry(type, minutes, timestamp = new Date()) {
+            const entry = {
+                type,
+                minutes,
+                timestamp: timestamp.getTime()
+            };
+            activityLog.unshift(entry); // Add to beginning of array
+            if (activityLog.length > 100) { // Keep only last 100 entries
+                activityLog.pop();
+            }
+            localStorage.setItem('activityLog', JSON.stringify(activityLog));
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logContainer = document.getElementById('logEntries');
+            logContainer.innerHTML = activityLog.map(entry => {
+                const date = new Date(entry.timestamp);
+                const timeStr = date.toLocaleString();
+                const cssClass = entry.type === 'session' ? 'session-log' : 'addition-log';
+                const action = entry.type === 'session' ? 'Completed session' : 'Added time';
+                return `<div class="log-entry ${cssClass}">
+                    ${timeStr} - ${action}: ${entry.minutes} minutes
+                </div>`;
+            }).join('');
+        }
+
         function checkHourlyAddition() {
             const now = Date.now();
-            // Calculate hours since last check, even if page was closed
             const hoursSinceLastCheck = Math.floor((now - lastTimeCheck) / (1000 * 60 * 60));
             
             if (hoursSinceLastCheck > 0) {
-                // Add hourlyAddition minutes for each hour passed
-                pendingBoringTime += hourlyAddition * hoursSinceLastCheck;
-                lastTimeCheck = now; // Update to current time
+                const addedMinutes = hourlyAddition * hoursSinceLastCheck;
+                pendingBoringTime += addedMinutes;
+                lastTimeCheck = now;
                 
                 // Save the updated values
                 localStorage.setItem('pendingBoringTime', pendingBoringTime);
                 localStorage.setItem('lastTimeCheck', lastTimeCheck);
                 document.getElementById('pendingTime').textContent = pendingBoringTime;
+
+                // Log the addition
+                addLogEntry('addition', addedMinutes);
             }
         }
 
@@ -314,12 +373,13 @@
         setInterval(checkHourlyAddition, 60000); // Check every minute
 
         // Initialize
-        checkHourlyAddition(); // Check for missed hours on page load
+        checkHourlyAddition();
         updateTimer(0);
         restoreTimerState();
         updateStats();
-        document.getElementById('hourlyAddition').value = hourlyAddition; // Set initial value
-        document.getElementById('pendingTime').textContent = pendingBoringTime; // Update display
+        updateLogDisplay();
+        document.getElementById('hourlyAddition').value = hourlyAddition;
+        document.getElementById('pendingTime').textContent = pendingBoringTime;
     </script>
 </body>
 </html>

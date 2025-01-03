@@ -168,7 +168,7 @@
             <div id="logEntries"></div>
         </div>
 
-        <div class="version">Version 1.0.4</div>
+        <div class="version">Version 1.0.5</div>
     </div>
 
     <script>
@@ -176,9 +176,9 @@
         let currentSession = null;
         let startTime = null;
         let totalDuration = 0;
-        let sessionsStarted = 0;
-        let sessionsCompleted = 0;
-        let totalTimeCompleted = 0;
+        let sessionsStarted = parseInt(localStorage.getItem('sessionsStarted')) || 0;
+        let sessionsCompleted = parseInt(localStorage.getItem('sessionsCompleted')) || 0;
+        let totalTimeCompleted = parseInt(localStorage.getItem('totalTimeCompleted')) || 0;
         let dailyProgress = 0;
         let pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || 15;
         let lastTimeCheck = parseInt(localStorage.getItem('lastTimeCheck')) || Date.now();
@@ -343,8 +343,8 @@
         function updateStats() {
             document.getElementById('totalTime').textContent = totalTimeCompleted;
             document.getElementById('sessionsCompleted').textContent = sessionsCompleted;
-            document.getElementById('completionRate').textContent = 
-                Math.round((sessionsCompleted / sessionsStarted) * 100);
+            const rate = sessionsStarted === 0 ? 100 : Math.round((sessionsCompleted / sessionsStarted) * 100);
+            document.getElementById('completionRate').textContent = rate;
         }
 
         function addLogEntry(type, minutes, timestamp = new Date()) {
@@ -429,6 +429,11 @@
                 sessionsStarted = 0;
                 sessionsCompleted = 0;
                 totalTimeCompleted = 0;
+                
+                // Save reset values
+                localStorage.setItem('sessionsStarted', sessionsStarted);
+                localStorage.setItem('sessionsCompleted', sessionsCompleted);
+                localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
                 
                 // Update last reset date
                 lastStatsReset = today;

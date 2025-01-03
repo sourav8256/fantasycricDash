@@ -378,17 +378,19 @@
             const hoursSinceLastCheck = Math.floor((now - lastTimeCheck) / (1000 * 60 * 60));
             
             if (hoursSinceLastCheck > 0) {
-                const addedMinutes = hourlyAddition * hoursSinceLastCheck;
-                pendingBoringTime += addedMinutes;
+                // Add entries for each missed hour
+                for (let i = 0; i < hoursSinceLastCheck; i++) {
+                    const entryTime = new Date(lastTimeCheck + ((i + 1) * 60 * 60 * 1000));
+                    addLogEntry('addition', hourlyAddition, entryTime);
+                    pendingBoringTime += hourlyAddition;
+                }
+                
                 lastTimeCheck = now;
                 
                 // Save the updated values
                 localStorage.setItem('pendingBoringTime', pendingBoringTime);
                 localStorage.setItem('lastTimeCheck', lastTimeCheck);
                 document.getElementById('pendingTime').textContent = pendingBoringTime;
-
-                // Log the addition
-                addLogEntry('addition', addedMinutes);
             }
         }
 

@@ -123,6 +123,10 @@
             color: #666;
             font-size: 12px;
         }
+        .reset-log {
+            color: #6c757d;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -172,14 +176,15 @@
         let currentSession = null;
         let startTime = null;
         let totalDuration = 0;
-        let sessionsStarted = parseInt(localStorage.getItem('sessionsStarted')) || 0;
-        let sessionsCompleted = parseInt(localStorage.getItem('sessionsCompleted')) || 0;
-        let totalTimeCompleted = parseInt(localStorage.getItem('totalTimeCompleted')) || 0;
+        let sessionsStarted = 0;
+        let sessionsCompleted = 0;
+        let totalTimeCompleted = 0;
         let dailyProgress = 0;
         let pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || 15;
         let lastTimeCheck = parseInt(localStorage.getItem('lastTimeCheck')) || Date.now();
-        let hourlyAddition = parseInt(localStorage.getItem('hourlyAddition')) || 15; // Default 15 minutes
+        let hourlyAddition = parseInt(localStorage.getItem('hourlyAddition')) || 15;
         let activityLog = JSON.parse(localStorage.getItem('activityLog')) || [];
+        let lastStatsReset = localStorage.getItem('lastStatsReset') || new Date().toDateString();
 
         function setHourlyAddition(value) {
             const newValue = parseInt(value);
@@ -374,6 +379,12 @@
                         cssClass = 'cancelled-log';
                         action = 'Cancelled session';
                         break;
+                    case 'reset':
+                        cssClass = 'reset-log';
+                        action = 'Daily statistics reset';
+                        return `<div class="log-entry ${cssClass}">
+                            ${timeStr} - ${action}
+                        </div>`;
                 }
                 return `<div class="log-entry ${cssClass}">
                     ${timeStr} - ${action}: ${entry.minutes} minutes
@@ -402,10 +413,31 @@
             }
         }
 
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            if (lastStatsReset !== today) {
+                // Reset daily statistics
+                sessionsStarted = 0;
+                sessionsCompleted = 0;
+                totalTimeCompleted = 0;
+                
+                // Update last reset date
+                lastStatsReset = today;
+                localStorage.setItem('lastStatsReset', lastStatsReset);
+                
+                // Add log entry for stats reset
+                addLogEntry('reset', 0);
+                
+                // Update display
+                updateStats();
+            }
+        }
+
         // Check for hourly additions periodically
         setInterval(checkHourlyAddition, 60000); // Check every minute
 
         // Initialize
+        checkDailyReset();
         checkHourlyAddition();
         updateTimer(0);
         restoreTimerState();
@@ -413,6 +445,12 @@
         updateLogDisplay();
         document.getElementById('hourlyAddition').value = hourlyAddition;
         document.getElementById('pendingTime').textContent = pendingBoringTime;
+
+        // Check for daily reset every minute along with hourly additions
+        setInterval(() => {
+            checkDailyReset();
+            checkHourlyAddition();
+        }, 60000);
     </script>
 </body>
 </html>

@@ -211,58 +211,37 @@
     <div class="row">
         <div class="col-md-8">
             <div class="card">
-                <h5>Connected Brokers</h5>
-                <div class="broker-card active">
+                <h5>Available Brokers</h5>
+                <!-- Zerodha Card -->
+                <div class="broker-card">
                     <img src="https://zerodha.com/static/images/logo.svg" alt="Zerodha" class="broker-logo">
-                    <div class="broker-status status-connected">
-                        <i class="fas fa-check-circle"></i> Connected
+                    <div class="broker-status status-disconnected">
+                        <i class="fas fa-times-circle"></i> Disconnected
                     </div>
                     <div class="broker-details">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label>User ID</label>
-                                <p>AB1234</p>
-                            </div>
-                            <div class="col-md-6">
-                                <label>Account Type</label>
-                                <p>Individual</p>
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-md-6">
-                                <label>API Key</label>
-                                <div class="api-key-field">
-                                    <p>••••••••••••••••</p>
-                                    <button class="toggle-visibility">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label>Last Connected</label>
-                                <p>Today, 9:15 AM</p>
-                            </div>
-                        </div>
+                        <p>Connect your Zerodha account to start trading.</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-sync-alt"></i> Reconnect
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm">
-                            <i class="fas fa-unlink"></i> Disconnect
+                        <button class="btn btn-primary btn-sm" onclick="connectZerodha()">
+                            <i class="fas fa-plug"></i> Connect Zerodha
                         </button>
                     </div>
                 </div>
 
+                <!-- Angel Broking Card -->
                 <div class="broker-card">
-                    <img src="https://upstox.com/open-api/img/upstox-logo.svg" alt="Upstox" class="broker-logo">
+                    <img src="https://www.angelone.in/assets/images/angel-one-logo.svg" alt="Angel One" class="broker-logo">
                     <div class="broker-status status-disconnected">
                         <i class="fas fa-times-circle"></i> Disconnected
                     </div>
-                    <p class="text-muted">Click connect to add your Upstox account</p>
-                    <button class="btn btn-primary">
-                        <i class="fas fa-plug"></i> Connect Account
-                    </button>
+                    <div class="broker-details">
+                        <p>Connect your Angel One account to start trading.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary btn-sm" onclick="connectAngel()">
+                            <i class="fas fa-plug"></i> Connect Angel
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -307,24 +286,231 @@
         </div>
     </div>
 
+    <!-- API Key Configuration Modal -->
+    <div class="modal fade" id="apiKeyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configure API Keys</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="zerodhaApiForm" style="display: none;">
+                        <h6 class="mb-3">Zerodha API Configuration</h6>
+                        <div class="mb-3">
+                            <label class="form-label">API Key</label>
+                            <input type="text" class="form-control" id="zerodhaApiKey" placeholder="Enter Zerodha API Key">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">API Secret</label>
+                            <input type="password" class="form-control" id="zerodhaApiSecret" placeholder="Enter Zerodha API Secret">
+                        </div>
+                    </div>
+                    <div id="angelApiForm" style="display: none;">
+                        <h6 class="mb-3">Angel One API Configuration</h6>
+                        <div class="mb-3">
+                            <label class="form-label">API Key</label>
+                            <input type="text" class="form-control" id="angelApiKey" placeholder="Enter Angel API Key">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">API Secret</label>
+                            <input type="password" class="form-control" id="angelApiSecret" placeholder="Enter Angel API Secret">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveApiKeys()">Save & Connect</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Toggle API Key visibility
-            document.querySelectorAll('.toggle-visibility').forEach(button => {
-                button.addEventListener('click', function() {
-                    const keyField = this.previousElementSibling;
-                    const icon = this.querySelector('i');
-                    if (keyField.textContent === '••••••••••••••••') {
-                        keyField.textContent = 'ABC123XYZ789';
-                        icon.classList.replace('fa-eye', 'fa-eye-slash');
-                    } else {
-                        keyField.textContent = '••••••••••••••••';
-                        icon.classList.replace('fa-eye-slash', 'fa-eye');
-                    }
-                });
+        // Configuration for broker authentication
+        const config = {
+            zerodha: {
+                clientId: localStorage.getItem('zerodhaApiKey') || '',
+                apiSecret: localStorage.getItem('zerodhaApiSecret') || '',
+                redirectUri: window.location.origin + '/algotrade/frontend/pages/callback.html',
+                authUrl: 'https://kite.zerodha.com/connect/login'
+            },
+            angel: {
+                clientId: localStorage.getItem('angelApiKey') || '',
+                apiSecret: localStorage.getItem('angelApiSecret') || '',
+                redirectUri: window.location.origin + '/algotrade/frontend/pages/callback.html',
+                authUrl: 'https://smartapi.angelbroking.com/oauth/authorize'
+            }
+        };
+
+        let currentBroker = '';
+        const apiKeyModal = new bootstrap.Modal(document.getElementById('apiKeyModal'));
+
+        // Function to show API key modal
+        function showApiKeyModal(broker) {
+            currentBroker = broker;
+            document.getElementById('zerodhaApiForm').style.display = broker === 'zerodha' ? 'block' : 'none';
+            document.getElementById('angelApiForm').style.display = broker === 'angel' ? 'block' : 'none';
+            
+            // Pre-fill existing values if any
+            if (broker === 'zerodha') {
+                document.getElementById('zerodhaApiKey').value = config.zerodha.clientId;
+                document.getElementById('zerodhaApiSecret').value = config.zerodha.apiSecret;
+            } else {
+                document.getElementById('angelApiKey').value = config.angel.clientId;
+                document.getElementById('angelApiSecret').value = config.angel.apiSecret;
+            }
+            
+            apiKeyModal.show();
+        }
+
+        // Function to save API keys
+        function saveApiKeys() {
+            if (currentBroker === 'zerodha') {
+                const apiKey = document.getElementById('zerodhaApiKey').value.trim();
+                const apiSecret = document.getElementById('zerodhaApiSecret').value.trim();
+                
+                if (!apiKey || !apiSecret) {
+                    alert('Please enter both API Key and Secret');
+                    return;
+                }
+                
+                localStorage.setItem('zerodhaApiKey', apiKey);
+                localStorage.setItem('zerodhaApiSecret', apiSecret);
+                config.zerodha.clientId = apiKey;
+                config.zerodha.apiSecret = apiSecret;
+                
+                apiKeyModal.hide();
+                connectZerodha();
+            } else if (currentBroker === 'angel') {
+                const apiKey = document.getElementById('angelApiKey').value.trim();
+                const apiSecret = document.getElementById('angelApiSecret').value.trim();
+                
+                if (!apiKey || !apiSecret) {
+                    alert('Please enter both API Key and Secret');
+                    return;
+                }
+                
+                localStorage.setItem('angelApiKey', apiKey);
+                localStorage.setItem('angelApiSecret', apiSecret);
+                config.angel.clientId = apiKey;
+                config.angel.apiSecret = apiSecret;
+                
+                apiKeyModal.hide();
+                connectAngel();
+            }
+        }
+
+        // Function to connect Zerodha
+        function connectZerodha() {
+            if (!config.zerodha.clientId || !config.zerodha.apiSecret) {
+                showApiKeyModal('zerodha');
+                return;
+            }
+
+            const params = new URLSearchParams({
+                api_key: config.zerodha.clientId,
+                redirect_uri: config.zerodha.redirectUri,
+                response_type: 'code',
+                v: '3'
             });
+            
+            const authUrl = `${config.zerodha.authUrl}?${params.toString()}`;
+            window.open(authUrl, '_blank', 'width=800,height=600');
+        }
+
+        // Function to connect Angel
+        function connectAngel() {
+            if (!config.angel.clientId || !config.angel.apiSecret) {
+                showApiKeyModal('angel');
+                return;
+            }
+
+            const params = new URLSearchParams({
+                client_id: config.angel.clientId,
+                redirect_uri: config.angel.redirectUri,
+                response_type: 'code',
+                state: 'angel'
+            });
+            
+            const authUrl = `${config.angel.authUrl}?${params.toString()}`;
+            window.open(authUrl, '_blank', 'width=800,height=600');
+        }
+
+        // Function to handle successful authentication
+        window.addEventListener('message', function(event) {
+            // Verify origin for security
+            if (event.origin !== window.location.origin) return;
+
+            const { broker, code } = event.data;
+            if (code) {
+                // Get the API secret from config
+                const apiSecret = broker === 'zerodha' ? config.zerodha.apiSecret : config.angel.apiSecret;
+
+                // Send the authorization code and API secret to your backend
+                fetch('/api/auth/broker', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        broker, 
+                        code,
+                        apiKey: broker === 'zerodha' ? config.zerodha.clientId : config.angel.clientId,
+                        apiSecret 
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update UI to show connected state
+                        updateBrokerStatus(broker, true);
+                        // Add to connection log
+                        addConnectionLog('success', `Connected to ${broker}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Authentication error:', error);
+                    alert('Failed to authenticate with broker. Please try again.');
+                    addConnectionLog('error', `Failed to connect to ${broker}`);
+                });
+            }
         });
+
+        // Function to add entry to connection log
+        function addConnectionLog(type, message) {
+            const logContainer = document.querySelector('.connection-log');
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-${type}">${message}</span>
+            `;
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+        }
+
+        // Function to update broker status in UI
+        function updateBrokerStatus(broker, isConnected) {
+            const brokerCard = document.querySelector(`[data-broker="${broker}"]`);
+            if (!brokerCard) return;
+
+            const statusDiv = brokerCard.querySelector('.broker-status');
+            const connectButton = brokerCard.querySelector('button');
+
+            if (isConnected) {
+                statusDiv.className = 'broker-status status-connected';
+                statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                connectButton.textContent = 'Reconnect';
+            } else {
+                statusDiv.className = 'broker-status status-disconnected';
+                statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> Disconnected';
+                connectButton.textContent = `Connect ${broker}`;
+            }
+        }
     </script>
 </body>
 </html> 

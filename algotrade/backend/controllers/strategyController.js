@@ -9,6 +9,23 @@ const getStrategies = async (req, res) => {
     }
 };
 
+const getStrategyById = async (req, res) => {
+    try {
+        const strategy = await Strategy.findOne({
+            _id: req.params.id,
+            userId: req.user.id
+        });
+
+        if (!strategy) {
+            return res.status(404).json({ message: 'Strategy not found' });
+        }
+
+        res.json(strategy);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 const createStrategy = async (req, res) => {
     try {
         const strategy = new Strategy({
@@ -62,6 +79,7 @@ const deleteStrategy = async (req, res) => {
 
 module.exports = {
     getStrategies,
+    getStrategyById,
     createStrategy,
     updateStrategy,
     deleteStrategy

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="800" height="600" fill="#f5f7fb"/>
+    
+    <!-- Title -->
+    <text x="400" y="50" font-family="Arial" font-size="24" fill="#1a237e" text-anchor="middle" font-weight="bold">
+        AlgoTrade System Topology
+    </text>
+
+    <!-- Frontend System -->
+    <g transform="translate(100,150)">
+        <rect width="200" height="150" rx="10" fill="#1a237e" opacity="0.9"/>
+        <text x="100" y="40" font-family="Arial" font-size="18" fill="white" text-anchor="middle">Frontend</text>
+        <text x="100" y="70" font-family="Arial" font-size="14" fill="white" text-anchor="middle">(Port 80/443)</text>
+        <text x="100" y="100" font-family="Arial" font-size="12" fill="white" text-anchor="middle">User Interface</text>
+        <text x="100" y="120" font-family="Arial" font-size="12" fill="white" text-anchor="middle">Strategy Management</text>
+        <text x="100" y="140" font-family="Arial" font-size="12" fill="white" text-anchor="middle">Monitoring Dashboard</text>
+    </g>
+
+    <!-- Backend System -->
+    <g transform="translate(500,150)">
+        <rect width="200" height="150" rx="10" fill="#283593" opacity="0.9"/>
+        <text x="100" y="40" font-family="Arial" font-size="18" fill="white" text-anchor="middle">Backend</text>
+        <text x="100" y="70" font-family="Arial" font-size="14" fill="white" text-anchor="middle">(Port 3000)</text>
+        <text x="100" y="100" font-family="Arial" font-size="12" fill="white" text-anchor="middle">REST API</text>
+        <text x="100" y="120" font-family="Arial" font-size="12" fill="white" text-anchor="middle">Authentication</text>
+        <text x="100" y="140" font-family="Arial" font-size="12" fill="white" text-anchor="middle">Database Operations</text>
+    </g>
+
+    <!-- Live System -->
+    <g transform="translate(300,400)">
+        <rect width="200" height="150" rx="10" fill="#303f9f" opacity="0.9"/>
+        <text x="100" y="40" font-family="Arial" font-size="18" fill="white" text-anchor="middle">Live System</text>
+        <text x="100" y="70" font-family="Arial" font-size="14" fill="white" text-anchor="middle">(Port 3001)</text>
+        <text x="100" y="100" font-family="Arial" font-size="12" fill="white" text-anchor="middle">WebSocket Server</text>
+        <text x="100" y="120" font-family="Arial" font-size="12" fill="white" text-anchor="middle">Strategy Execution</text>
+        <text x="100" y="140" font-family="Arial" font-size="12" fill="white" text-anchor="middle">Real-time Processing</text>
+    </g>
+
+    <!-- Connection Lines -->
+    <!-- Frontend to Backend -->
+    <path d="M300,225 L500,225" stroke="#1a237e" stroke-width="2" fill="none"/>
+    <text x="400" y="215" font-family="Arial" font-size="12" fill="#1a237e" text-anchor="middle">HTTP/REST</text>
+
+    <!-- Frontend to Live -->
+    <path d="M200,300 L300,400" stroke="#303f9f" stroke-width="2" fill="none"/>
+    <text x="220" y="360" font-family="Arial" font-size="12" fill="#303f9f" text-anchor="middle">WebSocket</text>
+
+    <!-- Backend to Live -->
+    <path d="M600,300 L500,400" stroke="#283593" stroke-width="2" fill="none"/>
+    <text x="580" y="360" font-family="Arial" font-size="12" fill="#283593" text-anchor="middle">Internal API</text>
+
+    <!-- Legend -->
+    <g transform="translate(50,520)">
+        <rect width="700" height="60" rx="5" fill="white" stroke="#ddd"/>
+        <text x="20" y="25" font-family="Arial" font-size="14" fill="#333" font-weight="bold">Communication Types:</text>
+        <text x="20" y="45" font-family="Arial" font-size="12" fill="#666">
+            HTTP/REST: User interactions, API calls | WebSocket: Real-time data, Live updates | Internal API: System coordination
+        </text>
+    </g>
+</svg> 

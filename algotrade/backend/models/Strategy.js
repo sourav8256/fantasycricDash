@@ -10,24 +10,7 @@ const strategySchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    parameters: {
-        type: Map,
-        of: mongoose.Schema.Types.Mixed
-    },
-    entryConditions: [{
-        type: String,
-        required: true
-    }],
-    exitConditions: [{
-        type: String,
-        required: true
-    }],
-    instruments: [{
+    rules: [{
         type: String,
         required: true
     }],
@@ -35,9 +18,14 @@ const strategySchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    isActive: {
-        type: Boolean,
-        default: false
+    market: {
+        type: String,
+        required: true
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
     createdAt: {
         type: Date,

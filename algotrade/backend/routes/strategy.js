@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateToken = require('../middleware/auth');
 const {
     getStrategies,
+    getStrategyById,
     createStrategy,
     updateStrategy,
     deleteStrategy
@@ -11,6 +12,7 @@ const {
 router.use(authenticateToken);
 
 router.get('/', getStrategies);
+router.get('/:id', getStrategyById);
 router.post('/', createStrategy);
 router.put('/:id', updateStrategy);
 router.delete('/:id', deleteStrategy);

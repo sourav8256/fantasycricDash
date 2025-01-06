@@ -17,6 +17,7 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
         }
         .buttons {
             display: grid;
@@ -137,12 +138,103 @@
         .update-message.show {
             opacity: 1;
         }
+        .confirmation-section {
+            display: none;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .confirmation-section.show {
+            display: block;
+        }
+        .confirmation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .confirmation-buttons button {
+            padding: 10px 20px;
+            min-width: 100px;
+        }
+        .confirmation-buttons .confirm-btn {
+            background-color: #28a745;
+        }
+        .confirmation-buttons .cancel-btn {
+            background-color: #dc3545;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            margin-left: 8px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .testing-mode-toggle {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1;
+        }
+        .testing-mode-toggle label {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Boring Time Tracker</h1>
         
+        <div class="testing-mode-toggle">
+            <label for="testingModeSwitch">Testing Mode</label>
+            <label class="switch">
+                <input type="checkbox" id="testingModeSwitch" onchange="toggleTestingMode()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <div class="daily-goal">
             <p style="margin-top: 10px; font-weight: bold;">Total Pending Boring Time: <span id="pendingTime">0</span> minutes</p>
             <div style="margin-top: 10px;">
@@ -155,6 +247,7 @@
         </div>
 
         <div class="buttons">
+            <button id="testButton" onclick="startSession(0.0167)" style="background-color: #6c757d; display: none;">1 Second</button>
             <button onclick="startSession(30)">30 Minutes</button>
             <button onclick="startSession(60)">60 Minutes</button>
             <button onclick="startSession(120)">2 Hours</button>
@@ -166,6 +259,15 @@
             <div class="progress" id="progress"></div>
         </div>
         <button class="cancel-button" id="cancelButton" onclick="cancelSession()">Cancel Session</button>
+
+        <div id="confirmationSection" class="confirmation-section">
+            <h3 style="color: #28a745; margin-bottom: 15px;">Session Complete!</h3>
+            <p style="margin-bottom: 20px;">Would you like to confirm this session?</p>
+            <div class="confirmation-buttons">
+                <button class="confirm-btn" onclick="confirmSession()">Confirm</button>
+                <button class="cancel-btn" onclick="cancelConfirmation()">Cancel</button>
+            </div>
+        </div>
 
         <div class="stats">
             <h2>Statistics</h2>
@@ -196,6 +298,24 @@
         let hourlyAddition = parseInt(localStorage.getItem('hourlyAddition')) || 15;
         let activityLog = JSON.parse(localStorage.getItem('activityLog')) || [];
         let lastStatsReset = localStorage.getItem('lastStatsReset') || new Date().toDateString();
+        let isTestingMode = localStorage.getItem('isTestingMode') === 'true';
+
+        function toggleTestingMode() {
+            isTestingMode = document.getElementById('testingModeSwitch').checked;
+            localStorage.setItem('isTestingMode', isTestingMode);
+            updateTestingMode();
+        }
+
+        function updateTestingMode() {
+            const testButton = document.getElementById('testButton');
+            const switchEl = document.getElementById('testingModeSwitch');
+            if (testButton) {
+                testButton.style.display = isTestingMode ? 'block' : 'none';
+            }
+            if (switchEl) {
+                switchEl.checked = isTestingMode;
+            }
+        }
 
         function setHourlyAddition(value) {
             const newValue = parseInt(value);
@@ -219,10 +339,12 @@
                 localStorage.setItem('timerStartTime', startTime.getTime());
                 localStorage.setItem('timerDuration', totalDuration);
                 localStorage.setItem('currentSession', currentSession);
+                localStorage.setItem('timerState', timer ? 'running' : 'completed');
             } else {
                 localStorage.removeItem('timerStartTime');
                 localStorage.removeItem('timerDuration');
                 localStorage.removeItem('currentSession');
+                localStorage.removeItem('timerState');
             }
         }
 
@@ -231,6 +353,7 @@
             const savedStartTime = localStorage.getItem('timerStartTime');
             const savedDuration = localStorage.getItem('timerDuration');
             const savedSession = localStorage.getItem('currentSession');
+            const savedState = localStorage.getItem('timerState');
 
             if (savedStartTime && savedDuration && savedSession) {
                 startTime = new Date(parseInt(savedStartTime));
@@ -241,8 +364,9 @@
                 const elapsed = Math.floor((now - startTime) / 1000);
                 const remaining = currentSession - elapsed;
 
-                if (remaining <= 0) {
-                    sessionComplete();
+                if (remaining <= 0 || savedState === 'completed') {
+                    document.getElementById('confirmationSection').classList.add('show');
+                    updateButtons(true);  // Disable buttons if there's a pending confirmation
                 } else {
                     document.getElementById('cancelButton').style.display = 'block';
                     updateButtons(true);
@@ -268,6 +392,11 @@
         }
 
         function startSession(minutes) {
+            // Check if there's a pending confirmation
+            if (document.getElementById('confirmationSection').classList.contains('show')) {
+                return; // Don't start new session if confirmation is pending
+            }
+
             if (timer) {
                 clearInterval(timer);
             }
@@ -299,6 +428,8 @@
                 updateTimer(0);
                 updateProgress(0);
                 document.getElementById('cancelButton').style.display = 'none';
+                document.getElementById('confirmationSection').classList.remove('show');
+                addLogEntry('cancelled', totalDuration / 60);
                 saveTimerState();
             }
         }
@@ -306,38 +437,49 @@
         function sessionComplete() {
             clearInterval(timer);
             timer = null;
-            currentSession = null;
-            startTime = null;
-            const sessionMinutes = Math.floor(totalDuration / 60);
+            document.getElementById('confirmationSection').classList.add('show');
+            updateButtons(true);  // Disable buttons while confirmation is pending
+            saveTimerState();  // Save state when session completes
+        }
+
+        function confirmSession() {
+            document.getElementById('confirmationSection').classList.remove('show');
+            updateButtons(false);  // Re-enable buttons after confirmation
+            sessionsCompleted++;
+            totalTimeCompleted += currentSession / 60;
+            pendingBoringTime = Math.max(0, pendingBoringTime - (currentSession / 60));
             
-            // Ask for confirmation
-            if (confirm(`Did you complete these ${sessionMinutes} minutes without any dopamine-inducing activities? Click OK if you were faithful, Cancel if you weren't.`)) {
-                // If confirmed, count the session
-                sessionsCompleted++;
-                totalTimeCompleted += sessionMinutes;
-                dailyProgress += sessionMinutes;
-                pendingBoringTime = Math.max(0, pendingBoringTime - sessionMinutes);
-                
-                // Save statistics
-                localStorage.setItem('sessionsCompleted', sessionsCompleted);
-                localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
-                localStorage.setItem('pendingBoringTime', pendingBoringTime);
-                
-                // Log the completed session
-                addLogEntry('session', sessionMinutes);
-                
-                // Update display
-                document.getElementById('pendingTime').textContent = pendingBoringTime;
-            } else {
-                // If not confirmed, log it as cancelled
-                addLogEntry('cancelled', sessionMinutes);
-            }
+            // Update localStorage
+            localStorage.setItem('sessionsCompleted', sessionsCompleted);
+            localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
+            localStorage.setItem('pendingBoringTime', pendingBoringTime);
             
+            // Add to activity log
+            addLogEntry('session', currentSession / 60);
+            
+            resetTimer();
             updateStats();
-            updateButtons(false);
-            updateTimer(0);
-            updateProgress(0);
+            document.getElementById('pendingTime').textContent = pendingBoringTime;
+        }
+
+        function cancelConfirmation() {
+            document.getElementById('confirmationSection').classList.remove('show');
+            updateButtons(false);  // Re-enable buttons after cancellation
+            addLogEntry('cancelled', currentSession / 60);
+            resetTimer();
+            updateStats();
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            timer = null;
+            startTime = null;
+            currentSession = null;
+            totalDuration = 0;
+            document.getElementById('timer').textContent = '00:00:00';
+            document.getElementById('progress').style.width = '0%';
             document.getElementById('cancelButton').style.display = 'none';
+            updateButtons(false);
             saveTimerState();
         }
 
@@ -481,6 +623,7 @@
         updateLogDisplay();
         document.getElementById('hourlyAddition').value = hourlyAddition;
         document.getElementById('pendingTime').textContent = pendingBoringTime;
+        updateTestingMode();  // Initialize testing mode button visibility
 
         // Check for daily reset every minute along with hourly additions
         setInterval(() => {

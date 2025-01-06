@@ -1,0 +1,162 @@
+=== API Test Results ===
+Started at: 2025-01-05T05:24:42.805Z
+
+[2025-01-05T05:24:43.500Z] Register User
+URL: http://localhost:3000/api/auth/register
+Request: {
+  "username": "testuser_1736054682810",
+  "email": "test1736054682810@example.com",
+  "password": "password123"
+}
+Status: PASS
+Response: {
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2ExNzliMWY0N2M4MWRmMDM3ZTBkMCIsImlhdCI6MTczNjA1NDY4MywiZXhwIjoxNzM2MTQxMDgzfQ.VNoSKAuBktTUNnC-_nSZPRZ06GCb0utXYVAG-wXYKw4",
+  "user": {
+    "id": "677a179b1f47c81df037e0d0",
+    "username": "testuser_1736054682810",
+    "email": "test1736054682810@example.com"
+  }
+}
+
+================================================================================
+
+[2025-01-05T05:24:43.865Z] Login User
+URL: http://localhost:3000/api/auth/login
+Request: {
+  "email": "test1736054682810@example.com",
+  "password": "password123"
+}
+Status: PASS
+Response: {
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2ExNzliMWY0N2M4MWRmMDM3ZTBkMCIsImlhdCI6MTczNjA1NDY4MywiZXhwIjoxNzM2MTQxMDgzfQ.VNoSKAuBktTUNnC-_nSZPRZ06GCb0utXYVAG-wXYKw4",
+  "user": {
+    "id": "677a179b1f47c81df037e0d0",
+    "username": "testuser_1736054682810",
+    "email": "test1736054682810@example.com"
+  }
+}
+
+================================================================================
+
+[2025-01-05T05:24:44.120Z] Create Strategy
+URL: http://localhost:3000/api/strategies
+Request: {
+  "name": "Test Strategy",
+  "description": "A test trading strategy",
+  "rules": [
+    "Buy when price crosses above MA",
+    "Sell when price crosses below MA"
+  ],
+  "timeframe": "1h",
+  "market": "BTCUSDT",
+  "headers": {
+    "Authorization": "Bearer [TOKEN]"
+  }
+}
+Status: PASS
+Response: {
+  "name": "Test Strategy",
+  "description": "A test trading strategy",
+  "rules": [
+    "Buy when price crosses above MA",
+    "Sell when price crosses below MA"
+  ],
+  "timeframe": "1h",
+  "market": "BTCUSDT",
+  "userId": "677a179b1f47c81df037e0d0",
+  "_id": "677a179b1f47c81df037e0d3",
+  "createdAt": "2025-01-05T05:24:43.870Z",
+  "lastModified": "2025-01-05T05:24:43.870Z",
+  "__v": 0
+}
+
+================================================================================
+
+[2025-01-05T05:24:44.367Z] Get All Strategies
+URL: http://localhost:3000/api/strategies
+Request: {
+  "headers": {
+    "Authorization": "Bearer [TOKEN]"
+  }
+}
+Status: PASS
+Response: [
+  {
+    "_id": "677a179b1f47c81df037e0d3",
+    "name": "Test Strategy",
+    "description": "A test trading strategy",
+    "rules": [
+      "Buy when price crosses above MA",
+      "Sell when price crosses below MA"
+    ],
+    "timeframe": "1h",
+    "market": "BTCUSDT",
+    "userId": "677a179b1f47c81df037e0d0",
+    "createdAt": "2025-01-05T05:24:43.870Z",
+    "lastModified": "2025-01-05T05:24:43.870Z",
+    "__v": 0
+  }
+]
+
+================================================================================
+
+[2025-01-05T05:24:44.613Z] Get Strategy by ID
+URL: http://localhost:3000/api/strategies/677a179b1f47c81df037e0d3
+Request: {
+  "headers": {
+    "Authorization": "Bearer [TOKEN]"
+  }
+}
+Status: PASS
+Response: {
+  "_id": "677a179b1f47c81df037e0d3",
+  "name": "Test Strategy",
+  "description": "A test trading strategy",
+  "rules": [
+    "Buy when price crosses above MA",
+    "Sell when price crosses below MA"
+  ],
+  "timeframe": "1h",
+  "market": "BTCUSDT",
+  "userId": "677a179b1f47c81df037e0d0",
+  "createdAt": "2025-01-05T05:24:43.870Z",
+  "lastModified": "2025-01-05T05:24:43.870Z",
+  "__v": 0
+}
+
+================================================================================
+
+[2025-01-05T05:24:45.113Z] Update Strategy
+URL: http://localhost:3000/api/strategies/677a179b1f47c81df037e0d3
+Request: {
+  "name": "Updated Strategy Name",
+  "description": "Updated strategy description",
+  "rules": [
+    "Updated rule 1",
+    "Updated rule 2"
+  ],
+  "timeframe": "4h",
+  "market": "ETHUSDT",
+  "headers": {
+    "Authorization": "Bearer [TOKEN]"
+  }
+}
+Status: PASS
+Response: {
+  "_id": "677a179b1f47c81df037e0d3",
+  "name": "Updated Strategy Name",
+  "description": "Updated strategy description",
+  "rules": [
+    "Updated rule 1",
+    "Updated rule 2"
+  ],
+  "timeframe": "4h",
+  "market": "ETHUSDT",
+  "userId": "677a179b1f47c81df037e0d0",
+  "createdAt": "2025-01-05T05:24:43.870Z",
+  "lastModified": "2025-01-05T05:24:44.861Z",
+  "__v": 1
+}
+
+================================================================================
+

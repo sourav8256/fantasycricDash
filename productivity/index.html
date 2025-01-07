@@ -192,9 +192,12 @@
         function loadApp(url) {
             welcomeContent.style.display = 'none';
             appFrame.style.display = 'block';
-            appFrame.src = url;
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const cacheBustUrl = url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
+            appFrame.src = cacheBustUrl;
 
-            // Update the URL with the app parameter
+            // Update the URL with the app parameter (without the cache-busting parameter)
             const newUrl = `${window.location.pathname}?app=${encodeURIComponent(url)}`;
             window.history.pushState({ path: newUrl }, '', newUrl);
             

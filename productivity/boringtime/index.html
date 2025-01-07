@@ -447,7 +447,7 @@
             updateButtons(false);  // Re-enable buttons after confirmation
             sessionsCompleted++;
             totalTimeCompleted += currentSession / 60;
-            pendingBoringTime = Math.max(0, pendingBoringTime - (currentSession / 60));
+            pendingBoringTime = pendingBoringTime - (currentSession / 60);  // Remove Math.max to allow negative values
             
             // Update localStorage
             localStorage.setItem('sessionsCompleted', sessionsCompleted);
@@ -574,7 +574,7 @@
                     // Use old value for hours that passed before the new value was set
                     const valueToAdd = hourTime <= valueSetTime ? oldValue : hourlyAddition;
                     addLogEntry('addition', valueToAdd, entryTime);
-                    pendingBoringTime += valueToAdd;
+                    pendingBoringTime += valueToAdd;  // Simply add the value, allowing it to go positive if it was negative
                 }
                 
                 lastTimeCheck = currentHour;

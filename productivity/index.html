@@ -57,6 +57,13 @@
             z-index: 1000;
         }
 
+        #reload-btn {
+            position: fixed;
+            left: 60px;
+            top: 10px;
+            z-index: 1000;
+        }
+
         #app-frame {
             width: 100%;
             height: calc(100vh - 100px);
@@ -81,6 +88,7 @@
 </head>
 <body>
     <button id="toggle-btn" class="btn btn-primary">☰</button>
+    <button id="reload-btn" class="btn btn-secondary ms-2">↻</button>
 
     <nav class="sidebar">
         <div class="list-group">
@@ -149,6 +157,7 @@
 
     <script>
         const toggleBtn = document.getElementById('toggle-btn');
+        const reloadBtn = document.getElementById('reload-btn');
         const sidebar = document.querySelector('.sidebar');
         const content = document.querySelector('.content');
         const welcomeContent = document.getElementById('welcome-content');
@@ -172,6 +181,12 @@
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('active');
             content.classList.toggle('active');
+        });
+
+        reloadBtn.addEventListener('click', () => {
+            if (appFrame.src) {
+                appFrame.src = appFrame.src;
+            }
         });
 
         function loadApp(url) {

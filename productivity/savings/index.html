@@ -216,6 +216,50 @@
             font-size: 14px;
             display: inline-block;
         }
+
+        .daily-rate {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .daily-rate p {
+            margin: 0;
+            font-size: 1.1em;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .target-calculator {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .target-calculator .form-group {
+            margin-bottom: 10px;
+        }
+
+        .target-calculator label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .target-calculator input {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .target-result {
+            margin: 10px 0 0 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            font-size: 0.95em;
+            color: #2c3e50;
+        }
     </style>
 </head>
 <body>
@@ -283,6 +327,16 @@
             <h2>Savings History</h2>
             <button class="consolidate-btn" onclick="consolidateHistory()">Consolidate History by Category</button>
             <div id="historyList"></div>
+            <div class="daily-rate">
+                <p>Daily Savings Rate: ₹<span id="dailySavingsRate">0.00</span></p>
+                <div class="target-calculator">
+                    <div class="form-group">
+                        <label for="targetAmount">Target Amount (₹)</label>
+                        <input type="number" id="targetAmount" min="0" step="0.01" onchange="calculateTimeToTarget()">
+                    </div>
+                    <p id="timeToTarget" class="target-result"></p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -291,6 +345,7 @@
         const EXPECTED_RATE_KEY = 'expected-monthly-rate';
         const CATEGORIES_KEY = 'savings-categories';
         const CATEGORY_TYPES_KEY = 'savings-category-types';
+        const TARGET_AMOUNT_KEY = 'target-amount';
         let savingsHistory = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let expectedRate = parseFloat(localStorage.getItem(EXPECTED_RATE_KEY)) || 0;
         let categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY)) || [];
@@ -298,6 +353,13 @@
 
         // Set initial expected rate in input
         document.getElementById('expectedRate').value = expectedRate;
+
+        // Set initial target amount from localStorage
+        const savedTargetAmount = localStorage.getItem(TARGET_AMOUNT_KEY);
+        if (savedTargetAmount) {
+            document.getElementById('targetAmount').value = savedTargetAmount;
+            calculateTimeToTarget();
+        }
 
         // Initialize categories dropdown
         function initializeCategories() {
@@ -505,12 +567,32 @@
             }
         }
 
+        function calculateDailySavingsRate() {
+            if (savingsHistory.length === 0) return 0;
+
+            const startDate = new Date(2019, 6); // July 2019
+            const currentDate = new Date();
+            const daysDiff = Math.max(1, Math.ceil((currentDate - startDate) / (1000 * 60 * 60 * 24)));
+            
+            const totalSavings = savingsHistory.reduce((sum, entry) => sum + entry.amount, 0);
+            return totalSavings / daysDiff;
+        }
+
         function renderHistory() {
             const historyList = document.getElementById('historyList');
             const categoryBreakdown = document.getElementById('categoryBreakdown');
             historyList.innerHTML = '';
             categoryBreakdown.innerHTML = '';
             
+            // Calculate and display daily savings rate
+            const dailyRate = calculateDailySavingsRate();
+            document.getElementById('dailySavingsRate').textContent = dailyRate.toFixed(2);
+            
+            // Recalculate time to target if target amount exists
+            if (document.getElementById('targetAmount').value) {
+                calculateTimeToTarget();
+            }
+
             let total = savingsHistory.reduce((sum, entry) => sum + entry.amount, 0);
             let categoryTotals = {};
             let liquidTotal = 0;
@@ -658,6 +740,55 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(savingsHistory));
 
             renderHistory();
+        }
+
+        function calculateTimeToTarget() {
+            const targetAmountInput = document.getElementById('targetAmount');
+            const targetAmount = parseFloat(targetAmountInput.value);
+            
+            if (isNaN(targetAmount) || targetAmount < 0) {
+                document.getElementById('timeToTarget').textContent = 'Please enter a valid target amount';
+                return;
+            }
+
+            // Save target amount to localStorage
+            localStorage.setItem(TARGET_AMOUNT_KEY, targetAmount);
+
+            const dailyRate = calculateDailySavingsRate();
+            if (dailyRate <= 0) {
+                document.getElementById('timeToTarget').textContent = 'Unable to calculate: No savings history or negative daily rate';
+                return;
+            }
+
+            // Calculate total current savings
+            const currentSavings = savingsHistory.reduce((sum, entry) => sum + entry.amount, 0);
+            
+            // Calculate remaining amount needed
+            const remainingAmount = Math.max(0, targetAmount - currentSavings);
+            
+            if (remainingAmount === 0) {
+                document.getElementById('timeToTarget').textContent = 'Target already achieved! 🎉';
+                return;
+            }
+
+            // Get the last savings entry date
+            const lastEntryDate = savingsHistory.length > 0 
+                ? new Date(savingsHistory[savingsHistory.length - 1].date)
+                : new Date();
+
+            // Calculate days needed
+            const daysNeeded = Math.ceil(remainingAmount / dailyRate);
+            
+            // Calculate target date starting from the last entry
+            const targetDate = new Date(lastEntryDate);
+            targetDate.setDate(targetDate.getDate() + daysNeeded);
+            
+            // Format the result message
+            let resultMessage = `Need ₹${remainingAmount.toFixed(2)} more. `;
+            resultMessage += `At current daily rate (since July 2019), this will take ${daysNeeded} days starting from your last entry (${lastEntryDate.toLocaleDateString()}) `;
+            resultMessage += `to reach target on ${targetDate.toLocaleDateString()}`;
+            
+            document.getElementById('timeToTarget').textContent = resultMessage;
         }
 
         // Initial render

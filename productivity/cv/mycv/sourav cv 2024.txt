@@ -1,0 +1,84 @@
+﻿8256995686
+souravmandalm@gmail.com
+	 Sourav Mandal
+	https://github.com/sourav8256
+	
+
+
+
+Experience [4.8 Yrs]
+
+
+* Sr Associate, SW Eng - [1 month] Senior Associate, Software Engineering at Northern Trust | Working in banking application developmen and operations in IBM BPM and Appian [2022 - present]
+   * Onboarding Applications - Set of related onboarding applications
+      * Created self service where manual effort was being spent.
+      * Improved process for handling incidents
+      * Worked on incident reduction
+
+
+* Associate Consultant - [2 yrs] Associate Consultant in Infosys | Working in banking application operations in IBM BPM and Appian [2022 - present]
+   * Onboarding Applications - Set of related onboarding applications
+      * Worked on database stored procedures analysis and used them in the application
+      * Worked on flows that consumed and posted data to few external applications using rest api
+      * Worked on analysis of coaches, forms and field with dropdown, checkbox and radiobutton, text box
+      * Worked on analyzing business objects and checking necessary details in audit logging
+      * Worked on analyzing flows involving reminder and notifications in email
+
+
+* Project Engineer - [2.7 yrs] Project engineer in Wipro | Worked in healthcare invoicing application development and operations in IBM BPM [2019 - 2022]
+
+
+   * RBAM - An app to approve financial invoices
+      * Worked on integration listener to listens from integration, that in turn listened for events from SAP
+      * Decision table to determine the approver according to the rules.
+      * Fetched records from the database based on the designation decided by the rule.
+      * Implemented flows to consider scenarios like when two approvers are required, when two approvers had to approve parallely etc.
+      * Called rest api to store the updated data so it can be used by other systems.
+      * Exception handling for http and database errors.
+
+
+Certification
+
+
+* Certified Mulesoft Developer - Level 1 
+
+
+Internship
+
+
+* Internship at IIT Bombay | Drupal module development
+
+
+Education
+
+
+* Graduated from NIT Agartala with B. Tech in Electronics and instrumentation.
+
+
+
+
+Technical Skills
+
+
+* Server and hosting
+* Analysis, Database, shell
+* Flutter, Java , nodejs, MERN stack
+
+
+
+
+
+
+Soft Skills
+
+
+* Experience interacting with customers from the Netherlands,Brazil,China and other parts of the world.
+* MS Word, Video editing, Powerpoint
+* Enjoy presenting and demonstrating.
+
+
+Projects
+
+
+* Tutor booking app in nodejs,mongodb and flutter.
+* Integrated pollution monitoring system in vehicles

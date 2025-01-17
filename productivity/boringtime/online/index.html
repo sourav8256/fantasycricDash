@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boring Time Tracker</title>
+    <!-- Add Parse SDK -->
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .timer {
+            text-align: center;
+            font-size: 48px;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #333;
+        }
+        .stats {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 1s linear;
+        }
+        .daily-goal {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .daily-goal input {
+            padding: 8px;
+            width: 80px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .daily-goal button {
+            padding: 8px 15px;
+        }
+        .cancel-button {
+            background-color: #dc3545;
+            margin-top: 10px;
+            display: none;
+        }
+        .cancel-button:hover {
+            background-color: #c82333;
+        }
+        .log-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .session-log {
+            color: #28a745;
+        }
+        .addition-log {
+            color: #007bff;
+        }
+        .cancelled-log {
+            color: #dc3545;
+        }
+        .version {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+        .reset-log {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .update-message {
+            color: #28a745;
+            font-size: 12px;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .update-message.show {
+            opacity: 1;
+        }
+        .confirmation-section {
+            display: none;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .confirmation-section.show {
+            display: block;
+        }
+        .confirmation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .confirmation-buttons button {
+            padding: 10px 20px;
+            min-width: 100px;
+        }
+        .confirmation-buttons .confirm-btn {
+            background-color: #28a745;
+        }
+        .confirmation-buttons .cancel-btn {
+            background-color: #dc3545;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            margin-left: 8px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .testing-mode-toggle {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1;
+        }
+        .testing-mode-toggle label {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+        }
+        .pause-button {
+            background-color: #ffc107;
+            margin-top: 10px;
+            display: none;
+        }
+        .pause-button:hover {
+            background-color: #e0a800;
+        }
+        .pause-button.paused {
+            background-color: #28a745;
+        }
+        .pause-button.paused:hover {
+            background-color: #218838;
+        }
+        .break-button {
+            background-color: #ffc107;
+            margin-top: 10px;
+            display: none;
+        }
+        .break-button:hover {
+            background-color: #e0a800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Boring Time Tracker</h1>
+        
+        <div class="testing-mode-toggle">
+            <label for="testingModeSwitch">Testing Mode</label>
+            <label class="switch">
+                <input type="checkbox" id="testingModeSwitch" onchange="toggleTestingMode()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="daily-goal">
+            <p style="margin-top: 10px; font-weight: bold;">Total Pending Boring Time: <span id="pendingTime">0</span> minutes</p>
+            <div style="margin-top: 10px;">
+                <label>Minutes to add per hour: 
+                    <input type="number" id="hourlyAddition" min="0" value="15" style="width: 60px; padding: 5px;" 
+                           onblur="setHourlyAddition(this.value)"> 
+                    <span class="update-message" id="updateMessage">✓ Updated</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="testButton" onclick="startSession(0.0167)" style="background-color: #6c757d; display: none;">1 Second</button>
+            <button onclick="startSession(30)">30 Minutes</button>
+            <button onclick="startSession(60)">60 Minutes</button>
+            <button onclick="startSession(120)">2 Hours</button>
+            <button onclick="startSession(180)">3 Hours</button>
+            <button onclick="startSession(360)">6 Hours</button>
+        </div>
+
+        <div class="timer" id="timer">00:00:00</div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <button class="cancel-button" id="cancelButton" onclick="cancelSession()">Cancel Session</button>
+        <button class="break-button" id="breakButton" onclick="breakSession()">Break Session</button>
+
+        <div id="confirmationSection" class="confirmation-section">
+            <h3 style="color: #28a745; margin-bottom: 15px;">Session Complete!</h3>
+            <p style="margin-bottom: 20px;">Would you like to confirm this session?</p>
+            <div class="confirmation-buttons">
+                <button class="confirm-btn" onclick="confirmSession()">Confirm</button>
+                <button class="cancel-btn" onclick="cancelConfirmation()">Cancel</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <h2>Statistics</h2>
+            <p>Total Boring Time: <span id="totalTime">0</span> minutes</p>
+            <p>Sessions Completed: <span id="sessionsCompleted">0</span></p>
+            <p>Completion Rate: <span id="completionRate">0</span>%</p>
+        </div>
+
+        <div class="log-section">
+            <h2>Activity Log</h2>
+            <div id="logEntries"></div>
+        </div>
+
+        <div class="version">Version 1.0.8</div>
+    </div>
+
+    <script>
+        // Initialize Back4App
+        Parse.initialize("IKmm8MbcH9movBK7et1DrQVyd8nJqfJq8bm548t6", "6Ik3DvMj2RRikc52dWYqt6BJ9qDrjdUWI1nUCS3v");
+        Parse.serverURL = 'https://parseapi.back4app.com/';
+
+        // Define Parse Object for BoringTime
+        const BoringTime = Parse.Object.extend("BoringTime");
+
+        // Function to load data from Back4App
+        async function loadData() {
+            try {
+                const query = new Parse.Query(BoringTime);
+                const boringTime = await query.first();
+                
+                if (boringTime) {
+                    const sessionsStarted = boringTime.get("sessionsStarted") || 0;
+                    const sessionsCompleted = boringTime.get("sessionsCompleted") || 0;
+                    const totalTimeCompleted = boringTime.get("totalTimeCompleted") || 0;
+                    const pendingBoringTime = boringTime.get("pendingBoringTime") || 15;
+                    const lastTimeCheck = boringTime.get("lastTimeCheck") || Date.now();
+                    const hourlyAddition = boringTime.get("hourlyAddition") || 15;
+                    const activityLog = boringTime.get("activityLog") || [];
+                    const lastStatsReset = boringTime.get("lastStatsReset") || new Date().toDateString();
+                    const isTestingMode = boringTime.get("isTestingMode") || false;
+                    const currentSession = boringTime.get("currentSession");
+                    const timerStartTime = boringTime.get("timerStartTime");
+                    const timerState = boringTime.get("timerState");
+
+                    // Update UI with server data
+                    document.getElementById('totalTime').textContent = totalTimeCompleted;
+                    document.getElementById('sessionsCompleted').textContent = sessionsCompleted;
+                    document.getElementById('completionRate').textContent = 
+                        sessionsStarted === 0 ? 100 : Math.round((sessionsCompleted / sessionsStarted) * 100);
+                    document.getElementById('pendingTime').textContent = pendingBoringTime;
+                    document.getElementById('hourlyAddition').value = hourlyAddition;
+                    document.getElementById('testingModeSwitch').checked = isTestingMode;
+                    document.getElementById('testButton').style.display = isTestingMode ? 'block' : 'none';
+
+                    // Update activity log
+                    const logContainer = document.getElementById('logEntries');
+                    logContainer.innerHTML = activityLog.map(entry => {
+                        const date = new Date(entry.timestamp);
+                        const timeStr = date.toLocaleString();
+                        let cssClass, action;
+                        switch(entry.type) {
+                            case 'session':
+                                cssClass = 'session-log';
+                                action = 'Completed session';
+                                break;
+                            case 'addition':
+                                cssClass = 'addition-log';
+                                action = 'Added time';
+                                break;
+                            case 'cancelled':
+                                cssClass = 'cancelled-log';
+                                action = 'Cancelled session';
+                                break;
+                            case 'reset':
+                                cssClass = 'reset-log';
+                                action = 'Daily statistics reset';
+                                return `<div class="log-entry ${cssClass}">${timeStr} - ${action}</div>`;
+                        }
+                        return `<div class="log-entry ${cssClass}">
+                            ${timeStr} - ${action}: ${entry.minutes} minutes
+                        </div>`;
+                    }).join('');
+
+                    // Check and restore active session if exists
+                    if (timerStartTime && currentSession && timerState) {
+                        const now = new Date().getTime();
+                        const elapsed = Math.floor((now - timerStartTime) / 1000);
+                        const remaining = currentSession - elapsed;
+
+                        if (timerState === 'completed') {
+                            document.getElementById('confirmationSection').classList.add('show');
+                            document.querySelectorAll('.buttons button').forEach(button => button.disabled = true);
+                        } else if (remaining > 0) {
+                            startTimer(remaining, timerStartTime);
+                            document.getElementById('cancelButton').style.display = 'block';
+                            document.getElementById('breakButton').style.display = 'block';
+                            document.querySelectorAll('.buttons button').forEach(button => button.disabled = true);
+                        }
+                    }
+
+                    // Check for daily reset
+                    const today = new Date().toDateString();
+                    if (lastStatsReset !== today) {
+                        resetDailyStats();
+                        return;
+                    }
+
+                    // Check for hourly additions
+                    const currentHour = Date.now() - (Date.now() % (60 * 60 * 1000));
+                    const lastCheckHour = lastTimeCheck - (lastTimeCheck % (60 * 60 * 1000));
+                    const hoursSinceLastCheck = Math.floor((currentHour - lastCheckHour) / (1000 * 60 * 60));
+                    
+                    if (hoursSinceLastCheck > 0) {
+                        addHourlyTime(hoursSinceLastCheck, hourlyAddition, lastCheckHour);
+                        return;
+                    }
+                } else {
+                    // Create initial data
+                    const boringTime = new BoringTime();
+                    boringTime.set("sessionsStarted", 0);
+                    boringTime.set("sessionsCompleted", 0);
+                    boringTime.set("totalTimeCompleted", 0);
+                    boringTime.set("pendingBoringTime", 15);
+                    boringTime.set("lastTimeCheck", Date.now());
+                    boringTime.set("hourlyAddition", 15);
+                    boringTime.set("activityLog", []);
+                    boringTime.set("lastStatsReset", new Date().toDateString());
+                    boringTime.set("isTestingMode", false);
+                    await boringTime.save();
+                    location.reload();
+                }
+            } catch (error) {
+                console.error("Error loading data from Back4App:", error);
+            }
+        }
+
+        async function startSession(minutes) {
+            try {
+                const query = new Parse.Query(BoringTime);
+                let boringTime = await query.first();
+                
+                if (boringTime) {
+                    boringTime.increment("sessionsStarted");
+                    boringTime.set("currentSession", minutes * 60);
+                    boringTime.set("timerStartTime", new Date().getTime());
+                    boringTime.set("timerState", "running");
+                    await boringTime.save();
+                }
+                location.reload();
+            } catch (error) {
+                console.error("Error starting session:", error);
+            }
+        }
+
+        async function cancelSession() {
+            try {
+                const query = new Parse.Query(BoringTime);
+                let boringTime = await query.first();
+                
+                if (boringTime) {
+                    const currentSession = boringTime.get("currentSession");
+                    const activityLog = boringTime.get("activityLog") || [];
+                    
+                    activityLog.unshift({
+                        type: 'cancelled',
+                        minutes: currentSession / 60,
+                        timestamp: new Date().getTime()
+                    });
+                    
+                    boringTime.set("activityLog", activityLog);
+                    boringTime.unset("currentSession");
+                    boringTime.unset("timerStartTime");
+                    boringTime.unset("timerState");
+                    await boringTime.save();
+                }
+                location.reload();
+            } catch (error) {
+                console.error("Error cancelling session:", error);
+            }
+        }
+
+        async function confirmSession() {
+            try {
+                const query = new Parse.Query(BoringTime);
+                let boringTime = await query.first();
+                
+                if (boringTime) {
+                    const currentSession = boringTime.get("currentSession");
+                    const minutes = currentSession / 60;
+                    
+                    boringTime.increment("sessionsCompleted");
+                    boringTime.increment("totalTimeCompleted", minutes);
+                    boringTime.increment("pendingBoringTime", -minutes);
+                    
+                    const activityLog = boringTime.get("activityLog") || [];
+                    activityLog.unshift({
+                        type: 'session',
+                        minutes: minutes,
+                        timestamp: new Date().getTime()
+                    });
+                    
+                    boringTime.set("activityLog", activityLog);
+                    boringTime.unset("currentSession");
+                    boringTime.unset("timerStartTime");
+                    boringTime.unset("timerState");
+                    await boringTime.save();
+                }
+                location.reload();
+            } catch (error) {
+                console.error("Error confirming session:", error);
+            }
+        }
+
+        async function setHourlyAddition(value) {
+            try {
+                const newValue = parseInt(value);
+                if (newValue >= 0) {
+                    const query = new Parse.Query(BoringTime);
+                    let boringTime = await query.first();
+                    
+                    if (boringTime) {
+                        boringTime.set("hourlyAddition", newValue);
+                        await boringTime.save();
+                    }
+                    location.reload();
+                }
+            } catch (error) {
+                console.error("Error setting hourly addition:", error);
+            }
+        }
+
+        async function toggleTestingMode() {
+            try {
+                const query = new Parse.Query(BoringTime);
+                let boringTime = await query.first();
+                
+                if (boringTime) {
+                    const isTestingMode = document.getElementById('testingModeSwitch').checked;
+                    boringTime.set("isTestingMode", isTestingMode);
+                    await boringTime.save();
+                }
+                location.reload();
+            } catch (error) {
+                console.error("Error toggling testing mode:", error);
+            }
+        }
+
+        async function resetDailyStats() {
+            try {
+                const query = new Parse.Query(BoringTime);
+                let boringTime = await query.first();
+                
+                if (boringTime) {
+                    boringTime.set("sessionsStarted", 0);
+                    boringTime.set("sessionsCompleted", 0);
+                    boringTime.set("totalTimeCompleted", 0);
+                    boringTime.set("lastStatsReset", new Date().toDateString());
+                    
+                    const activityLog = boringTime.get("activityLog") || [];
+                    activityLog.unshift({
+                        type: 'reset',
+                        minutes: 0,
+                        timestamp: new Date().getTime()
+                    });
+                    boringTime.set("activityLog", activityLog);
+                    
+                    await boringTime.save();
+                }
+                location.reload();
+            } catch (error) {
+                console.error("Error resetting daily stats:", error);
+            }
+        }
+
+        async function addHourlyTime(hours, hourlyAddition, lastCheckHour) {
+            try {
+                const query = new Parse.Query(BoringTime);
+                let boringTime = await query.first();
+                
+                if (boringTime) {
+                    const activityLog = boringTime.get("activityLog") || [];
+                    
+                    for (let i = 0; i < hours; i++) {
+                        const hourTime = lastCheckHour + ((i + 1) * 60 * 60 * 1000);
+                        activityLog.unshift({
+                            type: 'addition',
+                            minutes: hourlyAddition,
+                            timestamp: hourTime
+                        });
+                    }
+                    
+                    boringTime.set("activityLog", activityLog);
+                    boringTime.increment("pendingBoringTime", hours * hourlyAddition);
+                    boringTime.set("lastTimeCheck", Date.now());
+                    await boringTime.save();
+                }
+                location.reload();
+            } catch (error) {
+                console.error("Error adding hourly time:", error);
+            }
+        }
+
+        function startTimer(remaining, startTime) {
+            const timer = setInterval(() => {
+                const now = new Date().getTime();
+                const elapsed = Math.floor((now - startTime) / 1000);
+                const remainingSeconds = remaining - elapsed;
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(timer);
+                    location.reload();
+                } else {
+                    const h = Math.floor(remainingSeconds / 3600);
+                    const m = Math.floor((remainingSeconds % 3600) / 60);
+                    const s = remainingSeconds % 60;
+                    document.getElementById('timer').textContent = 
+                        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                    
+                    const progressPercent = (remainingSeconds / remaining) * 100;
+                    document.getElementById('progress').style.width = `${Math.max(0, Math.min(100 - progressPercent, 100))}%`;
+                }
+            }, 100);
+        }
+
+        // Load data when page loads
+        loadData();
+    </script>
+</body>
+</html>

@@ -280,6 +280,17 @@
         </div>
 
         <div class="timer" id="timer">00:00:00</div>
+        <div style="text-align: center; font-size: 16px; color: #666; margin-bottom: 15px;">
+            Start Time: <span id="startTime">--:--:--</span>
+        </div>
+        <div style="text-align: center; font-size: 14px; color: #666; margin-bottom: 15px; font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+            <div>Total Duration: <span id="totalDuration">--:--:--</span> (<span id="totalSeconds">0</span> seconds)</div>
+            <div>Start Time: <span id="startTimeMs">--</span> ms (<span id="startTime">--:--:--</span>)</div>
+            <div>Current Time: <span id="currentTimeMs">--</span> ms (<span id="currentTime">--:--:--</span>)</div>
+            <div>Time Difference: <span id="timeDiffMs">--</span> ms</div>
+            <div>Elapsed Time: <span id="elapsedTime">--:--:--</span> (<span id="elapsedSeconds">0</span> seconds)</div>
+            <div>Remaining Time: <span id="remainingTimeCalc">--:--:--</span> (<span id="remainingSeconds">0</span> seconds)</div>
+        </div>
         <div class="progress-bar">
             <div class="progress" id="progress"></div>
         </div>
@@ -337,6 +348,10 @@
                     const currentSession = boringTime.get("currentSession");
                     const timerStartTime = boringTime.get("timerStartTime");
                     const timerState = boringTime.get("timerState");
+                    const currentTimeMs = boringTime.get("currentTimeMs");
+                    const timeDiffMs = boringTime.get("timeDiffMs");
+                    const timeDiffSeconds = boringTime.get("timeDiffSeconds");
+                    const progressPercent = boringTime.get("progressPercent");
 
                     // Update UI with server data
                     document.getElementById('totalTime').textContent = totalTimeCompleted;
@@ -378,20 +393,22 @@
                     }).join('');
 
                     // Check and restore active session if exists
-                    if (timerStartTime && currentSession && timerState) {
-                        const now = new Date().getTime();
-                        const elapsed = Math.floor((now - timerStartTime) / 1000);
-                        const remaining = currentSession - elapsed;
+                    if (timerStartTime && currentSession && timerState === "running") {
+                        startTimer(timerStartTime);
+                    } else if (timerState === "completed") {
+                        document.getElementById('confirmationSection').classList.add('show');
+                        document.querySelectorAll('.buttons button').forEach(button => button.disabled = true);
+                    }
 
-                        if (timerState === 'completed') {
-                            document.getElementById('confirmationSection').classList.add('show');
-                            document.querySelectorAll('.buttons button').forEach(button => button.disabled = true);
-                        } else if (remaining > 0) {
-                            startTimer(remaining, timerStartTime);
-                            document.getElementById('cancelButton').style.display = 'block';
-                            document.getElementById('breakButton').style.display = 'block';
-                            document.querySelectorAll('.buttons button').forEach(button => button.disabled = true);
-                        }
+                    // Update UI with stored values if they exist
+                    if (currentTimeMs) document.getElementById('currentTimeMs').textContent = currentTimeMs;
+                    if (timeDiffMs) document.getElementById('timeDiffMs').textContent = timeDiffMs;
+                    if (timeDiffSeconds) {
+                        document.getElementById('elapsedTime').textContent = formatTime(timeDiffSeconds);
+                        document.getElementById('elapsedSeconds').textContent = timeDiffSeconds;
+                    }
+                    if (progressPercent) {
+                        document.getElementById('progress').style.width = `${progressPercent}%`;
                     }
 
                     // Check for daily reset
@@ -411,7 +428,7 @@
                         return;
                     }
                 } else {
-                    // Create initial data
+                    // Create initial data with new fields
                     const boringTime = new BoringTime();
                     boringTime.set("sessionsStarted", 0);
                     boringTime.set("sessionsCompleted", 0);
@@ -422,6 +439,10 @@
                     boringTime.set("activityLog", []);
                     boringTime.set("lastStatsReset", new Date().toDateString());
                     boringTime.set("isTestingMode", false);
+                    boringTime.set("currentTimeMs", null);
+                    boringTime.set("timeDiffMs", null);
+                    boringTime.set("timeDiffSeconds", null);
+                    boringTime.set("progressPercent", null);
                     await boringTime.save();
                     location.reload();
                 }
@@ -438,11 +459,12 @@
                 if (boringTime) {
                     boringTime.increment("sessionsStarted");
                     boringTime.set("currentSession", minutes * 60);
-                    boringTime.set("timerStartTime", new Date().getTime());
+                    const startTime = new Date().getTime();
+                    boringTime.set("timerStartTime", startTime);
                     boringTime.set("timerState", "running");
                     await boringTime.save();
+                    startTimer(startTime);
                 }
-                location.reload();
             } catch (error) {
                 console.error("Error starting session:", error);
             }
@@ -596,26 +618,62 @@
             }
         }
 
-        function startTimer(remaining, startTime) {
-            const timer = setInterval(() => {
-                const now = new Date().getTime();
-                const elapsed = Math.floor((now - startTime) / 1000);
-                const remainingSeconds = remaining - elapsed;
+        function startTimer(startTime) {
+            // Get session duration from Parse once at start
+            const query = new Parse.Query(BoringTime);
+            query.first().then(boringTime => {
+                if (boringTime) {
+                    const totalSeconds = boringTime.get("currentSession");
+                    document.getElementById('totalDuration').textContent = formatTime(totalSeconds);
+                    document.getElementById('totalSeconds').textContent = totalSeconds;
+                    document.getElementById('startTime').textContent = new Date(startTime).toLocaleTimeString();
+                    document.getElementById('startTimeMs').textContent = startTime;
 
-                if (remainingSeconds <= 0) {
-                    clearInterval(timer);
-                    location.reload();
-                } else {
-                    const h = Math.floor(remainingSeconds / 3600);
-                    const m = Math.floor((remainingSeconds % 3600) / 60);
-                    const s = remainingSeconds % 60;
-                    document.getElementById('timer').textContent = 
-                        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-                    
-                    const progressPercent = (remainingSeconds / remaining) * 100;
-                    document.getElementById('progress').style.width = `${Math.max(0, Math.min(100 - progressPercent, 100))}%`;
+                    // Show control buttons and disable session buttons
+                    document.getElementById('cancelButton').style.display = 'block';
+                    document.getElementById('breakButton').style.display = 'block';
+                    document.querySelectorAll('.buttons button').forEach(button => button.disabled = true);
+
+                    const timer = setInterval(() => {
+                        const now = new Date().getTime();
+                        // Calculate time difference in milliseconds
+                        const timeDiffMs = now - startTime;
+                        const timeDiffSeconds = Math.floor(timeDiffMs / 1000);
+
+                        // Update calculation details in UI
+                        document.getElementById('currentTimeMs').textContent = now;
+                        document.getElementById('timeDiffMs').textContent = timeDiffMs;
+                        document.getElementById('currentTime').textContent = new Date(now).toLocaleTimeString();
+                        document.getElementById('elapsedTime').textContent = formatTime(timeDiffSeconds);
+                        document.getElementById('elapsedSeconds').textContent = timeDiffSeconds;
+                        document.getElementById('remainingTimeCalc').textContent = formatTime(Math.max(0, totalSeconds - timeDiffSeconds));
+                        document.getElementById('remainingSeconds').textContent = Math.max(0, totalSeconds - timeDiffSeconds);
+                        document.getElementById('timer').textContent = formatTime(Math.max(0, totalSeconds - timeDiffSeconds));
+
+                        // Update progress bar
+                        const progressPercent = (timeDiffSeconds / totalSeconds) * 100;
+                        document.getElementById('progress').style.width = `${Math.min(progressPercent, 100)}%`;
+
+                        // Check if session duration is reached
+                        if (timeDiffSeconds >= totalSeconds) {
+                            clearInterval(timer);
+                            // Hide control buttons
+                            document.getElementById('cancelButton').style.display = 'none';
+                            document.getElementById('breakButton').style.display = 'none';
+                            // Update DB only once at completion
+                            boringTime.set("timerState", "completed");
+                            boringTime.save().then(() => location.reload());
+                        }
+                    }, 100);
                 }
-            }, 100);
+            });
+        }
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
         // Load data when page loads

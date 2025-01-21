@@ -243,6 +243,56 @@
         .break-button:hover {
             background-color: #e0a800;
         }
+        .notes-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .notes-section textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .notes-section textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76,175,80,0.1);
+        }
+        .notes-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .edit-pending-time {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .edit-pending-time input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .edit-pending-time button {
+            padding: 5px 10px;
+            font-size: 12px;
+            background-color: #6c757d;
+            margin: 0;
+        }
+        .edit-pending-time.editing .pending-time-display {
+            display: none;
+        }
+        .edit-pending-time.editing input {
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -258,7 +308,15 @@
         </div>
 
         <div class="daily-goal">
-            <p style="margin-top: 10px; font-weight: bold;">Total Pending Boring Time: <span id="pendingTime">0</span> minutes</p>
+            <p style="margin-top: 10px; font-weight: bold;">
+                Total Pending Boring Time: 
+                <span class="edit-pending-time">
+                    <span class="pending-time-display" id="pendingTime">0</span>
+                    <input type="number" id="pendingTimeInput" min="0">
+                    <button onclick="togglePendingTimeEdit()" id="editPendingTimeBtn">Edit</button>
+                </span>
+                minutes
+            </p>
             <div style="margin-top: 10px;">
                 <label>Minutes to add per hour: 
                     <input type="number" id="hourlyAddition" min="0" value="15" style="width: 60px; padding: 5px;" 
@@ -281,6 +339,12 @@
         <div class="progress-bar">
             <div class="progress" id="progress"></div>
         </div>
+        
+        <div class="notes-section">
+            <h3>Notes for After Session</h3>
+            <textarea id="sessionNotes" placeholder="Write things to remember for after your session..."></textarea>
+        </div>
+
         <button class="cancel-button" id="cancelButton" onclick="cancelSession()">Cancel Session</button>
         <button class="break-button" id="breakButton" onclick="breakSession()">Break Session</button>
 
@@ -323,6 +387,20 @@
         let activityLog = JSON.parse(localStorage.getItem('activityLog')) || [];
         let lastStatsReset = localStorage.getItem('lastStatsReset') || new Date().toDateString();
         let isTestingMode = localStorage.getItem('isTestingMode') === 'true';
+        let sessionNotes = localStorage.getItem('sessionNotes') || '';
+
+        // Initialize notes from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedNotes = localStorage.getItem('sessionNotes');
+            if (savedNotes) {
+                document.getElementById('sessionNotes').value = savedNotes;
+            }
+        });
+
+        // Save notes when they change
+        document.getElementById('sessionNotes').addEventListener('input', function() {
+            localStorage.setItem('sessionNotes', this.value);
+        });
 
         function toggleTestingMode() {
             isTestingMode = document.getElementById('testingModeSwitch').checked;
@@ -363,11 +441,13 @@
                 localStorage.setItem('timerDuration', totalDuration);
                 localStorage.setItem('currentSession', currentSession);
                 localStorage.setItem('timerState', timer ? 'running' : 'completed');
+                localStorage.setItem('sessionNotes', document.getElementById('sessionNotes').value);
             } else {
                 localStorage.removeItem('timerStartTime');
                 localStorage.removeItem('timerDuration');
                 localStorage.removeItem('currentSession');
                 localStorage.removeItem('timerState');
+                localStorage.removeItem('sessionNotes');
             }
         }
 
@@ -376,6 +456,11 @@
             const savedDuration = localStorage.getItem('timerDuration');
             const savedSession = localStorage.getItem('currentSession');
             const savedState = localStorage.getItem('timerState');
+            const savedNotes = localStorage.getItem('sessionNotes');
+
+            if (savedNotes) {
+                document.getElementById('sessionNotes').value = savedNotes;
+            }
 
             if (savedStartTime && savedDuration && savedSession) {
                 startTime = new Date(parseInt(savedStartTime));
@@ -393,6 +478,7 @@
                     sessionComplete();
                 } else {
                     document.getElementById('cancelButton').style.display = 'block';
+                    document.getElementById('breakButton').style.display = 'block';
                     startTimer();
                     updateButtons(true);
                 }
@@ -423,6 +509,10 @@
             if (timer) {
                 clearInterval(timer);
             }
+
+            // Clear notes when starting new session
+            document.getElementById('sessionNotes').value = '';
+            localStorage.removeItem('sessionNotes');
 
             sessionsStarted++;
             localStorage.setItem('sessionsStarted', sessionsStarted);
@@ -654,6 +744,38 @@
                 document.getElementById('pendingTime').textContent = pendingBoringTime;
             }
         }
+
+        function togglePendingTimeEdit() {
+            const container = document.querySelector('.edit-pending-time');
+            const display = document.getElementById('pendingTime');
+            const input = document.getElementById('pendingTimeInput');
+            const button = document.getElementById('editPendingTimeBtn');
+            
+            if (container.classList.contains('editing')) {
+                // Save the new value
+                const newValue = parseInt(input.value);
+                if (!isNaN(newValue) && newValue >= 0) {
+                    pendingBoringTime = newValue;
+                    localStorage.setItem('pendingBoringTime', pendingBoringTime);
+                    display.textContent = pendingBoringTime;
+                }
+                container.classList.remove('editing');
+                button.textContent = 'Edit';
+            } else {
+                // Show the input
+                input.value = pendingBoringTime;
+                container.classList.add('editing');
+                input.focus();
+                button.textContent = 'Save';
+            }
+        }
+
+        // Handle enter key on pending time input
+        document.getElementById('pendingTimeInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                togglePendingTimeEdit();
+            }
+        });
 
         setInterval(checkHourlyAddition, 60000);
 

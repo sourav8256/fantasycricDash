@@ -221,6 +221,28 @@
             user-select: none;
             margin: 0;
         }
+        .pause-button {
+            background-color: #ffc107;
+            margin-top: 10px;
+            display: none;
+        }
+        .pause-button:hover {
+            background-color: #e0a800;
+        }
+        .pause-button.paused {
+            background-color: #28a745;
+        }
+        .pause-button.paused:hover {
+            background-color: #218838;
+        }
+        .break-button {
+            background-color: #ffc107;
+            margin-top: 10px;
+            display: none;
+        }
+        .break-button:hover {
+            background-color: #e0a800;
+        }
     </style>
 </head>
 <body>
@@ -260,6 +282,7 @@
             <div class="progress" id="progress"></div>
         </div>
         <button class="cancel-button" id="cancelButton" onclick="cancelSession()">Cancel Session</button>
+        <button class="break-button" id="breakButton" onclick="breakSession()">Break Session</button>
 
         <div id="confirmationSection" class="confirmation-section">
             <h3 style="color: #28a745; margin-bottom: 15px;">Session Complete!</h3>
@@ -334,7 +357,6 @@
             }
         }
 
-        // Function to save timer state
         function saveTimerState() {
             if (startTime && currentSession) {
                 localStorage.setItem('timerStartTime', startTime.getTime());
@@ -349,7 +371,6 @@
             }
         }
 
-        // Function to restore timer state
         function restoreTimerState() {
             const savedStartTime = localStorage.getItem('timerStartTime');
             const savedDuration = localStorage.getItem('timerDuration');
@@ -361,25 +382,27 @@
                 totalDuration = parseInt(savedDuration);
                 currentSession = parseInt(savedSession);
                 
-                const now = new Date();
-                const elapsed = Math.floor((now - startTime) / 1000);
+                const now = new Date().getTime();
+                const elapsed = Math.floor((now - startTime.getTime()) / 1000);
                 const remaining = currentSession - elapsed;
 
-                if (remaining <= 0 || savedState === 'completed') {
+                if (savedState === 'completed') {
                     document.getElementById('confirmationSection').classList.add('show');
-                    updateButtons(true);  // Disable buttons if there's a pending confirmation
+                    updateButtons(true);
+                } else if (remaining <= 0) {
+                    sessionComplete();
                 } else {
                     document.getElementById('cancelButton').style.display = 'block';
-                    updateButtons(true);
                     startTimer();
+                    updateButtons(true);
                 }
             }
         }
 
         function startTimer() {
             timer = setInterval(() => {
-                const now = new Date();
-                const elapsedSeconds = Math.floor((now - startTime) / 1000);
+                const now = new Date().getTime();
+                const elapsedSeconds = Math.floor((now - startTime.getTime()) / 1000);
                 const remainingSeconds = currentSession - elapsedSeconds;
 
                 if (remainingSeconds <= 0) {
@@ -393,9 +416,8 @@
         }
 
         function startSession(minutes) {
-            // Check if there's a pending confirmation
             if (document.getElementById('confirmationSection').classList.contains('show')) {
-                return; // Don't start new session if confirmation is pending
+                return;
             }
 
             if (timer) {
@@ -404,15 +426,15 @@
 
             sessionsStarted++;
             localStorage.setItem('sessionsStarted', sessionsStarted);
-            currentSession = minutes * 60; // Convert to seconds
+            currentSession = minutes * 60;
             startTime = new Date();
             totalDuration = minutes * 60;
             
-            // Initial display update
             updateTimer(currentSession);
             updateProgress(100);
             updateButtons(true);
             document.getElementById('cancelButton').style.display = 'block';
+            document.getElementById('breakButton').style.display = 'block';
 
             startTimer();
             saveTimerState();
@@ -429,6 +451,7 @@
                 updateTimer(0);
                 updateProgress(0);
                 document.getElementById('cancelButton').style.display = 'none';
+                document.getElementById('breakButton').style.display = 'none';
                 document.getElementById('confirmationSection').classList.remove('show');
                 addLogEntry('cancelled', totalDuration / 60);
                 saveTimerState();
@@ -439,23 +462,22 @@
             clearInterval(timer);
             timer = null;
             document.getElementById('confirmationSection').classList.add('show');
-            updateButtons(true);  // Disable buttons while confirmation is pending
-            saveTimerState();  // Save state when session completes
+            document.getElementById('breakButton').style.display = 'none';
+            updateButtons(true);
+            saveTimerState();
         }
 
         function confirmSession() {
             document.getElementById('confirmationSection').classList.remove('show');
-            updateButtons(false);  // Re-enable buttons after confirmation
+            updateButtons(false);
             sessionsCompleted++;
             totalTimeCompleted += currentSession / 60;
-            pendingBoringTime = pendingBoringTime - (currentSession / 60);  // Remove Math.max to allow negative values
+            pendingBoringTime = pendingBoringTime - (currentSession / 60);
             
-            // Update localStorage
             localStorage.setItem('sessionsCompleted', sessionsCompleted);
             localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
             localStorage.setItem('pendingBoringTime', pendingBoringTime);
             
-            // Add to activity log
             addLogEntry('session', currentSession / 60);
             
             resetTimer();
@@ -465,7 +487,7 @@
 
         function cancelConfirmation() {
             document.getElementById('confirmationSection').classList.remove('show');
-            updateButtons(false);  // Re-enable buttons after cancellation
+            updateButtons(false);
             addLogEntry('cancelled', currentSession / 60);
             resetTimer();
             updateStats();
@@ -480,6 +502,7 @@
             document.getElementById('timer').textContent = '00:00:00';
             document.getElementById('progress').style.width = '0%';
             document.getElementById('cancelButton').style.display = 'none';
+            document.getElementById('breakButton').style.display = 'none';
             updateButtons(false);
             saveTimerState();
         }
@@ -514,8 +537,8 @@
                 minutes,
                 timestamp: timestamp.getTime()
             };
-            activityLog.unshift(entry); // Add to beginning of array
-            if (activityLog.length > 100) { // Keep only last 100 entries
+            activityLog.unshift(entry);
+            if (activityLog.length > 100) {
                 activityLog.pop();
             }
             localStorage.setItem('activityLog', JSON.stringify(activityLog));
@@ -556,31 +579,25 @@
 
         function checkHourlyAddition() {
             const now = Date.now();
-            // Round down to the last hour
             const currentHour = now - (now % (60 * 60 * 1000));
-            // Round down lastTimeCheck to the last hour
             const lastCheckHour = lastTimeCheck - (lastTimeCheck % (60 * 60 * 1000));
             const hoursSinceLastCheck = Math.floor((currentHour - lastCheckHour) / (1000 * 60 * 60));
             
             if (hoursSinceLastCheck > 0) {
-                // Get the value that was set when each hour passed
                 const valueSetTime = parseInt(localStorage.getItem('hourlyAdditionSetTime')) || lastTimeCheck;
                 const oldValue = parseInt(localStorage.getItem('hourlyAddition')) || 15;
                 
-                // Add entries for each missed hour
                 for (let i = 0; i < hoursSinceLastCheck; i++) {
                     const hourTime = lastCheckHour + ((i + 1) * 60 * 60 * 1000);
                     const entryTime = new Date(hourTime);
                     
-                    // Use old value for hours that passed before the new value was set
                     const valueToAdd = hourTime <= valueSetTime ? oldValue : hourlyAddition;
                     addLogEntry('addition', valueToAdd, entryTime);
-                    pendingBoringTime += valueToAdd;  // Simply add the value, allowing it to go positive if it was negative
+                    pendingBoringTime += valueToAdd;
                 }
                 
                 lastTimeCheck = currentHour;
                 
-                // Save the updated values
                 localStorage.setItem('pendingBoringTime', pendingBoringTime);
                 localStorage.setItem('lastTimeCheck', lastTimeCheck);
                 document.getElementById('pendingTime').textContent = pendingBoringTime;
@@ -590,32 +607,56 @@
         function checkDailyReset() {
             const today = new Date().toDateString();
             if (lastStatsReset !== today) {
-                // Reset daily statistics
                 sessionsStarted = 0;
                 sessionsCompleted = 0;
                 totalTimeCompleted = 0;
                 
-                // Save reset values
                 localStorage.setItem('sessionsStarted', sessionsStarted);
                 localStorage.setItem('sessionsCompleted', sessionsCompleted);
                 localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
                 
-                // Update last reset date
                 lastStatsReset = today;
                 localStorage.setItem('lastStatsReset', lastStatsReset);
                 
-                // Add log entry for stats reset
                 addLogEntry('reset', 0);
                 
-                // Update display
                 updateStats();
             }
         }
 
-        // Check for hourly additions periodically
-        setInterval(checkHourlyAddition, 60000); // Check every minute
+        function breakSession() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
 
-        // Initialize
+                const now = new Date().getTime();
+                const elapsedSeconds = Math.floor((now - startTime.getTime()) / 1000);
+                const elapsedMinutes = elapsedSeconds / 60;
+                
+                // Round to nearest 30 minutes
+                const roundedMinutes = Math.floor(elapsedMinutes / 30) * 30;
+                
+                // Only deduct time if at least 30 minutes have passed
+                if (roundedMinutes >= 30) {
+                    sessionsCompleted++;
+                    totalTimeCompleted += roundedMinutes;
+                    pendingBoringTime = pendingBoringTime - roundedMinutes;
+                    
+                    localStorage.setItem('sessionsCompleted', sessionsCompleted);
+                    localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
+                    localStorage.setItem('pendingBoringTime', pendingBoringTime);
+                    
+                    addLogEntry('session', roundedMinutes);
+                }
+                
+                resetTimer();
+                updateStats();
+                document.getElementById('pendingTime').textContent = pendingBoringTime;
+            }
+        }
+
+        setInterval(checkHourlyAddition, 60000);
+
         checkDailyReset();
         checkHourlyAddition();
         updateTimer(0);
@@ -624,9 +665,8 @@
         updateLogDisplay();
         document.getElementById('hourlyAddition').value = hourlyAddition;
         document.getElementById('pendingTime').textContent = pendingBoringTime;
-        updateTestingMode();  // Initialize testing mode button visibility
+        updateTestingMode();
 
-        // Check for daily reset every minute along with hourly additions
         setInterval(() => {
             checkDailyReset();
             checkHourlyAddition();

@@ -260,7 +260,15 @@
         </div>
 
         <div class="daily-goal">
-            <p style="margin-top: 10px; font-weight: bold;">Total Pending Boring Time: <span id="pendingTime">0</span> minutes</p>
+            <p style="margin-top: 10px; font-weight: bold;">
+                Total Pending Boring Time: <span id="pendingTime">0</span> minutes
+                <button onclick="editPendingTime()" style="padding: 5px 10px; margin-left: 10px; font-size: 12px;">Edit</button>
+            </p>
+            <div id="editPendingTimeSection" style="display: none; margin-top: 10px;">
+                <input type="number" id="newPendingTime" min="0" style="width: 60px; padding: 5px;">
+                <button onclick="updatePendingTime()" style="padding: 5px 10px;">Save</button>
+                <button onclick="cancelEditPendingTime()" style="padding: 5px 10px; background-color: #dc3545;">Cancel</button>
+            </div>
             <div style="margin-top: 10px;">
                 <label>Minutes to add per hour: 
                     <input type="number" id="hourlyAddition" min="0" value="15" style="width: 60px; padding: 5px;" 
@@ -281,7 +289,7 @@
 
         <div class="timer" id="timer">00:00:00</div>
         <div style="text-align: center; font-size: 16px; color: #666; margin-bottom: 15px;">
-            Start Time: <span id="startTime">--:--:--</span>
+            Start Time: <span id="startTimeDisplay">--:--:--</span>
         </div>
         <div style="text-align: center; font-size: 14px; color: #666; margin-bottom: 15px; font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 5px;">
             <div>Total Duration: <span id="totalDuration">--:--:--</span> (<span id="totalSeconds">0</span> seconds)</div>
@@ -626,6 +634,7 @@
                     const totalSeconds = boringTime.get("currentSession");
                     document.getElementById('totalDuration').textContent = formatTime(totalSeconds);
                     document.getElementById('totalSeconds').textContent = totalSeconds;
+                    document.getElementById('startTimeDisplay').textContent = new Date(startTime).toLocaleTimeString();
                     document.getElementById('startTime').textContent = new Date(startTime).toLocaleTimeString();
                     document.getElementById('startTimeMs').textContent = startTime;
 
@@ -674,6 +683,35 @@
             const m = Math.floor((seconds % 3600) / 60);
             const s = seconds % 60;
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        async function editPendingTime() {
+            const pendingTimeSection = document.getElementById('editPendingTimeSection');
+            const currentPendingTime = document.getElementById('pendingTime').textContent;
+            document.getElementById('newPendingTime').value = currentPendingTime;
+            pendingTimeSection.style.display = 'block';
+        }
+
+        async function cancelEditPendingTime() {
+            document.getElementById('editPendingTimeSection').style.display = 'none';
+        }
+
+        async function updatePendingTime() {
+            try {
+                const newValue = parseInt(document.getElementById('newPendingTime').value);
+                if (newValue >= 0) {
+                    const query = new Parse.Query(BoringTime);
+                    let boringTime = await query.first();
+                    
+                    if (boringTime) {
+                        boringTime.set("pendingBoringTime", newValue);
+                        await boringTime.save();
+                    }
+                    location.reload();
+                }
+            } catch (error) {
+                console.error("Error updating pending time:", error);
+            }
         }
 
         // Load data when page loads

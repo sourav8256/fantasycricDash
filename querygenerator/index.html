@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .input-group { margin-bottom: 1rem; }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        textarea { height: 100px; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+        }
+        button:hover { background-color: #0056b3; }
+        #clearButton { background-color: #dc3545; }
+        #clearButton:hover { background-color: #c82333; }
+        #output {
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .error-message {
+            color: #dc3545;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Query Generator</h1>
+        
+        <div class="input-row">
+            <div class="input-group">
+                <label for="ids">Enter IDs (one per line):</label>
+                <textarea id="ids" placeholder="Enter IDs, one per line:&#10;123&#10;456&#10;789"></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="table">Table Names (one per line):</label>
+                <textarea id="table" placeholder="Enter table names, one per LG:&#10;lg0.table&#10;lg1.table&#10;lg2.table"></textarea>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label for="column1">Column Name 1:</label>
+                <input type="text" id="column1" placeholder="Enter column name 1">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label for="oldValue1">Old Value 1 (one per line):</label>
+                <textarea id="oldValue1" placeholder="Enter old values:&#10;old1&#10;old2&#10;old3"></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="newValue1">New Value 1 (one per line):</label>
+                <textarea id="newValue1" placeholder="Enter new values:&#10;new1&#10;new2&#10;new3"></textarea>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label for="column2">Column Name 2:</label>
+                <input type="text" id="column2" placeholder="Enter column name 2">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label for="oldValue2">Old Value 2 (one per line):</label>
+                <textarea id="oldValue2" placeholder="Enter old values:&#10;old1&#10;old2&#10;old3"></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="newValue2">New Value 2 (one per line):</label>
+                <textarea id="newValue2" placeholder="Enter new values:&#10;new1&#10;new2&#10;new3"></textarea>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="change">Change Number:</label>
+            <input type="text" id="change" placeholder="Enter change number">
+            <div id="changeError" class="error-message">Please enter a change number</div>
+        </div>
+
+        <div class="input-group">
+            <label for="selectTemplate">Select Query Template:</label>
+            <input type="text" id="selectTemplate" value="SELECT * FROM {table} WHERE id = {id} AND change_number = {change};">
+        </div>
+
+        <div class="input-group">
+            <label for="updateTemplate">Update Query Template:</label>
+            <input type="text" id="updateTemplate" value="UPDATE {table} SET change_number = {change} WHERE id = {id};">
+        </div>
+
+        <div class="input-group">
+            <label for="backoutTemplate">Backout Query Template:</label>
+            <input type="text" id="backoutTemplate" value="UPDATE {table} SET change_number = {prevChange} WHERE id = {id};">
+        </div>
+
+        <div class="input-group">
+            <label for="validateTemplate">Validate Query Template:</label>
+            <input type="text" id="validateTemplate" value="SELECT * FROM {table} WHERE id = {id};">
+        </div>
+
+        <button onclick="generateQueries()">Generate Queries</button>
+        <button id="clearButton" onclick="clearAll()">Clear All</button>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const userFields = ['ids', 'change', 'table', 'column1', 'column2', 'oldValue1', 'newValue1', 'oldValue2', 'newValue2'];
+        const templateFields = ['selectTemplate', 'updateTemplate', 'backoutTemplate', 'validateTemplate'];
+        const allFields = [...userFields, ...templateFields];
+
+        // Load saved values
+        allFields.forEach(field => {
+            const saved = localStorage.getItem(field);
+            if (saved) document.getElementById(field).value = saved;
+        });
+
+        // Save on input
+        allFields.forEach(field => {
+            document.getElementById(field).addEventListener('input', () => 
+                localStorage.setItem(field, document.getElementById(field).value)
+            );
+        });
+
+        function clearAll() {
+            userFields.forEach(field => {
+                localStorage.removeItem(field);
+                document.getElementById(field).value = '';
+            });
+            document.getElementById('output').textContent = '';
+            document.getElementById('changeError').style.display = 'none';
+        }
+
+        function generateQueries() {
+            const change = document.getElementById('change').value.trim();
+            if (!change) {
+                document.getElementById('changeError').style.display = 'block';
+                document.getElementById('output').textContent = '';
+                return;
+            }
+
+            const id = document.getElementById('ids').value
+                .split('\n')
+                .map(id => id.trim())
+                .filter(Boolean)[0]; // Get only the first ID
+
+            const tableName = document.getElementById('table').value
+                .split('\n')
+                .map(table => table.trim())
+                .filter(Boolean)[0]; // Get only the first table
+
+            if (!id || !tableName) {
+                document.getElementById('output').textContent = 'Please enter at least one ID and one table name.';
+                return;
+            }
+
+            const column1 = document.getElementById('column1').value.trim();
+            const column2 = document.getElementById('column2').value.trim();
+            const oldVal1 = document.getElementById('oldValue1').value
+                .split('\n')
+                .map(val => val.trim())
+                .filter(Boolean)[0] || '';
+            const newVal1 = document.getElementById('newValue1').value
+                .split('\n')
+                .map(val => val.trim())
+                .filter(Boolean)[0] || '';
+            const oldVal2 = document.getElementById('oldValue2').value
+                .split('\n')
+                .map(val => val.trim())
+                .filter(Boolean)[0] || '';
+            const newVal2 = document.getElementById('newValue2').value
+                .split('\n')
+                .map(val => val.trim())
+                .filter(Boolean)[0] || '';
+            const prevChange = parseInt(change) - 1;
+            
+            let output = '';
+            ['select', 'update', 'backout', 'validate'].forEach((type) => {
+                // Build dynamic query based on available columns and values
+                let query = '';
+                
+                // For UPDATE queries, build the SET clause dynamically
+                if (type === 'update') {
+                    const setValues = [];
+                    if (column1 && oldVal1 && oldVal1.toLowerCase() !== 'na') {
+                        setValues.push(`${column1} = ${newVal1}`);
+                    }
+                    if (column2 && oldVal2 && oldVal2.toLowerCase() !== 'na') {
+                        setValues.push(`${column2} = ${newVal2}`);
+                    }
+                    if (setValues.length > 0) {
+                        query = `UPDATE {table} SET ${setValues.join(', ')} WHERE id = {id} AND change_number = {change};`;
+                    }
+                }
+                // For SELECT queries, build the WHERE clause dynamically
+                else if (type === 'select') {
+                    const whereConditions = [`id = {id}`];
+                    if (column1 && oldVal1 && oldVal1.toLowerCase() !== 'na') {
+                        whereConditions.push(`${column1} = ${oldVal1}`);
+                    }
+                    if (column2 && oldVal2 && oldVal2.toLowerCase() !== 'na') {
+                        whereConditions.push(`${column2} = ${oldVal2}`);
+                    }
+                    query = `SELECT * FROM {table} WHERE ${whereConditions.join(' AND ')};`;
+                }
+                // For BACKOUT queries, build the SET clause dynamically
+                else if (type === 'backout') {
+                    const setValues = [];
+                    if (column1 && oldVal1 && oldVal1.toLowerCase() !== 'na') {
+                        setValues.push(`${column1} = ${oldVal1}`);
+                    }
+                    if (column2 && oldVal2 && oldVal2.toLowerCase() !== 'na') {
+                        setValues.push(`${column2} = ${oldVal2}`);
+                    }
+                    if (setValues.length > 0) {
+                        query = `UPDATE {table} SET ${setValues.join(', ')} WHERE id = {id};`;
+                    }
+                }
+                // For VALIDATE queries
+                else if (type === 'validate') {
+                    query = `SELECT * FROM {table} WHERE id = {id};`;
+                }
+
+                if (query) {
+                    query = query
+                        .replace(/\{id\}/g, id)
+                        .replace(/\{table\}/g, tableName)
+                        .replace(/\{change\}/g, change)
+                        .replace(/\{prevChange\}/g, prevChange);
+                    output += query + '\n';
+                }
+            });
+            
+            document.getElementById('output').textContent = output.trim();
+            document.getElementById('changeError').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

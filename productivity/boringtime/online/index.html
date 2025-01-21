@@ -245,6 +245,25 @@
         .break-button:hover {
             background-color: #e0a800;
         }
+        .notes-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .notes-section textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+            resize: vertical;
+        }
+        .notes-section button {
+            margin-top: 10px;
+            padding: 8px 15px;
+        }
     </style>
 </head>
 <body>
@@ -302,6 +321,15 @@
         <div class="progress-bar">
             <div class="progress" id="progress"></div>
         </div>
+
+        <div class="notes-section">
+            <h3>Session Notes</h3>
+            <p>Write what you plan to do after this session:</p>
+            <textarea id="sessionNotes" placeholder="Enter your notes here..."></textarea>
+            <button onclick="saveNotes()">Save Notes</button>
+            <span id="notesSavedMessage" style="color: #28a745; margin-left: 10px; display: none;">✓ Notes saved</span>
+        </div>
+
         <button class="cancel-button" id="cancelButton" onclick="cancelSession()">Cancel Session</button>
         <button class="break-button" id="breakButton" onclick="breakSession()">Break Session</button>
 
@@ -356,10 +384,6 @@
                     const currentSession = boringTime.get("currentSession");
                     const timerStartTime = boringTime.get("timerStartTime");
                     const timerState = boringTime.get("timerState");
-                    const currentTimeMs = boringTime.get("currentTimeMs");
-                    const timeDiffMs = boringTime.get("timeDiffMs");
-                    const timeDiffSeconds = boringTime.get("timeDiffSeconds");
-                    const progressPercent = boringTime.get("progressPercent");
 
                     // Update UI with server data
                     document.getElementById('totalTime').textContent = totalTimeCompleted;
@@ -370,6 +394,12 @@
                     document.getElementById('hourlyAddition').value = hourlyAddition;
                     document.getElementById('testingModeSwitch').checked = isTestingMode;
                     document.getElementById('testButton').style.display = isTestingMode ? 'block' : 'none';
+
+                    // Load saved notes if they exist
+                    const sessionNotes = boringTime.get("sessionNotes");
+                    if (sessionNotes) {
+                        document.getElementById('sessionNotes').value = sessionNotes;
+                    }
 
                     // Update activity log
                     const logContainer = document.getElementById('logEntries');
@@ -408,17 +438,6 @@
                         document.querySelectorAll('.buttons button').forEach(button => button.disabled = true);
                     }
 
-                    // Update UI with stored values if they exist
-                    if (currentTimeMs) document.getElementById('currentTimeMs').textContent = currentTimeMs;
-                    if (timeDiffMs) document.getElementById('timeDiffMs').textContent = timeDiffMs;
-                    if (timeDiffSeconds) {
-                        document.getElementById('elapsedTime').textContent = formatTime(timeDiffSeconds);
-                        document.getElementById('elapsedSeconds').textContent = timeDiffSeconds;
-                    }
-                    if (progressPercent) {
-                        document.getElementById('progress').style.width = `${progressPercent}%`;
-                    }
-
                     // Check for daily reset
                     const today = new Date().toDateString();
                     if (lastStatsReset !== today) {
@@ -447,10 +466,7 @@
                     boringTime.set("activityLog", []);
                     boringTime.set("lastStatsReset", new Date().toDateString());
                     boringTime.set("isTestingMode", false);
-                    boringTime.set("currentTimeMs", null);
-                    boringTime.set("timeDiffMs", null);
-                    boringTime.set("timeDiffSeconds", null);
-                    boringTime.set("progressPercent", null);
+                    boringTime.set("sessionNotes", "");
                     await boringTime.save();
                     location.reload();
                 }
@@ -711,6 +727,66 @@
                 }
             } catch (error) {
                 console.error("Error updating pending time:", error);
+            }
+        }
+
+        async function breakSession() {
+            try {
+                const query = new Parse.Query(BoringTime);
+                let boringTime = await query.first();
+                
+                if (boringTime) {
+                    const currentSession = boringTime.get("currentSession");
+                    const timerStartTime = boringTime.get("timerStartTime");
+                    const now = new Date().getTime();
+                    const timeDiffSeconds = Math.floor((now - timerStartTime) / 1000);
+                    const completedMinutes = Math.floor(timeDiffSeconds / 60);
+                    
+                    if (completedMinutes > 0) {
+                        boringTime.increment("sessionsCompleted");
+                        boringTime.increment("totalTimeCompleted", completedMinutes);
+                        boringTime.increment("pendingBoringTime", -completedMinutes);
+                        
+                        const activityLog = boringTime.get("activityLog") || [];
+                        activityLog.unshift({
+                            type: 'session',
+                            minutes: completedMinutes,
+                            timestamp: new Date().getTime()
+                        });
+                        
+                        boringTime.set("activityLog", activityLog);
+                    }
+                    
+                    boringTime.unset("currentSession");
+                    boringTime.unset("timerStartTime");
+                    boringTime.unset("timerState");
+                    await boringTime.save();
+                }
+                location.reload();
+            } catch (error) {
+                console.error("Error breaking session:", error);
+            }
+        }
+
+        async function saveNotes() {
+            try {
+                const notes = document.getElementById('sessionNotes').value;
+                const query = new Parse.Query(BoringTime);
+                let boringTime = await query.first();
+                
+                if (boringTime) {
+                    boringTime.set("sessionNotes", notes);
+                    await boringTime.save();
+                    
+                    // Show saved message
+                    const savedMessage = document.getElementById('notesSavedMessage');
+                    savedMessage.style.display = 'inline';
+                    setTimeout(() => {
+                        savedMessage.style.display = 'none';
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error("Error saving notes:", error);
             }
         }
 

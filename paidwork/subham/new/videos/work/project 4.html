@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Video Player</title>
+  <style>
+    body{
+      background-image: url(background.jpg);
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .video-container video {
+      width: 100%;
+      height: auto;
+    }
+
+    .video-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      box-sizing: border-box;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      opacity: 0;
+    }
+
+    .video-controls button {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 5px;
+      opacity: 0;
+    }
+    .description{
+      justify-content: center;
+      text-align: justify;
+      background-color: bisque;
+      font-family: Arial, Helvetica, sans-serif;
+      border-radius: 10px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="video-container">
+    <video id="videoPlayer" controls>
+      <source src="project 4.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="video-controls">
+      <button id="playPauseBtn">Play/Pause</button>
+      <button id="muteBtn">Mute</button>
+      <input type="range" id="volumeRange" min="0" max="1" step="0.1" value="1">
+    </div>
+  <div class="description">
+    <h3>This is a project I completed for JOVES, where I had the opportunity to showcase my skills in animation and storytelling. 🌟
+
+      <P>Project Brief:
+      The challenge was to create a short video on the topic of extraction. After extensive research, I embarked on this creative journey, aiming to simplify complex concepts through visual storytelling.</P>
+      
+      Storyboard Design:
+      I meticulously crafted a storyboard, envisioning a 2D animated video that would captivate viewers. Each scene was carefully planned to convey the essence of extraction in an engaging and straightforward manner.
+      
+      <p> Elements:
+      To bring my vision to life, I sourced elements from Freepik, ensuring a cohesive and visually appealing aesthetic. From chemical processes to natural resources, every frame was meticulously designed.</p>
+      
+      Animation Magic:
+      Using Adobe After Effects, I animated each scene, seamlessly transitioning from one concept to another. The power of animation lies in its ability to simplify intricate ideas, making them accessible to a wide audience.
+      
+      <p>Soundtrack Creation:
+      The audio experience was equally important. I generated computerized audio to complement the visuals, enhancing the overall impact. The background music, lovingly crafted in Adobe Premiere Pro. </p>
+      
+      Time and Dedication:
+      This project was a labor of love, consuming a total of 45 hours. But every second spent was worth it—I take immense pride in how I distilled complex information into an engaging video.</h3>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('videoPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const volumeRange = document.getElementById('volumeRange');
+
+    playPauseBtn.addEventListener('click', function() {
+      if (video.paused || video.ended) {
+        video.play();
+        playPauseBtn.textContent = 'Pause';
+      } else {
+        video.pause();
+        playPauseBtn.textContent = 'Play';
+      }
+    });
+
+    muteBtn.addEventListener('click', function() {
+      if (video.muted) {
+        video.muted = false;
+        muteBtn.textContent = 'Mute';
+      } else {
+        video.muted = true;
+        muteBtn.textContent = 'Unmute';
+      }
+    });
+
+    volumeRange.addEventListener('input', function() {
+      video.volume = volumeRange.value;
+    });
+  </script>
+</body>
+</html>

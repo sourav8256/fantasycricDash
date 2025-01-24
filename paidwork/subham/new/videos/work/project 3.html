@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Video Player</title>
+  <style>
+    body{
+      background-image: url(background.jpg);
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .video-container video {
+      width: 100%;
+      height: auto;
+    }
+
+    .video-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      box-sizing: border-box;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      opacity: 0;
+    }
+
+    .video-controls button {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 5px;
+      opacity: 0;
+    }
+    .description{
+      justify-content: center;
+      text-align: justify;
+      background-color: bisque;
+      font-family: Arial, Helvetica, sans-serif;
+      border-radius: 10px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="video-container">
+    <video id="videoPlayer" controls>
+      <source src="project 3.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="video-controls">
+      <button id="playPauseBtn">Play/Pause</button>
+      <button id="muteBtn">Mute</button>
+      <input type="range" id="volumeRange" min="0" max="1" step="0.1" value="1">
+    </div>
+  <div class="description">
+    <h3>This is one of my early days project in the field of content creation and animation at BYJU'S. 
+
+        <p>The video is about fractions, a topic that many students find difficult and boring. The task was to make the video fun and easy to understand for 6th standard students.</p>
+        
+        To do that, I came up with a creative idea: using comic books as a way to explain fractions. I thought comic books would be a great way to connect with the students, as they are colorful, entertaining, and popular. 
+        
+        <p>Created the video from scratch, doing everything from the idea, storyboard, and artwork. I used After Effects for the animation and worked with a sound designer for the audio.</p> 
+        
+        The project took me 40 hours to finish, but it was a very rewarding and enjoyable experience. I learned a lot about fractions, comic books, and animation. I also developed my creative thinking and problem-solving skills from this project.
+        
+        Thank you for your attention!</h3>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('videoPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const volumeRange = document.getElementById('volumeRange');
+
+    playPauseBtn.addEventListener('click', function() {
+      if (video.paused || video.ended) {
+        video.play();
+        playPauseBtn.textContent = 'Pause';
+      } else {
+        video.pause();
+        playPauseBtn.textContent = 'Play';
+      }
+    });
+
+    muteBtn.addEventListener('click', function() {
+      if (video.muted) {
+        video.muted = false;
+        muteBtn.textContent = 'Mute';
+      } else {
+        video.muted = true;
+        muteBtn.textContent = 'Unmute';
+      }
+    });
+
+    volumeRange.addEventListener('input', function() {
+      video.volume = volumeRange.value;
+    });
+  </script>
+</body>
+</html>

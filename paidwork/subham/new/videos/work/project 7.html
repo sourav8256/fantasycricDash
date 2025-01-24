@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Video Player</title>
+  <style>
+    body{
+      background-image: url(background.jpg);
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .video-container video {
+      width: 100%;
+      height: auto;
+    }
+
+    .video-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      box-sizing: border-box;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      opacity: 0;
+    }
+
+    .video-controls button {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 5px;
+      opacity: 0;
+    }
+    .description{
+      justify-content: center;
+      text-align: justify;
+      background-color: bisque;
+      font-family: Arial, Helvetica, sans-serif;
+      border-radius: 10px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="video-container">
+    <video id="videoPlayer" controls>
+      <source src="project 7.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="video-controls">
+      <button id="playPauseBtn">Play/Pause</button>
+      <button id="muteBtn">Mute</button>
+      <input type="range" id="volumeRange" min="0" max="1" step="0.1" value="1">
+    </div>
+  <div class="description">
+    <h3>Here I am sharing my latest and best creative endeavor with you.
+
+      Inspiration: I recently recreated an animation from the fantastic ravie.co YouTube channel. As an aspiring motion designer, I've been following this channel closely to enhance my skills in After Effects. The step-by-step breakdowns of complex animations have been invaluable!
+      
+      <p>My Creation: Armed with newfound knowledge, I embarked on my own animation project. I meticulously storyboarded every frame and brought it to life in a sleek 16:9 format. The challenge? Syncing the beats perfectly with each animation cut.</p>
+      
+      Rhythm and Flow: Let me tell you, matching the rhythm of the music to the animation transitions was like choreographing a dance! But the satisfaction of nailing those sync points? Priceless.
+      
+      <p>Pure Joy: Every little detail—the way a shape morphed, the timing of an easing effect—brought me joy. It's these small victories that fuel my passion for motion design.</p>
+      
+      Gratitude: Huge shoutout to the ravie.co channel for being my guiding star! And to all of those who've supported my creative journey, thank you!
+      
+      <p>Check out the channel here:<a href="http://www.youtube.com/@RavieAndCo" >http://www.youtube.com/@RavieAndCo</a></p>
+        </h3>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('videoPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const volumeRange = document.getElementById('volumeRange');
+
+    playPauseBtn.addEventListener('click', function() {
+      if (video.paused || video.ended) {
+        video.play();
+        playPauseBtn.textContent = 'Pause';
+      } else {
+        video.pause();
+        playPauseBtn.textContent = 'Play';
+      }
+    });
+
+    muteBtn.addEventListener('click', function() {
+      if (video.muted) {
+        video.muted = false;
+        muteBtn.textContent = 'Mute';
+      } else {
+        video.muted = true;
+        muteBtn.textContent = 'Unmute';
+      }
+    });
+
+    volumeRange.addEventListener('input', function() {
+      video.volume = volumeRange.value;
+    });
+  </script>
+</body>
+</html>

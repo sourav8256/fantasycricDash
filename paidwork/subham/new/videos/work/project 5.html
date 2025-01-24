@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Video Player</title>
+  <style>
+    body{
+      background-image: url(background.jpg);
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .video-container video {
+      width: 100%;
+      height: auto;
+    }
+
+    .video-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      box-sizing: border-box;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      opacity: 0;
+    }
+
+    .video-controls button {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 5px;
+      opacity: 0;
+    }
+    .description{
+      justify-content: center;
+      text-align: justify;
+      background-color: bisque;
+      font-family: Arial, Helvetica, sans-serif;
+      border-radius: 10px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="video-container">
+    <video id="videoPlayer" controls>
+      <source src="project 5.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="video-controls">
+      <button id="playPauseBtn">Play/Pause</button>
+      <button id="muteBtn">Mute</button>
+      <input type="range" id="volumeRange" min="0" max="1" step="0.1" value="1">
+    </div>
+  <div class="description">
+    <h3>This is one of my best projects for the German region: a video ad for Imodium, a brand of anti-diarrheal medication. I was in charge of the animation part of this project, which involved creating and animating the characters, using the parallax effect to create a sense of depth and movement, and composing the scenes in After Effects. I used the DUIK plugin for the character animation, and I aimed for a stop motion type look to match the style and tone of the ad.
+
+       <p> This project was a great opportunity for me to showcase my skills and passion for character animation, 2.5D animation, and composition. I enjoyed every step of the process, from designing the characters to adding the final touches. I also learned a lot from working with a talented team of professionals who provided me with feedback and support. The animation part of this project took me 40 hours to complete, and I am very proud of the result.</p>
+        </h3>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('videoPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const volumeRange = document.getElementById('volumeRange');
+
+    playPauseBtn.addEventListener('click', function() {
+      if (video.paused || video.ended) {
+        video.play();
+        playPauseBtn.textContent = 'Pause';
+      } else {
+        video.pause();
+        playPauseBtn.textContent = 'Play';
+      }
+    });
+
+    muteBtn.addEventListener('click', function() {
+      if (video.muted) {
+        video.muted = false;
+        muteBtn.textContent = 'Mute';
+      } else {
+        video.muted = true;
+        muteBtn.textContent = 'Unmute';
+      }
+    });
+
+    volumeRange.addEventListener('input', function() {
+      video.volume = volumeRange.value;
+    });
+  </script>
+</body>
+</html>

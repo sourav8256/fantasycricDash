@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Video Player</title>
+  <style>
+    body{
+      background-image: url(background.jpg);
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .video-container video {
+      width: 100%;
+      height: auto;
+    }
+
+    .video-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      box-sizing: border-box;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      opacity: 0;
+    }
+
+    .video-controls button {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 5px;
+      opacity: 0;
+    }
+    .description{
+      justify-content: center;
+      text-align: justify;
+      background-color: bisque;
+      font-family: Arial, Helvetica, sans-serif;
+      border-radius: 10px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="video-container">
+    <video id="videoPlayer" controls>
+      <source src="project 6.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="video-controls">
+      <button id="playPauseBtn">Play/Pause</button>
+      <button id="muteBtn">Mute</button>
+      <input type="range" id="volumeRange" min="0" max="1" step="0.1" value="1">
+    </div>
+  <div class="description">
+    <h3>I'm thrilled to share a this simple cool project that has my creative gears spinning.
+
+      <p>Storyboard Magic: Working on this animation for the German Region was an exhilarating journey. Armed with a rough storyboard, I collaborated closely with one of the best storyboard artists out there. Together, we transformed those initial sketches into a captivating visual narrative.</p>
+      
+      From Concept to Reality: The entire animation—from concept to execution—was my labor of love. I meticulously crafted each frame, ensuring that every detail aligned seamlessly. Here's the breakdown:
+      
+      <p>1. Cinema 4D Brilliance: The 3D teeth and water splash segments? Yep, that's where Cinema 4D stepped in. I sculpted those pearly whites and choreographed the dynamic splash, bringing realism to the forefront.</p>
+      
+      2. After Effects Wizardry: The final animation and composition? All After Effects magic! I weaved together the elements, fine-tuned transitions, and orchestrated the visual symphony.
+      
+      <p>Harmonious Sound: Shoutout to the sound team—they added the auditory magic! The right sound effects can elevate an animation from good to extraordinary.</p>
+      
+      Creative Representation: Capturing the essence of the video's main content was my mission. I creatively distilled complex ideas into engaging visuals. The kinetic text animations danced across the screen, mirroring the heartbeat of the message.
+      
+      <p>Technical Thrills: And let's talk tech! The 3D modeling process? A delightful challenge. The precision required for those teeth? Exhilarating! And the kinetic typography? Like conducting an orchestra of letters.</p>
+      
+      Grateful: Gratitude fills my heart. To the German Region for entrusting me with this project, to my fellow creatives for their collaboration, and to the entire process that fueled my passion.
+        </h3>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('videoPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const volumeRange = document.getElementById('volumeRange');
+
+    playPauseBtn.addEventListener('click', function() {
+      if (video.paused || video.ended) {
+        video.play();
+        playPauseBtn.textContent = 'Pause';
+      } else {
+        video.pause();
+        playPauseBtn.textContent = 'Play';
+      }
+    });
+
+    muteBtn.addEventListener('click', function() {
+      if (video.muted) {
+        video.muted = false;
+        muteBtn.textContent = 'Mute';
+      } else {
+        video.muted = true;
+        muteBtn.textContent = 'Unmute';
+      }
+    });
+
+    volumeRange.addEventListener('input', function() {
+      video.volume = volumeRange.value;
+    });
+  </script>
+</body>
+</html>

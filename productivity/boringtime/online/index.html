@@ -423,10 +423,10 @@
                             case 'reset':
                                 cssClass = 'reset-log';
                                 action = 'Daily statistics reset';
-                                return `<div class="log-entry ${cssClass}">${timeStr} - ${action}</div>`;
+                                return `<div class="log-entry ${cssClass}">${timeStr} - ${action} - Pending Time: ${entry.pendingTime} minutes</div>`;
                         }
                         return `<div class="log-entry ${cssClass}">
-                            ${timeStr} - ${action}: ${entry.minutes} minutes
+                            ${timeStr} - ${action}: ${entry.minutes} minutes - Pending Time: ${entry.pendingTime} minutes
                         </div>`;
                     }).join('');
 
@@ -506,7 +506,8 @@
                     activityLog.unshift({
                         type: 'cancelled',
                         minutes: currentSession / 60,
-                        timestamp: new Date().getTime()
+                        timestamp: new Date().getTime(),
+                        pendingTime: boringTime.get("pendingBoringTime")
                     });
                     
                     boringTime.set("activityLog", activityLog);
@@ -538,7 +539,8 @@
                     activityLog.unshift({
                         type: 'session',
                         minutes: minutes,
-                        timestamp: new Date().getTime()
+                        timestamp: new Date().getTime(),
+                        pendingTime: boringTime.get("pendingBoringTime")
                     });
                     
                     boringTime.set("activityLog", activityLog);
@@ -602,7 +604,8 @@
                     activityLog.unshift({
                         type: 'reset',
                         minutes: 0,
-                        timestamp: new Date().getTime()
+                        timestamp: new Date().getTime(),
+                        pendingTime: boringTime.get("pendingBoringTime")
                     });
                     boringTime.set("activityLog", activityLog);
                     
@@ -627,7 +630,8 @@
                         activityLog.unshift({
                             type: 'addition',
                             minutes: hourlyAddition,
-                            timestamp: hourTime
+                            timestamp: hourTime,
+                            pendingTime: boringTime.get("pendingBoringTime")
                         });
                     }
                     
@@ -749,7 +753,8 @@
                         activityLog.unshift({
                             type: 'session',
                             minutes: completedMinutes,
-                            timestamp: new Date().getTime()
+                            timestamp: new Date().getTime(),
+                            pendingTime: boringTime.get("pendingBoringTime")
                         });
                         
                         boringTime.set("activityLog", activityLog);

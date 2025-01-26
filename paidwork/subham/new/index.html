@@ -1231,6 +1231,24 @@
         document.body.appendChild(popup);
         document.body.style.overflow = 'hidden';
       }
+
+      // Add event listeners after DOM is loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        const videoContainers = document.querySelectorAll('.video-container');
+        
+        videoContainers.forEach(container => {
+          // Handle both click and touch events
+          container.addEventListener('click', function(e) {
+            e.preventDefault();
+            openVideoPopup(this);
+          });
+          
+          container.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            openVideoPopup(this);
+          });
+        });
+      });
     </script>
     <!-- Load Scripts End -->
     

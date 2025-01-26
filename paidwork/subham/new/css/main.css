@@ -580,22 +580,22 @@ h1 {
 }
 @media only screen and (min-width: 768px) {
   h1 {
-    font-size: 5rem;
+    font-size: 4rem;
   }
 }
 @media only screen and (min-width: 1200px) {
   h1 {
-    font-size: 6rem;
+    font-size: 5rem;
   }
 }
 @media only screen and (min-width: 1400px) {
   h1 {
-    font-size: 7rem;
+    font-size: 6rem;
   }
 }
 @media only screen and (min-width: 1600px) {
   h1 {
-    font-size: 8rem;
+    font-size: 7rem;
   }
 }
 

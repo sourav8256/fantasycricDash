@@ -11,13 +11,13 @@ Content-Type: application/json
 
 jData={
     "apkversion": "1.0.0",
-    "uid": "User Id of the login user", 
-    "pwd": "s3cur3Id",
-    "factor2": "OTP or TOTP as entered by the user.",
+    "uid": "CTDPM4123L", 
+    "pwd": "Lumia730#",
+    "factor2": "",
     "imei": "134243434",
     "source": "API",
     "vc": "CTDPM4123L_U",
-    "appkey": "Sha256 of uid|e1740bf198be11d943b3a6ca0f4677cb"
+    "appkey": "e1740bf198be11d943b3a6ca0f4677cb"
 }
 
 ###

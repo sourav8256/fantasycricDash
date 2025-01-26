@@ -1,0 +1,32 @@
+POST https://api.shoonya.com/NorenWClientTP/QuickAuth
+Content-Type: application/x-www-form-urlencoded
+
+jData={"apkversion":"1.0.0","uid":"User Id of the login user","pwd":"s3cur3Id","factor2":"OTP or TOTP as entered by the user.","imei":"134243434","source":"API","vc":"Client Code_U","appkey":"Sha256 of uid|api_key"}
+
+
+###
+
+POST https://api.shoonya.com/NorenWClientTP/QuickAuth
+Content-Type: application/json
+
+jData={
+    "apkversion": "1.0.0",
+    "uid": "User Id of the login user", 
+    "pwd": "s3cur3Id",
+    "factor2": "OTP or TOTP as entered by the user.",
+    "imei": "134243434",
+    "source": "API",
+    "vc": "CTDPM4123L_U",
+    "appkey": "Sha256 of uid|e1740bf198be11d943b3a6ca0f4677cb"
+}
+
+###
+
+GET https://api.shoonya.com/NorenWClientTP/GetQuotes
+Content-Type: application/json
+
+{
+    "uid": "User Id",
+    "token": "Auth token received from login",
+    "symbols": "NSE:NIFTY-50,NSE:BANKNIFTY-50"
+}

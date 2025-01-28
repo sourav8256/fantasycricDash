@@ -286,20 +286,290 @@
             <div class="tab-pane fade" id="my" role="tabpanel">
                 <div class="card">
                     <h5>My Saved Strategies</h5>
-                    <p>No strategies saved yet</p>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Strategy Name</th>
+                                    <th>Type</th>
+                                    <th>Instrument</th>
+                                    <th>Legs</th>
+                                    <th>Risk Management</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Double Calendar</td>
+                                    <td>Time Based</td>
+                                    <td>NIFTY</td>
+                                    <td>4 legs</td>
+                                    <td>
+                                        <small class="d-block">Target: ₹5,000</small>
+                                        <small class="d-block">Stop Loss: ₹2,500</small>
+                                    </td>
+                                    <td>Jan 5, 2024</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-success me-2">
+                                            <i class="fas fa-play"></i> Deploy
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Straddle with Hedge</td>
+                                    <td>Time Based</td>
+                                    <td>BANKNIFTY</td>
+                                    <td>3 legs</td>
+                                    <td>
+                                        <small class="d-block">Target: ₹8,000</small>
+                                        <small class="d-block">Stop Loss: ₹4,000</small>
+                                    </td>
+                                    <td>Jan 4, 2024</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-success me-2">
+                                            <i class="fas fa-play"></i> Deploy
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Bollinger Band Reversal</td>
+                                    <td>Indicator Based</td>
+                                    <td>FINNIFTY</td>
+                                    <td>2 legs</td>
+                                    <td>
+                                        <small class="d-block">Target: ₹3,000</small>
+                                        <small class="d-block">Stop Loss: ₹1,500</small>
+                                    </td>
+                                    <td>Jan 3, 2024</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-success me-2">
+                                            <i class="fas fa-play"></i> Deploy
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Ratio Spread</td>
+                                    <td>Time Based</td>
+                                    <td>NIFTY</td>
+                                    <td>3 legs</td>
+                                    <td>
+                                        <small class="d-block">Target: ₹6,000</small>
+                                        <small class="d-block">Stop Loss: ₹3,000</small>
+                                    </td>
+                                    <td>Jan 2, 2024</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-success me-2">
+                                            <i class="fas fa-play"></i> Deploy
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <div class="tab-pane fade" id="deployed" role="tabpanel">
                 <div class="card">
-                    <h5>Currently Deployed</h5>
-                    <p>No strategies deployed</p>
+                    <h5>Deployed Strategies</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Strategy Name</th>
+                                    <th>Type</th>
+                                    <th>Mode</th>
+                                    <th>Instrument</th>
+                                    <th>Live Price</th>
+                                    <th>P&L</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Strangle ATM</td>
+                                    <td>Time Based</td>
+                                    <td><span class="badge bg-primary">Live</span></td>
+                                    <td>NIFTY</td>
+                                    <td class="live-price-cell">--</td>
+                                    <td class="text-success">+₹12,500</td>
+                                    <td><span class="badge bg-success">Running</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-warning me-2">Square Off</button>
+                                        <button class="btn btn-sm btn-outline-danger">Stop</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Iron Condor</td>
+                                    <td>Time Based</td>
+                                    <td><span class="badge bg-info">Forward Testing</span></td>
+                                    <td>BANKNIFTY</td>
+                                    <td class="live-price-cell">--</td>
+                                    <td class="text-danger">-₹3,200</td>
+                                    <td><span class="badge bg-success">Running</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-warning me-2">Square Off</button>
+                                        <button class="btn btn-sm btn-outline-danger">Stop</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>RSI Reversal</td>
+                                    <td>Indicator Based</td>
+                                    <td><span class="badge bg-primary">Live</span></td>
+                                    <td>FINNIFTY</td>
+                                    <td class="live-price-cell">--</td>
+                                    <td class="text-success">+₹8,750</td>
+                                    <td><span class="badge bg-success">Running</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-warning me-2">Square Off</button>
+                                        <button class="btn btn-sm btn-outline-danger">Stop</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Butterfly Spread</td>
+                                    <td>Time Based</td>
+                                    <td><span class="badge bg-info">Forward Testing</span></td>
+                                    <td>NIFTY</td>
+                                    <td class="live-price-cell">--</td>
+                                    <td class="text-success">+₹5,300</td>
+                                    <td><span class="badge bg-warning text-dark">Paused</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">Resume</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>MACD Crossover</td>
+                                    <td>Indicator Based</td>
+                                    <td><span class="badge bg-info">Forward Testing</span></td>
+                                    <td>BANKNIFTY</td>
+                                    <td class="live-price-cell">--</td>
+                                    <td class="text-danger">-₹2,100</td>
+                                    <td><span class="badge bg-danger">Stopped</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">Start</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div> 
     </div>
 
+    <!-- Deploy Strategy Modal -->
+    <div class="modal fade" id="deployModal" tabindex="-1" aria-labelledby="deployModalLabel" aria-hidden="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deployModalLabel">Deploy Strategy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="deployForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Deployment Mode</label>
+                                <div class="d-flex">
+                                    <div class="form-check me-3">
+                                        <input class="form-check-input" type="radio" name="deployMode" id="modeLive" value="live">
+                                        <label class="form-check-label" for="modeLive">Live</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="deployMode" id="modeForward" value="forward" checked>
+                                        <label class="form-check-label" for="modeForward">Forward Testing</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Select Broker</label>
+                                <select class="form-select" id="brokerSelect">
+                                    <option value="">Choose a broker...</option>
+                                    <option value="zerodha">Zerodha</option>
+                                    <option value="angelone">Angel One</option>
+                                    <option value="fyers">Fyers</option>
+                                    <option value="upstox">Upstox</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Square Off Time</label>
+                                <input type="time" class="form-control" id="squareOffTime" value="15:15">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Quantity Multiplier</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="qtyMultiplier" value="1" min="1">
+                                    <span class="input-group-text">×</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Max Loss</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control" id="maxLoss" placeholder="Enter amount">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Max Profit</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control" id="maxProfit" placeholder="Enter amount">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <small>
+                                Note: Make sure your broker account is properly configured and has sufficient funds before deploying in live mode.
+                            </small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="confirmDeploy()">
+                        <i class="fas fa-play"></i> Deploy Strategy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/live-feed.js"></script>
     <script>
     console.log('Strategy page script starting...');
 
@@ -490,15 +760,45 @@
         const myStrategiesDiv = document.querySelector('#my');
         if (!myStrategiesDiv) return;
 
-        if (savedStrategies.length === 0) {
-            myStrategiesDiv.innerHTML = `
-                <div class="card">
-                    <h5>My Saved Strategies</h5>
-                    <p>No strategies saved yet</p>
-                </div>
-            `;
-            return;
-        }
+        // Dummy strategies data
+        const dummyStrategies = [
+            {
+                name: "Double Calendar",
+                type: "Time Based",
+                instrument: "NIFTY",
+                legs: 4,
+                target: 5000,
+                stopLoss: 2500,
+                created: "Jan 5, 2024"
+            },
+            {
+                name: "Straddle with Hedge",
+                type: "Time Based",
+                instrument: "BANKNIFTY",
+                legs: 3,
+                target: 8000,
+                stopLoss: 4000,
+                created: "Jan 4, 2024"
+            },
+            {
+                name: "Bollinger Band Reversal",
+                type: "Indicator Based",
+                instrument: "FINNIFTY",
+                legs: 2,
+                target: 3000,
+                stopLoss: 1500,
+                created: "Jan 3, 2024"
+            },
+            {
+                name: "Ratio Spread",
+                type: "Time Based",
+                instrument: "NIFTY",
+                legs: 3,
+                target: 6000,
+                stopLoss: 3000,
+                created: "Jan 2, 2024"
+            }
+        ];
 
         let strategiesHtml = `
             <div class="card">
@@ -507,10 +807,11 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Name</th>
+                                <th>Strategy Name</th>
                                 <th>Type</th>
                                 <th>Instrument</th>
                                 <th>Legs</th>
+                                <th>Risk Management</th>
                                 <th>Created</th>
                                 <th>Actions</th>
                             </tr>
@@ -518,24 +819,8 @@
                         <tbody>
         `;
 
-        savedStrategies.forEach(strategy => {
-            strategiesHtml += `
-                <tr>
-                    <td>${strategy.strategyName}</td>
-                    <td>${strategy.type}</td>
-                    <td>${strategy.instrument}</td>
-                    <td>${strategy.legs.length} legs</td>
-                    <td>${strategy.createdAt}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-2" onclick="editStrategy(${strategy.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStrategy(${strategy.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+        dummyStrategies.forEach(strategy => {
+            strategiesHtml += getStrategyHTML(strategy);
         });
 
         strategiesHtml += `
@@ -634,8 +919,72 @@
         }
         
         updateRemoveButtons();
-        displaySavedStrategies();
+        displaySavedStrategies();  // This will now show dummy strategies
     });
+
+    // Function to show deploy modal
+    function showDeployModal(strategyName) {
+        const modal = new bootstrap.Modal(document.getElementById('deployModal'));
+        document.getElementById('deployModalLabel').textContent = `Deploy Strategy: ${strategyName}`;
+        modal.show();
+    }
+
+    // Function to confirm deployment
+    function confirmDeploy() {
+        const deploymentConfig = {
+            mode: document.querySelector('input[name="deployMode"]:checked').value,
+            broker: document.getElementById('brokerSelect').value,
+            squareOffTime: document.getElementById('squareOffTime').value,
+            qtyMultiplier: document.getElementById('qtyMultiplier').value,
+            maxLoss: document.getElementById('maxLoss').value,
+            maxProfit: document.getElementById('maxProfit').value
+        };
+
+        // Validate inputs
+        if (!deploymentConfig.broker) {
+            alert('Please select a broker');
+            return;
+        }
+
+        if (deploymentConfig.mode === 'live') {
+            const confirmLive = confirm('Are you sure you want to deploy this strategy in LIVE mode? This will use real funds.');
+            if (!confirmLive) return;
+        }
+
+        console.log('Deployment configuration:', deploymentConfig);
+        
+        // Here you would typically make an API call to deploy the strategy
+        alert('Strategy deployment initiated!');
+        bootstrap.Modal.getInstance(document.getElementById('deployModal')).hide();
+    }
+
+    // Update the strategy HTML generation to add click handler for deploy button
+    function getStrategyHTML(strategy) {
+        return `
+            <tr>
+                <td>${strategy.name}</td>
+                <td>${strategy.type}</td>
+                <td>${strategy.instrument}</td>
+                <td>${strategy.legs} legs</td>
+                <td>
+                    <small class="d-block">Target: ₹${strategy.target.toLocaleString()}</small>
+                    <small class="d-block">Stop Loss: ₹${strategy.stopLoss.toLocaleString()}</small>
+                </td>
+                <td>${strategy.created}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary me-2">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-success me-2" onclick="showDeployModal('${strategy.name}')">
+                        <i class="fas fa-play"></i> Deploy
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
     </script>
 </body>
 </html>

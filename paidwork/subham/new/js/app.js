@@ -305,24 +305,28 @@ $(function() {
   // --------------------------------------------- //
   // Contact Form Start
   // --------------------------------------------- //
-  $("#contact-form").submit(function() { //Change
-		var th = $(this);
-		$.ajax({
-			type: "POST",
-			url: "mail.php", //Change
-			data: th.serialize()
-		}).done(function() {
+  $("#contact-form").submit(function(e) {
+    e.preventDefault();
+    var form = $(this);
+    
+    $.ajax({
+      url: 'https://api.web3forms.com/submit',
+      type: 'POST',
+      data: form.serialize(),
+      success: function(response) {
       $('.contact').find('.form').addClass('is-hidden');
       $('.contact').find('.form__reply').addClass('is-visible');
-			setTimeout(function() {
-				// Done Functions
+      setTimeout(function() {
         $('.contact').find('.form__reply').removeClass('is-visible');
         $('.contact').find('.form').delay(300).removeClass('is-hidden');
-				th.trigger("reset");
-			}, 5000);
-		});
-		return false;
-	});
+          form.trigger("reset");
+      }, 5000);
+      },
+      error: function(error) {
+      console.error('Error:', error);
+      }
+    });
+  });
   // --------------------------------------------- //
   // Contact Form End
   // --------------------------------------------- //
@@ -396,37 +400,9 @@ $(function() {
 // --------------------------------------------- //
 // Color Switch Start
 // --------------------------------------------- //
-const themeBtn = document.querySelector('.color-switcher');
-
-function getCurrentTheme(){
-  let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  localStorage.getItem('template.theme') ? theme = localStorage.getItem('template.theme') : null;
-  return theme;
-}
-
-function loadTheme(theme){
-  const root = document.querySelector(':root');
-  if(theme === "light"){
-    themeBtn.innerHTML = `<em></em><i class="ph-bold ph-moon-stars"></i>`;
-  } else {
-    themeBtn.innerHTML = `<em></em><i class="ph-bold ph-sun"></i>`;
-  }
-  root.setAttribute('color-scheme', `${theme}`);
-};
-
-themeBtn.addEventListener('click', () => {
-  let theme = getCurrentTheme();
-  if(theme === 'dark'){
-    theme = 'light';
-  } else {
-    theme = 'dark';
-  }
-  localStorage.setItem('template.theme', `${theme}`);
-  loadTheme(theme);
-});
-
 window.addEventListener('DOMContentLoaded', () => {
-  loadTheme(getCurrentTheme());
+  const root = document.querySelector(':root');
+  root.setAttribute('color-scheme', 'light');
 });
 // --------------------------------------------- //
 // Color Switch End

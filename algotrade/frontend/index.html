@@ -497,6 +497,9 @@
             const initialSection = hash || 'home';
             showSection(initialSection);
 
+            // Load previously deployed strategies
+            loadDeployedStrategies();
+
             // Add click event listeners to all navigation links
             document.querySelectorAll('.sidebar a').forEach(link => {
                 link.addEventListener('click', (e) => {
@@ -512,6 +515,143 @@
             const section = event.state?.section || 'home';
             showSection(section);
         });
+
+        // Store available strategies
+        const AVAILABLE_STRATEGIES = {
+            'double-calendar': {
+                name: 'Double Calendar',
+                type: 'Time Based',
+                instrument: 'NIFTY',
+                legs: '4 legs',
+                target: 5000,
+                stopLoss: 2500
+            },
+            'straddle-hedge': {
+                name: 'Straddle with Hedge',
+                type: 'Time Based',
+                instrument: 'BANKNIFTY',
+                legs: '3 legs',
+                target: 8000,
+                stopLoss: 4000
+            },
+            'bollinger-reversal': {
+                name: 'Bollinger Band Reversal',
+                type: 'Indicator Based',
+                instrument: 'FINNIFTY',
+                legs: '2 legs',
+                target: 3000,
+                stopLoss: 1500
+            },
+            'ratio-spread': {
+                name: 'Ratio Spread',
+                type: 'Time Based',
+                instrument: 'NIFTY',
+                legs: '3 legs',
+                target: 6000,
+                stopLoss: 3000
+            }
+        };
+
+        // Function to create strategy card HTML
+        function createStrategyCard(strategy, strategyId) {
+            return `
+                <div class="card-body">
+                    <h5 class="card-title">${strategy.name}</h5>
+                    <div class="strategy-details">
+                        <p>${strategy.type} | ${strategy.instrument} | ${strategy.legs}</p>
+                        <p>Target: ₹${strategy.target.toLocaleString()}</p>
+                        <p>Stop Loss: ₹${strategy.stopLoss.toLocaleString()}</p>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="undeployStrategy('${strategyId}')">
+                        Undeploy
+                    </button>
+                </div>
+            `;
+        }
+
+        // Function to add strategy card to a section
+        function addStrategyToSection(strategy, strategyId, sectionId) {
+            const section = document.querySelector(`#${sectionId}`);
+            if (section) {
+                const strategyCard = document.createElement('div');
+                strategyCard.className = 'card mb-3';
+                strategyCard.dataset.strategyId = strategyId;
+                strategyCard.innerHTML = createStrategyCard(strategy, strategyId);
+                section.appendChild(strategyCard);
+            }
+        }
+
+        // Function to save deployed strategies to localStorage
+        function saveDeployedStrategies(strategyId) {
+            let deployedStrategies = JSON.parse(localStorage.getItem('deployedStrategies') || '[]');
+            if (!deployedStrategies.includes(strategyId)) {
+                deployedStrategies.push(strategyId);
+                localStorage.setItem('deployedStrategies', JSON.stringify(deployedStrategies));
+                console.log('Strategy saved locally:', strategyId);
+                console.log('Currently deployed strategies:', deployedStrategies);
+            }
+        }
+
+        // Function to remove strategy from localStorage
+        function removeDeployedStrategy(strategyId) {
+            let deployedStrategies = JSON.parse(localStorage.getItem('deployedStrategies') || '[]');
+            deployedStrategies = deployedStrategies.filter(id => id !== strategyId);
+            localStorage.setItem('deployedStrategies', JSON.stringify(deployedStrategies));
+            console.log('Strategy removed from local storage:', strategyId);
+            console.log('Remaining deployed strategies:', deployedStrategies);
+        }
+
+        // Function to load deployed strategies on page load
+        function loadDeployedStrategies() {
+            const deployedStrategies = JSON.parse(localStorage.getItem('deployedStrategies') || '[]');
+            console.log('Loading deployed strategies from local storage:', deployedStrategies);
+            deployedStrategies.forEach(strategyId => {
+                deployStrategy(strategyId, false);
+            });
+        }
+
+        // Function to deploy strategy
+        async function deployStrategy(strategyId, saveToStorage = true) {
+            try {
+                const strategy = AVAILABLE_STRATEGIES[strategyId];
+                if (!strategy) throw new Error('Strategy not found');
+
+                // Add strategy card to both sections
+                addStrategyToSection(strategy, strategyId, 'home');
+                addStrategyToSection(strategy, strategyId, 'deployed-strategies');
+
+                if (saveToStorage) {
+                    saveDeployedStrategies(strategyId);
+                    showNotification('Strategy deployed successfully', 'success');
+                }
+            } catch (error) {
+                console.error('Error deploying strategy:', error);
+                showNotification('Failed to deploy strategy', 'error');
+            }
+        }
+
+        // Function to undeploy strategy
+        function undeployStrategy(strategyId) {
+            try {
+                const cards = document.querySelectorAll(`[data-strategy-id="${strategyId}"]`);
+                cards.forEach(card => card.remove());
+                removeDeployedStrategy(strategyId);
+                showNotification('Strategy undeployed successfully', 'success');
+            } catch (error) {
+                console.error('Error undeploying strategy:', error);
+                showNotification('Failed to undeploy strategy', 'error');
+            }
+        }
+
+        // Function to show notifications
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+            notification.style.zIndex = '9999';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

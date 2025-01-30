@@ -30,9 +30,7 @@ class LiveFeedManager {
 
             this.ws.onopen = () => {
                 console.log('WebSocket connection established');
-                // Subscribe to all symbols after connection
                 this.subscribedSymbols.forEach(symbol => {
-                    console.log('Resubscribing to:', symbol);
                     this.subscribe(symbol);
                 });
             };
@@ -52,13 +50,14 @@ class LiveFeedManager {
             this.ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    console.log('Message type:', data.type);
                     if (data.type === 'price_update') {
                         this.updatePriceInTable({
                             symbol: data.symbol,
                             price: data.price,
                             timestamp: data.timestamp
                         });
+                    } else if (data.type === 'strategy_deployed') {
+                        console.log('Strategy deployed:', data.strategyId);
                     }
                 } catch (error) {
                     console.error('Error processing message:', error);
@@ -76,12 +75,11 @@ class LiveFeedManager {
                 symbol: symbol,
                 strategyId: `strategy_${symbol.toLowerCase()}`
             };
-            console.log('Sending subscribe message:', subscribeMsg);
+            console.log('Strategy subscription:', symbol);
             this.ws.send(JSON.stringify(subscribeMsg));
             this.subscribedSymbols.add(symbol);
-            console.log('Current subscribed symbols:', Array.from(this.subscribedSymbols));
         } else {
-            console.warn('Cannot subscribe to', symbol, '- WebSocket not ready. State:', this.ws?.readyState);
+            console.warn('Cannot subscribe to', symbol, '- WebSocket not ready');
         }
     }
 
@@ -101,27 +99,17 @@ class LiveFeedManager {
 
     updatePriceInTable(data) {
         try {
-            console.log('updatePriceInTable called with:', { symbol: data.symbol, price: data.price, timestamp: data.timestamp });
-
-            if (!data) {
-                console.error('No data provided to updatePriceInTable');
-                return;
-            }
-
-            if (!data.symbol || !data.price) {
-                console.error('Invalid data format:', data);
+            if (!data || !data.symbol || !data.price) {
                 return;
             }
 
             const deployedTab = document.getElementById('deployed');
             if (!deployedTab) {
-                console.error('Deployed tab not found in DOM');
                 return;
             }
 
             const table = deployedTab.querySelector('.table');
             if (!table) {
-                console.error('Table not found in deployed tab');
                 return;
             }
 
@@ -132,7 +120,6 @@ class LiveFeedManager {
                 try {
                     const instrumentCell = row.cells[3];
                     if (!instrumentCell) {
-                        console.error(`Row ${index + 1}: Instrument cell not found`);
                         return;
                     }
 
@@ -141,7 +128,6 @@ class LiveFeedManager {
                         found = true;
                         const priceCell = row.querySelector('.live-price-cell');
                         if (!priceCell) {
-                            console.error(`Row ${index + 1}: Price cell not found for symbol ${data.symbol}`);
                             return;
                         }
 
@@ -176,20 +162,15 @@ class LiveFeedManager {
                             const time = new Date(data.timestamp).toLocaleTimeString();
                             priceCell.title = `Last updated: ${time}`;
                         } catch (formatError) {
-                            console.error(`Error formatting/updating price for ${data.symbol}:`, formatError);
+                            console.error('Error formatting price:', formatError);
                         }
                     }
                 } catch (rowError) {
-                    console.error(`Error processing row ${index + 1}:`, rowError);
+                    console.error('Error processing row:', rowError);
                 }
             });
-
-            if (!found) {
-                console.error(`No matching row found for symbol: ${data.symbol}`);
-            }
         } catch (error) {
             console.error('Error in updatePriceInTable:', error);
-            console.error('Stack trace:', error.stack);
         }
     }
 
@@ -241,6 +222,6 @@ const liveFeedManager = new LiveFeedManager();
 
 // Re-initialize on DOM content loaded
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded - reinitializing subscriptions');
+    console.log('Reinitializing strategy subscriptions');
     liveFeedManager.initializeSubscriptions();
 }); 

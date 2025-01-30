@@ -578,6 +578,42 @@
     let savedStrategies = [];
     let editingStrategyId = null; // Track which strategy is being edited
 
+    // Store available strategies
+    const AVAILABLE_STRATEGIES = {
+        'double-calendar': {
+            name: 'Double Calendar',
+            type: 'Time Based',
+            instrument: 'NIFTY',
+            legs: '4 legs',
+            target: 5000,
+            stopLoss: 2500
+        },
+        'straddle-hedge': {
+            name: 'Straddle with Hedge',
+            type: 'Time Based',
+            instrument: 'BANKNIFTY',
+            legs: '3 legs',
+            target: 8000,
+            stopLoss: 4000
+        },
+        'bollinger-reversal': {
+            name: 'Bollinger Band Reversal',
+            type: 'Indicator Based',
+            instrument: 'FINNIFTY',
+            legs: '2 legs',
+            target: 3000,
+            stopLoss: 1500
+        },
+        'ratio-spread': {
+            name: 'Ratio Spread',
+            type: 'Time Based',
+            instrument: 'NIFTY',
+            legs: '3 legs',
+            target: 6000,
+            stopLoss: 3000
+        }
+    };
+
     // Helper functions for safe value retrieval
     function getElementValue(selector, defaultValue = '') {
         const element = document.querySelector(selector);
@@ -919,13 +955,31 @@
         }
         
         updateRemoveButtons();
-        displaySavedStrategies();  // This will now show dummy strategies
+        displaySavedStrategies();  // This will show dummy strategies
+        displayDeployedStrategies(); // Add this line to show deployed strategies
+        
+        // Add event listener for tab changes to refresh deployed strategies
+        document.querySelector('#deployed-tab').addEventListener('click', () => {
+            displayDeployedStrategies();
+        });
     });
 
     // Function to show deploy modal
     function showDeployModal(strategyName) {
+        // Convert strategy name to ID format
+        const strategyId = strategyName.toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/\b(band|with)\b/g, '')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+            
+        console.log('Deploy modal - Strategy name:', strategyName);
+        console.log('Deploy modal - Converted ID:', strategyId);
+        
         const modal = new bootstrap.Modal(document.getElementById('deployModal'));
         document.getElementById('deployModalLabel').textContent = `Deploy Strategy: ${strategyName}`;
+        // Store the ID in a data attribute
+        document.getElementById('deployModal').dataset.strategyId = strategyId;
         modal.show();
     }
 
@@ -953,8 +1007,17 @@
 
         console.log('Deployment configuration:', deploymentConfig);
         
-        // Here you would typically make an API call to deploy the strategy
-        alert('Strategy deployment initiated!');
+        // Get the stored strategy ID
+        const strategyId = document.getElementById('deployModal').dataset.strategyId;
+        console.log('Confirm deploy - Using strategy ID:', strategyId);
+        
+        if (!AVAILABLE_STRATEGIES[strategyId]) {
+            console.error('Strategy not found in AVAILABLE_STRATEGIES:', strategyId);
+            showNotification('Invalid strategy', 'error');
+            return;
+        }
+        
+        deployStrategy(strategyId);
         bootstrap.Modal.getInstance(document.getElementById('deployModal')).hide();
     }
 
@@ -984,6 +1047,165 @@
                 </td>
             </tr>
         `;
+    }
+
+    // Function to save deployed strategies to localStorage
+    function saveDeployedStrategies(strategyId) {
+        let deployedStrategies = JSON.parse(localStorage.getItem('deployedStrategies') || '[]');
+        if (!deployedStrategies.includes(strategyId)) {
+            deployedStrategies.push(strategyId);
+            localStorage.setItem('deployedStrategies', JSON.stringify(deployedStrategies));
+            console.log('Strategy saved locally:', strategyId);
+            console.log('Currently deployed strategies:', deployedStrategies);
+        }
+    }
+
+    // Function to remove strategy from localStorage
+    function removeDeployedStrategy(strategyId) {
+        let deployedStrategies = JSON.parse(localStorage.getItem('deployedStrategies') || '[]');
+        deployedStrategies = deployedStrategies.filter(id => id !== strategyId);
+        localStorage.setItem('deployedStrategies', JSON.stringify(deployedStrategies));
+        console.log('Strategy removed from local storage:', strategyId);
+        console.log('Remaining deployed strategies:', deployedStrategies);
+    }
+
+    // Function to load deployed strategies
+    function loadDeployedStrategies() {
+        const deployedStrategies = JSON.parse(localStorage.getItem('deployedStrategies') || '[]');
+        console.log('Loading deployed strategies from local storage:', deployedStrategies);
+        
+        // Log each strategy object
+        deployedStrategies.forEach(strategyId => {
+            const strategy = AVAILABLE_STRATEGIES[strategyId];
+            console.log('Strategy found for ID:', strategyId, ':', strategy);
+        });
+        
+        return deployedStrategies;
+    }
+
+    // Function to deploy strategy
+    async function deployStrategy(strategyId) {
+        try {
+            console.log('Attempting to deploy strategy with ID:', strategyId);
+            console.log('Available strategies:', Object.keys(AVAILABLE_STRATEGIES));
+            
+            const strategy = AVAILABLE_STRATEGIES[strategyId];
+            if (!strategy) {
+                console.error(`Strategy not found. ID: "${strategyId}". Available IDs:`, Object.keys(AVAILABLE_STRATEGIES));
+                throw new Error(`Strategy not found: ${strategyId}`);
+            }
+
+            saveDeployedStrategies(strategyId);
+            showNotification('Strategy deployed successfully', 'success');
+            displayDeployedStrategies();
+        } catch (error) {
+            console.error('Error deploying strategy:', error.message);
+            showNotification('Failed to deploy strategy', 'error');
+        }
+    }
+
+    // Function to undeploy strategy
+    function undeployStrategy(strategyId) {
+        try {
+            removeDeployedStrategy(strategyId);
+            showNotification('Strategy undeployed successfully', 'success');
+            // Refresh the deployed strategies table
+            displayDeployedStrategies();
+        } catch (error) {
+            console.error('Error undeploying strategy:', error);
+            showNotification('Failed to undeploy strategy', 'error');
+        }
+    }
+
+    // Function to show notifications
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+        notification.style.zIndex = '9999';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+    }
+
+    // Function to stop strategy without removing it
+    function stopStrategy(strategyId) {
+        try {
+            const row = document.querySelector(`tr[data-strategy-id="${strategyId}"]`);
+            if (row) {
+                const statusCell = row.querySelector('td:nth-child(7)');
+                const stopButton = row.querySelector('.btn-outline-danger');
+                
+                if (statusCell.querySelector('.badge').classList.contains('bg-success')) {
+                    // Strategy is running - stop it
+                    statusCell.innerHTML = '<span class="badge bg-danger">Stopped</span>';
+                    stopButton.innerHTML = 'Start';
+                    showNotification('Strategy stopped successfully', 'success');
+                } else {
+                    // Strategy is stopped - start it
+                    statusCell.innerHTML = '<span class="badge bg-success">Running</span>';
+                    stopButton.innerHTML = 'Stop';
+                    showNotification('Strategy started successfully', 'success');
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling strategy:', error);
+            showNotification('Failed to toggle strategy', 'error');
+        }
+    }
+
+    // Function to delete strategy with confirmation
+    function deleteStrategy(strategyId) {
+        if (confirm('Are you sure you want to delete this strategy? This cannot be undone.')) {
+            try {
+                removeDeployedStrategy(strategyId);
+                showNotification('Strategy deleted successfully', 'success');
+                displayDeployedStrategies();
+            } catch (error) {
+                console.error('Error deleting strategy:', error);
+                showNotification('Failed to delete strategy', 'error');
+            }
+        }
+    }
+
+    // Update the displayDeployedStrategies function to add delete button
+    function displayDeployedStrategies() {
+        const deployedTab = document.querySelector('#deployed');
+        if (!deployedTab) return;
+
+        const deployedStrategies = loadDeployedStrategies();
+        const tableBody = deployedTab.querySelector('tbody');
+        if (!tableBody) return;
+        
+        tableBody.innerHTML = '';
+
+        deployedStrategies.forEach(strategyId => {
+            const strategy = AVAILABLE_STRATEGIES[strategyId];
+            if (!strategy) return;
+
+            const row = document.createElement('tr');
+            row.dataset.strategyId = strategyId;
+            row.innerHTML = `
+                <td>${strategy.name}</td>
+                <td>${strategy.type}</td>
+                <td><span class="badge bg-primary">Live</span></td>
+                <td>${strategy.instrument}</td>
+                <td class="live-price-cell">--</td>
+                <td>--</td>
+                <td><span class="badge bg-success">Running</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-warning me-2" onclick="undeployStrategy('${strategyId}')">
+                        Square Off
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger me-2" onclick="stopStrategy('${strategyId}')">
+                        Stop
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteStrategy('${strategyId}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
     }
     </script>
 </body>

@@ -163,11 +163,22 @@
             saveStatus.textContent = 'Changes saved';
 
             const dateKey = date.toISOString().split('T')[0];
-            const savedContent = localStorage.getItem(dateKey);
-            if (savedContent) {
-                textarea.value = savedContent;
-                lineCount.textContent = `${countLines(savedContent)} lines`;
+            const savedData = localStorage.getItem(dateKey);
+            if (savedData) {
+                try {
+                    const parsedData = JSON.parse(savedData);
+                    textarea.value = parsedData.content || '';
+                    lineCount.textContent = `${countLines(textarea.value)} lines`;
+                    setTimeout(() => adjustTextareaHeight(textarea), 0);
+                } catch (e) {
+                    console.error('Error loading saved note:', e);
+                    // If there's old format data (just string content), migrate it
+                    if (typeof savedData === 'string') {
+                        textarea.value = savedData;
+                        lineCount.textContent = `${countLines(savedData)} lines`;
                         setTimeout(() => adjustTextareaHeight(textarea), 0);
+                    }
+                }
             }
 
             let saveTimeout;
@@ -177,7 +188,13 @@
                 lineCount.textContent = `${countLines(textarea.value)} lines`;
                 updateAverageCount();
                 saveTimeout = setTimeout(() => {
-                    localStorage.setItem(dateKey, textarea.value);
+                    // Save both content and date information
+                    const noteData = {
+                        content: textarea.value,
+                        date: dateKey,
+                        lastModified: new Date().toISOString()
+                    };
+                    localStorage.setItem(dateKey, JSON.stringify(noteData));
                     saveStatus.classList.add('visible');
                     setTimeout(() => {
                         saveStatus.classList.remove('visible');

@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-require('dotenv').config({ path: '../backend/.env' });
+require('dotenv').config();
 
 const app = express();
 const server = require('http').createServer(app);
@@ -113,7 +113,7 @@ function simulateMarketData() {
 }
 
 // Start the server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 4302;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     simulateMarketData();

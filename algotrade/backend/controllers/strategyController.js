@@ -1,6 +1,46 @@
 const Strategy = require('../models/Strategy');
 
-const getStrategies = async (req, res) => {
+// Get all available strategies (no authentication required)
+const getAvailableStrategies = async (req, res) => {
+    try {
+        const strategies = [
+            {
+                id: "double-calendar",
+                name: "Double Calendar",
+                type: "Time Based",
+                instrument: "NIFTY",
+                legs: "4 legs",
+                target: 5000,
+                stopLoss: 2500
+            },
+            {
+                id: "straddle-hedge",
+                name: "Straddle with Hedge",
+                type: "Time Based",
+                instrument: "BANKNIFTY",
+                legs: "3 legs",
+                target: 8000,
+                stopLoss: 4000
+            },
+            {
+                id: "bollinger-reversal",
+                name: "Bollinger Band Reversal",
+                type: "Indicator Based",
+                instrument: "FINNIFTY",
+                legs: "2 legs",
+                target: 3000,
+                stopLoss: 1500
+            }
+        ];
+        
+        res.json(strategies);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// Get user's deployed strategies
+const getDeployedStrategies = async (req, res) => {
     try {
         const strategies = await Strategy.find({ userId: req.user.id });
         res.json(strategies);
@@ -78,7 +118,8 @@ const deleteStrategy = async (req, res) => {
 };
 
 module.exports = {
-    getStrategies,
+    getAvailableStrategies,
+    getDeployedStrategies,
     getStrategyById,
     createStrategy,
     updateStrategy,

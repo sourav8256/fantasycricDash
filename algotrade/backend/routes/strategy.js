@@ -2,16 +2,20 @@ const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/auth');
 const {
-    getStrategies,
+    getAvailableStrategies,
+    getDeployedStrategies,
     getStrategyById,
     createStrategy,
     updateStrategy,
     deleteStrategy
 } = require('../controllers/strategyController');
 
-router.use(authenticateToken);
+// Public route for available strategies
+router.get('/available', getAvailableStrategies);
 
-router.get('/', getStrategies);
+// Protected routes
+router.use(authenticateToken);
+router.get('/deployed', getDeployedStrategies);
 router.get('/:id', getStrategyById);
 router.post('/', createStrategy);
 router.put('/:id', updateStrategy);

@@ -82,9 +82,7 @@
         let currentSymbol = null;
 
         function connect() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}`;
-            
+            const wsUrl = `ws://localhost:4302`;
             ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {

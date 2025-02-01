@@ -1,40 +1,45 @@
 const mongoose = require('mongoose');
 
 const strategySchema = new mongoose.Schema({
+    id: {
+        type: String,
+        required: true,
+        unique: true
+    },
     name: {
         type: String,
         required: true,
         trim: true
     },
-    description: {
+    type: {
+        type: String,
+        required: true,
+        enum: ['Time Based', 'Indicator Based']
+    },
+    instrument: {
+        type: String,
+        required: true,
+        enum: ['NIFTY', 'BANKNIFTY', 'FINNIFTY']
+    },
+    legs: {
         type: String,
         required: true
     },
-    rules: [{
-        type: String,
-        required: true
-    }],
-    timeframe: {
-        type: String,
+    target: {
+        type: Number,
         required: true
     },
-    market: {
-        type: String,
+    stopLoss: {
+        type: Number,
         required: true
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    lastModified: {
-        type: Date,
-        default: Date.now
     }
+}, {
+    timestamps: true
 });
 
 module.exports = mongoose.model('Strategy', strategySchema); 

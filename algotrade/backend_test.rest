@@ -1,0 +1,62 @@
+### Register new user
+POST http://localhost:4301/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+### Login user
+POST http://localhost:4301/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+### Get available strategies (public)
+GET http://localhost:4301/api/strategies/available
+
+### Get deployed strategies (requires auth)
+GET http://localhost:4301/api/strategies/deployed
+Authorization: Bearer <auth_token>
+
+### Get strategy by ID
+GET http://localhost:4301/api/strategies/:strategyId
+Authorization: Bearer <auth_token>
+
+### Create new strategy
+POST http://localhost:4301/api/strategies
+Content-Type: application/json
+Authorization: Bearer <auth_token>
+
+{
+    "id": "custom-strategy-1",
+    "name": "My Custom Strategy",
+    "type": "Time Based",
+    "instrument": "NIFTY",
+    "legs": "3 legs",
+    "target": 5000,
+    "stopLoss": 2500
+}
+
+### Update strategy
+PUT http://localhost:4301/api/strategies/:strategyId
+Content-Type: application/json
+Authorization: Bearer <auth_token>
+
+{
+    "name": "Updated Strategy Name",
+    "type": "Indicator Based",
+    "instrument": "BANKNIFTY",
+    "legs": "4 legs",
+    "target": 8000,
+    "stopLoss": 4000
+}
+
+### Delete strategy
+DELETE http://localhost:4301/api/strategies/:strategyId
+Authorization: Bearer <auth_token>

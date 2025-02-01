@@ -30,3 +30,7 @@ Content-Type: application/json
     "token": "Auth token received from login",
     "symbols": "NSE:NIFTY-50,NSE:BANKNIFTY-50"
 }
+
+
+
+

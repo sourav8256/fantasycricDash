@@ -8,6 +8,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="js/config.js"></script>
+    <script>
+        // Check for authentication token immediately
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            // alert(`Current token value: ${token || 'No token found'}`);
+            if (!token) {
+                // No token found, redirect to auth page
+                window.location.href = 'auth.html';
+            }
+
+            // Update user greeting
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.username) {
+                    document.getElementById('userGreeting').textContent = `Hello, ${user.username}`;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        });
+    </script>
     <style>
         body {
             background-color: #f5f7fb;
@@ -335,14 +356,43 @@
             right: 0;
             bottom: 0;
         }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <!-- Optional loading indicator -->
+    <div style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+        color: #1a237e;
+    ">
+        <div>
+            <h2>Loading AlgoTrade...</h2>
+            <div style="text-align: center;">
+                <div class="spinner" style="
+                    width: 40px;
+                    height: 40px;
+                    margin: 20px auto;
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #1a237e;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                "></div>
+            </div>
+        </div>
+    </div>
+
     <div class="header">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <h1 class="ms-3">AlgoTrade</h1>
             <div class="d-flex align-items-center me-3">
-                <span class="me-3">Hello, Sourav</span>
+                <span class="me-3" id="userGreeting">Hello, Guest</span>
                 <button class="btn btn-outline-light btn-sm">Help Desk</button>
             </div>
         </div>
@@ -652,6 +702,28 @@
             document.body.appendChild(notification);
             setTimeout(() => notification.remove(), 3000);
         }
+
+        async function loadStrategies() {
+            try {
+                const response = await fetch('http://localhost:4301/api/strategies/available');
+                const strategies = await response.json();
+                
+                const strategySelect = document.getElementById('strategy');
+                strategySelect.innerHTML = ''; // Clear existing options
+                
+                strategies.forEach(strategy => {
+                    const option = document.createElement('option');
+                    option.value = strategy.id;
+                    option.textContent = strategy.name;
+                    strategySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading strategies:', error);
+            }
+        }
+
+        // Call loadStrategies when the page loads
+        document.addEventListener('DOMContentLoaded', loadStrategies);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

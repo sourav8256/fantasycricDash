@@ -70,6 +70,8 @@
             font-size: 14px;
             line-height: 1.5;
             resize: vertical;
+            overflow-y: hidden;
+            box-sizing: border-box;
         }
 
         textarea:focus {
@@ -131,6 +133,11 @@
                 `${average.toFixed(1)} lines (${nonEmptyCount} days with content)`;
         }
 
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        }
+
         function createDayElement(date) {
             const container = document.createElement('div');
             container.className = 'day-container';
@@ -160,11 +167,13 @@
             if (savedContent) {
                 textarea.value = savedContent;
                 lineCount.textContent = `${countLines(savedContent)} lines`;
+                setTimeout(() => adjustTextareaHeight(textarea), 0);
             }
 
             let saveTimeout;
             textarea.addEventListener('input', () => {
                 clearTimeout(saveTimeout);
+                adjustTextareaHeight(textarea);
                 lineCount.textContent = `${countLines(textarea.value)} lines`;
                 updateAverageCount();
                 saveTimeout = setTimeout(() => {
@@ -174,6 +183,10 @@
                         saveStatus.classList.remove('visible');
                     }, 2000);
                 }, 500);
+            });
+
+            textarea.addEventListener('mouseup', () => {
+                adjustTextareaHeight(textarea);
             });
 
             container.appendChild(dateHeader);

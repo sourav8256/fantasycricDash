@@ -317,6 +317,9 @@
                 </span>
                 minutes
             </p>
+            <p id="breakTimeInfo" style="margin-top: 5px; color: #666; display: none;">
+                If breaking now: <span id="breakTimePending">0</span> minutes pending
+            </p>
             <div style="margin-top: 10px;">
                 <label>Minutes to add per hour: 
                     <input type="number" id="hourlyAddition" min="0" value="15" style="width: 60px; padding: 5px;" 
@@ -485,6 +488,31 @@
             }
         }
 
+        function updateBreakTimeInfo() {
+            const breakTimeInfo = document.getElementById('breakTimeInfo');
+            const breakTimePending = document.getElementById('breakTimePending');
+            
+            if (timer && startTime) {
+                const now = new Date().getTime();
+                const elapsedSeconds = Math.floor((now - startTime.getTime()) / 1000);
+                const elapsedMinutes = elapsedSeconds / 60;
+                const roundedMinutes = Math.floor(elapsedMinutes / 30) * 30;
+                
+                if (roundedMinutes < 30) {
+                    breakTimeInfo.style.display = 'block';
+                    breakTimePending.textContent = pendingBoringTime;
+                    breakTimePending.style.color = '#666';
+                } else {
+                    const newPendingTime = pendingBoringTime - roundedMinutes;
+                    breakTimeInfo.style.display = 'block';
+                    breakTimePending.textContent = newPendingTime;
+                    breakTimePending.style.color = '#28a745';
+                }
+            } else {
+                breakTimeInfo.style.display = 'none';
+            }
+        }
+
         function startTimer() {
             timer = setInterval(() => {
                 const now = new Date().getTime();
@@ -497,6 +525,7 @@
                     updateTimer(remainingSeconds);
                     const progressPercent = (remainingSeconds / totalDuration) * 100;
                     updateProgress(progressPercent);
+                    updateBreakTimeInfo();
                 }
             }, 100);
         }
@@ -523,6 +552,7 @@
             updateTimer(currentSession);
             updateProgress(100);
             updateButtons(true);
+            updateBreakTimeInfo();
             document.getElementById('cancelButton').style.display = 'block';
             document.getElementById('breakButton').style.display = 'block';
 
@@ -540,6 +570,7 @@
                 updateButtons(false);
                 updateTimer(0);
                 updateProgress(0);
+                updateBreakTimeInfo();
                 document.getElementById('cancelButton').style.display = 'none';
                 document.getElementById('breakButton').style.display = 'none';
                 document.getElementById('confirmationSection').classList.remove('show');

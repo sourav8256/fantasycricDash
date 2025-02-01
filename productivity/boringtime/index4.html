@@ -557,22 +557,53 @@
             saveTimerState();
         }
 
+        function syncPendingTime(newValue) {
+            pendingBoringTime = newValue;
+            localStorage.setItem('pendingBoringTime', pendingBoringTime);
+            document.getElementById('pendingTime').textContent = pendingBoringTime;
+            // Force update any UI elements that depend on this value
+            updateStats();
+            updateLogDisplay();
+        }
+
+        function togglePendingTimeEdit() {
+            const container = document.querySelector('.edit-pending-time');
+            const input = document.getElementById('pendingTimeInput');
+            const button = document.getElementById('editPendingTimeBtn');
+            
+            if (container.classList.contains('editing')) {
+                // Save the new value
+                const newValue = parseInt(input.value);
+                if (!isNaN(newValue)) {
+                    syncPendingTime(newValue);
+                }
+                container.classList.remove('editing');
+                button.textContent = 'Edit';
+            } else {
+                // Show the input
+                input.value = pendingBoringTime;
+                container.classList.add('editing');
+                input.focus();
+                button.textContent = 'Save';
+            }
+        }
+
         function confirmSession() {
             document.getElementById('confirmationSection').classList.remove('show');
             updateButtons(false);
             sessionsCompleted++;
             totalTimeCompleted += currentSession / 60;
-            pendingBoringTime = pendingBoringTime - (currentSession / 60);
+            const newPendingTime = pendingBoringTime - (currentSession / 60);
             
             localStorage.setItem('sessionsCompleted', sessionsCompleted);
             localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
-            localStorage.setItem('pendingBoringTime', pendingBoringTime);
+            
+            syncPendingTime(newPendingTime);
             
             addLogEntry('session', currentSession / 60);
             
             resetTimer();
             updateStats();
-            document.getElementById('pendingTime').textContent = pendingBoringTime;
         }
 
         function cancelConfirmation() {
@@ -684,14 +715,11 @@
                     
                     const valueToAdd = hourTime <= valueSetTime ? oldValue : hourlyAddition;
                     addLogEntry('addition', valueToAdd, entryTime);
-                    pendingBoringTime += valueToAdd;
+                    syncPendingTime(pendingBoringTime + valueToAdd);
                 }
                 
                 lastTimeCheck = currentHour;
-                
-                localStorage.setItem('pendingBoringTime', pendingBoringTime);
                 localStorage.setItem('lastTimeCheck', lastTimeCheck);
-                document.getElementById('pendingTime').textContent = pendingBoringTime;
             }
         }
 
@@ -731,43 +759,18 @@
                 if (roundedMinutes >= 30) {
                     sessionsCompleted++;
                     totalTimeCompleted += roundedMinutes;
-                    pendingBoringTime = pendingBoringTime - roundedMinutes;
+                    const newPendingTime = pendingBoringTime - roundedMinutes;
                     
                     localStorage.setItem('sessionsCompleted', sessionsCompleted);
                     localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
-                    localStorage.setItem('pendingBoringTime', pendingBoringTime);
+                    
+                    syncPendingTime(newPendingTime);
                     
                     addLogEntry('session', roundedMinutes);
                 }
                 
                 resetTimer();
                 updateStats();
-                document.getElementById('pendingTime').textContent = pendingBoringTime;
-            }
-        }
-
-        function togglePendingTimeEdit() {
-            const container = document.querySelector('.edit-pending-time');
-            const display = document.getElementById('pendingTime');
-            const input = document.getElementById('pendingTimeInput');
-            const button = document.getElementById('editPendingTimeBtn');
-            
-            if (container.classList.contains('editing')) {
-                // Save the new value
-                const newValue = parseInt(input.value);
-                if (!isNaN(newValue)) {
-                    pendingBoringTime = newValue;
-                    localStorage.setItem('pendingBoringTime', pendingBoringTime);
-                    display.textContent = pendingBoringTime;
-                }
-                container.classList.remove('editing');
-                button.textContent = 'Edit';
-            } else {
-                // Show the input
-                input.value = pendingBoringTime;
-                container.classList.add('editing');
-                input.focus();
-                button.textContent = 'Save';
             }
         }
 

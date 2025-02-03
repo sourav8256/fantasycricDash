@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>30 Day Handover</title>
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,6 +51,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .date-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .last-modified {
+            font-size: 0.7em;
+            color: #666;
+            font-weight: normal;
+            margin-top: 2px;
         }
 
         .line-count {
@@ -101,6 +115,11 @@
     <div id="days-container"></div>
 
     <script>
+        Parse.initialize("IKmm8MbcH9movBK7et1DrQVyd8nJqfJq8bm548t6", "6Ik3DvMj2RRikc52dWYqt6BJ9qDrjdUWI1nUCS3v");
+        Parse.serverURL = 'https://parseapi.back4app.com/';
+
+        const HandoverNote = Parse.Object.extend("HandoverNote");
+
         function formatDate(date) {
             return date.toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -110,12 +129,21 @@
             });
         }
 
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+        }
+
         function countLines(text) {
             if (!text.trim()) return 0;
             return text.split(/\r\n|\r|\n/).length;
         }
 
-        function updateAverageCount() {
+        async function updateAverageCount() {
             const textareas = document.querySelectorAll('textarea');
             let totalLines = 0;
             let nonEmptyCount = 0;
@@ -138,21 +166,66 @@
             textarea.style.height = (textarea.scrollHeight) + 'px';
         }
 
-        function createDayElement(date) {
+        async function loadNoteForDate(dateKey) {
+            const query = new Parse.Query(HandoverNote);
+            query.equalTo("date", dateKey);
+            try {
+                const note = await query.first();
+                return note;
+            } catch (error) {
+                console.error("Error loading note:", error);
+                return null;
+            }
+        }
+
+        async function saveNote(dateKey, content) {
+            const query = new Parse.Query(HandoverNote);
+            query.equalTo("date", dateKey);
+            
+            try {
+                let note = await query.first();
+                const currentTime = new Date();
+                
+                if (!note) {
+                    note = new HandoverNote();
+                    note.set("date", dateKey);
+                }
+                
+                note.set("content", content);
+                note.set("lastModified", currentTime);
+                await note.save();
+                
+                return currentTime;
+            } catch (error) {
+                console.error("Error saving note:", error);
+                throw error;
+            }
+        }
+
+        async function createDayElement(date) {
             const container = document.createElement('div');
             container.className = 'day-container';
             
             const dateHeader = document.createElement('div');
             dateHeader.className = 'date-header';
             
+            const dateInfo = document.createElement('div');
+            dateInfo.className = 'date-info';
+            
             const dateText = document.createElement('span');
             dateText.textContent = formatDate(date);
+            
+            const lastModified = document.createElement('span');
+            lastModified.className = 'last-modified';
+            
+            dateInfo.appendChild(dateText);
+            dateInfo.appendChild(lastModified);
             
             const lineCount = document.createElement('span');
             lineCount.className = 'line-count';
             lineCount.textContent = '0 lines';
             
-            dateHeader.appendChild(dateText);
+            dateHeader.appendChild(dateInfo);
             dateHeader.appendChild(lineCount);
             
             const textarea = document.createElement('textarea');
@@ -163,22 +236,18 @@
             saveStatus.textContent = 'Changes saved';
 
             const dateKey = date.toISOString().split('T')[0];
-            const savedData = localStorage.getItem(dateKey);
-            if (savedData) {
-                try {
-                    const parsedData = JSON.parse(savedData);
-                    textarea.value = parsedData.content || '';
-                    lineCount.textContent = `${countLines(textarea.value)} lines`;
-                    setTimeout(() => adjustTextareaHeight(textarea), 0);
-                } catch (e) {
-                    console.error('Error loading saved note:', e);
-                    // If there's old format data (just string content), migrate it
-                    if (typeof savedData === 'string') {
-                        textarea.value = savedData;
-                        lineCount.textContent = `${countLines(savedData)} lines`;
-                        setTimeout(() => adjustTextareaHeight(textarea), 0);
-                    }
+            
+            const savedNote = await loadNoteForDate(dateKey);
+            if (savedNote) {
+                const content = savedNote.get("content");
+                const lastModifiedTime = savedNote.get("lastModified");
+                
+                textarea.value = content || '';
+                lineCount.textContent = `${countLines(textarea.value)} lines`;
+                if (lastModifiedTime) {
+                    lastModified.textContent = `Last modified: ${formatTime(lastModifiedTime)}`;
                 }
+                setTimeout(() => adjustTextareaHeight(textarea), 0);
             }
 
             let saveTimeout;
@@ -187,18 +256,19 @@
                 adjustTextareaHeight(textarea);
                 lineCount.textContent = `${countLines(textarea.value)} lines`;
                 updateAverageCount();
-                saveTimeout = setTimeout(() => {
-                    // Save both content and date information
-                    const noteData = {
-                        content: textarea.value,
-                        date: dateKey,
-                        lastModified: new Date().toISOString()
-                    };
-                    localStorage.setItem(dateKey, JSON.stringify(noteData));
-                    saveStatus.classList.add('visible');
-                    setTimeout(() => {
-                        saveStatus.classList.remove('visible');
-                    }, 2000);
+                
+                saveTimeout = setTimeout(async () => {
+                    try {
+                        const savedTime = await saveNote(dateKey, textarea.value);
+                        lastModified.textContent = `Last modified: ${formatTime(savedTime)}`;
+                        saveStatus.classList.add('visible');
+                        setTimeout(() => {
+                            saveStatus.classList.remove('visible');
+                        }, 2000);
+                    } catch (error) {
+                        console.error("Error saving:", error);
+                        alert("Failed to save note. Please try again.");
+                    }
                 }, 500);
             });
 
@@ -212,17 +282,31 @@
             return container;
         }
 
-        function initializeDays() {
+        async function initializeDays() {
             const container = document.getElementById('days-container');
             const today = new Date();
+            today.setHours(0, 0, 0, 0);  // Normalize today to start of day
             
-            for (let i = 0; i < 30; i++) {
+            // Start from tomorrow and count down for 11 days (tomorrow + today + 9 past days)
+            for (let i = 1; i >= -9; i--) {
                 const date = new Date(today);
-                date.setDate(today.getDate() - i + 1);
-                const dayElement = createDayElement(date);
-                container.appendChild(dayElement);
+                date.setDate(today.getDate() + i);  // +1 for tomorrow, 0 for today, negative for past days
+                
+                const dayElement = await createDayElement(date);
+                
+                // Add separator after tomorrow's date
+                if (i === 1) {  // If it's tomorrow's date
+                    const separator = document.createElement('div');
+                    separator.style.margin = '20px 0';
+                    separator.style.borderTop = '2px dashed #ccc';
+                    container.appendChild(dayElement);
+                    container.appendChild(separator);
+                } else {
+                    container.appendChild(dayElement);
+                }
             }
-            updateAverageCount();
+            
+            await updateAverageCount();
         }
 
         initializeDays();

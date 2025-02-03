@@ -119,6 +119,33 @@
         Parse.serverURL = 'https://parseapi.back4app.com/';
 
         const HandoverNote = Parse.Object.extend("HandoverNote");
+        
+        // Rate limiter configuration
+        const RATE_LIMIT = {
+            saveDelay: 2000,      // Wait 2 seconds before saving
+            loadDelay: 500,       // Wait 0.5 seconds before loading
+            maxRequests: 10,      // Maximum 10 requests
+            timeWindow: 60000,    // In a 60-second window
+        };
+
+        // Queue to track API requests
+        let requestQueue = [];
+        
+        // Rate limiter function
+        function canMakeRequest() {
+            const now = Date.now();
+            // Remove requests older than timeWindow
+            requestQueue = requestQueue.filter(time => now - time < RATE_LIMIT.timeWindow);
+            
+            if (requestQueue.length < RATE_LIMIT.maxRequests) {
+                requestQueue.push(now);
+                return true;
+            }
+            return false;
+        }
+
+        // Cache for loaded notes
+        const noteCache = new Map();
 
         function formatDate(date) {
             return date.toLocaleDateString('en-US', {
@@ -167,10 +194,24 @@
         }
 
         async function loadNoteForDate(dateKey) {
+            // Check cache first
+            if (noteCache.has(dateKey)) {
+                return noteCache.get(dateKey);
+            }
+
+            // Rate limit check
+            if (!canMakeRequest()) {
+                console.log("Rate limit reached, waiting before loading note...");
+                await new Promise(resolve => setTimeout(resolve, RATE_LIMIT.loadDelay));
+                return loadNoteForDate(dateKey);
+            }
+
             const query = new Parse.Query(HandoverNote);
             query.equalTo("date", dateKey);
             try {
                 const note = await query.first();
+                // Cache the result
+                noteCache.set(dateKey, note);
                 return note;
             } catch (error) {
                 console.error("Error loading note:", error);
@@ -178,28 +219,59 @@
             }
         }
 
+        // Pending saves queue
+        const pendingSaves = new Map();
+
         async function saveNote(dateKey, content) {
-            const query = new Parse.Query(HandoverNote);
-            query.equalTo("date", dateKey);
-            
-            try {
-                let note = await query.first();
-                const currentTime = new Date();
-                
-                if (!note) {
-                    note = new HandoverNote();
-                    note.set("date", dateKey);
-                }
-                
-                note.set("content", content);
-                note.set("lastModified", currentTime);
-                await note.save();
-                
-                return currentTime;
-            } catch (error) {
-                console.error("Error saving note:", error);
-                throw error;
+            // Clear any pending save for this date
+            if (pendingSaves.has(dateKey)) {
+                clearTimeout(pendingSaves.get(dateKey).timeout);
             }
+
+            return new Promise((resolve, reject) => {
+                const timeoutId = setTimeout(async () => {
+                    // Rate limit check
+                    if (!canMakeRequest()) {
+                        console.log("Rate limit reached, waiting before saving...");
+                        await new Promise(r => setTimeout(r, RATE_LIMIT.saveDelay));
+                    }
+
+                    const query = new Parse.Query(HandoverNote);
+                    query.equalTo("date", dateKey);
+                    
+                    try {
+                        let note = await query.first();
+                        const currentTime = new Date();
+                        
+                        if (!note) {
+                            note = new HandoverNote();
+                            note.set("date", dateKey);
+                        }
+                        
+                        note.set("content", content);
+                        note.set("lastModified", currentTime);
+                        await note.save();
+                        
+                        // Update cache
+                        noteCache.set(dateKey, note);
+                        
+                        // Remove from pending saves
+                        pendingSaves.delete(dateKey);
+                        
+                        resolve(currentTime);
+                    } catch (error) {
+                        console.error("Error saving note:", error);
+                        pendingSaves.delete(dateKey);
+                        reject(error);
+                    }
+                }, RATE_LIMIT.saveDelay);
+
+                // Store the pending save
+                pendingSaves.set(dateKey, {
+                    timeout: timeoutId,
+                    content: content
+                });
+            });
         }
 
         async function createDayElement(date) {

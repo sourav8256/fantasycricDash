@@ -10,6 +10,13 @@ cleanup() {
 # Set up trap for cleanup
 trap cleanup SIGINT SIGTERM
 
+# Start frontend server
+echo "Starting frontend server on port 4300..."
+cd frontend && npm start &
+
+# Wait a bit for frontend to initialize
+sleep 2
+
 # Start backend server
 echo "Starting backend server on port 4301..."
 cd backend && npm start &
@@ -22,5 +29,5 @@ echo "Starting live server on port 4302..."
 cd live && npm start &
 
 # Keep script running and show logs
-echo "Both servers are running. Press Ctrl+C to stop all servers."
+echo "All servers are running. Press Ctrl+C to stop all servers."
 wait

@@ -10,11 +10,9 @@ const {
     deleteStrategy
 } = require('../controllers/strategyController');
 
-// Public route for available strategies
-router.get('/available', getAvailableStrategies);
-
-// Protected routes
+// All routes require authentication
 router.use(authenticateToken);
+router.get('/available', getAvailableStrategies);
 router.get('/deployed', getDeployedStrategies);
 router.get('/:id', getStrategyById);
 router.post('/', createStrategy);

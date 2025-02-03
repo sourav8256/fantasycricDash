@@ -570,6 +570,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/live-feed.js"></script>
+    <script src="../js/env.js"></script>
     <script>
     console.log('Strategy page script starting...');
 
@@ -1207,6 +1208,32 @@
             tableBody.appendChild(row);
         });
     }
+
+    async function loadStrategies() {
+        try {
+            const response = await fetch(`${ENV.API_BASE_URL}/api/strategies/available`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem(ENV.AUTH_TOKEN_KEY)}`
+                }
+            });
+            const strategies = await response.json();
+            
+            const strategySelect = document.getElementById('strategy');
+            strategySelect.innerHTML = ''; // Clear existing options
+            
+            strategies.forEach(strategy => {
+                const option = document.createElement('option');
+                option.value = strategy.id;
+                option.textContent = strategy.name;
+                strategySelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading strategies:', error);
+        }
+    }
+
+    // Call loadStrategies when the page loads
+    document.addEventListener('DOMContentLoaded', loadStrategies);
     </script>
 </body>
 </html>

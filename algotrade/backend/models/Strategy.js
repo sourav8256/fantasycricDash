@@ -33,6 +33,10 @@ const strategySchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    description: {
+        type: String,
+        required: true
+    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

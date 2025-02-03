@@ -11,7 +11,9 @@ const getAvailableStrategies = async (req, res) => {
                 instrument: "NIFTY",
                 legs: "4 legs",
                 target: 5000,
-                stopLoss: 2500
+                stopLoss: 2500,
+                created: "2024-01-05",
+                description: "A neutral options strategy that involves simultaneously holding calendar spreads"
             },
             {
                 id: "straddle-hedge",
@@ -20,7 +22,9 @@ const getAvailableStrategies = async (req, res) => {
                 instrument: "BANKNIFTY",
                 legs: "3 legs",
                 target: 8000,
-                stopLoss: 4000
+                stopLoss: 4000,
+                created: "2024-01-10",
+                description: "A delta-neutral strategy using ATM straddle with OTM hedge"
             },
             {
                 id: "bollinger-reversal",
@@ -29,7 +33,9 @@ const getAvailableStrategies = async (req, res) => {
                 instrument: "FINNIFTY",
                 legs: "2 legs",
                 target: 3000,
-                stopLoss: 1500
+                stopLoss: 1500,
+                created: "2024-01-15",
+                description: "Mean reversion strategy using Bollinger Bands"
             }
         ];
         

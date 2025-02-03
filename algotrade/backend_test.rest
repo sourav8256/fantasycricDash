@@ -19,10 +19,11 @@ Content-Type: application/json
 
 ### Get available strategies (public)
 GET http://localhost:4301/api/strategies/available
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczODQzNTczMywiZXhwIjoxNzM4NTIyMTMzfQ.m8GuXqEoAqqyAjrkSsUZtuHtNfv3vYE0EmyAkYH0kYQ
 
 ### Get deployed strategies (requires auth)
 GET http://localhost:4301/api/strategies/deployed
-Authorization: Bearer <auth_token>
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczODQzNTczMywiZXhwIjoxNzM4NTIyMTMzfQ.m8GuXqEoAqqyAjrkSsUZtuHtNfv3vYE0EmyAkYH0kYQ
 
 ### Get strategy by ID
 GET http://localhost:4301/api/strategies/:strategyId
@@ -60,3 +61,7 @@ Authorization: Bearer <auth_token>
 ### Delete strategy
 DELETE http://localhost:4301/api/strategies/:strategyId
 Authorization: Bearer <auth_token>
+
+### Get available strategies (requires auth)
+GET http://localhost:4301/api/strategies/available
+Authorization: Bearer {{authToken}}

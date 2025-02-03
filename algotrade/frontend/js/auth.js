@@ -21,7 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to handle logout
 function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    console.log('Before logout - Token:', localStorage.getItem(ENV.AUTH_TOKEN_KEY));
+    localStorage.removeItem(ENV.AUTH_TOKEN_KEY);
+    localStorage.removeItem(ENV.USER_DATA_KEY);
+    console.log('After logout - Token:', localStorage.getItem(ENV.AUTH_TOKEN_KEY));
     window.location.href = '../auth.html';
 } 

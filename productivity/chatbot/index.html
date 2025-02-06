@@ -219,7 +219,7 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <img src="files/profilepic.jpeg" alt="Lily" class="profile-pic" onclick="openModal()">
+            <img src="img/profilepic.jpeg" alt="Lily" class="profile-pic" onclick="openModal()">
             <h2>Lily 💕</h2>
         </div>
         <div class="chat-messages" id="chatMessages">
@@ -245,13 +245,12 @@
     <div class="modal" id="imageModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal()">&times;</button>
-            <img src="files/profilepic.jpeg" alt="Lily">
+            <img src="img/profilepic.jpeg" alt="Lily">
         </div>
     </div>
 
-    <!-- Import response engine and log engine -->
-    <script src="files/response-engine.js"></script>
-    <script src="files/log-engine.js"></script>
+    <!-- Import response engine -->
+    <script src="js/response-engine.js"></script>
 
     <script>
         const messageInput = document.getElementById('messageInput');

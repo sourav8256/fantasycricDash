@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অন্নপ্রাশন নিমন্ত্রণ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans Bengali', sans-serif;
+            background: linear-gradient(135deg, #fff5e6, #ffe0e0);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            max-width: 800px;
+            width: 90%;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #FFD700;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(90deg, #FF9933, #FF3366);
+        }
+
+        /* Corner Decorations */
+        .corner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+        }
+
+        .corner::before,
+        .corner::after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #FFD700;
+        }
+
+        .top-left {
+            top: 0;
+            left: 0;
+        }
+
+        .top-right {
+            top: 0;
+            right: 0;
+            transform: rotate(90deg);
+        }
+
+        .bottom-left {
+            bottom: 0;
+            left: 0;
+            transform: rotate(-90deg);
+        }
+
+        .bottom-right {
+            bottom: 0;
+            right: 0;
+            transform: rotate(180deg);
+        }
+
+        .corner::before {
+            border-right: none;
+            border-bottom: none;
+            top: 20px;
+            left: 20px;
+        }
+
+        .corner::after {
+            border-left: none;
+            border-top: none;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+        }
+
+        /* Decorative Divider */
+        .divider {
+            position: relative;
+            height: 30px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '❀';
+            color: #FF9933;
+            font-size: 1.5em;
+            margin: 0 15px;
+        }
+
+        .divider span {
+            display: inline-block;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #FFD700, transparent);
+        }
+
+        .header {
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #FF3366;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            font-size: 1.8em;
+            color: #666;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .subtitle::after {
+            content: '🍚';
+            position: absolute;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .details {
+            font-size: 1.3em;
+            line-height: 1.8;
+            color: #444;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)),
+                        url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FFD700' fill-opacity='0.1'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .highlight {
+            color: #FF3366;
+            font-weight: 700;
+            position: relative;
+            display: inline-block;
+        }
+
+        .highlight::before,
+        .highlight::after {
+            content: '✿';
+            color: #FF9933;
+            font-size: 0.8em;
+            margin: 0 10px;
+            opacity: 0.7;
+        }
+
+        .decoration {
+            font-size: 1.5em;
+            color: #FF9933;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .decoration::before,
+        .decoration::after {
+            content: '॥';
+            color: #FFD700;
+            margin: 0 10px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 1.2em;
+            color: #666;
+            position: relative;
+            padding-top: 20px;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #FFD700, transparent);
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 20px;
+            }
+            .title {
+                font-size: 2em;
+            }
+            .subtitle {
+                font-size: 1.5em;
+            }
+            .details {
+                font-size: 1.1em;
+            }
+            .corner {
+                width: 60px;
+                height: 60px;
+            }
+            .corner::before {
+                width: 40px;
+                height: 40px;
+            }
+            .corner::after {
+                width: 30px;
+                height: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <!-- Corner Decorations -->
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
+
+        <div class="header">
+            <div class="decoration">শ্রী শ্রী দুর্গা</div>
+            <h1 class="title">অন্নপ্রাশন</h1>
+            <div class="subtitle">নিমন্ত্রণ পত্র</div>
+        </div>
+        
+        <div class="divider">
+            <span></span>
+        </div>
+
+        <div class="details">
+            শ্রদ্ধেয়েষু,<br><br>
+            
+            আমাদের প্রিয় সন্তান<br>
+            <span class="highlight">চিরঞ্জীব/চিরঞ্জীবা [নাম]</span><br>
+            এর অন্নপ্রাশন উপলক্ষে আপনাদের সপরিবারে<br>
+            আমন্ত্রণ জানাইতেছি।<br><br>
+            
+            <strong>তারিখ:</strong> [তারিখ]<br>
+            <strong>সময়:</strong> [সময়]<br>
+            <strong>স্থান:</strong> [ঠিকানা]<br><br>
+            
+            আপনাদের উপস্থিতি আমাদের<br>
+            সৌভাগ্য বলে মনে করব।
+        </div>
+        
+        <div class="divider">
+            <span></span>
+        </div>
+
+        <div class="footer">
+            নিবেদক<br>
+            [পিতা-মাতার নাম]<br>
+            এবং সমস্ত পরিবারবর্গ
+        </div>
+    </div>
+</body>
+</html>

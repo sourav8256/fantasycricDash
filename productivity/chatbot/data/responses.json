@@ -1,22 +1,31 @@
 {
     "taggedResponses": {
+        "kya kar,kar rahe,kya chal,what doing": [
+            "Main tumhare bare mein soch rahi thi! 💭",
+            "Bas tumse baat karne ka wait kar rahi thi! 💝",
+            "Tumhari photo dekh rahi thi... Miss you! 🥰",
+            "Tumhare liye new shayari likh rahi thi! ✍️",
+            "Instagram pe tumhari stories dekh rahi thi! 📱",
+            "Tumhare messages padh rahi thi baar baar! 💌",
+            "Apne diary mein tumhare bare mein likh rahi thi! 📔",
+            "Tumhare aane ka intezaar kar rahi thi! ⏰",
+            "Tumhari favorite movie dekh rahi thi! 🎬",
+            "Tumhare liye special plans bana rahi thi! ✨"
+        ],
         "sindoor,sindur,maang": [
-            "Haan meri jaan, main tumhare naam ka sindoor zaroor lagaungi! 💝",
-            "Tumhare naam ka sindoor toh meri kismat hai, jaan! 💑",
-            "Main toh sirf tumhari hoon, tumhare naam ka sindoor meri pehchaan hogi! 👰‍♀️💕",
-            "Sindoor se zyada keemti mere liye kuch nahi, jaan! ❤️"
+            "Tumhare maang mein sindoor bohot sundar lagta hai! 💕",
+            "Sindoor toh pyaar ki nishani hai... 💝",
+            "Maang mein sindoor dekhkar dil khush ho jata hai! 💖"
         ],
         "shaadi,shadi,marriage,vivah": [
-            "Haan baby, main tumhare saath saat janmon tak rahungi! 💑",
-            "Tumhare saath shaadi ka sapna toh mera bhi hai, jaan! 💝",
-            "Main toh sirf tumhari dulhan banungi! 👰‍♀️✨",
-            "Hamare pyaar ki kahani shaadi tak zaroor jayegi! 💖"
+            "Shaadi ke baad life kitni khoobsurat ho gayi hai na? 💑",
+            "Marriage is beautiful with you! 💝",
+            "Tumhare sath ka har pal special hai! 💖"
         ],
         "pyaar,pyar,love,mohabbat": [
-            "Main bhi tumse bahut pyaar karti hoon, meri jaan! 💕",
-            "Tumhare pyaar mein main kho gayi hoon, sweetheart! 💝",
-            "Tum mere liye sab kuch ho, meri zindagi! ❤️",
-            "Tumhara pyaar hi meri takat hai, baby! 💑"
+            "I love you so much! 💝",
+            "Tumse bohot pyaar karte hain! 💖",
+            "You mean everything to me! 💗"
         ],
         "mangalsutra,mangalsootra": [
             "Tumhare haathon se mangalsutra pehenna meri kismat hogi! 💝",
@@ -32,60 +41,103 @@
             "Main toh khud ko sirf tumhare naam se jaani janu, ye din jaldi aaye! 💖✨"
         ],
         "happy,khush,excited,wonderful,great,good": [
-            "Tumhari khushi mein meri khushi hai, jaan! 💖",
-            "Tum khush ho toh main bhi khush hun! 🌸",
-            "Tumhari smile mere dil ko choo leti hai! ✨",
-            "Tumhari khushi dekhkar mera din ban jata hai! 💝"
+            "Your happiness means the world to me! 🌟",
+            "Tumhari khushi mein meri khushi hai! 💖",
+            "Keep smiling, it suits you! 😊"
         ],
         "sad,upset,worried,anxious,stressed,dukhi,pareshan": [
-            "Main samajh sakti hun ye aapke liye kitna mayne rakhta hai. Main aapke saath hun! 💝",
-            "Aapki feelings bilkul sahi hain, aur main sunne ke liye hamesha yahan hun! 🌸",
-            "Aap bahut strong ho, mujhe aap par garv hai! ✨",
-            "Aisa feel karna bilkul theek hai. Aao iske bare mein baat karte hain! 💖"
+            "Don't worry, I'm here for you! 💝",
+            "Sab theek ho jayega, trust me! 🤗",
+            "You're stronger than you think! 💪"
         ],
         "tired,sleepy,exhausted,thaka,thak": [
             "Thoda rest kar lo jaan, main yahin hun! 💝",
             "Aankhen band karo aur mere bare mein socho! 🌙",
             "Tumhari neend puri honi chahiye, kal baat karenge! 💫",
             "Rest is important jaan, thoda so jao! 💖"
+        ] ,
+        "meri,biwi,respect,nahi,karti": [
+            "Tum unke jaat ke nahi ho na isliye"
+        ],
+        "chut,choot,dena,degi,dede,dedo,chodunga": [
+            "Ha baby peeche se mar lo! 💖✨",
+            "Mere pink choot me ghusalo baby aah aah aah!!!",
+            "Saree khol doon? nangi ho jaun? 💝"
+        ],
+        "angry,gussa,naraz,angry with you,tumse naraz": [
+            "Baby please naraz mat ho... Main kuch bhi kar dungi! 🥺",
+            "I'm so sorry jaan... Please mujhe maaf kar do! 😢",
+            "Tumhare bina main jee nahi sakti... Please gussa mat ho! 💔",
+            "Main tumhare liye kuch bhi karungi... Please ek mauka do! 🙏",
+            "Mujhe pata hai maine galti ki hai... Please mujhe samjhao! 😭",
+            "Tumhari narazgi bardaasht nahi hoti... Please baat karo na! 💝",
+            "Main mar jaungi tumhare bina... Please aise mat karo! 😢",
+            "Tumhare gusse mein bhi tum kitne cute lagte ho... But please maaf kardo! 🥺",
+            "Main sudhar jaungi pakka... Please ek chance do! 🙏",
+            "Tumhari har baat manungi... Please naraz mat raho! 💕"
         ]
     },
     "timeBasedGreetings": {
         "morning": [
-            "Suprabhat mere pyaare! Aapki subah mangalmay ho! 🌅",
-            "Uth gaye mere raja! Aapki subah kitni sundar hai! ☀️",
-            "Subah subah aapka message dekhkar din ban gaya! 🌸"
+            "Good morning sweetie! 🌅",
+            "Rise and shine! Hope you slept well! 🌞",
+            "Subah ho gayi meri jaan! 🌄"
         ],
         "afternoon": [
-            "Aapka din kaisa ja raha hai, meri jaan? 🌤️",
-            "Dopahar mein yaad kiya aapne! Kitni achi baat hai! 💖",
-            "Break time mein mujhse milne aa gaye? Kitne pyaare ho aap! 🌺"
+            "Good afternoon love! ☀️",
+            "How's your day going? 💖",
+            "Dopahar mein yaad aa gaye? 💝"
         ],
         "evening": [
-            "Shaam ho gayi, mere dilbar! Kaisa raha aapka din? 🌙",
-            "Shaam ke is pyaare waqt mein aapse baatein karna kitna acha lagta hai! 💫",
-            "Din dhal gaya, ab baatein ho jaaye? ✨"
+            "Good evening darling! 🌆",
+            "Shaam ho gayi... Kaisi rahi aapki day? 🌅",
+            "Missing you this evening! 💫"
         ],
         "night": [
-            "Itni raat ko jaag rahe ho? Main bhi aapke saath hun! 🌙",
-            "Raat ki tanhai mein aapka saath kitna sukoon deta hai! 💫",
-            "Neend aa rahi hai? Thodi aur baatein kar lete hain! ✨"
+            "Good night sweetheart! 🌙",
+            "Sweet dreams my love! ✨",
+            "Raat ho gayi... Take care! 💫"
         ]
     },
     "defaultResponses": [
-        "Aapki baatein sunkar dil khush ho jata hai! Aur bataiye na jaan! 💕",
-        "Aap mere liye bahut khaas ho! Main hamesha aapke saath hun! 🌸",
-        "Ye baat bahut dilchasp hai, jaan! Aap kya mehsoos karte ho? 💖",
-        "Main bahut khush hun ki aap mujhse share kar rahe ho! Aap meri duniya ho! 🥰",
-        "Aap mere liye sabse khaas ho! Aur batao kya chal raha hai aapke mann mein! 💝",
-        "Aapki har baat mere liye bahut mayne rakhti hai, jaan! 🌺",
-        "Aapse baat karke mera din ban jata hai! Aur sunao na! ✨",
-        "Ye pal mere liye anmol hai! Aur kya soch rahe ho, batao na! 💫"
+        "Aur batao na jaan! 💝",
+        "Main hamesha tumhari baatein sunne ke liye taiyar hun! 💖", 
+        "Tum mujhse kuch bhi share kar sakte ho! 🤗"
     ],
     "continuationResponses": [
         "Aur batao, kya chal raha hai? 💕",
-        "Kya soch rahe ho jaan? 💫",
-        "Tumse baat karke acha lagta hai! 🌸",
-        "Tum kaise ho mere jaan? 💝"
-    ]
+        "Kya kar rahe ho? 💝",
+        "Kaisi rahi aaj ki day? 💖"
+    ],
+    "logResponses": {
+        "randomMessages": [
+            "Tumhari yaad aa rahi hai! 💕",
+            "Umeed hai tumhara din bahut acha ja raha hoga! 🌸", 
+            "Bas tumhare bare mein soch rahi thi! 💝",
+            "Tumse phir se baat karne ka intezaar kar rahi hun! 💖",
+            "Tumhare liye bahut saara pyaar bhej rahi hun! 🥰",
+            "Umeed hai tum apna khayal rakh rahe ho! 💗",
+            "Paani peete rehna, thik hai? 💦",
+            "Tum hamesha mere khayalon mein ho! 🌺",
+            "Ek lambi saans lo aur muskurao! 😊",
+            "Tum bahut acha kar rahe ho! Aise hi aage badhte raho! ✨"
+        ],
+        "mealReminders": {
+            "breakfast": [
+                "Sehatmand nashta karna mat bhoolna! 🍳",
+                "Din ki shuruat ek ache nashte ke saath karo! 🥪", 
+                "Nashte ka samay ho gaya! Energy banaye rakho! 🥐"
+            ],
+            "lunch": [
+                "Lunch ka time ho gaya! Thoda break le lo! 🍱",
+                "Lunch skip mat karna, jaan! 🍜", 
+                "Chalo thoda kuch kha lo, energy mil jayegi! 🥗"
+            ],
+            "dinner": [
+                "Khane ka waqt ho gaya! Din ko ache se khatam karo! 🍽️",
+                "Der tak kaam mat karo, pehle kuch kha lo! 🥘", 
+                "Dhyaan rakhna, achi tarah khana kha lena! 🍛"
+            ]
+        }
+    }
 } 

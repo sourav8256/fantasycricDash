@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
+const Strategy = require('./models/Strategy');
 
 const app = express();
 const server = require('http').createServer(app);
@@ -91,10 +92,63 @@ function unsubscribeFromSymbol(symbol, ws) {
     console.log(`Client unsubscribed from ${symbol}`);
 }
 
-// Mock function to simulate market data
+// Strategy execution context
+function createStrategyContext(symbol, price, timestamp) {
+    return {
+        symbol,
+        price,
+        timestamp,
+        // Add any other market data or indicators needed by strategies
+        getHistoricalData: async () => {
+            // TODO: Implement historical data retrieval
+            return [];
+        }
+    };
+}
+
+// Execute a single strategy
+async function executeStrategy(strategy, context) {
+    try {
+        // Create a safe execution environment
+        const strategyFunction = new Function('context', strategy.code);
+        const result = await strategyFunction(context);
+        
+        // Update strategy execution status
+        await Strategy.findByIdAndUpdate(strategy._id, {
+            lastExecuted: new Date(),
+            lastResult: result
+        });
+
+        console.log(`Strategy ${strategy.name} executed:`, result);
+        return result;
+    } catch (error) {
+        console.error(`Error executing strategy ${strategy.name}:`, error);
+        return null;
+    }
+}
+
+// Load and execute strategies for a symbol
+async function executeStrategies(symbol, price, timestamp) {
+    try {
+        const strategies = await Strategy.find({
+            symbol: symbol,
+            isActive: true
+        });
+
+        const context = createStrategyContext(symbol, price, timestamp);
+
+        for (const strategy of strategies) {
+            await executeStrategy(strategy, context);
+        }
+    } catch (error) {
+        console.error('Error executing strategies:', error);
+    }
+}
+
+// Update simulateMarketData function
 function simulateMarketData() {
-    setInterval(() => {
-        activeSymbols.forEach((subscribers, symbol) => {
+    setInterval(async () => {
+        for (const [symbol, subscribers] of activeSymbols) {
             const mockData = {
                 type: 'price_update',
                 symbol: symbol,
@@ -102,15 +156,66 @@ function simulateMarketData() {
                 timestamp: new Date().toISOString()
             };
             
+            // Execute strategies for this symbol
+            await executeStrategies(symbol, mockData.price, mockData.timestamp);
+            
             // Broadcast to all subscribers of this symbol
             subscribers.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(JSON.stringify(mockData));
                 }
             });
-        });
+        }
     }, 1000);
 }
+
+// Add API endpoints for strategy management
+app.use(express.json());
+
+// Get all strategies
+app.get('/api/strategies', async (req, res) => {
+    try {
+        const strategies = await Strategy.find();
+        res.json(strategies);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add new strategy
+app.post('/api/strategies', async (req, res) => {
+    try {
+        const strategy = new Strategy(req.body);
+        await strategy.save();
+        res.status(201).json(strategy);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Update strategy
+app.put('/api/strategies/:id', async (req, res) => {
+    try {
+        const strategy = await Strategy.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        res.json(strategy);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Delete strategy
+app.delete('/api/strategies/:id', async (req, res) => {
+    try {
+        await Strategy.findByIdAndDelete(req.params.id);
+        res.status(204).send();
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
 
 // Start the server
 const PORT = process.env.PORT || 4302;

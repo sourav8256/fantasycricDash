@@ -19,7 +19,7 @@ Content-Type: application/json
 
 ### Get available strategies (public)
 GET http://localhost:4301/api/strategies/available
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczODQzNTczMywiZXhwIjoxNzM4NTIyMTMzfQ.m8GuXqEoAqqyAjrkSsUZtuHtNfv3vYE0EmyAkYH0kYQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczOTA4MDE0MiwiZXhwIjoxNzM5MTY2NTQyfQ.2Y-YQTUYUVtZMX583kCGMxZEwZwJ6jDfnqraIJn163Y
 
 ### Get deployed strategies (requires auth)
 GET http://localhost:4301/api/strategies/deployed
@@ -28,6 +28,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwM
 ### Get strategy by ID
 GET http://localhost:4301/api/strategies/:strategyId
 Authorization: Bearer <auth_token>
+
+###
+GET http://localhost:4301/api/strategies/67a83c1184062bdff08f44dc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczOTA4MDE0MiwiZXhwIjoxNzM5MTY2NTQyfQ.2Y-YQTUYUVtZMX583kCGMxZEwZwJ6jDfnqraIJn163Y
+
 
 ### Create new strategy
 POST http://localhost:4301/api/strategies

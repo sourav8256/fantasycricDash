@@ -28,6 +28,10 @@ sleep 2
 echo "Starting live server on port 4302..."
 cd live && npm start &
 
+# Start mock market server
+echo "Starting mock market server on port 5555..."
+cd mockmarket && node app.js &
+
 # Keep script running and show logs
 echo "All servers are running. Press Ctrl+C to stop all servers."
 wait

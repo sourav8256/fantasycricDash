@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .strategy-form {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .strategy-list {
+            margin-top: 20px;
+        }
+        .strategy-item {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        textarea, input {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Strategy Management</h1>
+
+    <div class="strategy-form">
+        <h2>Add New Strategy</h2>
+        <form id="strategyForm">
+            <input type="text" id="name" placeholder="Strategy Name" required>
+            <input type="text" id="symbol" placeholder="Symbol" required>
+            <textarea id="code" rows="10" placeholder="Strategy Code" required></textarea>
+            <button type="submit">Add Strategy</button>
+        </form>
+    </div>
+
+    <div class="strategy-list" id="strategyList">
+        <!-- Strategies will be listed here -->
+    </div>
+
+    <script>
+        // Load strategies
+        async function loadStrategies() {
+            const response = await fetch('/api/strategies');
+            const strategies = await response.json();
+            const listElement = document.getElementById('strategyList');
+            listElement.innerHTML = strategies.map(strategy => `
+                <div class="strategy-item">
+                    <h3>${strategy.name}</h3>
+                    <p>Symbol: ${strategy.symbol}</p>
+                    <p>Active: ${strategy.isActive}</p>
+                    <p>Last Executed: ${strategy.lastExecuted || 'Never'}</p>
+                    <pre>${strategy.code}</pre>
+                    <button onclick="deleteStrategy('${strategy._id}')">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        // Add new strategy
+        document.getElementById('strategyForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const strategy = {
+                name: document.getElementById('name').value,
+                symbol: document.getElementById('symbol').value,
+                code: document.getElementById('code').value,
+                isActive: true
+            };
+
+            await fetch('/api/strategies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(strategy)
+            });
+
+            loadStrategies();
+            e.target.reset();
+        };
+
+        // Delete strategy
+        async function deleteStrategy(id) {
+            await fetch(`/api/strategies/${id}`, {
+                method: 'DELETE'
+            });
+            loadStrategies();
+        }
+
+        // Initial load
+        loadStrategies();
+    </script>
+</body>
+</html> 

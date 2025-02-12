@@ -1,55 +1,100 @@
 const Strategy = require('../models/Strategy');
-
 // Get all available strategies (no authentication required)
 const getAvailableStrategies = async (req, res) => {
     try {
-        const strategies = [
-            {
-                id: "double-calendar",
-                name: "Double Calendar",
-                type: "Time Based",
-                instrument: "NIFTY",
-                legs: "4 legs",
-                target: 5000,
-                stopLoss: 2500,
-                created: "2024-01-05",
-                description: "A neutral options strategy that involves simultaneously holding calendar spreads"
-            },
-            {
-                id: "straddle-hedge",
-                name: "Straddle with Hedge",
-                type: "Time Based",
-                instrument: "BANKNIFTY",
-                legs: "3 legs",
-                target: 8000,
-                stopLoss: 4000,
-                created: "2024-01-10",
-                description: "A delta-neutral strategy using ATM straddle with OTM hedge"
-            },
-            {
-                id: "bollinger-reversal",
-                name: "Bollinger Band Reversal",
-                type: "Indicator Based",
-                instrument: "FINNIFTY",
-                legs: "2 legs",
-                target: 3000,
-                stopLoss: 1500,
-                created: "2024-01-15",
-                description: "Mean reversion strategy using Bollinger Bands"
-            }
-        ];
-        
+        const strategies = await Strategy.find({});
         res.json(strategies);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
 
-// Get user's deployed strategies
+// Sample deployed strategies data (replace with database implementation)
+let deployedStrategies = [];
+
+const deployStrategy = async (req, res) => {
+    try {
+        const strategyId = req.params.id;
+        const userId = req.user.id;
+        
+        // Get the strategy from available strategies
+        const strategy = await Strategy.findOne({
+            _id: strategyId,
+            userId: userId
+        });
+
+        if (!strategy) {
+            return res.status(404).json({ message: 'Strategy not found' });
+        }
+
+        // Get deployment configuration from request body
+        const {
+            mode = 'paper',  // 'paper' or 'live'
+            broker,
+            squareOffTime,
+            qtyMultiplier = 1,
+            maxLoss,
+            maxProfit
+        } = req.body;
+
+        // Validate required fields
+        if (!broker) {
+            return res.status(400).json({ message: 'Broker is required' });
+        }
+
+        // Create deployed strategy object
+        const deployedStrategy = {
+            id: `${strategyId}_${Date.now()}`,
+            strategyId: strategyId,
+            userId: userId,
+            name: strategy.name,
+            type: strategy.type,
+            instrument: strategy.instrument,
+            mode: mode,
+            broker: broker,
+            status: 'Running',
+            pnl: 0,
+            deployedAt: new Date(),
+            config: {
+                squareOffTime,
+                qtyMultiplier,
+                maxLoss,
+                maxProfit
+            }
+        };
+
+        // In a real implementation, you would:
+        // 1. Save to database
+        // 2. Initialize broker connection
+        // 3. Start strategy execution
+        // 4. Set up monitoring
+
+        // For now, just add to our in-memory array
+        deployedStrategies.push(deployedStrategy);
+
+        res.status(201).json({
+            message: 'Strategy deployed successfully',
+            deployedStrategy
+        });
+
+    } catch (error) {
+        console.error('Error deploying strategy:', error);
+        res.status(500).json({ 
+            message: 'Failed to deploy strategy',
+            error: error.message 
+        });
+    }
+};
+
+// Update getDeployedStrategies to return deployed strategies
 const getDeployedStrategies = async (req, res) => {
     try {
-        const strategies = await Strategy.find({ userId: req.user.id });
-        res.json(strategies);
+        // In a real implementation, fetch from database
+        const userDeployedStrategies = deployedStrategies.filter(
+            strategy => strategy.userId === req.user.id
+        );
+        
+        res.json(userDeployedStrategies);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -123,11 +168,13 @@ const deleteStrategy = async (req, res) => {
     }
 };
 
+// Export all functions
 module.exports = {
     getAvailableStrategies,
     getDeployedStrategies,
     getStrategyById,
     createStrategy,
     updateStrategy,
-    deleteStrategy
+    deleteStrategy,
+    deployStrategy
 }; 

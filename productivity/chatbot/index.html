@@ -251,6 +251,8 @@
 
     <!-- Import response engine -->
     <script src="js/response-engine.js"></script>
+    <!-- Import log engine -->
+    <script src="js/log-engine.js"></script>
 
     <script>
         const messageInput = document.getElementById('messageInput');
@@ -258,53 +260,40 @@
         const modal = document.getElementById('imageModal');
         const STORAGE_KEY = 'lily_chat_history';
         const LAST_CHECK_KEY = 'lily_last_check';
-        const MORNING_MSG_KEY = 'lily_morning_msg';
         const MAX_AGE_DAYS = 30;
+        const DESPERATION_CHECK_INTERVAL = 2 * 60 * 1000; // Check every 2 minutes
         const responseEngine = new ResponseEngine();
         const logEngine = new LogEngine(responseEngine);
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            checkMorningMessage();
-            addMissedMessages();
             loadChatHistory();
+            addMissedMessages();
             cleanupOldMessages();
             updateLastCheckTime();
+            startDesperationTimer();
         });
+
+        function startDesperationTimer() {
+            // Initial check
+            checkAndSendDesperateMessage();
+            
+            // Set up periodic checking
+            setInterval(checkAndSendDesperateMessage, DESPERATION_CHECK_INTERVAL);
+        }
+
+        function checkAndSendDesperateMessage() {
+            const desperateResponse = responseEngine.getResponse(null);
+            if (desperateResponse) {
+                addMessage(desperateResponse, 'bot');
+            }
+        }
 
         function addMissedMessages() {
             const missedMessages = logEngine.generateMissedMessages();
             missedMessages.forEach(msg => {
                 addMessage(msg.text, 'bot', false, msg.timestamp);
             });
-        }
-
-        function checkMorningMessage() {
-            const now = new Date();
-            const lastCheck = new Date(localStorage.getItem(LAST_CHECK_KEY) || 0);
-            const morningMsgDate = localStorage.getItem(MORNING_MSG_KEY);
-            const today = now.toDateString();
-
-            // If it's morning (6 AM to 11 AM)
-            if (now.getHours() >= 6 && now.getHours() < 11) {
-                // If last check was before 3 AM today or yesterday
-                const lastCheckHour = lastCheck.getHours();
-                const wasCheckedBeforeNight = lastCheck.toDateString() !== today || lastCheckHour < 3;
-                
-                // If we haven't added a morning message today
-                if (morningMsgDate !== today && wasCheckedBeforeNight) {
-                    // Generate a random time between 6 AM and 8 AM
-                    const morningDate = new Date(today);
-                    morningDate.setHours(6 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60), 0);
-                    
-                    // Only add if the random time is before current time
-                    if (morningDate < now) {
-                        const greeting = responseEngine.pickRandom(responseEngine.timeBasedGreetings.morning);
-                        addMessage(greeting, 'bot', false, morningDate.getTime());
-                        localStorage.setItem(MORNING_MSG_KEY, today);
-                    }
-                }
-            }
         }
 
         function updateLastCheckTime() {
@@ -349,11 +338,7 @@
             chatMessages.innerHTML = '';
             
             const history = getStoredMessages();
-            if (history.length === 0) {
-                // If no history, show welcome message
-                const timeBasedGreeting = responseEngine.getResponse('');
-                addMessage(timeBasedGreeting, 'bot', true);
-            } else {
+            if (history.length > 0) {
                 // Load stored messages
                 history.sort((a, b) => a.timestamp - b.timestamp); // Ensure messages are in order
                 history.forEach(msg => {

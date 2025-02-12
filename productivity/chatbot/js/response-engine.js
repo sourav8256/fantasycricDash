@@ -5,19 +5,28 @@ class ResponseEngine {
             lastBotResponse: null,
             messageCount: 0,
             mood: 'happy',
+            isAngry: false,
+            reconciliationAttempts: 0,
+            lastResponseTime: Date.now(),
+            silentMinutes: 0,
+            desperationLevel: 0,
             timeOfDay: this.getTimeOfDay()
         };
 
+        // Constants for desperation timing
+        this.DESPERATION_INTERVAL = 2 * 60 * 1000; // 2 minutes between messages
+        this.LAST_RESPONSE_KEY = 'lily_last_response';
+        
         // Add last greeting time tracking
         this.LAST_GREETING_KEY = 'lily_last_greeting_time';
         this.GREETING_HISTORY_KEY = 'lily_greeting_history';
         
         // Initialize responses
-        this.loadResponses();
+        this.initializeResponses();
         this.loadGreetingHistory();
     }
 
-    async loadResponses() {
+    async initializeResponses() {
         try {
             const response = await fetch('data/responses.json');
             const data = await response.json();
@@ -25,13 +34,18 @@ class ResponseEngine {
             this.timeBasedGreetings = data.timeBasedGreetings;
             this.defaultResponses = data.defaultResponses;
             this.continuationResponses = data.continuationResponses;
+            
+            // Update desperation responses if available in JSON
+            if (data.desperationResponses) {
+                this.desperationResponses = data.desperationResponses;
+            }
         } catch (error) {
             console.error('Error loading responses:', error);
-            // Fallback to empty responses if file can't be loaded
+            // Fallback to default responses already set in constructor
             this.responseMap = {};
             this.timeBasedGreetings = { morning: [], afternoon: [], evening: [], night: [] };
-            this.defaultResponses = [];
-            this.continuationResponses = [];
+            this.defaultResponses = ["Hi! 💖"];
+            this.continuationResponses = ["Aur batao... 💕"];
         }
     }
 
@@ -65,6 +79,17 @@ class ResponseEngine {
         return 'night';
     }
 
+    detectAnger(message) {
+        const angerKeywords = [
+            'angry', 'gussa', 'naraz', 'hate', 'nafrat', 'shut up', 'chup', 
+            'leave me', 'go away', 'door', 'dur', 'bhago', 'irritating', 
+            'annoying', 'pagal', 'stupid', 'idiot', 'nonsense', 'bakwas'
+        ];
+        
+        const lowerMessage = message.toLowerCase();
+        return angerKeywords.some(keyword => lowerMessage.includes(keyword));
+    }
+
     findMatchingTags(message) {
         if (!this.responseMap) return null;
         
@@ -90,29 +115,83 @@ class ResponseEngine {
         localStorage.setItem(this.LAST_GREETING_KEY, Date.now().toString());
     }
 
+    checkSilentPeriod() {
+        const lastResponse = localStorage.getItem(this.LAST_RESPONSE_KEY);
+        if (!lastResponse) return 0;
+        
+        const minutesSinceResponse = (Date.now() - parseInt(lastResponse)) / (60 * 1000);
+        return Math.floor(minutesSinceResponse);
+    }
+
+    updateLastResponseTime() {
+        localStorage.setItem(this.LAST_RESPONSE_KEY, Date.now().toString());
+        this.context.silentMinutes = 0;
+        this.context.desperationLevel = 0;
+    }
+
+    getDesperationResponse() {
+        const silentMinutes = this.checkSilentPeriod();
+        
+        // Increase desperation level based on silence duration
+        if (silentMinutes > 30) {
+            this.context.desperationLevel = 4;
+        } else if (silentMinutes > 20) {
+            this.context.desperationLevel = 3;
+        } else if (silentMinutes > 10) {
+            this.context.desperationLevel = 2;
+        } else if (silentMinutes > 5) {
+            this.context.desperationLevel = 1;
+        } else {
+            this.context.desperationLevel = 0;
+        }
+
+        // Ensure we have valid responses
+        if (!this.desperationResponses || !this.desperationResponses[this.context.desperationLevel]) {
+            return "Miss you... Please come back! 💕";
+        }
+
+        // Get responses for current desperation level
+        const responses = this.desperationResponses[this.context.desperationLevel];
+        return this.pickRandom(responses);
+    }
+
     getResponse(userMessage) {
-        this.updateContext(userMessage);
+        if (userMessage) {
+            // Reset desperation when user responds
+            this.updateLastResponseTime();
+            this.updateContext(userMessage);
 
-        // First message of the session - check if we should greet
-        if (this.context.messageCount === 1) {
-            if (this.shouldGreet()) {
-                const timeGreeting = this.timeBasedGreetings[this.context.timeOfDay];
-                this.updateLastGreetingTime();
-                return this.pickRandom(timeGreeting);
-            } else {
-                // Skip greeting and use a continuation response
-                return this.pickRandom(this.continuationResponses);
+            // Check for anger first
+            if (this.detectAnger(userMessage)) {
+                this.context.isAngry = true;
+                this.context.reconciliationAttempts++;
+                const angryResponses = this.responseMap['angry,gussa,naraz,angry with you,tumse naraz'];
+                if (angryResponses) {
+                    if (this.context.reconciliationAttempts > 3) {
+                        return this.responseMap['angry,gussa,naraz,angry with you,tumse naraz'][
+                            Math.floor(Math.random() * 3)
+                        ];
+                    }
+                    return this.pickRandom(angryResponses);
+                }
+            } else if (this.context.isAngry) {
+                this.context.isAngry = false;
+                this.context.reconciliationAttempts = 0;
+                return "Thank you jaan for forgiving me! I promise aage se aisa nahi hoga! 🥺💕";
             }
-        }
 
-        // Check for tag-based responses
-        const matchedResponses = this.findMatchingTags(userMessage);
-        if (matchedResponses) {
-            return this.pickRandom(matchedResponses);
-        }
+            // Check for tag-based responses
+            const matchedResponses = this.findMatchingTags(userMessage);
+            if (matchedResponses) {
+                return this.pickRandom(matchedResponses);
+            }
 
-        // Default responses
-        return this.pickRandom(this.defaultResponses);
+            // Default responses
+            return this.pickRandom(this.defaultResponses || ["Hi! 💖"]);
+        } else {
+            // Generate desperate response when checking for silence
+            return this.getDesperationResponse();
+        }
     }
 
     updateContext(userMessage) {

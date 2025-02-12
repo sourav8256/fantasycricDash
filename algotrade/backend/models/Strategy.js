@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
 const strategySchema = new mongoose.Schema({
-    id: {
-        type: String,
-        required: true,
-        unique: true
-    },
     name: {
         type: String,
         required: true,
@@ -18,8 +13,7 @@ const strategySchema = new mongoose.Schema({
     },
     instrument: {
         type: String,
-        required: true,
-        enum: ['NIFTY', 'BANKNIFTY', 'FINNIFTY']
+        required: true
     },
     legs: {
         type: String,
@@ -35,7 +29,7 @@ const strategySchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: true
+        required: false
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,

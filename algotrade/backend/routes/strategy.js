@@ -7,7 +7,8 @@ const {
     getStrategyById,
     createStrategy,
     updateStrategy,
-    deleteStrategy
+    deleteStrategy,
+    deployStrategy
 } = require('../controllers/strategyController');
 
 // All routes require authentication
@@ -18,5 +19,6 @@ router.get('/:id', getStrategyById);
 router.post('/', createStrategy);
 router.put('/:id', updateStrategy);
 router.delete('/:id', deleteStrategy);
+router.post('/:id/deploy', deployStrategy);
 
 module.exports = router; 

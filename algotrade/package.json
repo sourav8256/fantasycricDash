@@ -1,0 +1,30 @@
+{
+  "name": "trading-platform-launcher",
+  "version": "1.0.0",
+  "description": "Launcher for trading platform components",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "build": "pkg .",
+    "create-exe": "pkg . --compress GZip"
+  },
+  "bin": "app.js",
+  "pkg": {
+    "targets": [
+      "node18-linux-x64",
+      "node18-macos-x64",
+      "node18-win-x64"
+    ],
+    "outputPath": "dist",
+    "assets": [
+      "frontend/**/*",
+      "backend/**/*",
+      "live/**/*",
+      "mockmarket/**/*"
+    ]
+  },
+  "devDependencies": {
+    "open": "^8.4.2",
+    "pkg": "^5.8.1"
+  }
+}

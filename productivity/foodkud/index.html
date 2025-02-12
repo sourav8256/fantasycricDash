@@ -360,7 +360,7 @@
             logContainer.innerHTML = transactionLog.map(entry => `
                 <div class="log-entry ${entry.type}">
                     <div class="timestamp">${new Date(entry.timestamp).toLocaleString()}</div>
-                    <div>${entry.description}: ${entry.type === 'credit' ? '+' : '-'}₹${entry.amount.toFixed(2)}</div>
+                    <div>${entry.description}: ${entry.type === 'info' ? '₹' : (entry.type === 'credit' ? '+' : '-')}${entry.amount.toFixed(2)}${entry.type === 'info' ? '/month' : ''}</div>
                 </div>
             `).join('');
         }
@@ -401,13 +401,22 @@
             if (newRate >= 0) {
                 const oldRate = monthlyRate;
                 if (oldRate !== newRate) {
-                    // Update base amount with accumulated rate before changing
-                    baseAmount = calculateCurrentAmount();
+                    // Just update the rate and timestamp
                     monthlyRate = newRate;
                     lastUpdateTimestamp = new Date().getTime();
-                    addLogEntry('credit', newRate, 'Monthly Rate Changed');
+                    // Log the rate change without affecting amounts
+                    transactionLog.unshift({
+                        type: 'info',
+                        amount: newRate,
+                        description: 'Monthly Rate Changed',
+                        timestamp: new Date().getTime()
+                    });
+                    if (transactionLog.length > 50) {
+                        transactionLog.pop();
+                    }
                     saveData();
                     updateDisplay();
+                    updateLogDisplay();
                 }
                 input.value = '';
             } else {

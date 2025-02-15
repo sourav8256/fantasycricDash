@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
 const Strategy = require('./models/Strategy');
-
+const DeployedStrategy = require('./models/DeployedStrategy');
 const app = express();
 const server = require('http').createServer(app);
 
@@ -26,6 +26,12 @@ const wss = new WebSocket.Server({ server });
 
 // Store active symbols and their subscribers
 const activeSymbols = new Map();
+
+// Store loaded strategies in memory for runtime access
+let loadedStrategies = [];
+
+// Store market feed connection
+let marketWs;
 
 // WebSocket connection handler
 wss.on('connection', (ws) => {
@@ -71,9 +77,67 @@ function handleMessage(data, ws) {
     }
 }
 
+// Connect to mock market feed
+function connectToMarketFeed() {
+    marketWs = new WebSocket('ws://localhost:5555');
+
+    marketWs.on('open', () => {
+        console.log('Connected to market feed');
+        // Subscribe to all active symbols
+        for (const symbol of activeSymbols.keys()) {
+            subscribeToMarketSymbol(symbol);
+        }
+    });
+
+    marketWs.on('message', async (data) => {
+        try {
+            const marketData = JSON.parse(data);
+            const { symbol, price, timestamp } = marketData;
+
+            // Get subscribers for this symbol
+            const subscribers = activeSymbols.get(symbol);
+            if (subscribers) {
+                // Execute strategies for this symbol
+                await executeStrategies(symbol, price, timestamp);
+                
+                // Forward market data to all subscribers
+                subscribers.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify(marketData));
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error processing market data:', error);
+        }
+    });
+
+    marketWs.on('close', () => {
+        console.log('Disconnected from market feed - attempting to reconnect...');
+        setTimeout(connectToMarketFeed, 1000);
+    });
+
+    marketWs.on('error', (error) => {
+        console.error('Market feed error:', error);
+    });
+}
+
+// Subscribe to symbol in market feed
+function subscribeToMarketSymbol(symbol) {
+    if (marketWs && marketWs.readyState === WebSocket.OPEN) {
+        marketWs.send(JSON.stringify({
+            type: 'subscribe',
+            symbol: symbol
+        }));
+        console.log(`Subscribed to market feed for ${symbol}`);
+    }
+}
+
 function subscribeToSymbol(symbol, ws) {
     if (!activeSymbols.has(symbol)) {
         activeSymbols.set(symbol, new Set());
+        // Subscribe to market feed for new symbols
+        subscribeToMarketSymbol(symbol);
     }
     activeSymbols.get(symbol).add(ws);
     ws.subscribedSymbols.add(symbol);
@@ -87,6 +151,14 @@ function unsubscribeFromSymbol(symbol, ws) {
         ws.subscribedSymbols.delete(symbol);
         if (subscribers.size === 0) {
             activeSymbols.delete(symbol);
+            // Unsubscribe from market feed when no clients are subscribed
+            if (marketWs && marketWs.readyState === WebSocket.OPEN) {
+                marketWs.send(JSON.stringify({
+                    type: 'unsubscribe',
+                    symbol: symbol
+                }));
+                console.log(`Unsubscribed from market feed for ${symbol}`);
+            }
         }
     }
     console.log(`Client unsubscribed from ${symbol}`);
@@ -127,99 +199,48 @@ async function executeStrategy(strategy, context) {
     }
 }
 
-// Load and execute strategies for a symbol
+// Load deployed strategies on startup
+async function loadDeployedStrategies() {
+    try {
+        // Load deployed strategies and populate the referenced strategy data
+        loadedStrategies = await DeployedStrategy.find({})
+            .populate('strategyId');
+        
+        console.log(`Loaded ${loadedStrategies.length} deployed strategies`);
+        return loadedStrategies;
+    } catch (error) {
+        console.error('Error loading deployed strategies:', error);
+        return [];
+    }
+}
+
+// Add endpoint to view loaded strategies
+app.get('/deployed-strategies', (req, res) => {
+    res.json(loadedStrategies);
+});
+
+// Update executeStrategies function to use loaded strategies
 async function executeStrategies(symbol, price, timestamp) {
     try {
-        const strategies = await Strategy.find({
-            symbol: symbol,
-            isActive: true
-        });
+        // Filter loaded strategies for the given symbol
+        const symbolStrategies = loadedStrategies.filter(
+            deployed => deployed.strategyId.symbol === symbol
+        );
 
         const context = createStrategyContext(symbol, price, timestamp);
 
-        for (const strategy of strategies) {
-            await executeStrategy(strategy, context);
+        for (const deployed of symbolStrategies) {
+            await executeStrategy(deployed.strategyId, context);
         }
     } catch (error) {
         console.error('Error executing strategies:', error);
     }
 }
 
-// Update simulateMarketData function
-function simulateMarketData() {
-    setInterval(async () => {
-        for (const [symbol, subscribers] of activeSymbols) {
-            const mockData = {
-                type: 'price_update',
-                symbol: symbol,
-                price: Math.random() * 1000 + 19000,
-                timestamp: new Date().toISOString()
-            };
-            
-            // Execute strategies for this symbol
-            await executeStrategies(symbol, mockData.price, mockData.timestamp);
-            
-            // Broadcast to all subscribers of this symbol
-            subscribers.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(mockData));
-                }
-            });
-        }
-    }, 1000);
-}
-
-// Add API endpoints for strategy management
-app.use(express.json());
-
-// Get all strategies
-app.get('/api/strategies', async (req, res) => {
-    try {
-        const strategies = await Strategy.find();
-        res.json(strategies);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Add new strategy
-app.post('/api/strategies', async (req, res) => {
-    try {
-        const strategy = new Strategy(req.body);
-        await strategy.save();
-        res.status(201).json(strategy);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// Update strategy
-app.put('/api/strategies/:id', async (req, res) => {
-    try {
-        const strategy = await Strategy.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true }
-        );
-        res.json(strategy);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// Delete strategy
-app.delete('/api/strategies/:id', async (req, res) => {
-    try {
-        await Strategy.findByIdAndDelete(req.params.id);
-        res.status(204).send();
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
 // Start the server
 const PORT = process.env.PORT || 4302;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
-    simulateMarketData();
+    await loadDeployedStrategies();
+    connectToMarketFeed();
 }); 

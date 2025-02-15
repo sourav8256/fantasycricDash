@@ -33,6 +33,17 @@ app.use('/css', express.static(path.join(__dirname, 'css'), {
     }
 }));
 
+// Serve env.js and config.js from root
+app.get('/env.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(path.join(__dirname, 'env.js'));
+});
+
+app.get('/config.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(path.join(__dirname, 'config.js'));
+});
+
 // Handle all routes by serving index.html
 app.get('*', (req, res) => {
     if (req.path.startsWith('/pages/')) {

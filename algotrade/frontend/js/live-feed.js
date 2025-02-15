@@ -11,17 +11,11 @@ class LiveFeedManager {
     }
 
     connect() {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.hostname || 'localhost';
-        const port = '3000';
-        const wsUrl = `${protocol}//${host}:${port}`;
+        const wsUrl = ENV.LIVE_WS_URL;
         
         console.log('------------------------');
         console.log('WebSocket Connection Details:');
-        console.log('Protocol:', protocol);
-        console.log('Host:', host);
-        console.log('Port:', port);
-        console.log('Full URL:', wsUrl);
+        console.log('URL:', wsUrl);
         console.log('------------------------');
         
         try {

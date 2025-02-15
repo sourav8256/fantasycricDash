@@ -39,11 +39,19 @@ function handleSubscribe(ws, symbols) {
     if (!Array.isArray(symbols)) {
         symbols = [symbols];
     }
+    console.log('Subscribe request received:', symbols);
 
     const subscriptions = clients.get(ws);
-    const validSymbols = symbols.filter(symbol => 
-        typeof symbol === 'string' && mockStocks[symbol.toUpperCase()]
-    ).map(symbol => symbol.toUpperCase());
+    console.log('Current mockStocks:', Object.keys(mockStocks));
+    
+    const validSymbols = symbols.filter(symbol => {
+        console.log('Checking symbol:', symbol, 
+                    'type:', typeof symbol, 
+                    'exists:', symbol in mockStocks);
+        return typeof symbol === 'string' && mockStocks[symbol.toUpperCase()];
+    }).map(symbol => symbol.toUpperCase());
+
+    console.log('Valid symbols after filter:', validSymbols);
 
     validSymbols.forEach(symbol => subscriptions.add(symbol));
 

@@ -17,6 +17,42 @@ Content-Type: application/json
     "password": "password123"
 }
 
+
+
+### List deployed strategies
+GET http://localhost:4301/api/strategies/deployed
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczOTYxMzc0NCwiZXhwIjoxNzM5NzAwMTQ0fQ.1_Sp0QHB1eQyv9SSmH6MnQZFjnZ2pDhajLHBwZfjgJU
+
+
+
+### Deploy strategy
+POST http://localhost:4301/api/strategies/67a83c1184062bdff08f44dc/deploy
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczOTYxMzc0NCwiZXhwIjoxNzM5NzAwMTQ0fQ.1_Sp0QHB1eQyv9SSmH6MnQZFjnZ2pDhajLHBwZfjgJU
+
+{
+    "mode": "paper",
+    "broker": "zerodha",
+    "squareOffTime": "15:15",
+    "qtyMultiplier": 1,
+    "maxLoss": 2000,
+    "maxProfit": 5000
+}
+
+### Stop deployed strategy
+POST http://localhost:4301/api/strategies/67a83c1184062bdff08f44dc/stop
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczOTA4MDE0MiwiZXhwIjoxNzM5MTY2NTQyfQ.2Y-YQTUYUVtZMX583kCGMxZEwZwJ6jDfnqraIJn163Y
+
+### Resume deployed strategy
+POST http://localhost:4301/api/strategies/67a83c1184062bdff08f44dc/resume
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczOTA4MDE0MiwiZXhwIjoxNzM5MTY2NTQyfQ.2Y-YQTUYUVtZMX583kCGMxZEwZwJ6jDfnqraIJn163Y
+
+### Start deployed strategy
+POST http://localhost:4301/api/strategies/67a83c1184062bdff08f44dc/start
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczOTA4MDE0MiwiZXhwIjoxNzM5MTY2NTQyfQ.2Y-YQTUYUVtZMX583kCGMxZEwZwJ6jDfnqraIJn163Y
+
+
 ### Get available strategies (public)
 GET http://localhost:4301/api/strategies/available
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3OWQ5ZjUwMzNiODE0ZGNkNzBlNGMwOSIsImlhdCI6MTczOTA4MDE0MiwiZXhwIjoxNzM5MTY2NTQyfQ.2Y-YQTUYUVtZMX583kCGMxZEwZwJ6jDfnqraIJn163Y

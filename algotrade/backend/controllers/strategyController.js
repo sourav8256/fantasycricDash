@@ -1,4 +1,5 @@
 const Strategy = require('../models/Strategy');
+const DeployedStrategy = require('../models/DeployedStrategy');
 // Get all available strategies (no authentication required)
 const getAvailableStrategies = async (req, res) => {
     try {
@@ -20,7 +21,7 @@ const deployStrategy = async (req, res) => {
         // Get the strategy from available strategies
         const strategy = await Strategy.findOne({
             _id: strategyId,
-            userId: userId
+            // userId: userId
         });
 
         if (!strategy) {
@@ -34,7 +35,8 @@ const deployStrategy = async (req, res) => {
             squareOffTime,
             qtyMultiplier = 1,
             maxLoss,
-            maxProfit
+            maxProfit,
+            instrument
         } = req.body;
 
         // Validate required fields
@@ -43,34 +45,25 @@ const deployStrategy = async (req, res) => {
         }
 
         // Create deployed strategy object
-        const deployedStrategy = {
-            id: `${strategyId}_${Date.now()}`,
+        const deployedStrategy = new DeployedStrategy({
             strategyId: strategyId,
             userId: userId,
             name: strategy.name,
-            type: strategy.type,
-            instrument: strategy.instrument,
+            instrument: instrument,
             mode: mode,
             broker: broker,
             status: 'Running',
             pnl: 0,
-            deployedAt: new Date(),
             config: {
                 squareOffTime,
                 qtyMultiplier,
                 maxLoss,
                 maxProfit
             }
-        };
+        });
 
-        // In a real implementation, you would:
-        // 1. Save to database
-        // 2. Initialize broker connection
-        // 3. Start strategy execution
-        // 4. Set up monitoring
-
-        // For now, just add to our in-memory array
-        deployedStrategies.push(deployedStrategy);
+        // Save to database
+        await deployedStrategy.save();
 
         res.status(201).json({
             message: 'Strategy deployed successfully',
@@ -90,9 +83,7 @@ const deployStrategy = async (req, res) => {
 const getDeployedStrategies = async (req, res) => {
     try {
         // In a real implementation, fetch from database
-        const userDeployedStrategies = deployedStrategies.filter(
-            strategy => strategy.userId === req.user.id
-        );
+        const userDeployedStrategies = await DeployedStrategy.find({});
         
         res.json(userDeployedStrategies);
     } catch (err) {
@@ -168,6 +159,124 @@ const deleteStrategy = async (req, res) => {
     }
 };
 
+// Stop a deployed strategy
+const stopStrategy = async (req, res) => {
+    try {
+        const strategyId = req.params.id;
+        const userId = req.user.id;
+
+        // Find the deployed strategy
+        const deployedStrategy = await DeployedStrategy.findOne({
+            strategyId: strategyId,
+            userId: userId
+        });
+
+        if (!deployedStrategy) {
+            return res.status(404).json({ message: 'Deployed strategy not found' });
+        }
+
+        // Update status to Paused
+        deployedStrategy.status = 'Paused';
+        await deployedStrategy.save();
+
+        // In a real implementation, you would:
+        // 1. Stop strategy execution
+        // 2. Clean up any active orders/positions
+        // 3. Update monitoring
+
+        res.json({ 
+            message: 'Strategy stopped successfully',
+            strategy: deployedStrategy 
+        });
+
+    } catch (error) {
+        console.error('Error stopping strategy:', error);
+        res.status(500).json({ 
+            message: 'Failed to stop strategy',
+            error: error.message 
+        });
+    }
+};
+
+// Resume a deployed strategy
+const resumeStrategy = async (req, res) => {
+    try {
+        const strategyId = req.params.id;
+        const userId = req.user.id;
+
+        // Find the deployed strategy
+        const deployedStrategy = await DeployedStrategy.findOne({
+            strategyId: strategyId,
+            userId: userId
+        });
+
+        if (!deployedStrategy) {
+            return res.status(404).json({ message: 'Deployed strategy not found' });
+        }
+
+        // Update status to Running
+        deployedStrategy.status = 'Running';
+        await deployedStrategy.save();
+
+        // In a real implementation, you would:
+        // 1. Restart strategy execution
+        // 2. Reinitialize monitoring
+        // 3. Check market conditions before resuming
+
+        res.json({ 
+            message: 'Strategy resumed successfully',
+            strategy: deployedStrategy 
+        });
+
+    } catch (error) {
+        console.error('Error resuming strategy:', error);
+        res.status(500).json({ 
+            message: 'Failed to resume strategy',
+            error: error.message 
+        });
+    }
+};
+
+// Start a deployed strategy
+const startStrategy = async (req, res) => {
+    try {
+        const strategyId = req.params.id;
+        const userId = req.user.id;
+
+        // Find the deployed strategy
+        const deployedStrategy = await DeployedStrategy.findOne({
+            strategyId: strategyId,
+            userId: userId
+        });
+
+        if (!deployedStrategy) {
+            return res.status(404).json({ message: 'Deployed strategy not found' });
+        }
+
+        // Update status to Running
+        deployedStrategy.status = 'Running';
+        await deployedStrategy.save();
+
+        // In a real implementation, you would:
+        // 1. Initialize strategy execution
+        // 2. Set up monitoring
+        // 3. Validate market conditions
+        // 4. Place initial orders if needed
+
+        res.json({ 
+            message: 'Strategy started successfully',
+            strategy: deployedStrategy 
+        });
+
+    } catch (error) {
+        console.error('Error starting strategy:', error);
+        res.status(500).json({ 
+            message: 'Failed to start strategy',
+            error: error.message 
+        });
+    }
+};
+
 // Export all functions
 module.exports = {
     getAvailableStrategies,
@@ -176,5 +285,8 @@ module.exports = {
     createStrategy,
     updateStrategy,
     deleteStrategy,
-    deployStrategy
+    deployStrategy,
+    stopStrategy,
+    resumeStrategy,
+    startStrategy
 }; 

@@ -53,7 +53,7 @@
     <div id="status" class="disconnected">Status: Disconnected</div>
 
     <div class="controls">
-        <input type="text" id="symbolInput" placeholder="Enter symbol (e.g., AAPL)">
+        <input type="text" id="symbolInput" placeholder="Enter any symbol (e.g., AAPL, SBIN, RELIANCE)">
         <button onclick="subscribe()">Subscribe</button>
         <button onclick="unsubscribe()">Unsubscribe</button>
         <button onclick="clearData()">Clear Data</button>
@@ -127,12 +127,13 @@
             const symbol = document.getElementById('symbolInput').value.toUpperCase();
             if (!symbol) return;
             
-            console.log('Attempting to subscribe to:', symbol);
-            
-            ws.send(JSON.stringify({
+            const message = {
                 action: 'subscribe',
-                symbols: [symbol]
-            }));
+                symbols: [symbol]  // Make sure it's an array
+            };
+            
+            console.log('Sending subscription message:', message);
+            ws.send(JSON.stringify(message));
         }
 
         function unsubscribe() {

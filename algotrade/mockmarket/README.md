@@ -16,14 +16,29 @@ node app.js
 
 The server will run on port 5555 by default (configurable via PORT environment variable).
 
-## Available Symbols
+## Features
 
-The mock market provides data for the following symbols:
+- Dynamic symbol support - subscribe to any symbol
+- Real-time price and volume updates every 5 seconds
+- Simulated market volatility with random price movements
+- WebSocket-based live data streaming
+- REST API for historical data and trading
+- Automatic price generation for new symbols
+- Simulated trading capabilities
+
+## Default Symbols
+
+The mock market comes pre-configured with these symbols, but you can subscribe to any symbol:
 - AAPL (Apple)
 - GOOGL (Google)
 - MSFT (Microsoft)
 - AMZN (Amazon)
 - TSLA (Tesla)
+
+When subscribing to a new symbol, the server will:
+- Generate a random initial price between $100 and $1000
+- Generate random initial volume between 100,000 and 1,000,000
+- Begin sending price updates every 5 seconds
 
 ## REST API Endpoints
 
@@ -62,7 +77,7 @@ All messages are JSON formatted.
 ```json
 {
   "action": "subscribe",
-  "symbols": ["AAPL", "GOOGL"]
+  "symbols": ["AAPL", "SBIN", "RELIANCE"]  // Can be any symbols
 }
 ```
 
@@ -70,7 +85,7 @@ All messages are JSON formatted.
 ```json
 {
   "action": "unsubscribe",
-  "symbols": ["AAPL", "GOOGL"]
+  "symbols": ["AAPL", "SBIN"]
 }
 ```
 
@@ -115,10 +130,10 @@ fetch('http://localhost:5555/api/trade/enter', {
 const ws = new WebSocket('ws://localhost:5555');
 
 ws.onopen = () => {
-  // Subscribe to symbols
+  // Subscribe to any symbols
   ws.send(JSON.stringify({
     action: 'subscribe',
-    symbols: ['AAPL', 'GOOGL']
+    symbols: ['AAPL', 'SBIN', 'RELIANCE']
   }));
 };
 
@@ -128,8 +143,18 @@ ws.onmessage = (event) => {
 };
 ```
 
-## Notes
-- Price updates occur every 5 seconds with random variations
+## Price Movement Simulation
+
+- Prices update every 5 seconds
+- Random price movements between -1% and +1% of current price
+- Random volume changes between -20% and +40% of current volume
 - All prices include simulated latency (0-100ms)
+- New symbols start with random prices between $100 and $1000
+- Initial volumes between 100,000 and 1,000,000
+
+## Notes
+- All symbol names are case-insensitive
 - WebSocket connections receive real-time price updates for subscribed symbols
-- All symbol names are case-insensitive 
+- Supports any symbol name - not restricted to predefined list
+- Automatically generates realistic price data for new symbols
+- Maintains price continuity and realistic volatility 

@@ -99,9 +99,14 @@
             };
 
             ws.onmessage = (event) => {
+                console.log('Received message:', event.data);
                 const data = JSON.parse(event.data);
-                if (data.type === 'price_update') {
+                console.log('Parsed data:', data);
+                if (data.event === 'price_update') {
+                    console.log('Processing price update:', data);
                     updatePrice(data);
+                } else {
+                    console.log('Unhandled message type:', data.type);
                 }
             };
         }
@@ -142,9 +147,9 @@
             priceCard.innerHTML = `
                 <strong>${data.symbol}</strong>
                 <br>
-                Price: ₹${data.price.toFixed(2)}
+                Price: ₹${data.data.price.toFixed(2)}
                 <br>
-                Time: ${new Date(data.timestamp).toLocaleTimeString()}
+                Time: ${new Date(data.data.timestamp).toLocaleTimeString()}
             `;
 
             priceUpdates.insertBefore(priceCard, priceUpdates.firstChild);

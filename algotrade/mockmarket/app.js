@@ -3,6 +3,7 @@ const app = express();
 const { WebSocketServer } = require('ws');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 const port = process.env.PORT || 5555;
 
 // Add this near the top to handle paths in production
@@ -34,26 +35,33 @@ function generateTradeId() {
     return Math.random().toString(36).substr(2, 9);
 }
 
-// WebSocket connection handler
+// Add logging function
+function logToFile(message) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `${timestamp}: ${message}\n`;
+    fs.appendFileSync(path.join(__dirname, 'system.log'), logMessage);
+}
+
+// Modify handleSubscribe to add new symbols dynamically
 function handleSubscribe(ws, symbols) {
     if (!Array.isArray(symbols)) {
         symbols = [symbols];
     }
-    console.log('Subscribe request received:', symbols);
 
     const subscriptions = clients.get(ws);
-    console.log('Current mockStocks:', Object.keys(mockStocks));
-    
-    const validSymbols = symbols.filter(symbol => {
-        console.log('Checking symbol:', symbol, 
-                    'type:', typeof symbol, 
-                    'exists:', symbol in mockStocks);
-        return typeof symbol === 'string' && mockStocks[symbol.toUpperCase()];
-    }).map(symbol => symbol.toUpperCase());
+    const validSymbols = symbols.map(symbol => symbol.toUpperCase());
 
-    console.log('Valid symbols after filter:', validSymbols);
-
-    validSymbols.forEach(symbol => subscriptions.add(symbol));
+    validSymbols.forEach(symbol => {
+        // Add symbol to mockStocks if it doesn't exist
+        if (!mockStocks[symbol]) {
+            mockStocks[symbol] = {
+                price: 100 + Math.random() * 900, // Random initial price between 100 and 1000
+                volume: Math.floor(100000 + Math.random() * 900000) // Random initial volume
+            };
+            logToFile(`Created new symbol ${symbol} with initial price ${mockStocks[symbol].price}`);
+        }
+        subscriptions.add(symbol);
+    });
 
     ws.send(JSON.stringify({
         event: 'subscribed',
@@ -77,15 +85,16 @@ function handleUnsubscribe(ws, symbols) {
     }));
 }
 
-// Modify updatePrices to broadcast updates to subscribed clients
+// Modify updatePrices to handle any symbol
 function updatePrices() {
     for (let symbol in mockStocks) {
         // Random price movement between -1% and +1%
-        const priceChange = mockStocks[symbol].price * (Math.random() * 0.02 - 0.01);
+        const oldPrice = mockStocks[symbol].price;
+        const priceChange = oldPrice * (Math.random() * 0.02 - 0.01);
         mockStocks[symbol].price += priceChange;
         mockStocks[symbol].price = Number(mockStocks[symbol].price.toFixed(2));
         
-        // Random volume change
+        // Random volume change between -20% and +40%
         mockStocks[symbol].volume = Math.floor(mockStocks[symbol].volume * (0.8 + Math.random() * 0.4));
 
         // Broadcast to subscribed clients
@@ -274,30 +283,37 @@ wss.on('connection', (ws) => {
     // Initialize client's subscriptions
     clients.set(ws, new Set());
 
-    console.log('Client connected');
+    logToFile('Client connected');
 
     ws.on('message', (message) => {
         try {
-            const data = JSON.parse(message);
+            const data = JSON.parse(message.toString());
+            logToFile(`Received message: ${JSON.stringify(data, null, 2)}`);
             
             switch (data.action) {
                 case 'subscribe':
+                    if (!data.symbols) {
+                        logToFile('No symbols in subscribe request');
+                        return;
+                    }
                     handleSubscribe(ws, data.symbols);
                     break;
                 case 'unsubscribe':
                     handleUnsubscribe(ws, data.symbols);
                     break;
                 default:
+                    logToFile(`Unknown action: ${data.action}`);
                     ws.send(JSON.stringify({ error: 'Unknown action' }));
             }
         } catch (err) {
+            logToFile(`Error processing message: ${err.message}`);
             ws.send(JSON.stringify({ error: 'Invalid message format' }));
         }
     });
 
     ws.on('close', () => {
         clients.delete(ws);
-        console.log('Client disconnected');
+        logToFile('Client disconnected');
     });
 
     // Send initial connection success message

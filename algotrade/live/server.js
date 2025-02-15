@@ -90,6 +90,7 @@ function connectToMarketFeed() {
     });
 
     marketWs.on('message', async (data) => {
+        // Log incoming market data messages
         try {
             const marketData = JSON.parse(data);
             const { symbol, price, timestamp } = marketData;
@@ -97,16 +98,21 @@ function connectToMarketFeed() {
             // Get subscribers for this symbol
             const subscribers = activeSymbols.get(symbol);
             if (subscribers) {
-                // Execute strategies for this symbol
-                await executeStrategies(symbol, price, timestamp);
-                
+                // console.log('Subscribers for symbol:', symbol, subscribers);
+
                 // Forward market data to all subscribers
                 subscribers.forEach(client => {
                     if (client.readyState === WebSocket.OPEN) {
+                        console.log('Sent data to client:', marketData);
                         client.send(JSON.stringify(marketData));
                     }
                 });
             }
+
+                // Execute strategies for this symbol
+                await executeStrategies(symbol, price, timestamp);
+                
+                
         } catch (error) {
             console.error('Error processing market data:', error);
         }
@@ -126,8 +132,8 @@ function connectToMarketFeed() {
 function subscribeToMarketSymbol(symbol) {
     if (marketWs && marketWs.readyState === WebSocket.OPEN) {
         marketWs.send(JSON.stringify({
-            type: 'subscribe',
-            symbol: symbol
+            action: 'subscribe',
+            symbols: [symbol]
         }));
         console.log(`Subscribed to market feed for ${symbol}`);
     }
@@ -141,7 +147,6 @@ function subscribeToSymbol(symbol, ws) {
     }
     activeSymbols.get(symbol).add(ws);
     ws.subscribedSymbols.add(symbol);
-    console.log(`Client subscribed to ${symbol}`);
 }
 
 function unsubscribeFromSymbol(symbol, ws) {

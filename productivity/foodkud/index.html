@@ -229,6 +229,25 @@
             min-width: 80px;
         }
 
+        .notes-section {
+            margin-top: 1rem;
+            border: inset 2px var(--win98-dark);
+            padding: 10px;
+            background: var(--win98-white);
+        }
+
+        #personalNotes {
+            width: calc(100% - 20px);
+            min-height: 100px;
+            margin-top: 5px;
+            padding: 5px;
+            border: inset 2px var(--win98-dark);
+            background: var(--win98-white);
+            font-family: 'MS Sans Serif', sans-serif;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+
         @media (max-width: 600px) {
             .window {
                 width: 95%;
@@ -289,6 +308,11 @@
                 <div class="log-entries" id="logEntries">
                     <!-- Log entries will be added here -->
                 </div>
+            </div>
+            
+            <div class="notes-section">
+                <h3>Personal Notes</h3>
+                <textarea id="personalNotes" placeholder="Write your personal notes here..."></textarea>
             </div>
         </div>
     </div>
@@ -514,8 +538,21 @@
             updateDisplay();
         }
 
+        // Save notes when they change
+        document.getElementById('personalNotes').addEventListener('input', function() {
+            const notes = this.value;
+            localStorage.setItem('foodkudNotes', notes);
+        });
+
+        // Load saved notes
+        function loadSavedNotes() {
+            const savedNotes = localStorage.getItem('foodkudNotes') || '';
+            document.getElementById('personalNotes').value = savedNotes;
+        }
+
         // Initialize
         loadSavedData();
+        loadSavedNotes();
         
         // Update display every second
         setInterval(updateAmount, 1000);

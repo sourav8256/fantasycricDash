@@ -1,0 +1,296 @@
+2025-02-15T15:43:05.854Z: Client connected
+2025-02-15T15:43:05.931Z: Client connected
+2025-02-15T15:43:10.086Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "SBIN"
+  ]
+}
+2025-02-15T15:43:15.467Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "SBIN"
+  ]
+}
+2025-02-15T15:43:16.064Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "SBIN"
+  ]
+}
+2025-02-15T15:43:18.735Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "SBINR"
+  ]
+}
+2025-02-15T15:44:44.576Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "AAPL"
+  ]
+}
+2025-02-15T15:44:45.934Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":151.24,"volume":1950538,"timestamp":"2025-02-15T15:44:45.933Z"}}
+2025-02-15T15:44:50.934Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":152.03,"volume":2280622,"timestamp":"2025-02-15T15:44:50.933Z"}}
+2025-02-15T15:44:55.934Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":150.52,"volume":2378765,"timestamp":"2025-02-15T15:44:55.933Z"}}
+2025-02-15T15:45:00.936Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":149.53,"volume":1981630,"timestamp":"2025-02-15T15:45:00.935Z"}}
+2025-02-15T15:45:05.938Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":148.83,"volume":1641242,"timestamp":"2025-02-15T15:45:05.937Z"}}
+2025-02-15T15:45:10.939Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":148.38,"volume":1477206,"timestamp":"2025-02-15T15:45:10.938Z"}}
+2025-02-15T15:45:15.940Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":149.07,"volume":1649087,"timestamp":"2025-02-15T15:45:15.939Z"}}
+2025-02-15T15:45:20.940Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":148.25,"volume":1644999,"timestamp":"2025-02-15T15:45:20.940Z"}}
+2025-02-15T15:45:25.942Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":148.79,"volume":1762528,"timestamp":"2025-02-15T15:45:25.941Z"}}
+2025-02-15T15:45:30.942Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":148.16,"volume":1717262,"timestamp":"2025-02-15T15:45:30.942Z"}}
+2025-02-15T15:45:35.943Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":148.68,"volume":1845186,"timestamp":"2025-02-15T15:45:35.942Z"}}
+2025-02-15T15:45:40.945Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":148.69,"volume":2123874,"timestamp":"2025-02-15T15:45:40.944Z"}}
+2025-02-15T15:45:45.945Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":147.81,"volume":1923713,"timestamp":"2025-02-15T15:45:45.945Z"}}
+2025-02-15T15:45:51.061Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":148.74,"volume":1805864,"timestamp":"2025-02-15T15:45:51.000Z"}}
+2025-02-15T15:45:56.001Z: Sent AAPL update to 1 clients: {"event":"price_update","symbol":"AAPL","data":{"price":148.31,"volume":1714878,"timestamp":"2025-02-15T15:45:56.001Z"}}
+2025-02-15T15:45:59.631Z: Client disconnected
+2025-02-15T15:45:59.709Z: Client connected
+2025-02-15T15:46:07.373Z: Client connected
+2025-02-15T15:46:11.805Z: Client connected
+2025-02-15T15:46:15.282Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "TEST"
+  ]
+}
+2025-02-15T15:46:15.283Z: Created new symbol TEST with initial price 606.4419949554758
+2025-02-15T15:47:25.808Z: Received message: {
+  "type": "subscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:25.810Z: Unknown action: undefined
+2025-02-15T15:47:34.008Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:34.010Z: Unknown action: undefined
+2025-02-15T15:47:34.013Z: Received message: {
+  "type": "subscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:34.014Z: Unknown action: undefined
+2025-02-15T15:47:34.593Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:34.593Z: Unknown action: undefined
+2025-02-15T15:47:34.594Z: Received message: {
+  "type": "subscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:34.594Z: Unknown action: undefined
+2025-02-15T15:47:34.750Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:34.751Z: Unknown action: undefined
+2025-02-15T15:47:34.752Z: Received message: {
+  "type": "subscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:34.752Z: Unknown action: undefined
+2025-02-15T15:47:34.888Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:34.888Z: Unknown action: undefined
+2025-02-15T15:47:34.889Z: Received message: {
+  "type": "subscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:34.890Z: Unknown action: undefined
+2025-02-15T15:47:52.715Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "TEST"
+}
+2025-02-15T15:47:52.717Z: Unknown action: undefined
+2025-02-15T15:47:52.718Z: Received message: {
+  "type": "subscribe",
+  "symbol": "GGG"
+}
+2025-02-15T15:47:52.719Z: Unknown action: undefined
+2025-02-15T15:53:19.805Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "GGG"
+}
+2025-02-15T15:53:19.807Z: Unknown action: undefined
+2025-02-15T15:53:19.808Z: Received message: {
+  "type": "subscribe",
+  "symbol": "GGG"
+}
+2025-02-15T15:53:19.809Z: Unknown action: undefined
+2025-02-15T15:57:39.997Z: Client connected
+2025-02-15T15:57:41.358Z: Client connected
+2025-02-15T15:57:46.819Z: Received message: {
+  "type": "subscribe",
+  "symbol": "GGG"
+}
+2025-02-15T15:57:46.820Z: Unknown action: undefined
+2025-02-15T15:59:17.360Z: Client connected
+2025-02-15T15:59:21.786Z: Client connected
+2025-02-15T15:59:23.145Z: Received message: {
+  "type": "subscribe",
+  "symbol": [
+    "GGG"
+  ]
+}
+2025-02-15T15:59:23.146Z: Unknown action: undefined
+2025-02-15T15:59:48.559Z: Client connected
+2025-02-15T15:59:49.849Z: Received message: {
+  "type": "subscribe",
+  "symbols": [
+    "GGG"
+  ]
+}
+2025-02-15T15:59:49.850Z: Unknown action: undefined
+2025-02-15T15:59:50.356Z: Client connected
+2025-02-15T16:00:04.509Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "TEST2"
+  ]
+}
+2025-02-15T16:00:04.511Z: Created new symbol TEST2 with initial price 159.88837515983744
+2025-02-15T16:00:46.355Z: Client connected
+2025-02-15T16:00:50.678Z: Client connected
+2025-02-15T16:00:53.153Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "GGG"
+  ]
+}
+2025-02-15T16:00:53.156Z: Created new symbol GGG with initial price 386.1035614553878
+2025-02-15T16:02:04.358Z: Client connected
+2025-02-15T16:02:08.316Z: Client connected
+2025-02-15T16:02:15.185Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "GGG"
+  ]
+}
+2025-02-15T16:02:15.188Z: Created new symbol GGG with initial price 850.0934983098169
+2025-02-15T16:03:02.355Z: Client connected
+2025-02-15T16:03:06.004Z: Client connected
+2025-02-15T16:03:15.696Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "GGG"
+  ]
+}
+2025-02-15T16:03:15.707Z: Created new symbol GGG with initial price 973.8259048669328
+2025-02-15T16:03:30.354Z: Client connected
+2025-02-15T16:03:34.346Z: Client connected
+2025-02-15T16:03:36.865Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "GGG"
+  ]
+}
+2025-02-15T16:03:36.867Z: Created new symbol GGG with initial price 839.1737332139433
+2025-02-15T16:04:08.257Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "GGG"
+}
+2025-02-15T16:04:08.261Z: Unknown action: undefined
+2025-02-15T16:04:12.423Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "GHGH"
+  ]
+}
+2025-02-15T16:04:12.424Z: Created new symbol GHGH with initial price 177.78273330154508
+2025-02-15T16:05:04.188Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "TEST2"
+  ]
+}
+2025-02-15T16:05:04.192Z: Created new symbol TEST2 with initial price 251.2298566768184
+2025-02-15T16:05:36.855Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "GHGH"
+}
+2025-02-15T16:05:36.856Z: Unknown action: undefined
+2025-02-15T16:05:39.978Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "HHH"
+  ]
+}
+2025-02-15T16:05:39.980Z: Created new symbol HHH with initial price 858.1990832224632
+2025-02-15T16:05:56.355Z: Client connected
+2025-02-15T16:05:59.961Z: Client connected
+2025-02-15T16:06:07.979Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "HHH"
+  ]
+}
+2025-02-15T16:06:07.982Z: Created new symbol HHH with initial price 897.095052304063
+2025-02-15T16:06:48.907Z: Client connected
+2025-02-15T16:06:49.345Z: Client connected
+2025-02-15T16:07:03.998Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "HHH"
+  ]
+}
+2025-02-15T16:07:04.001Z: Created new symbol HHH with initial price 521.7724626016917
+2025-02-15T16:08:49.867Z: Client connected
+2025-02-15T16:08:51.933Z: Client connected
+2025-02-15T16:08:57.912Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "HHH"
+  ]
+}
+2025-02-15T16:08:57.915Z: Created new symbol HHH with initial price 535.6575015532082
+2025-02-15T16:09:03.658Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "HHH"
+}
+2025-02-15T16:09:03.661Z: Unknown action: undefined
+2025-02-15T16:09:03.663Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "HHH"
+  ]
+}
+2025-02-15T16:10:26.345Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "HHH"
+}
+2025-02-15T16:10:26.347Z: Unknown action: undefined
+2025-02-15T16:10:29.297Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "FSD"
+  ]
+}
+2025-02-15T16:10:29.298Z: Created new symbol FSD with initial price 497.20963963101485
+2025-02-15T16:11:08.430Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "FSD"
+}
+2025-02-15T16:11:08.432Z: Unknown action: undefined
+2025-02-15T16:11:10.668Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "FASDF"
+  ]
+}
+2025-02-15T16:11:10.669Z: Created new symbol FASDF with initial price 600.5551373110808
+2025-02-15T16:12:07.336Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "FASDF"
+}
+2025-02-15T16:12:07.339Z: Unknown action: undefined
+2025-02-15T16:12:09.384Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "AFDS"
+  ]
+}
+2025-02-15T16:12:09.384Z: Created new symbol AFDS with initial price 337.5493943646976

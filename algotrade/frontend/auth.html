@@ -143,10 +143,21 @@
                 
                 if (response.ok) {
                     // Store token and redirect
+                    console.log('ENV.AUTH_TOKEN_KEY:', ENV.AUTH_TOKEN_KEY);
+                    console.log('data.token:', data.token);
+                    console.log('ENV.USER_DATA_KEY:', ENV.USER_DATA_KEY); 
+                    console.log('data.user:', data.user);
                     localStorage.setItem(ENV.AUTH_TOKEN_KEY, data.token);
                     localStorage.setItem(ENV.USER_DATA_KEY, JSON.stringify(data.user));
                     // alert(`Token saved: ${data.token}`);
+                    // Verify the token and user were saved correctly
+                    const savedToken = localStorage.getItem(ENV.AUTH_TOKEN_KEY);
+                    const savedUser = localStorage.getItem(ENV.USER_DATA_KEY);
+                    console.log('Saved token:', savedToken);
+                    console.log('Saved user:', savedUser);
+
                     window.location.href = 'index.html';
+
                 } else {
                     const errorDiv = document.getElementById('loginError');
                     errorDiv.textContent = data.message || 'Login failed';

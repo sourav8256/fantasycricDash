@@ -189,15 +189,36 @@ async function executeStrategy(strategy, context) {
         // Create a safe execution environment
         const strategyFunction = new Function('context', strategy.code);
         const result = await strategyFunction(context);
+
+        // Determine buy/sell action based on strategy result
+        let action = null;
+        if (result && typeof result === 'object') {
+            if (result.signal === 'buy') {
+                action = 'buy';
+            } else if (result.signal === 'sell') {
+                action = 'sell';
+            }
+        }
         
         // Update strategy execution status
         await Strategy.findByIdAndUpdate(strategy._id, {
             lastExecuted: new Date(),
-            lastResult: result
+            lastResult: result,
+            lastAction: action
         });
 
-        console.log(`Strategy ${strategy.name} executed:`, result);
-        return result;
+        if (action) {
+            console.log(`Strategy ${strategy.name} executed: ${action} signal for ${context.symbol} at ${context.price}`);
+        } else {
+            console.log(`Strategy ${strategy.name} executed: no action taken`);
+        }
+
+        return {
+            action,
+            price: context.price,
+            timestamp: context.timestamp,
+            result
+        };
     } catch (error) {
         console.error(`Error executing strategy ${strategy.name}:`, error);
         return null;

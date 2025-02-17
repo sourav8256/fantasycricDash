@@ -9,14 +9,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="/config.js"></script>
     <script src="/env.js"></script>
+    <script src="/js/auth.js"></script>
     <script>
         // Check for authentication token immediately
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem(ENV.AUTH_TOKEN_KEY);
+            console.log('ENV.AUTH_TOKEN_KEY:', ENV.AUTH_TOKEN_KEY);
+            console.log('token:', token);
             // alert(`Current token value: ${token || 'No token found'}`);
             if (!token) {
                 // No token found, redirect to auth page
-                window.location.href = 'auth.html';
+                // window.location.href = 'auth.html';
             }
 
             // Update user greeting
@@ -620,7 +623,7 @@
             
             // Redirect to login page after a brief delay
             setTimeout(() => {
-                window.location.href = 'auth.html';
+                // window.location.href = 'auth.html';
             }, 1000);
         }
 

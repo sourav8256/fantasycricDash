@@ -429,10 +429,13 @@
 
         function setHourlyAddition(value) {
             const newValue = parseInt(value);
-            if (newValue >= 0) {
+            if (!isNaN(newValue) && newValue >= 0) {
                 hourlyAddition = newValue;
                 localStorage.setItem('meditationHourlyAddition', hourlyAddition);
                 localStorage.setItem('meditationHourlyAdditionSetTime', Date.now());
+                
+                // Update the input field value to ensure it shows the correct value
+                document.getElementById('meditationHourlyAddition').value = hourlyAddition;
                 
                 // Show update message
                 const message = document.getElementById('meditationUpdateMessage');

@@ -294,6 +294,10 @@
             display: inline-block;
         }
     </style>
+    <audio id="meditationChime">
+        <source src="meditation-chime.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
 </head>
 <body>
     <div class="container">
@@ -585,6 +589,12 @@
             document.getElementById('meditationBreakButton').style.display = 'none';
             updateButtons(true);
             saveTimerState();
+            
+            // Play the chime sound
+            const chime = document.getElementById('meditationChime');
+            chime.play().catch(error => {
+                console.log('Error playing chime:', error);
+            });
         }
 
         function syncPendingTime(newValue) {

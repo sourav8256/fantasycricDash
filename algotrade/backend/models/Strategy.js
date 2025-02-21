@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const legSchema = require('./schemas/LegSchema');
+const riskManagementSchema = require('./schemas/RiskManagementSchema');
+const deploymentSchema = require('./schemas/DeploymentSchema');
 
 const strategySchema = new mongoose.Schema({
     name: {
@@ -8,28 +11,22 @@ const strategySchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        required: true,
-        enum: ['Time Based', 'Indicator Based']
+        enum: ['time', 'indicator'],
+        default: 'time'
     },
     instrument: {
         type: String,
+        enum: ['BANKNIFTY', 'NIFTY', 'FINNIFTY'],
         required: true
     },
-    legs: {
-        type: String,
-        required: true
+    legs: [legSchema],
+    riskManagement: {
+        type: riskManagementSchema,
+        default: () => ({})
     },
-    target: {
-        type: Number,
-        required: true
-    },
-    stopLoss: {
-        type: Number,
-        required: true
-    },
-    description: {
-        type: String,
-        required: false
+    deployment: {
+        type: deploymentSchema,
+        default: () => ({})
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,

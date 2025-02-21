@@ -110,19 +110,55 @@ const getStrategyById = async (req, res) => {
 
 const createStrategy = async (req, res) => {
     try {
+        const {
+            name,
+            type = 'time',
+            instrument,
+            legs = [],
+            riskManagement = {},
+            deployment = {}
+        } = req.body;
+
+        // Validate required fields
+        if (!name || !instrument) {
+            return res.status(400).json({ 
+                message: 'Name and instrument are required fields' 
+            });
+        }
+
+        // Create strategy with all fields
         const strategy = new Strategy({
-            ...req.body,
+            name,
+            type,
+            instrument,
+            legs,
+            riskManagement,
+            deployment,
             userId: req.user.id
         });
+
         const savedStrategy = await strategy.save();
         res.status(201).json(savedStrategy);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error('Error creating strategy:', err);
+        res.status(400).json({ 
+            message: err.message,
+            details: err.errors // Include validation errors if any
+        });
     }
 };
 
 const updateStrategy = async (req, res) => {
     try {
+        const {
+            name,
+            type,
+            instrument,
+            legs,
+            riskManagement,
+            deployment
+        } = req.body;
+
         const strategy = await Strategy.findOne({
             _id: req.params.id,
             userId: req.user.id
@@ -132,21 +168,29 @@ const updateStrategy = async (req, res) => {
             return res.status(404).json({ message: 'Strategy not found' });
         }
 
-        Object.assign(strategy, req.body);
-        strategy.lastModified = Date.now();
-        
+        // Update all fields
+        if (name) strategy.name = name;
+        if (type) strategy.type = type;
+        if (instrument) strategy.instrument = instrument;
+        if (legs) strategy.legs = legs;
+        if (riskManagement) strategy.riskManagement = riskManagement;
+        if (deployment) strategy.deployment = deployment;
+
         const updatedStrategy = await strategy.save();
         res.json(updatedStrategy);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error('Error updating strategy:', err);
+        res.status(400).json({ 
+            message: err.message,
+            details: err.errors
+        });
     }
 };
 
 const deleteStrategy = async (req, res) => {
     try {
         const strategy = await Strategy.findOneAndDelete({
-            _id: req.params.id,
-            userId: req.user.id
+            _id: req.params.id
         });
 
         if (!strategy) {
@@ -277,6 +321,43 @@ const startStrategy = async (req, res) => {
     }
 };
 
+// Add this new function
+const deleteDeployedStrategy = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        // First find the deployed strategy
+        const deployedStrategy = await DeployedStrategy.findOne({
+            _id: id
+        });
+
+        if (!deployedStrategy) {
+            return res.status(404).json({ message: 'Deployed strategy not found' });
+        }
+
+        // Delete the deployed strategy
+        await DeployedStrategy.findByIdAndDelete(id);
+
+        // Also delete the base strategy if it exists
+        if (deployedStrategy.strategyId) {
+            await Strategy.findByIdAndDelete(deployedStrategy.strategyId);
+        }
+
+        res.json({ 
+            message: 'Deployed strategy deleted successfully',
+            deletedStrategy: deployedStrategy
+        });
+
+    } catch (error) {
+        console.error('Error deleting deployed strategy:', error);
+        res.status(500).json({ 
+            message: 'Failed to delete deployed strategy',
+            error: error.message 
+        });
+    }
+};
+
 // Export all functions
 module.exports = {
     getAvailableStrategies,
@@ -288,5 +369,6 @@ module.exports = {
     deployStrategy,
     stopStrategy,
     resumeStrategy,
-    startStrategy
+    startStrategy,
+    deleteDeployedStrategy
 }; 

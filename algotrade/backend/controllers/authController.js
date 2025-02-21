@@ -74,7 +74,35 @@ const login = async (req, res) => {
     }
 };
 
+const verifyToken = async (req, res) => {
+    try {
+        // If the request reaches here, it means the token is valid
+        // (because it passed the authenticateToken middleware)
+        const user = await User.findById(req.user.id).select('-password');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({
+            valid: true,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email
+            }
+        });
+    } catch (err) {
+        console.error('Token verification error:', err);
+        res.status(500).json({ 
+            valid: false,
+            message: 'Internal server error during token verification' 
+        });
+    }
+};
+
 module.exports = {
     register,
-    login
+    login,
+    verifyToken
 }; 

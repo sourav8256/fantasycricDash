@@ -43,6 +43,24 @@
         button:hover {
             background-color: #45a049;
         }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -65,19 +83,31 @@
     <script>
         // Load strategies
         async function loadStrategies() {
-            const response = await fetch('/api/strategies');
-            const strategies = await response.json();
-            const listElement = document.getElementById('strategyList');
-            listElement.innerHTML = strategies.map(strategy => `
-                <div class="strategy-item">
-                    <h3>${strategy.name}</h3>
-                    <p>Symbol: ${strategy.symbol}</p>
-                    <p>Active: ${strategy.isActive}</p>
-                    <p>Last Executed: ${strategy.lastExecuted || 'Never'}</p>
-                    <pre>${strategy.code}</pre>
-                    <button onclick="deleteStrategy('${strategy._id}')">Delete</button>
-                </div>
-            `).join('');
+            try {
+                const response = await fetch('/api/deployed-strategies');
+                const strategies = await response.json();
+                const listElement = document.getElementById('strategyList');
+                
+                if (strategies.length === 0) {
+                    listElement.innerHTML = '<div class="strategy-item">No deployed strategies found.</div>';
+                    return;
+                }
+
+                listElement.innerHTML = strategies.map(strategy => `
+                    <div class="strategy-item">
+                        <h3>${strategy.name}</h3>
+                        <p>Instrument: ${strategy.instrument}</p>
+                        <p>Mode: ${strategy.mode}</p>
+                        <p>Status: ${strategy.status}</p>
+                        <p>Deployed At: ${new Date(strategy.deployedAt).toLocaleString()}</p>
+                        <button class="btn-danger" onclick="deleteDeployedStrategy('${strategy._id}')">Delete</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading strategies:', error);
+                document.getElementById('strategyList').innerHTML = 
+                    '<div class="strategy-item error">Error loading strategies. Please try again.</div>';
+            }
         }
 
         // Add new strategy
@@ -103,11 +133,25 @@
         };
 
         // Delete strategy
-        async function deleteStrategy(id) {
-            await fetch(`/api/strategies/${id}`, {
-                method: 'DELETE'
-            });
-            loadStrategies();
+        async function deleteDeployedStrategy(id) {
+            try {
+                const response = await fetch(`/api/deployed-strategies/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to delete strategy: ${response.statusText}`);
+                }
+
+                // Refresh the strategies list after successful deletion
+                loadStrategies();
+            } catch (error) {
+                console.error('Error deleting strategy:', error);
+                alert('Failed to delete strategy: ' + error.message);
+            }
         }
 
         // Initial load

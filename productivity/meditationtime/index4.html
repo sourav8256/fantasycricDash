@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meditation Time Tracker</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .timer {
+            text-align: center;
+            font-size: 48px;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #333;
+        }
+        .stats {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 1s linear;
+        }
+        .daily-goal {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .daily-goal input {
+            padding: 8px;
+            width: 80px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .daily-goal button {
+            padding: 8px 15px;
+        }
+        .cancel-button {
+            background-color: #dc3545;
+            margin-top: 10px;
+            display: none;
+        }
+        .cancel-button:hover {
+            background-color: #c82333;
+        }
+        .log-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .session-log {
+            color: #28a745;
+        }
+        .addition-log {
+            color: #007bff;
+        }
+        .cancelled-log {
+            color: #dc3545;
+        }
+        .version {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+        .reset-log {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .update-message {
+            color: #28a745;
+            font-size: 12px;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .update-message.show {
+            opacity: 1;
+        }
+        .confirmation-section {
+            display: none;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .confirmation-section.show {
+            display: block;
+        }
+        .confirmation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .confirmation-buttons button {
+            padding: 10px 20px;
+            min-width: 100px;
+        }
+        .confirmation-buttons .confirm-btn {
+            background-color: #28a745;
+        }
+        .confirmation-buttons .cancel-btn {
+            background-color: #dc3545;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            margin-left: 8px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .testing-mode-toggle {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1;
+        }
+        .testing-mode-toggle label {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+        }
+        .pause-button {
+            background-color: #ffc107;
+            margin-top: 10px;
+            display: none;
+        }
+        .pause-button:hover {
+            background-color: #e0a800;
+        }
+        .pause-button.paused {
+            background-color: #28a745;
+        }
+        .pause-button.paused:hover {
+            background-color: #218838;
+        }
+        .break-button {
+            background-color: #ffc107;
+            margin-top: 10px;
+            display: none;
+        }
+        .break-button:hover {
+            background-color: #e0a800;
+        }
+        .notes-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .notes-section textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .notes-section textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76,175,80,0.1);
+        }
+        .notes-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .edit-pending-time {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .edit-pending-time input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .edit-pending-time button {
+            padding: 5px 10px;
+            font-size: 12px;
+            background-color: #6c757d;
+            margin: 0;
+        }
+        .edit-pending-time.editing .pending-time-display {
+            display: none;
+        }
+        .edit-pending-time.editing input {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Meditation Time Tracker</h1>
+        
+        <div class="testing-mode-toggle">
+            <label for="meditationTestingModeSwitch">Testing Mode</label>
+            <label class="switch">
+                <input type="checkbox" id="meditationTestingModeSwitch" onchange="toggleTestingMode()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="daily-goal">
+            <p style="margin-top: 10px; font-weight: bold;">
+                Total Pending Meditation Time: 
+                <span class="edit-pending-time">
+                    <span class="pending-time-display" id="meditationPendingTime">0</span>
+                    <input type="number" id="meditationPendingTimeInput">
+                    <button onclick="togglePendingTimeEdit()" id="editMeditationPendingTimeBtn">Edit</button>
+                </span>
+                minutes
+            </p>
+            <p id="meditationBreakTimeInfo" style="margin-top: 5px; color: #666; display: none;">
+                If breaking now: <span id="meditationBreakTimePending">0</span> minutes pending
+            </p>
+            <div style="margin-top: 10px;">
+                <label>Minutes to add per hour: 
+                    <input type="number" id="meditationHourlyAddition" min="0" value="5" style="width: 60px; padding: 5px;" 
+                           onblur="setHourlyAddition(this.value)"> 
+                    <span class="update-message" id="meditationUpdateMessage">✓ Updated</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="meditationTestButton" onclick="startSession(0.0167)" style="background-color: #6c757d; display: none;">1 Second</button>
+            <button onclick="startSession(1)">1 Minutes</button>
+            <button onclick="startSession(5)">5 Minutes</button>
+            <button onclick="startSession(10)">10 Hours</button>
+            <button onclick="startSession(15)">15 Hours</button>
+        </div>
+
+        <div class="timer" id="meditationTimer">00:00:00</div>
+        <div class="progress-bar">
+            <div class="progress" id="meditationProgress"></div>
+        </div>
+        
+        <div class="notes-section">
+            <h3>Notes for After Session</h3>
+            <textarea id="meditationSessionNotes" placeholder="Write things to remember for after your session..."></textarea>
+        </div>
+
+        <button class="cancel-button" id="meditationCancelButton" onclick="cancelSession()">Cancel Session</button>
+        <button class="break-button" id="meditationBreakButton" onclick="breakSession()">Break Session</button>
+
+        <div id="meditationConfirmationSection" class="confirmation-section">
+            <h3 style="color: #28a745; margin-bottom: 15px;">Session Complete!</h3>
+            <p style="margin-bottom: 20px;">Would you like to confirm this session?</p>
+            <div class="confirmation-buttons">
+                <button class="confirm-btn" onclick="confirmSession()">Confirm</button>
+                <button class="cancel-btn" onclick="cancelConfirmation()">Cancel</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <h2>Statistics</h2>
+            <p>Total Meditation Time: <span id="meditationTotalTime">0</span> minutes</p>
+            <p>Sessions Completed: <span id="meditationSessionsCompleted">0</span></p>
+            <p>Completion Rate: <span id="meditationCompletionRate">0</span>%</p>
+        </div>
+
+        <div class="log-section">
+            <h2>Activity Log</h2>
+            <div id="meditationLogEntries"></div>
+        </div>
+
+        <div class="version">Version 1.0.6</div>
+    </div>
+
+    <script>
+        let timer = null;
+        let currentSession = null;
+        let startTime = null;
+        let totalDuration = 0;
+        let sessionsStarted = parseInt(localStorage.getItem('meditationSessionsStarted')) || 0;
+        let sessionsCompleted = parseInt(localStorage.getItem('meditationSessionsCompleted')) || 0;
+        let totalTimeCompleted = parseInt(localStorage.getItem('meditationTotalTimeCompleted')) || 0;
+        let dailyProgress = 0;
+        let pendingBoringTime = parseInt(localStorage.getItem('meditationPendingTime')) || 15;
+        let lastTimeCheck = parseInt(localStorage.getItem('meditationLastTimeCheck')) || Date.now();
+        let hourlyAddition = parseInt(localStorage.getItem('meditationHourlyAddition')) || 15;
+        let activityLog = JSON.parse(localStorage.getItem('meditationActivityLog')) || [];
+        let lastStatsReset = localStorage.getItem('meditationLastStatsReset') || new Date().toDateString();
+        let isTestingMode = localStorage.getItem('meditationTestingMode') === 'true';
+        let sessionNotes = localStorage.getItem('meditationSessionNotes') || '';
+
+        // Initialize notes from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedNotes = localStorage.getItem('meditationSessionNotes');
+            if (savedNotes) {
+                document.getElementById('meditationSessionNotes').value = savedNotes;
+            }
+        });
+
+        // Save notes when they change
+        document.getElementById('meditationSessionNotes').addEventListener('input', function() {
+            localStorage.setItem('meditationSessionNotes', this.value);
+        });
+
+        function toggleTestingMode() {
+            isTestingMode = document.getElementById('meditationTestingModeSwitch').checked;
+            localStorage.setItem('meditationTestingMode', isTestingMode);
+            updateTestingMode();
+        }
+
+        function updateTestingMode() {
+            const testButton = document.getElementById('meditationTestButton');
+            const switchEl = document.getElementById('meditationTestingModeSwitch');
+            if (testButton) {
+                testButton.style.display = isTestingMode ? 'block' : 'none';
+            }
+            if (switchEl) {
+                switchEl.checked = isTestingMode;
+            }
+        }
+
+        function setHourlyAddition(value) {
+            const newValue = parseInt(value);
+            if (newValue >= 0) {
+                hourlyAddition = newValue;
+                localStorage.setItem('meditationHourlyAddition', hourlyAddition);
+                localStorage.setItem('meditationHourlyAdditionSetTime', Date.now());
+                
+                // Show update message
+                const message = document.getElementById('meditationUpdateMessage');
+                message.classList.add('show');
+                setTimeout(() => {
+                    message.classList.remove('show');
+                }, 1000);
+            }
+        }
+
+        function saveTimerState() {
+            if (startTime && currentSession) {
+                localStorage.setItem('meditationTimerStartTime', startTime.getTime());
+                localStorage.setItem('meditationTimerDuration', totalDuration);
+                localStorage.setItem('meditationCurrentSession', currentSession);
+                localStorage.setItem('meditationTimerState', timer ? 'running' : 'completed');
+                localStorage.setItem('meditationSessionNotes', document.getElementById('meditationSessionNotes').value);
+            } else {
+                localStorage.removeItem('meditationTimerStartTime');
+                localStorage.removeItem('meditationTimerDuration');
+                localStorage.removeItem('meditationCurrentSession');
+                localStorage.removeItem('meditationTimerState');
+                localStorage.removeItem('meditationSessionNotes');
+            }
+        }
+
+        function restoreTimerState() {
+            const savedStartTime = localStorage.getItem('meditationTimerStartTime');
+            const savedDuration = localStorage.getItem('meditationTimerDuration');
+            const savedSession = localStorage.getItem('meditationCurrentSession');
+            const savedState = localStorage.getItem('meditationTimerState');
+            const savedNotes = localStorage.getItem('meditationSessionNotes');
+
+            if (savedNotes) {
+                document.getElementById('meditationSessionNotes').value = savedNotes;
+            }
+
+            if (savedStartTime && savedDuration && savedSession) {
+                startTime = new Date(parseInt(savedStartTime));
+                totalDuration = parseInt(savedDuration);
+                currentSession = parseInt(savedSession);
+                
+                const now = new Date().getTime();
+                const elapsed = Math.floor((now - startTime.getTime()) / 1000);
+                const remaining = currentSession - elapsed;
+
+                if (savedState === 'completed') {
+                    document.getElementById('meditationConfirmationSection').classList.add('show');
+                    updateButtons(true);
+                } else if (remaining <= 0) {
+                    sessionComplete();
+                } else {
+                    document.getElementById('meditationCancelButton').style.display = 'block';
+                    document.getElementById('meditationBreakButton').style.display = 'block';
+                    startTimer();
+                    updateButtons(true);
+                }
+            }
+        }
+
+        function updateBreakTimeInfo() {
+            const breakTimeInfo = document.getElementById('meditationBreakTimeInfo');
+            const breakTimePending = document.getElementById('meditationBreakTimePending');
+            
+            if (timer && startTime) {
+                const now = new Date().getTime();
+                const elapsedSeconds = Math.floor((now - startTime.getTime()) / 1000);
+                const elapsedMinutes = elapsedSeconds / 60;
+                const roundedMinutes = Math.floor(elapsedMinutes / 30) * 30;
+                
+                if (roundedMinutes < 30) {
+                    breakTimeInfo.style.display = 'block';
+                    breakTimePending.textContent = pendingBoringTime;
+                    breakTimePending.style.color = '#666';
+                } else {
+                    const newPendingTime = pendingBoringTime - roundedMinutes;
+                    breakTimeInfo.style.display = 'block';
+                    breakTimePending.textContent = newPendingTime;
+                    breakTimePending.style.color = '#28a745';
+                }
+            } else {
+                breakTimeInfo.style.display = 'none';
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                const now = new Date().getTime();
+                const elapsedSeconds = Math.floor((now - startTime.getTime()) / 1000);
+                const remainingSeconds = currentSession - elapsedSeconds;
+
+                if (remainingSeconds <= 0) {
+                    sessionComplete();
+                } else {
+                    updateTimer(remainingSeconds);
+                    const progressPercent = (remainingSeconds / totalDuration) * 100;
+                    updateProgress(progressPercent);
+                    updateBreakTimeInfo();
+                }
+            }, 100);
+        }
+
+        function startSession(minutes) {
+            if (document.getElementById('meditationConfirmationSection').classList.contains('show')) {
+                return;
+            }
+
+            if (timer) {
+                clearInterval(timer);
+            }
+
+            // Clear notes when starting new session
+            document.getElementById('meditationSessionNotes').value = '';
+            localStorage.removeItem('meditationSessionNotes');
+
+            sessionsStarted++;
+            localStorage.setItem('meditationSessionsStarted', sessionsStarted);
+            currentSession = minutes * 60;
+            startTime = new Date();
+            totalDuration = minutes * 60;
+            
+            updateTimer(currentSession);
+            updateProgress(100);
+            updateButtons(true);
+            updateBreakTimeInfo();
+            document.getElementById('meditationCancelButton').style.display = 'block';
+            document.getElementById('meditationBreakButton').style.display = 'block';
+
+            startTimer();
+            saveTimerState();
+            updateStats();
+        }
+
+        function cancelSession() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+                currentSession = null;
+                startTime = null;
+                updateButtons(false);
+                updateTimer(0);
+                updateProgress(0);
+                updateBreakTimeInfo();
+                document.getElementById('meditationCancelButton').style.display = 'none';
+                document.getElementById('meditationBreakButton').style.display = 'none';
+                document.getElementById('meditationConfirmationSection').classList.remove('show');
+                addLogEntry('cancelled', totalDuration / 60);
+                saveTimerState();
+            }
+        }
+
+        function sessionComplete() {
+            clearInterval(timer);
+            timer = null;
+            document.getElementById('meditationConfirmationSection').classList.add('show');
+            document.getElementById('meditationBreakButton').style.display = 'none';
+            updateButtons(true);
+            saveTimerState();
+        }
+
+        function syncPendingTime(newValue) {
+            pendingBoringTime = newValue;
+            localStorage.setItem('meditationPendingTime', pendingBoringTime);
+            document.getElementById('meditationPendingTime').textContent = pendingBoringTime;
+            // Force update any UI elements that depend on this value
+            updateStats();
+            updateLogDisplay();
+        }
+
+        function togglePendingTimeEdit() {
+            const container = document.querySelector('.edit-pending-time');
+            const input = document.getElementById('meditationPendingTimeInput');
+            const button = document.getElementById('editMeditationPendingTimeBtn');
+            
+            if (container.classList.contains('editing')) {
+                // Save the new value
+                const newValue = parseInt(input.value);
+                if (!isNaN(newValue)) {
+                    syncPendingTime(newValue);
+                }
+                container.classList.remove('editing');
+                button.textContent = 'Edit';
+            } else {
+                // Show the input
+                input.value = pendingBoringTime;
+                container.classList.add('editing');
+                input.focus();
+                button.textContent = 'Save';
+            }
+        }
+
+        function confirmSession() {
+            document.getElementById('meditationConfirmationSection').classList.remove('show');
+            updateButtons(false);
+            sessionsCompleted++;
+            totalTimeCompleted += currentSession / 60;
+            const newPendingTime = pendingBoringTime - (currentSession / 60);
+            
+            localStorage.setItem('meditationSessionsCompleted', sessionsCompleted);
+            localStorage.setItem('meditationTotalTimeCompleted', totalTimeCompleted);
+            
+            syncPendingTime(newPendingTime);
+            
+            addLogEntry('session', currentSession / 60);
+            
+            resetTimer();
+            updateStats();
+        }
+
+        function cancelConfirmation() {
+            document.getElementById('meditationConfirmationSection').classList.remove('show');
+            updateButtons(false);
+            addLogEntry('cancelled', currentSession / 60);
+            resetTimer();
+            updateStats();
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            timer = null;
+            startTime = null;
+            currentSession = null;
+            totalDuration = 0;
+            document.getElementById('meditationTimer').textContent = '00:00:00';
+            document.getElementById('meditationProgress').style.width = '0%';
+            document.getElementById('meditationCancelButton').style.display = 'none';
+            document.getElementById('meditationBreakButton').style.display = 'none';
+            updateButtons(false);
+            saveTimerState();
+        }
+
+        function updateTimer(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            document.getElementById('meditationTimer').textContent = 
+                `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function updateProgress(percentage) {
+            document.getElementById('meditationProgress').style.width = `${Math.max(0, Math.min(100 - percentage, 100))}%`;
+        }
+
+        function updateButtons(disabled) {
+            const buttons = document.querySelectorAll('.buttons button');
+            buttons.forEach(button => button.disabled = disabled);
+        }
+
+        function updateStats() {
+            document.getElementById('meditationTotalTime').textContent = totalTimeCompleted;
+            document.getElementById('meditationSessionsCompleted').textContent = sessionsCompleted;
+            const rate = sessionsStarted === 0 ? 100 : Math.round((sessionsCompleted / sessionsStarted) * 100);
+            document.getElementById('meditationCompletionRate').textContent = rate;
+        }
+
+        function addLogEntry(type, minutes, timestamp = new Date()) {
+            const entry = {
+                type,
+                minutes,
+                timestamp: timestamp.getTime(),
+                pendingTime: pendingBoringTime
+            };
+            activityLog.unshift(entry);
+            if (activityLog.length > 100) {
+                activityLog.pop();
+            }
+            localStorage.setItem('meditationActivityLog', JSON.stringify(activityLog));
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logContainer = document.getElementById('meditationLogEntries');
+            logContainer.innerHTML = activityLog.map(entry => {
+                const date = new Date(entry.timestamp);
+                const timeStr = date.toLocaleString();
+                let cssClass, action;
+                switch(entry.type) {
+                    case 'session':
+                        cssClass = 'session-log';
+                        action = 'Completed session';
+                        break;
+                    case 'addition':
+                        cssClass = 'addition-log';
+                        action = 'Added time';
+                        break;
+                    case 'cancelled':
+                        cssClass = 'cancelled-log';
+                        action = 'Cancelled session';
+                        break;
+                    case 'reset':
+                        cssClass = 'reset-log';
+                        action = 'Daily statistics reset';
+                        return `<div class="log-entry ${cssClass}">
+                            ${timeStr} - ${action}
+                        </div>`;
+                }
+                return `<div class="log-entry ${cssClass}">
+                    ${timeStr} - ${action}: ${entry.minutes} minutes (Pending Time: ${entry.pendingTime} minutes)
+                </div>`;
+            }).join('');
+        }
+
+        function checkHourlyAddition() {
+            const now = Date.now();
+            const currentHour = now - (now % (60 * 60 * 1000));
+            const lastCheckHour = lastTimeCheck - (lastTimeCheck % (60 * 60 * 1000));
+            const hoursSinceLastCheck = Math.floor((currentHour - lastCheckHour) / (1000 * 60 * 60));
+            
+            if (hoursSinceLastCheck > 0) {
+                const valueSetTime = parseInt(localStorage.getItem('meditationHourlyAdditionSetTime')) || lastTimeCheck;
+                const oldValue = parseInt(localStorage.getItem('meditationHourlyAddition')) || 15;
+                
+                for (let i = 0; i < hoursSinceLastCheck; i++) {
+                    const hourTime = lastCheckHour + ((i + 1) * 60 * 60 * 1000);
+                    const entryTime = new Date(hourTime);
+                    
+                    const valueToAdd = hourTime <= valueSetTime ? oldValue : hourlyAddition;
+                    addLogEntry('addition', valueToAdd, entryTime);
+                    syncPendingTime(pendingBoringTime + valueToAdd);
+                }
+                
+                lastTimeCheck = currentHour;
+                localStorage.setItem('meditationLastTimeCheck', lastTimeCheck);
+            }
+        }
+
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            if (lastStatsReset !== today) {
+                sessionsStarted = 0;
+                sessionsCompleted = 0;
+                totalTimeCompleted = 0;
+                
+                localStorage.setItem('meditationSessionsStarted', sessionsStarted);
+                localStorage.setItem('meditationSessionsCompleted', sessionsCompleted);
+                localStorage.setItem('meditationTotalTimeCompleted', totalTimeCompleted);
+                
+                lastStatsReset = today;
+                localStorage.setItem('meditationLastStatsReset', lastStatsReset);
+                
+                addLogEntry('reset', 0);
+                
+                updateStats();
+            }
+        }
+
+        function breakSession() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+
+                const now = new Date().getTime();
+                const elapsedSeconds = Math.floor((now - startTime.getTime()) / 1000);
+                const elapsedMinutes = elapsedSeconds / 60;
+                
+                // Round to nearest 30 minutes
+                const roundedMinutes = Math.floor(elapsedMinutes / 30) * 30;
+                
+                // Only deduct time if at least 30 minutes have passed
+                if (roundedMinutes >= 30) {
+                    sessionsCompleted++;
+                    totalTimeCompleted += roundedMinutes;
+                    const newPendingTime = pendingBoringTime - roundedMinutes;
+                    
+                    localStorage.setItem('meditationSessionsCompleted', sessionsCompleted);
+                    localStorage.setItem('meditationTotalTimeCompleted', totalTimeCompleted);
+                    
+                    syncPendingTime(newPendingTime);
+                    
+                    addLogEntry('session', roundedMinutes);
+                }
+                
+                resetTimer();
+                updateStats();
+            }
+        }
+
+        // Handle enter key on pending time input
+        document.getElementById('pendingTimeInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                togglePendingTimeEdit();
+            }
+        });
+
+        setInterval(checkHourlyAddition, 60000);
+
+        checkDailyReset();
+        checkHourlyAddition();
+        updateTimer(0);
+        restoreTimerState();
+        updateStats();
+        updateLogDisplay();
+        document.getElementById('hourlyAddition').value = hourlyAddition;
+        document.getElementById('pendingTime').textContent = pendingBoringTime;
+        updateTestingMode();
+
+        setInterval(() => {
+            checkDailyReset();
+            checkHourlyAddition();
+        }, 60000);
+    </script>
+</body>
+</html>

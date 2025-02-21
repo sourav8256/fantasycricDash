@@ -26,5 +26,8 @@
   "devDependencies": {
     "open": "^8.4.2",
     "pkg": "^5.8.1"
+  },
+  "dependencies": {
+    "winston": "^3.17.0"
   }
 }

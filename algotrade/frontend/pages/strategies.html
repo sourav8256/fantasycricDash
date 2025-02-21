@@ -278,6 +278,9 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <div class="btn-group">
+                                <button class="btn btn-outline-secondary" onclick="previewStrategyJson()">
+                                    <i class="fas fa-code"></i> Preview JSON
+                                </button>
                                 <button class="btn btn-primary" id="saveStrategyBtn" onclick="saveStrategy()">Save Strategy</button>
                                 <button class="btn btn-success">Deploy Strategy</button>
                             </div>
@@ -346,7 +349,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form id="deployForm">
+                        <input type="hidden" id="deployStrategyId">
+                        <div class="mb-3">
+                            <label class="form-label">Strategy Name</label>
+                            <input type="text" class="form-control" id="deployStrategyName" readonly>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Mode</label>
                             <div>
@@ -372,7 +381,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Broker</label>
-                            <select class="form-select" id="brokerSelect">
+                            <select class="form-select" id="brokerSelect" required>
                                 <option value="">Select Broker</option>
                                 <option value="zerodha">Zerodha</option>
                                 <option value="angelone">Angel One</option>
@@ -383,12 +392,12 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Square Off Time</label>
-                                <input type="time" class="form-control" id="squareOffTime" value="15:15">
+                                <input type="time" class="form-control" id="squareOffTime" value="15:15" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Quantity Multiplier</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control" id="qtyMultiplier" value="1" min="1">
+                                    <input type="number" class="form-control" id="qtyMultiplier" value="1" min="1" required>
                                     <span class="input-group-text">×</span>
                                 </div>
                             </div>
@@ -412,7 +421,7 @@
                         </div>
 
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
+                            <i class="fas fa-info-circle me-2"></i>
                             <small>
                                 Note: Make sure your broker account is properly configured and has sufficient funds before deploying in live mode.
                             </small>
@@ -421,8 +430,29 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" onclick="confirmDeploy()">
-                        <i class="fas fa-play"></i> Deploy Strategy
+                    <button type="button" class="btn btn-success" onclick="deployStrategy()">
+                        <i class="fas fa-play me-1"></i> Deploy Strategy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Modal for JSON Preview -->
+    <div class="modal fade" id="jsonPreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Strategy JSON Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="jsonPreview" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; max-height: 500px; overflow-y: auto;"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="copyJsonToClipboard()">
+                        <i class="fas fa-copy"></i> Copy to Clipboard
                     </button>
                 </div>
             </div>
@@ -693,22 +723,27 @@
                     </td>
                     <td>${strategy.type || 'N/A'}</td>
                     <td>${strategy.instrument || 'N/A'}</td>
-                    <td>${strategy.legs || '0'}</td>
+                    <td>${Array.isArray(strategy.legs) ? strategy.legs.length : 0}</td>
                     <td>
-                        Target: ₹${(strategy.target || 0).toLocaleString()}<br>
-                        Stop Loss: ₹${(strategy.stopLoss || 0).toLocaleString()}
+                        Target: ₹${(strategy.riskManagement?.profitTarget || 0).toLocaleString()}<br>
+                        Stop Loss: ₹${(strategy.riskManagement?.stopLoss || 0).toLocaleString()}
                     </td>
-                    <td>${strategy.created ? new Date(strategy.created).toLocaleDateString() : 'N/A'}</td>
+                    <td>${strategy.createdAt ? new Date(strategy.createdAt).toLocaleDateString() : 'N/A'}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary me-2" onclick="editStrategy('${strategy._id}')">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-sm btn-success me-2" data-bs-toggle="modal" data-bs-target="#deployModal" onclick="showDeployModal('${strategy.name}', '${strategy._id}')">
-                            <i class="fas fa-play"></i> Deploy
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStrategy('${strategy._id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-success" onclick="showDeployModal('${strategy.name}', '${strategy._id}')">
+                                <i class="fas fa-rocket"></i> Deploy
+                            </button>
+                            <button class="btn btn-outline-info" onclick="previewSavedStrategy('${strategy._id}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="editStrategy('${strategy._id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteStrategy('${strategy._id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -836,84 +871,79 @@
         console.log('Opening deploy modal for strategy:', strategyName, 'ID:', strategyId);
         
         // Store the strategy ID in the modal
-        document.getElementById('deployModal').dataset.strategyId = strategyId;
+        document.getElementById('deployStrategyId').value = strategyId;
         
         // Update modal title
         document.getElementById('deployModalLabel').textContent = `Deploy Strategy: ${strategyName}`;
         
         // Reset form fields
-        document.getElementById('brokerSelect').value = '';
-        document.getElementById('deployInstrumentSelect').value = 'BANKNIFTY'; // Set default instrument
-        document.getElementById('squareOffTime').value = '15:15';
-        document.getElementById('qtyMultiplier').value = '1';
-        document.getElementById('maxLoss').value = '';
-        document.getElementById('maxProfit').value = '';
-        document.querySelector('input[name="deployMode"][value="paper"]').checked = true;
+        document.getElementById('deployForm').reset();
+        document.getElementById('deployStrategyName').value = strategyName;
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('deployModal'));
+        modal.show();
     }
 
     // Function to confirm deployment
-    function confirmDeploy() {
-        const deploymentConfig = {
-            mode: document.querySelector('input[name="deployMode"]:checked').value,
-            broker: document.getElementById('brokerSelect').value,
-            instrument: document.getElementById('deployInstrumentSelect').value,
-            squareOffTime: document.getElementById('squareOffTime').value,
-            qtyMultiplier: parseInt(document.getElementById('qtyMultiplier').value),
-            maxLoss: parseInt(document.getElementById('maxLoss').value),
-            maxProfit: parseInt(document.getElementById('maxProfit').value)
-        };
-
-        // Validate inputs
-        if (!deploymentConfig.broker) {
-            alert('Please select a broker');
-            return;
-        }
-
-        if (!deploymentConfig.instrument) {
-            alert('Please select an instrument');
-            return;
-        }
-
-        if (deploymentConfig.mode === 'live') {
-            const confirmLive = confirm('Are you sure you want to deploy this strategy in LIVE mode? This will use real funds.');
-            if (!confirmLive) return;
-        }
-
-        console.log('Deployment configuration:', deploymentConfig);
-        
-        const strategyId = document.getElementById('deployModal').dataset.strategyId;
-        deployStrategy(strategyId, deploymentConfig);
-        bootstrap.Modal.getInstance(document.getElementById('deployModal')).hide();
-    }
-
-    // Function to deploy strategy
-    async function deployStrategy(strategyId, deploymentConfig) {
+    async function deployStrategy() {
         try {
-            if (!deploymentConfig.broker || !deploymentConfig.instrument) {
-                showNotification('Please select both broker and instrument', 'error');
+            const strategyId = document.getElementById('deployStrategyId').value;
+            const mode = document.querySelector('input[name="deployMode"]:checked').value;
+            const instrument = document.getElementById('deployInstrumentSelect').value;
+            const broker = document.getElementById('brokerSelect').value;
+            const squareOffTime = document.getElementById('squareOffTime').value;
+            const qtyMultiplier = parseInt(document.getElementById('qtyMultiplier').value);
+            const maxLoss = parseFloat(document.getElementById('maxLoss').value) || undefined;
+            const maxProfit = parseFloat(document.getElementById('maxProfit').value) || undefined;
+
+            // Validate required fields
+            if (!broker || !mode || !instrument || !squareOffTime || !qtyMultiplier) {
+                showNotification('Please fill in all required fields', 'error');
                 return;
             }
 
-            console.log('Deploying strategy:', strategyId, 'with config:', deploymentConfig);
-            
+            // Prepare deployment configuration
+            const deploymentConfig = {
+                broker,
+                mode,
+                instrument,
+                config: {
+                    squareOffTime,
+                    qtyMultiplier,
+                    maxLoss,
+                    maxProfit
+                }
+            };
+
+            console.log('Deploying strategy with config:', deploymentConfig);
+
             const response = await fetch(`${ENV.API_BASE_URL}/api/strategies/${strategyId}/deploy`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem(ENV.AUTH_TOKEN_KEY)}`
+                    'Authorization': `Bearer ${localStorage.getItem(ENV.AUTH_TOKEN_KEY)}`,
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(deploymentConfig)
             });
 
-            if (response.ok) {
-                showNotification('Strategy deployed successfully', 'success');
-                displayDeployedStrategies(); // Refresh the deployed strategies list
-            } else {
+            if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to deploy strategy');
             }
+
+            // Hide modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deployModal'));
+            modal.hide();
+
+            showNotification('Strategy deployed successfully', 'success');
+            
+            // Refresh both strategy lists
+            displaySavedStrategies();
+            displayDeployedStrategies();
         } catch (error) {
-            showNotification(`Failed to deploy strategy: ${error.message}\nURL: ${ENV.API_BASE_URL}/api/strategies/${strategyId}/deploy\nRequest: ${JSON.stringify(deploymentConfig)}\nResponse: ${error.message}`, 'error', 'deployStrategy');
+            console.error('Error deploying strategy:', error);
+            showNotification('Failed to deploy strategy: ' + error.message, 'error');
         }
     }
 
@@ -929,31 +959,7 @@
         }
     }
 
-    // Function to delete strategy
-    async function deleteStrategy(strategyId) {
-        if (confirm('Are you sure you want to delete this strategy?')) {
-            try {
-                console.log('Deleting strategy:', strategyId);
-                const response = await fetch(`${ENV.API_BASE_URL}/api/strategies/${strategyId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem(ENV.AUTH_TOKEN_KEY)}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to delete strategy');
-                }
-
-                showNotification('Strategy deleted successfully', 'success', 'deleteStrategy');
-                loadStrategies(); // Reload the list
-            } catch (error) {
-                console.error('Error deleting strategy:', error);
-                showNotification('Failed to delete strategy', 'error', 'deleteStrategy');
-            }
-        }
-    }
-
+    // Function to load strategies
     async function loadStrategies() {
         const tableBody = document.getElementById('strategiesTableBody');
         
@@ -1020,22 +1026,27 @@
                     </td>
                     <td>${strategy.type || 'N/A'}</td>
                     <td>${strategy.instrument || 'N/A'}</td>
-                    <td>${strategy.legs || '0'}</td>
+                    <td>${Array.isArray(strategy.legs) ? strategy.legs.length : 0}</td>
                     <td>
-                        Target: ₹${(strategy.target || 0).toLocaleString()}<br>
-                        Stop Loss: ₹${(strategy.stopLoss || 0).toLocaleString()}
+                        Target: ₹${(strategy.riskManagement?.profitTarget || 0).toLocaleString()}<br>
+                        Stop Loss: ₹${(strategy.riskManagement?.stopLoss || 0).toLocaleString()}
                     </td>
-                    <td>${strategy.created ? new Date(strategy.created).toLocaleDateString() : 'N/A'}</td>
+                    <td>${strategy.createdAt ? new Date(strategy.createdAt).toLocaleDateString() : 'N/A'}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary me-2" onclick="editStrategy('${strategy._id}')">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-sm btn-success me-2" data-bs-toggle="modal" data-bs-target="#deployModal" onclick="showDeployModal('${strategy.name}', '${strategy._id}')">
-                            <i class="fas fa-play"></i> Deploy
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStrategy('${strategy._id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-success" onclick="showDeployModal('${strategy.name}', '${strategy._id}')">
+                                <i class="fas fa-rocket"></i> Deploy
+                            </button>
+                            <button class="btn btn-outline-info" onclick="previewSavedStrategy('${strategy._id}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="editStrategy('${strategy._id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteStrategy('${strategy._id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -1157,18 +1168,20 @@
                         </span>
                     </td>
                     <td>
-                        ${strategy.status.toLowerCase() === 'running' ? `
-                            <button class="btn btn-sm btn-warning me-2" onclick="stopStrategy('${strategy._id}')">
-                                <i class="fas fa-pause"></i> Pause
+                        <div class="btn-group btn-group-sm">
+                            ${strategy.status.toLowerCase() === 'running' ? `
+                                <button class="btn btn-warning me-2" onclick="stopStrategy('${strategy._id}')">
+                                    <i class="fas fa-pause"></i> Pause
+                                </button>
+                            ` : `
+                                <button class="btn btn-success me-2" onclick="resumeStrategy('${strategy._id}')">
+                                    <i class="fas fa-play"></i> Resume
+                                </button>
+                            `}
+                            <button class="btn btn-danger" onclick="deleteDeployedStrategy('${strategy._id}')">
+                                <i class="fas fa-trash"></i> Delete
                             </button>
-                        ` : `
-                            <button class="btn btn-sm btn-success me-2" onclick="resumeStrategy('${strategy._id}')">
-                                <i class="fas fa-play"></i> Resume
-                            </button>
-                        `}
-                        <button class="btn btn-sm btn-danger" onclick="deleteDeployedStrategy('${strategy._id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -1265,6 +1278,141 @@
         // You can implement this using your preferred notification library
         // For now, just use alert
         alert(`${type.toUpperCase()}: ${message} (Method: ${method})`);
+    }
+
+    function previewStrategyJson() {
+        try {
+            // Collect all strategy data with safer element selection
+            const strategy = {
+                name: document.querySelector('input[placeholder="Enter a name for your strategy"]')?.value || '',
+                type: document.querySelector('input[name="strategy"]:checked')?.id || 'time', // default to 'time'
+                instrument: document.getElementById('instrumentSelect')?.value || 'BANKNIFTY',
+                legs: Array.from(document.querySelectorAll('.leg-row')).map(leg => {
+                    // Get selects inside input-groups
+                    const selects = leg.querySelectorAll('.input-group select');
+                    const quantityInput = leg.querySelector('.input-group input[type="number"]');
+                    
+                    return {
+                        type: selects[0]?.value || 'Buy',      // First select (Buy/Sell)
+                        strike: selects[1]?.value || 'ATM',    // Second select (Strike)
+                        option: selects[2]?.value || 'CE',     // Third select (Option type)
+                        quantity: parseInt(quantityInput?.value || '1')
+                    };
+                }),
+                riskManagement: {
+                    profitTarget: document.querySelector('input[placeholder*="total profit"]')?.value || '',
+                    stopLoss: document.querySelector('input[placeholder*="total loss"]')?.value || '',
+                    noTradeTime: document.querySelector('input[placeholder*="No Trade After"]')?.value || '',
+                    profitManagement: document.querySelector('input[name="profitManagement"]:checked')?.value || 'noTrailing',
+                    trailStep: document.getElementById('trailStep')?.value || '400',
+                    profitStep: document.getElementById('profitStep')?.value || '800'
+                },
+                deployment: {
+                    squareOffTime: document.getElementById('squareOffTime')?.value || '15:15',
+                    qtyMultiplier: document.getElementById('qtyMultiplier')?.value || '1',
+                    maxLoss: document.getElementById('maxLoss')?.value || '',
+                    maxProfit: document.getElementById('maxProfit')?.value || ''
+                }
+            };
+
+            // Format JSON with indentation
+            const formattedJson = JSON.stringify(strategy, null, 2);
+            
+            // Display in modal
+            const jsonPreview = document.getElementById('jsonPreview');
+            if (!jsonPreview) {
+                throw new Error('JSON preview element not found');
+            }
+            jsonPreview.textContent = formattedJson;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('jsonPreviewModal'));
+            modal.show();
+        } catch (error) {
+            console.error('Error generating JSON preview:', error);
+            showNotification('Error generating JSON preview: ' + error.message, 'error');
+        }
+    }
+
+    function copyJsonToClipboard() {
+        const jsonText = document.getElementById('jsonPreview').textContent;
+        navigator.clipboard.writeText(jsonText).then(() => {
+            showNotification('JSON copied to clipboard', 'success');
+        }).catch(err => {
+            console.error('Failed to copy JSON:', err);
+            showNotification('Failed to copy JSON', 'error');
+        });
+    }
+
+    // Add function to preview saved strategy
+    async function previewSavedStrategy(strategyId) {
+        try {
+            const response = await fetch(`${ENV.API_BASE_URL}/api/strategies/${strategyId}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem(ENV.AUTH_TOKEN_KEY)}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch strategy details');
+            }
+
+            const strategy = await response.json();
+            
+            // Format JSON with indentation
+            const formattedJson = JSON.stringify(strategy, null, 2);
+            
+            // Display in modal
+            const jsonPreview = document.getElementById('jsonPreview');
+            if (!jsonPreview) {
+                throw new Error('JSON preview element not found');
+            }
+            jsonPreview.textContent = formattedJson;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('jsonPreviewModal'));
+            modal.show();
+        } catch (error) {
+            console.error('Error previewing strategy:', error);
+            showNotification('Error previewing strategy: ' + error.message, 'error');
+        }
+    }
+
+    // Update the deleteDeployedStrategy function
+    async function deleteDeployedStrategy(strategyId) {
+        try {
+            // First delete from backend
+            const response = await fetch(`${ENV.API_BASE_URL}/api/strategies/deployed/${strategyId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem(ENV.AUTH_TOKEN_KEY)}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete deployed strategy');
+            }
+
+            // Then delete from live server
+            const liveResponse = await fetch(`${ENV.LIVE_WS_URL}/api/strategies/${strategyId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!liveResponse.ok) {
+                console.warn('Warning: Strategy deleted from backend but may still be running on live server');
+            }
+
+            showNotification('Deployed strategy deleted successfully', 'success');
+            displayDeployedStrategies(); // Refresh the list
+        } catch (error) {
+            console.error('Error deleting deployed strategy:', error);
+            showNotification('Failed to delete deployed strategy: ' + error.message, 'error');
+        }
     }
     </script>
 </body>

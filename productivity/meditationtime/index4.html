@@ -394,6 +394,8 @@
         let lastStatsReset = localStorage.getItem('meditationLastStatsReset') || new Date().toDateString();
         let isTestingMode = localStorage.getItem('meditationTestingMode') === 'true';
         let sessionNotes = localStorage.getItem('meditationSessionNotes') || '';
+        let wakeLock = null;
+        let wakeLockEnabled = false;
 
         // Initialize notes from localStorage
         document.addEventListener('DOMContentLoaded', function() {
@@ -542,6 +544,9 @@
                 clearInterval(timer);
             }
 
+            // Request wake lock when session starts
+            requestWakeLock();
+
             // Clear notes when starting new session
             document.getElementById('meditationSessionNotes').value = '';
             localStorage.removeItem('meditationSessionNotes');
@@ -566,6 +571,9 @@
 
         function cancelSession() {
             if (timer) {
+                // Release wake lock
+                releaseWakeLock();
+
                 clearInterval(timer);
                 timer = null;
                 currentSession = null;
@@ -585,16 +593,26 @@
         function sessionComplete() {
             clearInterval(timer);
             timer = null;
+            
+            // Release wake lock
+            releaseWakeLock();
+            
             document.getElementById('meditationConfirmationSection').classList.add('show');
             document.getElementById('meditationBreakButton').style.display = 'none';
             updateButtons(true);
             saveTimerState();
             
-            // Play the chime sound
+            // Play the chime sound for 5 seconds
             const chime = document.getElementById('meditationChime');
             chime.play().catch(error => {
                 console.log('Error playing chime:', error);
             });
+            
+            // Stop the sound after 5 seconds
+            setTimeout(() => {
+                chime.pause();
+                chime.currentTime = 0;
+            }, 1000);
         }
 
         function syncPendingTime(newValue) {
@@ -785,6 +803,9 @@
 
         function breakSession() {
             if (timer) {
+                // Release wake lock
+                releaseWakeLock();
+
                 clearInterval(timer);
                 timer = null;
 
@@ -818,6 +839,35 @@
         document.getElementById('pendingTimeInput').addEventListener('keyup', function(event) {
             if (event.key === 'Enter') {
                 togglePendingTimeEdit();
+            }
+        });
+
+        function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen').then((lock) => {
+                    wakeLock = lock;
+                    wakeLockEnabled = true;
+                    console.log('Wake Lock is active');
+                }).catch((err) => {
+                    console.log(`Wake Lock error: ${err.name}, ${err.message}`);
+                });
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLockEnabled && wakeLock) {
+                wakeLock.release().then(() => {
+                    wakeLock = null;
+                    wakeLockEnabled = false;
+                    console.log('Wake Lock released');
+                });
+            }
+        }
+
+        // Add event listener to reacquire wake lock if page becomes visible again
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLockEnabled && document.visibilityState === 'visible' && timer) {
+                requestWakeLock();
             }
         });
 

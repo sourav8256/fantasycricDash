@@ -73,11 +73,27 @@ let loadedStrategies = [];
 // Store market feed connection
 let marketWs;
 
-// WebSocket connection handler
+// Add heartbeat interval constant near the top of the file
+const HEARTBEAT_INTERVAL = 3000; // 30 seconds
+
+// Modify the WebSocket connection handler
 wss.on('connection', (ws) => {
     console.log('New client connected');
     
     ws.subscribedSymbols = new Set();
+    ws.isAlive = true;
+
+    // Set up heartbeat response handler
+    ws.on('pong', () => {
+        ws.isAlive = true;
+    });
+
+    // Send initial connection acknowledgment
+    ws.send(JSON.stringify({
+        event: 'connected',
+        message: 'Connected to trading server',
+        timestamp: new Date().toISOString()
+    }));
 
     ws.on('message', (message) => {
         console.log('Received message from client:', message);
@@ -102,6 +118,33 @@ wss.on('connection', (ws) => {
             }
         });
     });
+});
+
+// Add heartbeat interval checker
+const heartbeat = setInterval(() => {
+    wss.clients.forEach(ws => {
+        if (ws.isAlive === false) {
+            console.log('Terminating inactive client connection');
+            return ws.terminate();
+        }
+
+        ws.isAlive = false;
+        ws.ping();
+
+        // Send heartbeat message with subscribed symbols
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                event: 'heartbeat',
+                timestamp: new Date().toISOString(),
+                subscribedSymbols: Array.from(ws.subscribedSymbols)
+            }));
+        }
+    });
+}, HEARTBEAT_INTERVAL);
+
+// Clean up interval on server close
+wss.on('close', () => {
+    clearInterval(heartbeat);
 });
 
 // Message handler

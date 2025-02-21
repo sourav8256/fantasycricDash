@@ -85,17 +85,63 @@ function handleUnsubscribe(ws, symbols) {
     }));
 }
 
-// Modify updatePrices to handle any symbol
+// Add cycle tracking
+const CYCLE_DURATION = 20; // 20 seconds total (10 up + 10 down)
+const PRICE_CHANGE_PERCENT = 20; // 20% change
+let cycleStartTime = Date.now();
+let cycleStartPrices = {};
+
 function updatePrices() {
+    const currentTime = Date.now();
+    const timeInCycle = (currentTime - cycleStartTime) % (CYCLE_DURATION * 1000); // Time position in current cycle
+    const cycleProgress = timeInCycle / (CYCLE_DURATION * 1000); // 0 to 1
+    
+    // Start a new cycle
+    if (timeInCycle < 1000) { // If we're in the first second of a cycle
+        cycleStartTime = currentTime - timeInCycle; // Align to exact cycle start
+        cycleStartPrices = {};
+        Object.keys(mockStocks).forEach(symbol => {
+            cycleStartPrices[symbol] = {
+                price: mockStocks[symbol].price,
+                volume: mockStocks[symbol].volume
+            };
+        });
+        console.log('Starting new price cycle at:', new Date().toISOString());
+    }
+
     for (let symbol in mockStocks) {
-        // Random price movement between -1% and +1%
-        const oldPrice = mockStocks[symbol].price;
-        const priceChange = oldPrice * (Math.random() * 0.02 - 0.01);
-        mockStocks[symbol].price += priceChange;
-        mockStocks[symbol].price = Number(mockStocks[symbol].price.toFixed(2));
-        
-        // Random volume change between -20% and +40%
-        mockStocks[symbol].volume = Math.floor(mockStocks[symbol].volume * (0.8 + Math.random() * 0.4));
+        // Ensure we have start prices
+        if (!cycleStartPrices[symbol]) {
+            cycleStartPrices[symbol] = {
+                price: mockStocks[symbol].price,
+                volume: mockStocks[symbol].volume
+            };
+        }
+        const startPrice = cycleStartPrices[symbol].price;
+
+        // Calculate price based on cycle position
+        let percentChange;
+        if (cycleProgress < 0.5) {
+            // First 10 seconds - rising (0% to 20%)
+            percentChange = (cycleProgress * 2) * PRICE_CHANGE_PERCENT;
+        } else {
+            // Last 10 seconds - falling (20% to 0%)
+            percentChange = ((2 - cycleProgress * 2) * PRICE_CHANGE_PERCENT);
+        }
+
+        // Update price
+        const newPrice = startPrice * (1 + (percentChange / 100));
+        mockStocks[symbol].price = Number(newPrice.toFixed(2));
+
+        // Update volume (keep some randomness in volume)
+        mockStocks[symbol].volume = Math.floor(
+            cycleStartPrices[symbol].volume * (0.95 + Math.random() * 0.1)
+        );
+
+        // Log cycle information for debugging
+        if (symbol === Object.keys(mockStocks)[0]) { // Log only for first symbol
+            console.log(`Cycle Info - Time: ${timeInCycle/1000}s, Progress: ${(cycleProgress*100).toFixed(1)}%, Change: ${percentChange.toFixed(1)}%`);
+        }
 
         // Broadcast to subscribed clients
         const update = {
@@ -104,7 +150,13 @@ function updatePrices() {
             data: {
                 price: mockStocks[symbol].price,
                 volume: mockStocks[symbol].volume,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                cycleInfo: {
+                    timeInCycle: Math.floor(timeInCycle/1000),
+                    cycleProgress: cycleProgress,
+                    percentChange: percentChange,
+                    isRising: cycleProgress < 0.5
+                }
             }
         };
 
@@ -116,8 +168,8 @@ function updatePrices() {
     }
 }
 
-// Update prices every 5 seconds
-setInterval(updatePrices, 5000);
+// Update prices every second
+setInterval(updatePrices, 1000);
 
 // Middleware to simulate API latency
 app.use((req, res, next) => {

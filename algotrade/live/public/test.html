@@ -102,11 +102,28 @@
                 console.log('Received message:', event.data);
                 const data = JSON.parse(event.data);
                 console.log('Parsed data:', data);
-                if (data.event === 'price_update') {
-                    console.log('Processing price update:', data);
-                    updatePrice(data);
-                } else {
-                    console.log('Unhandled message type:', data.type);
+                
+                switch (data.event) {
+                    case 'price_update':
+                        console.log('Processing price update:', data);
+                        updatePrice(data);
+                        break;
+                    case 'heartbeat':
+                        console.log('Received heartbeat at:', data.timestamp);
+                        // Update connection status to show last heartbeat and subscribed symbols
+                        const statusEl = document.getElementById('connectionStatus');
+                        const symbolsList = data.subscribedSymbols.length > 0 
+                            ? ` - Subscribed to: ${data.subscribedSymbols.join(', ')}` 
+                            : ' - No active subscriptions';
+                        statusEl.textContent = `Connected - Last Heartbeat: ${new Date(data.timestamp).toLocaleTimeString()}${symbolsList}`;
+                        statusEl.classList.remove('disconnected');
+                        statusEl.classList.add('connected');
+                        break;
+                    case 'connected':
+                        console.log('Connection acknowledged:', data.message);
+                        break;
+                    default:
+                        console.log('Unhandled message type:', data.event);
                 }
             };
         }

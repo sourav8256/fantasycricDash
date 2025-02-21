@@ -85,6 +85,153 @@
             background: #f8f9fa;
             border-radius: 8px;
         }
+        .live-price-cell {
+            min-width: 120px;
+        }
+        .live-price-cell .price-value {
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .live-price-cell .timestamp {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        .text-success {
+            color: #00c853 !important;
+        }
+        .text-danger {
+            color: #ff1744 !important;
+        }
+        .websocket-status {
+            transition: all 0.3s ease;
+            margin: 0 0 1rem 0;
+        }
+        
+        .websocket-status.connected {
+            background-color: rgba(0, 200, 83, 0.1);
+            color: #00c853;
+            border-color: #00c853;
+        }
+        
+        .websocket-status.disconnected {
+            background-color: rgba(255, 23, 68, 0.1);
+            color: #ff1744;
+            border-color: #ff1744;
+        }
+        
+        .websocket-status.connecting {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: #ff9800;
+            border-color: #ff9800;
+        }
+
+        .websocket-status .spinner-border {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .reconnect-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .reconnect-btn i {
+            margin-right: 0.25rem;
+        }
+
+        .connection-details {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .market-data-feed {
+            font-size: 0.9rem;
+        }
+
+        .market-data-item {
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .market-data-item:last-child {
+            border-bottom: none;
+        }
+
+        .market-data-item .symbol {
+            font-weight: 500;
+            min-width: 100px;
+        }
+
+        .market-data-item .price {
+            font-family: monospace;
+        }
+
+        .market-data-item .time {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .market-data-item.price-up {
+            background-color: rgba(0, 200, 83, 0.05);
+        }
+
+        .market-data-item.price-down {
+            background-color: rgba(255, 23, 68, 0.05);
+        }
+
+        .feed-status.active {
+            color: #00c853 !important;
+        }
+
+        .feed-status.inactive {
+            color: #ff1744 !important;
+        }
+
+        .raw-data-item {
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .raw-data-item:last-child {
+            border-bottom: none;
+        }
+
+        .raw-data-item .time {
+            color: #666;
+            font-size: 0.8rem;
+            margin-right: 1rem;
+        }
+
+        .raw-data-item .data {
+            color: #1a237e;
+        }
+
+        /* Add these tab-specific styles */
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.show.active {
+            display: block;
+        }
+
+        /* Ensure smooth transitions */
+        .tab-pane {
+            transition: opacity 0.15s linear;
+        }
+
+        .tab-pane.fade {
+            opacity: 0;
+        }
+
+        .tab-pane.fade.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -95,194 +242,181 @@
             <button class="nav-link" id="deployed-tab" data-bs-toggle="pill" data-bs-target="#deployed" type="button" role="tab">Deployed Strategies</button>
         </div>
 
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="create" role="tabpanel">
-                <div class="card">
-                    <h5>Strategy Type</h5>
-                    <div class="btn-group" role="group">
-                        <input type="radio" class="btn-check" name="strategy" id="time" checked>
-                        <label class="btn btn-outline-primary" for="time">Time Based</label>
-                        
-                        <input type="radio" class="btn-check" name="strategy" id="indicator">
-                        <label class="btn btn-outline-primary" for="indicator">Indicator Based</label>
-                    </div>
+        <div class="websocket-status alert alert-warning d-flex align-items-center mb-3" style="display: none !important;">
+            <div class="d-flex align-items-center flex-grow-1">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
-
-                <div class="card">
-                    <h5>Select Instruments</h5>
-                    <select class="form-select mb-3" id="instrumentSelect" required>
-                        <option value="BANKNIFTY" selected>BANKNIFTY</option>
-                        <option value="NIFTY">NIFTY 50</option>
-                        <option value="FINNIFTY">FINNIFTY</option>
-                    </select>
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="input-group">
-                                <span class="input-group-text">Lot Size</span>
-                                <input type="number" class="form-control" value="25" style="margin: 0;">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="input-group">
-                                <span class="input-group-text">Strike</span>
-                                <select class="form-select">
-                                    <option>ATM</option>
-                                    <option>ITM</option>
-                                    <option>OTM</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="input-group">
-                                <span class="input-group-text">Option</span>
-                                <select class="form-select">
-                                    <option>CE</option>
-                                    <option>PE</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                <div>
+                    <span class="status-text">Connecting to market data...</span>
+                    <small class="d-block text-muted connection-details"></small>
                 </div>
-                <div class="card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5>Order Legs</h5>
-                        <button class="btn btn-outline-primary btn-sm" onclick="addLeg()" type="button">
-                            <i class="fas fa-plus"></i> Add Leg
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-warning ms-2 reconnect-btn">
+                <i class="fas fa-sync-alt"></i> Reconnect
+            </button>
+        </div>
+
+        <div class="market-data-feed card mb-3">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-2">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Market Data Feed
+                </h6>
+                <div class="d-flex align-items-center">
+                    <small class="text-muted me-2 feed-status">Waiting for data...</small>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#marketDataContent">
+                            <i class="fas fa-chart-line"></i> Parsed
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#rawDataContent">
+                            <i class="fas fa-code"></i> Raw
                         </button>
                     </div>
-                    <div id="legsContainer">
-                        <div class="row leg-row mb-3" data-leg="1">
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">Leg 1</span>
-                                    <select class="form-select">
-                                        <option>Buy</option>
-                                        <option>Sell</option>
-                                    </select>
+                </div>
+            </div>
+            <div class="collapse" id="marketDataContent">
+                <div class="card-body p-0">
+                    <div class="market-data-list" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Market data updates will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <div class="collapse" id="rawDataContent">
+                <div class="card-body p-0">
+                    <div class="raw-data-list" style="max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;">
+                        <!-- Raw data will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="create" role="tabpanel">
+                <div class="strategy-builder">
+                    <!-- Strategy Type Selection -->
+                    <div class="form-section">
+                        <h6 class="section-title">Strategy Type</h6>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-primary active" data-type="time">Time Based</button>
+                            <button class="btn btn-outline-primary" data-type="indicator">Indicator Based</button>
+                        </div>
+                    </div>
+
+                    <!-- Instrument Selection -->
+                    <div class="form-section">
+                        <h6 class="section-title">Select Instruments</h6>
+                        <div class="instrument-cards">
+                            <div class="card instrument-card">
+                                <div class="card-header">
+                                    <div class="symbol-info">
+                                        <span class="symbol">NIFTY 50</span>
+                                        <span class="exchange">NSE</span>
+                                    </div>
+                                    <div class="price-info">
+                                        <span class="price-change">0.00 (0.00%)</span>
+                                        <span class="lot-size">Lot: 75</span>
+                                    </div>
+                                    <button class="btn-close" aria-label="Remove"></button>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">Strike</span>
+                        </div>
+                    </div>
+
+                    <!-- Order Legs -->
+                    <div class="form-section">
+                        <h6 class="section-title">Order Legs</h6>
+                        <div class="order-leg">
+                            <div class="leg-controls">
+                                <button class="btn btn-outline-danger">SELL</button>
+                                <input type="number" class="form-control qty-input" value="75" step="75">
+                                <button class="btn btn-outline-primary">CE</button>
+                                <button class="btn btn-primary">Weekly</button>
+                                
+                                <!-- Strike Selection -->
+                                <div class="strike-selection">
+                                    <select class="form-select">
+                                        <option>ATM pt</option>
+                                        <option>ATM %</option>
+                                        <option>CP</option>
+                                    </select>
                                     <select class="form-select">
                                         <option>ATM</option>
-                                        <option>ITM</option>
-                                        <option>OTM</option>
+                                        <option>ITM 50</option>
+                                        <option>OTM 50</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">Option</span>
-                                    <select class="form-select">
-                                        <option>CE</option>
-                                        <option>PE</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="input-group">
-                                    <span class="input-group-text">Qty</span>
-                                    <input type="number" class="form-control" value="1" min="1">
-                                </div>
-                            </div>
-                            <div class="col-md-1">
-                                <button class="btn btn-outline-danger btn-sm w-100">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="card">
-                    <h5>Risk Management</h5>
-                    
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label class="form-label">Exit when total profit amounts to</label>
-                            <input type="text" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Exit when total loss amounts to</label>
-                            <input type="text" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">No Trade After</label>
-                            <input type="text" class="form-control">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <label class="form-label">Profit Management Options</label>
-                            <div class="d-flex">
-                                <div class="form-check me-3">
-                                    <input class="form-check-input" type="radio" name="profitManagement" id="noTrailing" value="noTrailing" checked>
-                                    <label class="form-check-label" for="noTrailing">No Trailing</label>
-                                </div>
-                                <div class="form-check me-3">
-                                    <input class="form-check-input" type="radio" name="profitManagement" id="lockFixProfit" value="lockFixProfit">
-                                    <label class="form-check-label" for="lockFixProfit">Lock Fix Profit</label>
-                                </div>
-                                <div class="form-check me-3">
-                                    <input class="form-check-input" type="radio" name="profitManagement" id="totalProfit" value="totalProfit">
-                                    <label class="form-check-label" for="totalProfit">Total Profit</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="profitManagement" id="lockAndTrail" value="lockAndTrail">
-                                    <label class="form-check-label" for="lockAndTrail">Lock and Trail</label>
+                                <!-- SL/Target Controls -->
+                                <div class="sl-target-controls">
+                                    <div class="input-group">
+                                        <select class="form-select">
+                                            <option>SL pt</option>
+                                            <option>SL %</option>
+                                        </select>
+                                        <input type="number" class="form-control" value="30">
+                                        <select class="form-select">
+                                            <option>On Price</option>
+                                            <option>On Close</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <button class="btn btn-primary mt-3">
+                            <i class="fas fa-plus"></i> ADD LEG
+                        </button>
                     </div>
-                    <div class="row mt-2" id="trailingOptions">
-                        <div class="col-md-6">
-                            <label class="form-label">Trail Amount</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Increase by</span>
-                                <input type="number" class="form-control" id="trailStep" value="400" min="1">
-                                <span class="input-group-text">points</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Profit Threshold</label>
-                            <div class="input-group">
-                                <span class="input-group-text">For every</span>
-                                <input type="number" class="form-control" id="profitStep" value="800" min="1">
-                                <span class="input-group-text">points profit</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-2" id="trailPreview">
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small>
-                                        <i class="fas fa-info-circle"></i> Preview: 
-                                        <span id="previewText">Stop loss will increase by 400 points for every 800 points profit</span>
-                                    </small>
-                                    <button class="btn btn-sm btn-outline-primary" id="calculateBtn">Calculate</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="card">
-                    <h5>Save Strategy</h5>
-                    <div class="row align-items-end">
-                        <div class="col-md-8">
-                            <label class="form-label">Strategy Name</label>
-                            <input type="text" class="form-control" placeholder="Enter a name for your strategy">
+                    <!-- Advanced Features -->
+                    <div class="form-section">
+                        <div class="accordion">
+                            <div class="accordion-item">
+                                <h6 class="accordion-header">
+                                    <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#advancedFeatures">
+                                        Advanced Features
+                                    </button>
+                                </h6>
+                                <div id="advancedFeatures" class="accordion-collapse collapse">
+                                    <div class="accordion-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="moveSL">
+                                            <label class="form-check-label" for="moveSL">Move SL to Cost</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="exitAll">
+                                            <label class="form-check-label" for="exitAll">Exit All on SL/Tgt</label>
+                                        </div>
+                                        <!-- Add other advanced features -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-4 text-end">
-                            <div class="btn-group">
-                                <button class="btn btn-outline-secondary" onclick="previewStrategyJson()">
-                                    <i class="fas fa-code"></i> Preview JSON
-                                </button>
-                                <button class="btn btn-primary" id="saveStrategyBtn" onclick="saveStrategy()">Save Strategy</button>
-                                <button class="btn btn-success">Deploy Strategy</button>
+                    </div>
+
+                    <!-- Risk Management -->
+                    <div class="form-section">
+                        <h6 class="section-title">Risk Management</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <input type="number" class="form-control" placeholder="Exit When Overall Profit (INR)">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control" placeholder="Exit When Overall Loss (INR)">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="time" class="form-control" value="15:15">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Strategy Name and Save -->
+                    <div class="form-section">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <input type="text" class="form-control" placeholder="Strategy name">
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-primary btn-lg">Save & Continue</button>
                             </div>
                         </div>
                     </div>
@@ -1149,7 +1283,20 @@
 
             console.log('Deployed strategies:', deployedStrategies);
 
-            // Update the status badge and action buttons logic
+            // Subscribe to symbols from deployed strategies
+            const symbols = new Set(deployedStrategies.map(strategy => strategy.instrument));
+            console.log('Subscribing to symbols:', Array.from(symbols));
+            
+            // Subscribe to each symbol
+            symbols.forEach(symbol => {
+                if (window.liveFeedManager) {
+                    window.liveFeedManager.subscribe(symbol);
+                } else {
+                    console.error('LiveFeedManager not initialized');
+                }
+            });
+
+            // Update the table HTML
             deployedTableBody.innerHTML = deployedStrategies.map(strategy => `
                 <tr>
                     <td>
@@ -1160,7 +1307,12 @@
                     <td>${strategy.type}</td>
                     <td>${strategy.mode}</td>
                     <td>${strategy.instrument}</td>
-                    <td class="live-price" data-symbol="${strategy.instrument}">--</td>
+                    <td class="live-price-cell" data-symbol="${strategy.instrument}">
+                        <div class="d-flex align-items-center">
+                            <span class="price-value">--</span>
+                            <small class="ms-2 text-muted timestamp"></small>
+                        </div>
+                    </td>
                     <td class="pnl">₹${strategy.pnl || '0'}</td>
                     <td>
                         <span class="badge ${strategy.status.toLowerCase() === 'running' ? 'bg-success' : 'bg-warning'}">
@@ -1414,6 +1566,65 @@
             showNotification('Failed to delete deployed strategy: ' + error.message, 'error');
         }
     }
+
+    // Add this to ensure LiveFeedManager is available
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize LiveFeedManager if not already initialized
+        if (!window.liveFeedManager) {
+            console.log('Initializing LiveFeedManager');
+            window.liveFeedManager = new LiveFeedManager();
+        }
+        
+        // Initial load of deployed strategies
+        displayDeployedStrategies();
+    });
+
+    // Function to handle tab switching
+    function switchTab(tabId) {
+        // Hide all tab panes
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.style.display = 'none';
+            pane.classList.remove('show', 'active');
+        });
+
+        // Remove active class from all nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+
+        // Show selected tab pane
+        const selectedPane = document.getElementById(tabId);
+        if (selectedPane) {
+            selectedPane.style.display = 'block';
+            selectedPane.classList.add('show', 'active');
+        }
+
+        // Add active class to selected nav link
+        const selectedLink = document.querySelector(`[data-bs-target="#${tabId}"]`);
+        if (selectedLink) {
+            selectedLink.classList.add('active');
+        }
+
+        // If showing deployed tab, initialize subscriptions
+        if (tabId === 'deployed') {
+            displayDeployedStrategies();
+        }
+    }
+
+    // Initialize tabs on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Show deployed strategies tab by default
+        switchTab('deployed');
+
+        // Add click handlers to tab links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabId = link.getAttribute('data-bs-target').substring(1);
+                switchTab(tabId);
+            });
+        });
+    });
     </script>
 </body>
 </html>

@@ -3,11 +3,149 @@ console.log('live-feed.js loaded');
 class LiveFeedManager {
     constructor() {
         this.ws = null;
-        this.subscribedSymbols = new Set();
         this.isConnecting = false;
+        this.statusElement = null;
+        this.reconnectButton = null;
         console.log('LiveFeedManager initialized');
+        this.lastPrices = new Map();
+        this.maxFeedItems = 50; // Keep last 50 updates
+        this.lastHeartbeat = null; // Track last heartbeat only
+        this.initializeUI();
         this.connect();
-        this.initializeSubscriptions();
+    }
+
+    initializeUI() {
+        this.statusElement = document.querySelector('.websocket-status');
+        if (this.statusElement) {
+            this.statusElement.style.display = 'flex';
+            this.reconnectButton = this.statusElement.querySelector('.reconnect-btn');
+            if (this.reconnectButton) {
+                this.reconnectButton.addEventListener('click', () => this.reconnect());
+            }
+        }
+        this.marketDataList = document.querySelector('.market-data-list');
+        this.feedStatus = document.querySelector('.feed-status');
+        this.rawDataList = document.querySelector('.raw-data-list');
+    }
+
+    updateConnectionStatus(status, message) {
+        if (!this.statusElement) return;
+
+        const statusText = this.statusElement.querySelector('.status-text');
+        const connectionDetails = this.statusElement.querySelector('.connection-details');
+        const spinner = this.statusElement.querySelector('.spinner-border');
+        
+        // Remove all status classes
+        this.statusElement.classList.remove('connected', 'disconnected', 'connecting');
+        
+        // Format the WebSocket URL for display
+        const wsUrl = new URL(ENV.LIVE_WS_URL);
+        const displayUrl = `${wsUrl.hostname}:${wsUrl.port}${wsUrl.pathname}`;
+        
+        switch (status) {
+            case 'connected':
+                this.statusElement.classList.add('connected');
+                spinner.style.display = 'none';
+                this.reconnectButton.style.display = 'none';
+                connectionDetails.textContent = `Connected to ${displayUrl}`;
+                break;
+            case 'disconnected':
+                this.statusElement.classList.add('disconnected');
+                spinner.style.display = 'none';
+                this.reconnectButton.style.display = 'block';
+                connectionDetails.textContent = `Last attempted connection to ${displayUrl}`;
+                break;
+            case 'connecting':
+                this.statusElement.classList.add('connecting');
+                spinner.style.display = 'block';
+                this.reconnectButton.style.display = 'none';
+                connectionDetails.textContent = `Attempting connection to ${displayUrl}`;
+                break;
+        }
+        
+        if (statusText) {
+            statusText.textContent = message;
+        }
+    }
+
+    updateFeedStatus(isActive) {
+        if (!this.feedStatus) return;
+        
+        this.feedStatus.classList.remove('active', 'inactive');
+        if (isActive) {
+            this.feedStatus.textContent = 'Receiving market data';
+            this.feedStatus.classList.add('active');
+        } else {
+            this.feedStatus.textContent = 'Feed inactive';
+            this.feedStatus.classList.add('inactive');
+        }
+    }
+
+    addMarketDataItem(data) {
+        if (!this.marketDataList) return;
+
+        const previousPrice = this.lastPrices.get(data.symbol) || data.price;
+        this.lastPrices.set(data.symbol, data.price);
+
+        const priceChange = data.price - previousPrice;
+        const priceClass = priceChange > 0 ? 'text-success' : priceChange < 0 ? 'text-danger' : '';
+        const rowClass = priceChange > 0 ? 'price-up' : priceChange < 0 ? 'price-down' : '';
+
+        const formattedPrice = new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(data.price);
+
+        const time = new Date(data.timestamp).toLocaleTimeString();
+
+        const item = document.createElement('div');
+        item.className = `market-data-item ${rowClass}`;
+        item.innerHTML = `
+            <span class="symbol">${data.symbol}</span>
+            <span class="price ${priceClass}">${formattedPrice}</span>
+            <span class="time">${time}</span>
+        `;
+
+        this.marketDataList.insertBefore(item, this.marketDataList.firstChild);
+
+        // Remove old items if exceeding maxFeedItems
+        while (this.marketDataList.children.length > this.maxFeedItems) {
+            this.marketDataList.removeChild(this.marketDataList.lastChild);
+        }
+
+        this.updateFeedStatus(true);
+    }
+
+    addRawDataItem(rawData) {
+        if (!this.rawDataList) return;
+
+        const time = new Date().toLocaleTimeString();
+        const item = document.createElement('div');
+        item.className = 'raw-data-item';
+        
+        // Handle both string and object data
+        const displayData = typeof rawData === 'string' ? rawData : JSON.stringify(rawData);
+        
+        item.innerHTML = `
+            <span class="time">${time}</span>
+            <span class="data">${displayData}</span>
+        `;
+
+        this.rawDataList.insertBefore(item, this.rawDataList.firstChild);
+
+        // Remove old items if exceeding maxFeedItems
+        while (this.rawDataList.children.length > this.maxFeedItems) {
+            this.rawDataList.removeChild(this.rawDataList.lastChild);
+        }
+    }
+
+    reconnect() {
+        if (this.ws) {
+            this.ws.close();
+        }
+        this.connect();
     }
 
     connect() {
@@ -20,38 +158,69 @@ class LiveFeedManager {
         
         try {
             console.log('Attempting WebSocket connection to:', wsUrl);
+            this.updateConnectionStatus('connecting', 'Connecting to market data...');
+            
             this.ws = new WebSocket(wsUrl);
 
             this.ws.onopen = () => {
                 console.log('WebSocket connection established');
-                this.subscribedSymbols.forEach(symbol => {
-                    this.subscribe(symbol);
-                });
+                this.updateConnectionStatus('connected', 'Connected to market data');
+                this.updateFeedStatus(true);
             };
 
             this.ws.onclose = (event) => {
                 console.log('WebSocket connection closed:', event.code, event.reason);
+                this.updateConnectionStatus('disconnected', 'Disconnected from market data');
+                this.updateFeedStatus(false);
                 setTimeout(() => {
-                    console.log('Attempting to reconnect...');
-                    this.connect();
-                }, 1000);
+                    if (this.ws.readyState === WebSocket.CLOSED) {
+                        this.connect();
+                    }
+                }, 5000);
             };
 
             this.ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
+                this.updateConnectionStatus('disconnected', 'Connection error');
             };
 
             this.ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    if (data.type === 'price_update') {
-                        this.updatePriceInTable({
-                            symbol: data.symbol,
-                            price: data.price,
-                            timestamp: data.timestamp
-                        });
-                    } else if (data.type === 'strategy_deployed') {
-                        console.log('Strategy deployed:', data.strategyId);
+                    
+                    // Handle heartbeat messages
+                    if (data.event === 'heartbeat') {
+                        this.lastHeartbeat = data;
+                        console.log('Updated subscribed symbols from heartbeat:', Array.from(data.subscribedSymbols));
+                    }
+
+                    // Show all raw data immediately
+                    this.addRawDataItem(event.data);
+                    
+                    // Parse and handle the message
+                    switch (data.event) {
+                        case 'price_update':
+                            const priceData = {
+                                symbol: data.symbol,
+                                price: data.data.price,
+                                timestamp: data.data.timestamp,
+                                volume: data.data.volume
+                            };
+                            this.updatePriceInTable(priceData);
+                            this.addMarketDataItem(priceData);
+                            break;
+                            
+                        case 'connected':
+                            console.log('Connected to market data:', data.message);
+                            this.updateConnectionStatus('connected', 'Connected to market data');
+                            break;
+                            
+                        case 'subscribed':
+                            console.log('Subscription confirmed:', data.symbols);
+                            break;
+                            
+                        default:
+                            console.log('Unhandled event type:', data.event);
                     }
                 } catch (error) {
                     console.error('Error processing message:', error);
@@ -59,110 +228,105 @@ class LiveFeedManager {
             };
         } catch (error) {
             console.error('Error creating WebSocket:', error);
+            this.updateConnectionStatus('disconnected', 'Failed to connect');
         }
     }
 
     subscribe(symbol) {
+        if (!symbol) {
+            console.warn('Attempted to subscribe with empty symbol');
+            return;
+        }
+
+        // Check last heartbeat for existing subscription
+        if (this.lastHeartbeat && this.lastHeartbeat.subscribedSymbols.includes(symbol)) {
+            console.log(`Already subscribed to ${symbol} according to last heartbeat, skipping subscription`);
+            return;
+        }
+
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             const subscribeMsg = {
                 type: 'subscribe',
-                symbol: symbol,
-                strategyId: `strategy_${symbol.toLowerCase()}`
+                symbol: symbol
             };
-            console.log('Strategy subscription:', symbol);
+            console.log('Sending subscribe message:', JSON.stringify(subscribeMsg, null, 2));
             this.ws.send(JSON.stringify(subscribeMsg));
-            this.subscribedSymbols.add(symbol);
         } else {
-            console.warn('Cannot subscribe to', symbol, '- WebSocket not ready');
+            console.log('WebSocket not ready, retrying subscription in 100ms');
+            setTimeout(() => this.subscribe(symbol), 100);
         }
     }
 
     unsubscribe(symbol) {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            const unsubscribeMsg = {
+            console.log('Sending unsubscribe message for:', symbol);
+            this.ws.send(JSON.stringify({
                 type: 'unsubscribe',
-                symbol: symbol,
-                strategyId: `strategy_${symbol.toLowerCase()}`
-            };
-            console.log('Sending unsubscribe message:', unsubscribeMsg);
-            this.ws.send(JSON.stringify(unsubscribeMsg));
-            this.subscribedSymbols.delete(symbol);
-            console.log('Current subscribed symbols:', Array.from(this.subscribedSymbols));
+                symbol: symbol
+            }));
         }
     }
 
     updatePriceInTable(data) {
         try {
             if (!data || !data.symbol || !data.price) {
+                console.warn('Invalid price update data:', data);
                 return;
             }
 
-            const deployedTab = document.getElementById('deployed');
-            if (!deployedTab) {
-                return;
-            }
-
-            const table = deployedTab.querySelector('.table');
-            if (!table) {
-                return;
-            }
-
-            const rows = table.querySelectorAll('tbody tr');
-            let found = false;
+            // Find all price cells for this symbol
+            const priceCells = document.querySelectorAll(`.live-price-cell[data-symbol="${data.symbol}"]`);
             
-            rows.forEach((row, index) => {
+            priceCells.forEach(priceCell => {
                 try {
-                    const instrumentCell = row.cells[3];
-                    if (!instrumentCell) {
+                    const priceValueEl = priceCell.querySelector('.price-value');
+                    const timestampEl = priceCell.querySelector('.timestamp');
+                    
+                    if (!priceValueEl || !timestampEl) {
+                        console.warn('Price elements not found in cell');
                         return;
                     }
 
-                    const instrumentSymbol = instrumentCell.textContent.trim();
-                    if (instrumentSymbol === data.symbol) {
-                        found = true;
-                        const priceCell = row.querySelector('.live-price-cell');
-                        if (!priceCell) {
-                            return;
-                        }
+                    // Format the price
+                    const formattedPrice = new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }).format(data.price);
 
-                        try {
-                            const formattedPrice = new Intl.NumberFormat('en-IN', {
-                                style: 'currency',
-                                currency: 'INR',
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            }).format(data.price);
-                            
-                            const previousPrice = parseFloat(priceCell.dataset.price || 0);
-                            const newPrice = data.price;
-                            const priceChange = newPrice - previousPrice;
-                            
-                            priceCell.dataset.price = newPrice;
-                            priceCell.textContent = formattedPrice;
-                            
-                            priceCell.classList.remove('text-success', 'text-danger');
-                            if (priceChange > 0) {
-                                priceCell.classList.add('text-success');
-                            } else if (priceChange < 0) {
-                                priceCell.classList.add('text-danger');
-                            }
-                            
-                            priceCell.style.transition = 'background-color 0.5s ease';
-                            priceCell.style.backgroundColor = 'rgba(0,0,0,0.05)';
-                            setTimeout(() => {
-                                priceCell.style.backgroundColor = 'transparent';
-                            }, 500);
+                    // Get previous price for comparison
+                    const previousPrice = parseFloat(priceCell.dataset.price || 0);
+                    const newPrice = parseFloat(data.price);
+                    
+                    // Update the price
+                    priceValueEl.textContent = formattedPrice;
+                    priceCell.dataset.price = newPrice;
 
-                            const time = new Date(data.timestamp).toLocaleTimeString();
-                            priceCell.title = `Last updated: ${time}`;
-                        } catch (formatError) {
-                            console.error('Error formatting price:', formatError);
-                        }
+                    // Update timestamp
+                    const time = new Date(data.timestamp).toLocaleTimeString();
+                    timestampEl.textContent = time;
+
+                    // Add visual feedback for price change
+                    priceValueEl.classList.remove('text-success', 'text-danger');
+                    if (newPrice > previousPrice) {
+                        priceValueEl.classList.add('text-success');
+                    } else if (newPrice < previousPrice) {
+                        priceValueEl.classList.add('text-danger');
                     }
-                } catch (rowError) {
-                    console.error('Error processing row:', rowError);
+
+                    // Add flash effect
+                    priceCell.style.transition = 'background-color 0.5s ease';
+                    priceCell.style.backgroundColor = 'rgba(0,0,0,0.05)';
+                    setTimeout(() => {
+                        priceCell.style.backgroundColor = 'transparent';
+                    }, 500);
+
+                } catch (cellError) {
+                    console.error('Error updating individual price cell:', cellError);
                 }
             });
+
         } catch (error) {
             console.error('Error in updatePriceInTable:', error);
         }
@@ -196,7 +360,7 @@ class LiveFeedManager {
             if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                 console.log('WebSocket ready, subscribing to symbols');
                 symbols.forEach(symbol => {
-                    if (!this.subscribedSymbols.has(symbol)) {
+                    if (!this.lastHeartbeat || !this.lastHeartbeat.subscribedSymbols.includes(symbol)) {
                         this.subscribe(symbol);
                     }
                 });
@@ -208,6 +372,11 @@ class LiveFeedManager {
 
         trySubscribe();
     }
+
+    getFormattedWsUrl() {
+        const url = new URL(ENV.LIVE_WS_URL);
+        return `${url.host}${url.pathname}`;
+    }
 }
 
 // Initialize immediately when script loads
@@ -218,4 +387,7 @@ const liveFeedManager = new LiveFeedManager();
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Reinitializing strategy subscriptions');
     liveFeedManager.initializeSubscriptions();
-}); 
+});
+
+// Make LiveFeedManager globally available
+window.LiveFeedManager = LiveFeedManager; 

@@ -337,8 +337,8 @@
             <button id="meditationTestButton" onclick="startSession(0.0167)" style="background-color: #6c757d; display: none;">1 Second</button>
             <button onclick="startSession(1)">1 Minutes</button>
             <button onclick="startSession(5)">5 Minutes</button>
-            <button onclick="startSession(10)">10 Hours</button>
-            <button onclick="startSession(15)">15 Hours</button>
+            <button onclick="startSession(10)">10 Minutes</button>
+            <button onclick="startSession(15)">15 Minutes</button>
         </div>
 
         <div class="timer" id="meditationTimer">00:00:00</div>
@@ -387,9 +387,9 @@
         let sessionsCompleted = parseInt(localStorage.getItem('meditationSessionsCompleted')) || 0;
         let totalTimeCompleted = parseInt(localStorage.getItem('meditationTotalTimeCompleted')) || 0;
         let dailyProgress = 0;
-        let pendingBoringTime = parseInt(localStorage.getItem('meditationPendingTime')) || 15;
+        let pendingBoringTime = parseInt(localStorage.getItem('meditationPendingTime')) || 5;
         let lastTimeCheck = parseInt(localStorage.getItem('meditationLastTimeCheck')) || Date.now();
-        let hourlyAddition = parseInt(localStorage.getItem('meditationHourlyAddition')) || 15;
+        let hourlyAddition = parseInt(localStorage.getItem('meditationHourlyAddition')) || 5;
         let activityLog = JSON.parse(localStorage.getItem('meditationActivityLog')) || [];
         let lastStatsReset = localStorage.getItem('meditationLastStatsReset') || new Date().toDateString();
         let isTestingMode = localStorage.getItem('meditationTestingMode') === 'true';
@@ -765,7 +765,7 @@
             
             if (hoursSinceLastCheck > 0) {
                 const valueSetTime = parseInt(localStorage.getItem('meditationHourlyAdditionSetTime')) || lastTimeCheck;
-                const oldValue = parseInt(localStorage.getItem('meditationHourlyAddition')) || 15;
+                const oldValue = parseInt(localStorage.getItem('meditationHourlyAddition')) || 5;
                 
                 for (let i = 0; i < hoursSinceLastCheck; i++) {
                     const hourTime = lastCheckHour + ((i + 1) * 60 * 60 * 1000);

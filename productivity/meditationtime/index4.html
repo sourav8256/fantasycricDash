@@ -375,44 +375,53 @@
             <div id="meditationLogEntries"></div>
         </div>
 
-        <div class="version">Version 1.0.7</div>
+        <div class="version">Version 1.0.8</div>
     </div>
 
     <script>
+
+const STORAGE_KEYS = {
+            SESSIONS_STARTED: 'meditationSessionsStarted',
+            SESSIONS_COMPLETED: 'meditationSessionsCompleted',
+            TOTAL_TIME_COMPLETED: 'meditationTotalTimeCompleted',
+            PENDING_TIME: 'meditationPendingTime',
+            LAST_TIME_CHECK: 'meditationLastTimeCheck',
+            HOURLY_ADDITION: 'meditationHourlyAddition',
+            HOURLY_ADDITION_SET_TIME: 'meditationHourlyAdditionSetTime',
+            ACTIVITY_LOG: 'meditationActivityLog',
+            LAST_STATS_RESET: 'meditationLastStatsReset',
+            TESTING_MODE: 'meditationTestingMode',
+            SESSION_NOTES: 'meditationSessionNotes',
+            TIMER_START_TIME: 'meditationTimerStartTime',
+            TIMER_DURATION: 'meditationTimerDuration',
+            CURRENT_SESSION: 'meditationCurrentSession',
+            TIMER_STATE: 'meditationTimerState'
+        };
+
+        
         let timer = null;
         let currentSession = null;
         let startTime = null;
         let totalDuration = 0;
-        let sessionsStarted = parseInt(localStorage.getItem('meditationSessionsStarted')) || 0;
-        let sessionsCompleted = parseInt(localStorage.getItem('meditationSessionsCompleted')) || 0;
-        let totalTimeCompleted = parseInt(localStorage.getItem('meditationTotalTimeCompleted')) || 0;
+        let sessionsStarted = parseInt(localStorage.getItem(STORAGE_KEYS.SESSIONS_STARTED)) || 0;
+        let sessionsCompleted = parseInt(localStorage.getItem(STORAGE_KEYS.SESSIONS_COMPLETED)) || 0;
+        let totalTimeCompleted = parseInt(localStorage.getItem(STORAGE_KEYS.TOTAL_TIME_COMPLETED)) || 0;
         let dailyProgress = 0;
-        let pendingBoringTime = parseInt(localStorage.getItem('meditationPendingTime')) || 5;
-        let lastTimeCheck = parseInt(localStorage.getItem('meditationLastTimeCheck')) || Date.now();
-        let hourlyAddition = parseInt(localStorage.getItem('meditationHourlyAddition')) || 5;
-        let activityLog = JSON.parse(localStorage.getItem('meditationActivityLog')) || [];
-        let lastStatsReset = localStorage.getItem('meditationLastStatsReset') || new Date().toDateString();
-        let isTestingMode = localStorage.getItem('meditationTestingMode') === 'true';
-        let sessionNotes = localStorage.getItem('meditationSessionNotes') || '';
+        let pendingBoringTime = parseInt(localStorage.getItem(STORAGE_KEYS.PENDING_TIME)) || 5;
+        let lastTimeCheck = parseInt(localStorage.getItem(STORAGE_KEYS.LAST_TIME_CHECK)) || Date.now();
+        let hourlyAddition = parseInt(localStorage.getItem(STORAGE_KEYS.HOURLY_ADDITION)) || 5;
+        let activityLog = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITY_LOG)) || [];
+        let lastStatsReset = localStorage.getItem(STORAGE_KEYS.LAST_STATS_RESET) || new Date().toDateString();
+        let isTestingMode = localStorage.getItem(STORAGE_KEYS.TESTING_MODE) === 'true';
+        let sessionNotes = localStorage.getItem(STORAGE_KEYS.SESSION_NOTES) || '';
         let wakeLock = null;
         let wakeLockEnabled = false;
 
-        // Initialize notes from localStorage
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedNotes = localStorage.getItem('meditationSessionNotes');
-            if (savedNotes) {
-                document.getElementById('meditationSessionNotes').value = savedNotes;
-            }
-        });
-
-        // Save notes when they change
-        document.getElementById('meditationSessionNotes').addEventListener('input', function() {
-            localStorage.setItem('meditationSessionNotes', this.value);
-        });
+        
 
         function toggleTestingMode() {
             isTestingMode = document.getElementById('meditationTestingModeSwitch').checked;
-            localStorage.setItem('meditationTestingMode', isTestingMode);
+            localStorage.setItem(STORAGE_KEYS.TESTING_MODE, isTestingMode);
             updateTestingMode();
         }
 
@@ -431,8 +440,8 @@
             const newValue = parseInt(value);
             if (!isNaN(newValue) && newValue >= 0) {
                 hourlyAddition = newValue;
-                localStorage.setItem('meditationHourlyAddition', hourlyAddition);
-                localStorage.setItem('meditationHourlyAdditionSetTime', Date.now());
+                localStorage.setItem(STORAGE_KEYS.HOURLY_ADDITION, hourlyAddition);
+                localStorage.setItem(STORAGE_KEYS.HOURLY_ADDITION_SET_TIME, Date.now());
                 
                 // Update the input field value to ensure it shows the correct value
                 document.getElementById('meditationHourlyAddition').value = hourlyAddition;
@@ -448,26 +457,26 @@
 
         function saveTimerState() {
             if (startTime && currentSession) {
-                localStorage.setItem('meditationTimerStartTime', startTime.getTime());
-                localStorage.setItem('meditationTimerDuration', totalDuration);
-                localStorage.setItem('meditationCurrentSession', currentSession);
-                localStorage.setItem('meditationTimerState', timer ? 'running' : 'completed');
-                localStorage.setItem('meditationSessionNotes', document.getElementById('meditationSessionNotes').value);
+                localStorage.setItem(STORAGE_KEYS.TIMER_START_TIME, startTime.getTime());
+                localStorage.setItem(STORAGE_KEYS.TIMER_DURATION, totalDuration);
+                localStorage.setItem(STORAGE_KEYS.CURRENT_SESSION, currentSession);
+                localStorage.setItem(STORAGE_KEYS.TIMER_STATE, timer ? 'running' : 'completed');
+                localStorage.setItem(STORAGE_KEYS.SESSION_NOTES, document.getElementById('meditationSessionNotes').value);
             } else {
-                localStorage.removeItem('meditationTimerStartTime');
-                localStorage.removeItem('meditationTimerDuration');
-                localStorage.removeItem('meditationCurrentSession');
-                localStorage.removeItem('meditationTimerState');
-                localStorage.removeItem('meditationSessionNotes');
+                localStorage.removeItem(STORAGE_KEYS.TIMER_START_TIME);
+                localStorage.removeItem(STORAGE_KEYS.TIMER_DURATION);
+                localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION);
+                localStorage.removeItem(STORAGE_KEYS.TIMER_STATE);
+                localStorage.removeItem(STORAGE_KEYS.SESSION_NOTES);
             }
         }
 
         function restoreTimerState() {
-            const savedStartTime = localStorage.getItem('meditationTimerStartTime');
-            const savedDuration = localStorage.getItem('meditationTimerDuration');
-            const savedSession = localStorage.getItem('meditationCurrentSession');
-            const savedState = localStorage.getItem('meditationTimerState');
-            const savedNotes = localStorage.getItem('meditationSessionNotes');
+            const savedStartTime = localStorage.getItem(STORAGE_KEYS.TIMER_START_TIME);
+            const savedDuration = localStorage.getItem(STORAGE_KEYS.TIMER_DURATION);
+            const savedSession = localStorage.getItem(STORAGE_KEYS.CURRENT_SESSION);
+            const savedState = localStorage.getItem(STORAGE_KEYS.TIMER_STATE);
+            const savedNotes = localStorage.getItem(STORAGE_KEYS.SESSION_NOTES);
 
             if (savedNotes) {
                 document.getElementById('meditationSessionNotes').value = savedNotes;
@@ -552,10 +561,10 @@
 
             // Clear notes when starting new session
             document.getElementById('meditationSessionNotes').value = '';
-            localStorage.removeItem('meditationSessionNotes');
+            localStorage.removeItem(STORAGE_KEYS.SESSION_NOTES);
 
             sessionsStarted++;
-            localStorage.setItem('meditationSessionsStarted', sessionsStarted);
+            localStorage.setItem(STORAGE_KEYS.SESSIONS_STARTED, sessionsStarted);
             currentSession = minutes * 60;
             startTime = new Date();
             totalDuration = minutes * 60;
@@ -620,7 +629,7 @@
 
         function syncPendingTime(newValue) {
             pendingBoringTime = newValue;
-            localStorage.setItem('meditationPendingTime', pendingBoringTime);
+            localStorage.setItem(STORAGE_KEYS.PENDING_TIME, pendingBoringTime);
             document.getElementById('meditationPendingTime').textContent = pendingBoringTime;
             // Force update any UI elements that depend on this value
             updateStats();
@@ -656,8 +665,8 @@
             totalTimeCompleted += currentSession / 60;
             const newPendingTime = pendingBoringTime - (currentSession / 60);
             
-            localStorage.setItem('meditationSessionsCompleted', sessionsCompleted);
-            localStorage.setItem('meditationTotalTimeCompleted', totalTimeCompleted);
+            localStorage.setItem(STORAGE_KEYS.SESSIONS_COMPLETED, sessionsCompleted);
+            localStorage.setItem(STORAGE_KEYS.TOTAL_TIME_COMPLETED, totalTimeCompleted);
             
             syncPendingTime(newPendingTime);
             
@@ -724,7 +733,7 @@
             if (activityLog.length > 100) {
                 activityLog.pop();
             }
-            localStorage.setItem('meditationActivityLog', JSON.stringify(activityLog));
+            localStorage.setItem(STORAGE_KEYS.ACTIVITY_LOG, JSON.stringify(activityLog));
             updateLogDisplay();
         }
 
@@ -767,8 +776,8 @@
             const hoursSinceLastCheck = Math.floor((currentHour - lastCheckHour) / (1000 * 60 * 60));
             
             if (hoursSinceLastCheck > 0) {
-                const valueSetTime = parseInt(localStorage.getItem('meditationHourlyAdditionSetTime')) || lastTimeCheck;
-                const oldValue = parseInt(localStorage.getItem('meditationHourlyAddition')) || 5;
+                const valueSetTime = parseInt(localStorage.getItem(STORAGE_KEYS.HOURLY_ADDITION_SET_TIME)) || lastTimeCheck;
+                const oldValue = parseInt(localStorage.getItem(STORAGE_KEYS.HOURLY_ADDITION)) || 5;
                 
                 for (let i = 0; i < hoursSinceLastCheck; i++) {
                     const hourTime = lastCheckHour + ((i + 1) * 60 * 60 * 1000);
@@ -780,7 +789,7 @@
                 }
                 
                 lastTimeCheck = currentHour;
-                localStorage.setItem('meditationLastTimeCheck', lastTimeCheck);
+                localStorage.setItem(STORAGE_KEYS.LAST_TIME_CHECK, lastTimeCheck);
             }
         }
 
@@ -791,12 +800,12 @@
                 sessionsCompleted = 0;
                 totalTimeCompleted = 0;
                 
-                localStorage.setItem('meditationSessionsStarted', sessionsStarted);
-                localStorage.setItem('meditationSessionsCompleted', sessionsCompleted);
-                localStorage.setItem('meditationTotalTimeCompleted', totalTimeCompleted);
+                localStorage.setItem(STORAGE_KEYS.SESSIONS_STARTED, sessionsStarted);
+                localStorage.setItem(STORAGE_KEYS.SESSIONS_COMPLETED, sessionsCompleted);
+                localStorage.setItem(STORAGE_KEYS.TOTAL_TIME_COMPLETED, totalTimeCompleted);
                 
                 lastStatsReset = today;
-                localStorage.setItem('meditationLastStatsReset', lastStatsReset);
+                localStorage.setItem(STORAGE_KEYS.LAST_STATS_RESET, lastStatsReset);
                 
                 addLogEntry('reset', 0);
                 
@@ -825,8 +834,8 @@
                     totalTimeCompleted += roundedMinutes;
                     const newPendingTime = pendingBoringTime - roundedMinutes;
                     
-                    localStorage.setItem('meditationSessionsCompleted', sessionsCompleted);
-                    localStorage.setItem('meditationTotalTimeCompleted', totalTimeCompleted);
+                    localStorage.setItem(STORAGE_KEYS.SESSIONS_COMPLETED, sessionsCompleted);
+                    localStorage.setItem(STORAGE_KEYS.TOTAL_TIME_COMPLETED, totalTimeCompleted);
                     
                     syncPendingTime(newPendingTime);
                     
@@ -839,7 +848,7 @@
         }
 
         // Handle enter key on pending time input
-        document.getElementById('pendingTimeInput').addEventListener('keyup', function(event) {
+        document.getElementById('meditationPendingTimeInput').addEventListener('keyup', function(event) {
             if (event.key === 'Enter') {
                 togglePendingTimeEdit();
             }
@@ -876,20 +885,36 @@
 
         setInterval(checkHourlyAddition, 60000);
 
-        checkDailyReset();
-        checkHourlyAddition();
-        updateTimer(0);
-        restoreTimerState();
-        updateStats();
-        updateLogDisplay();
-        document.getElementById('meditationHourlyAddition').value = hourlyAddition;
-        document.getElementById('meditationPendingTime').textContent = pendingBoringTime;
-        updateTestingMode();
-
-        setInterval(() => {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all saved values
+            const savedHourlyAddition = localStorage.getItem(STORAGE_KEYS.HOURLY_ADDITION);
+            const savedPendingTime = localStorage.getItem(STORAGE_KEYS.PENDING_TIME);
+            const savedNotes = localStorage.getItem(STORAGE_KEYS.SESSION_NOTES);
+            
+            // Initialize hourly addition
+            if (savedHourlyAddition !== null) {
+                hourlyAddition = parseInt(savedHourlyAddition);
+                document.getElementById('meditationHourlyAddition').value = hourlyAddition;
+            }
+            
+            // Initialize pending time
+            pendingBoringTime = parseInt(savedPendingTime) || 5; // Use default of 5 if not set
+            document.getElementById('meditationPendingTime').textContent = pendingBoringTime;
+            
+            // Initialize notes
+            if (savedNotes) {
+                document.getElementById('meditationSessionNotes').value = savedNotes;
+            }
+            
+            // Initialize all states
             checkDailyReset();
             checkHourlyAddition();
-        }, 60000);
+            updateTimer(0);
+            restoreTimerState();
+            updateStats();
+            updateLogDisplay();
+            updateTestingMode();
+        });
     </script>
 </body>
 </html>

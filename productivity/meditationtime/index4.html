@@ -293,9 +293,35 @@
         .edit-pending-time.editing input {
             display: inline-block;
         }
+        .volume-control {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .volume-control input[type="range"] {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+        .volume-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+        }
     </style>
     <audio id="meditationChime">
         <source src="meditation-chime.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <audio id="meditationMusic" loop>
+        <source src="meditation-music.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
 </head>
@@ -346,6 +372,11 @@
             <div class="progress" id="meditationProgress"></div>
         </div>
         
+        <div class="volume-control">
+            <label for="musicVolume">Music Volume:</label>
+            <input type="range" id="musicVolume" min="0" max="1" step="0.1" value="0.5">
+        </div>
+
         <div class="notes-section">
             <h3>Notes for After Session</h3>
             <textarea id="meditationSessionNotes" placeholder="Write things to remember for after your session..."></textarea>
@@ -375,7 +406,7 @@
             <div id="meditationLogEntries"></div>
         </div>
 
-        <div class="version">Version 1.0.8</div>
+        <div class="version">Version 1.1.0</div>
     </div>
 
     <script>
@@ -398,6 +429,11 @@ const STORAGE_KEYS = {
             TIMER_STATE: 'meditationTimerState'
         };
 
+const DEFAULT_VALUES = {
+    PENDING_TIME: 5,
+    HOURLY_ADDITION: 5
+};
+
         
         let timer = null;
         let currentSession = null;
@@ -407,9 +443,10 @@ const STORAGE_KEYS = {
         let sessionsCompleted = parseInt(localStorage.getItem(STORAGE_KEYS.SESSIONS_COMPLETED)) || 0;
         let totalTimeCompleted = parseInt(localStorage.getItem(STORAGE_KEYS.TOTAL_TIME_COMPLETED)) || 0;
         let dailyProgress = 0;
-        let pendingBoringTime = parseInt(localStorage.getItem(STORAGE_KEYS.PENDING_TIME)) || 5;
+        let pendingBoringTime = localStorage.getItem(STORAGE_KEYS.PENDING_TIME) !== null ? 
+            parseInt(localStorage.getItem(STORAGE_KEYS.PENDING_TIME)) : DEFAULT_VALUES.PENDING_TIME;
         let lastTimeCheck = parseInt(localStorage.getItem(STORAGE_KEYS.LAST_TIME_CHECK)) || Date.now();
-        let hourlyAddition = parseInt(localStorage.getItem(STORAGE_KEYS.HOURLY_ADDITION)) || 5;
+        let hourlyAddition = parseInt(localStorage.getItem(STORAGE_KEYS.HOURLY_ADDITION)) || DEFAULT_VALUES.HOURLY_ADDITION;
         let activityLog = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITY_LOG)) || [];
         let lastStatsReset = localStorage.getItem(STORAGE_KEYS.LAST_STATS_RESET) || new Date().toDateString();
         let isTestingMode = localStorage.getItem(STORAGE_KEYS.TESTING_MODE) === 'true';
@@ -559,6 +596,12 @@ const STORAGE_KEYS = {
             // Request wake lock when session starts
             requestWakeLock();
 
+            // Start the meditation music
+            const music = document.getElementById('meditationMusic');
+            music.play().catch(error => {
+                console.log('Error playing music:', error);
+            });
+
             // Clear notes when starting new session
             document.getElementById('meditationSessionNotes').value = '';
             localStorage.removeItem(STORAGE_KEYS.SESSION_NOTES);
@@ -578,13 +621,17 @@ const STORAGE_KEYS = {
 
             startTimer();
             saveTimerState();
-            updateStats();
         }
 
         function cancelSession() {
             if (timer) {
                 // Release wake lock
                 releaseWakeLock();
+
+                // Stop the meditation music
+                const music = document.getElementById('meditationMusic');
+                music.pause();
+                music.currentTime = 0;
 
                 clearInterval(timer);
                 timer = null;
@@ -609,6 +656,11 @@ const STORAGE_KEYS = {
             // Release wake lock
             releaseWakeLock();
             
+            // Stop the meditation music
+            const music = document.getElementById('meditationMusic');
+            music.pause();
+            music.currentTime = 0;
+            
             document.getElementById('meditationConfirmationSection').classList.add('show');
             document.getElementById('meditationBreakButton').style.display = 'none';
             updateButtons(true);
@@ -620,7 +672,6 @@ const STORAGE_KEYS = {
                 console.log('Error playing chime:', error);
             });
             
-            // Stop the sound after 5 seconds
             setTimeout(() => {
                 chime.pause();
                 chime.currentTime = 0;
@@ -777,7 +828,7 @@ const STORAGE_KEYS = {
             
             if (hoursSinceLastCheck > 0) {
                 const valueSetTime = parseInt(localStorage.getItem(STORAGE_KEYS.HOURLY_ADDITION_SET_TIME)) || lastTimeCheck;
-                const oldValue = parseInt(localStorage.getItem(STORAGE_KEYS.HOURLY_ADDITION)) || 5;
+                const oldValue = parseInt(localStorage.getItem(STORAGE_KEYS.HOURLY_ADDITION)) || DEFAULT_VALUES.HOURLY_ADDITION;
                 
                 for (let i = 0; i < hoursSinceLastCheck; i++) {
                     const hourTime = lastCheckHour + ((i + 1) * 60 * 60 * 1000);
@@ -817,6 +868,11 @@ const STORAGE_KEYS = {
             if (timer) {
                 // Release wake lock
                 releaseWakeLock();
+
+                // Stop the meditation music
+                const music = document.getElementById('meditationMusic');
+                music.pause();
+                music.currentTime = 0;
 
                 clearInterval(timer);
                 timer = null;
@@ -898,7 +954,7 @@ const STORAGE_KEYS = {
             }
             
             // Initialize pending time
-            pendingBoringTime = parseInt(savedPendingTime) || 5; // Use default of 5 if not set
+            pendingBoringTime = savedPendingTime !== null ? parseInt(savedPendingTime) : DEFAULT_VALUES.PENDING_TIME;
             document.getElementById('meditationPendingTime').textContent = pendingBoringTime;
             
             // Initialize notes
@@ -914,6 +970,16 @@ const STORAGE_KEYS = {
             updateStats();
             updateLogDisplay();
             updateTestingMode();
+
+            // Initialize music volume
+            const music = document.getElementById('meditationMusic');
+            const volumeControl = document.getElementById('musicVolume');
+            music.volume = volumeControl.value;
+
+            // Add volume control listener
+            volumeControl.addEventListener('input', function() {
+                music.volume = this.value;
+            });
         });
     </script>
 </body>

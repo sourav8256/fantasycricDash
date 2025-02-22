@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Timer</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 15px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        .timer {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .timer-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-width: 80px;
+        }
+
+        .timer-unit .number {
+            font-size: 2.5rem;
+            color: #2c3e50;
+        }
+
+        .timer-unit span {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .button-group {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        select {
+            padding: 12px;
+            font-size: 1rem;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: white;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        @media (min-width: 768px) {
+            .controls {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .timer {
+                gap: 20px;
+            }
+
+            .timer-unit {
+                min-width: 100px;
+                padding: 15px 20px;
+            }
+
+            .timer-unit .number {
+                font-size: 3rem;
+            }
+
+            .timer-unit span {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .timer {
+                gap: 10px;
+            }
+
+            .timer-unit {
+                min-width: 60px;
+                padding: 8px 12px;
+            }
+
+            .timer-unit .number {
+                font-size: 2rem;
+            }
+
+            .timer-unit span {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .controls {
+                grid-template-columns: repeat(7, 1fr);
+            }
+
+            .button-group {
+                grid-column: 1 / -1;
+            }
+        }
+
+        input {
+            display: none;
+        }
+
+        .saved-timers {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .saved-timers h3 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .saved-values {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .saved-values p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .saved-values strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer" id="timer">00:00:00:00:00:00:00</div>
+    <div class="controls">
+        <select id="years" aria-label="Years">
+            <option value="">Years</option>
+            <script>
+                for (let i = 0; i <= 10; i++) {
+                    document.write(`<option value="${i}">${String(i).padStart(2, '0')}</option>`);
+                }
+            </script>
+        </select>
+        <select id="months" aria-label="Months">
+            <option value="">Months</option>
+            <script>
+                for (let i = 0; i <= 11; i++) {
+                    document.write(`<option value="${i}">${String(i).padStart(2, '0')}</option>`);
+                }
+            </script>
+        </select>
+        <select id="weeks" aria-label="Weeks">
+            <option value="">Weeks</option>
+            <script>
+                for (let i = 0; i <= 4; i++) {
+                    document.write(`<option value="${i}">${String(i).padStart(2, '0')}</option>`);
+                }
+            </script>
+        </select>
+        <select id="days" aria-label="Days">
+            <option value="">Days</option>
+            <script>
+                for (let i = 0; i <= 6; i++) {
+                    document.write(`<option value="${i}">${String(i).padStart(2, '0')}</option>`);
+                }
+            </script>
+        </select>
+        <select id="hours" aria-label="Hours">
+            <option value="">Hours</option>
+            <script>
+                for (let i = 0; i <= 23; i++) {
+                    document.write(`<option value="${i}">${String(i).padStart(2, '0')}</option>`);
+                }
+            </script>
+        </select>
+        <select id="minutes" aria-label="Minutes">
+            <option value="">Minutes</option>
+            <script>
+                for (let i = 0; i <= 59; i++) {
+                    document.write(`<option value="${i}">${String(i).padStart(2, '0')}</option>`);
+                }
+            </script>
+        </select>
+        <select id="seconds" aria-label="Seconds">
+            <option value="">Seconds</option>
+            <script>
+                for (let i = 0; i <= 59; i++) {
+                    document.write(`<option value="${i}">${String(i).padStart(2, '0')}</option>`);
+                }
+            </script>
+        </select>
+        <div class="button-group">
+            <button onclick="startTimer()">Start</button>
+            <button onclick="stopTimer()">Stop</button>
+            <button onclick="resetTimer()">Reset</button>
+            <button onclick="rerunTimer()" id="rerunBtn" disabled>Rerun</button>
+        </div>
+    </div>
+
+    <div class="saved-timers">
+        <h3>Saved Timer Values</h3>
+        <div class="saved-values" id="savedValues">
+            <!-- Values will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        let timeLeft;
+        let timerId = null;
+        let lastTimeValues = null;
+
+        // Load last time values from local storage when page loads
+        window.onload = function() {
+            const savedTime = localStorage.getItem('lastTimeValues');
+            const savedDuration = localStorage.getItem('lastDuration');
+            const startTime = localStorage.getItem('startTime');
+
+            if (savedTime) {
+                lastTimeValues = JSON.parse(savedTime);
+                document.getElementById('rerunBtn').disabled = false;
+
+                // If there's a saved start time and duration, resume the timer
+                if (startTime && savedDuration) {
+                    const currentTime = new Date().getTime();
+                    const savedStartTime = new Date(startTime).getTime();
+                    const elapsedSeconds = Math.floor((currentTime - savedStartTime) / 1000);
+                    const duration = parseInt(savedDuration);
+
+                    // Only start if there's still time remaining
+                    if (duration - elapsedSeconds > 0) {
+                        startTimer({resaveTime: false});
+                    }
+                }
+            }
+            displaySavedValues();
+        }
+
+        function displaySavedValues() {
+            const savedValuesDiv = document.getElementById('savedValues');
+            const savedTime = localStorage.getItem('lastTimeValues');
+            const savedDuration = localStorage.getItem('lastDuration');
+            const startTime = localStorage.getItem('startTime');
+
+            if (savedTime && savedDuration) {
+                const values = JSON.parse(savedTime);
+                const duration = parseInt(savedDuration);
+
+                // Calculate readable duration
+                const years = Math.floor(duration / (365 * 24 * 3600));
+                const remainingAfterYears = duration % (365 * 24 * 3600);
+                const months = Math.floor(remainingAfterYears / (30 * 24 * 3600));
+                const remainingAfterMonths = remainingAfterYears % (30 * 24 * 3600);
+                const weeks = Math.floor(remainingAfterMonths / (7 * 24 * 3600));
+                const remainingAfterWeeks = remainingAfterMonths % (7 * 24 * 3600);
+                const days = Math.floor(remainingAfterWeeks / (24 * 3600));
+                const remainingAfterDays = remainingAfterWeeks % (24 * 3600);
+                const hours = Math.floor(remainingAfterDays / 3600);
+                const minutes = Math.floor((remainingAfterDays % 3600) / 60);
+                const seconds = remainingAfterDays % 60;
+
+                // Format start time if it exists
+                const startTimeDisplay = startTime ? 
+                    new Date(startTime).toLocaleString() : 
+                    'Not started';
+
+                savedValuesDiv.innerHTML = `
+                    <p><strong>Last Timer Settings:</strong></p>
+                    <p>Years: ${values.years || '00'}</p>
+                    <p>Months: ${values.months || '00'}</p>
+                    <p>Weeks: ${values.weeks || '00'}</p>
+                    <p>Days: ${values.days || '00'}</p>
+                    <p>Hours: ${values.hours || '00'}</p>
+                    <p>Minutes: ${values.minutes || '00'}</p>
+                    <p>Seconds: ${values.seconds || '00'}</p>
+                    <p><strong>Total Duration:</strong></p>
+                    <p>${years}y ${months}m ${weeks}w ${days}d ${hours}h ${minutes}m ${seconds}s</p>
+                    <p><strong>Start Time:</strong></p>
+                    <p>${startTimeDisplay}</p>
+                `;
+            } else {
+                savedValuesDiv.innerHTML = '<p>No saved timer values found</p>';
+            }
+        }
+
+        function saveTimeValues() {
+            const timeValues = {
+                years: document.getElementById('years').value,
+                months: document.getElementById('months').value,
+                weeks: document.getElementById('weeks').value,
+                days: document.getElementById('days').value,
+                hours: document.getElementById('hours').value,
+                minutes: document.getElementById('minutes').value,
+                seconds: document.getElementById('seconds').value
+            };
+
+            // Calculate total duration in seconds
+            const duration = 
+                (parseInt(timeValues.years) || 0) * 365 * 24 * 3600 +
+                (parseInt(timeValues.months) || 0) * 30 * 24 * 3600 +
+                (parseInt(timeValues.weeks) || 0) * 7 * 24 * 3600 +
+                (parseInt(timeValues.days) || 0) * 24 * 3600 +
+                (parseInt(timeValues.hours) || 0) * 3600 +
+                (parseInt(timeValues.minutes) || 0) * 60 +
+                (parseInt(timeValues.seconds) || 0);
+
+            // Save both time values and duration
+            localStorage.setItem('lastTimeValues', JSON.stringify(timeValues));
+            localStorage.setItem('lastDuration', duration.toString());
+            
+            lastTimeValues = timeValues;
+            document.getElementById('rerunBtn').disabled = false;
+            displaySavedValues();
+        }
+
+        function saveStartTime() {
+            // save current time in local storage
+            localStorage.setItem('startTime', new Date().toISOString());
+        }
+
+        function startTimer({resaveTime = true} = {}) {
+            console.log('startTimer called');
+            if (timerId !== null) return;
+
+            const years = parseInt(document.getElementById('years').value) || 0;
+            const months = parseInt(document.getElementById('months').value) || 0;
+            const weeks = parseInt(document.getElementById('weeks').value) || 0;
+            const days = parseInt(document.getElementById('days').value) || 0;
+            const hours = parseInt(document.getElementById('hours').value) || 0;
+            const minutes = parseInt(document.getElementById('minutes').value) || 0;
+            const seconds = parseInt(document.getElementById('seconds').value) || 0;
+
+            if (resaveTime) {
+                saveTimeValues();
+                saveStartTime();
+
+            }
+
+            
+            if (parseInt(localStorage.getItem('lastDuration')) <= 0) return;
+
+            timerId = setInterval(updateTimer, 1000);
+            updateTimer(); // Initial update
+        }
+
+        function rerunTimer() {
+            saveStartTime();
+        }
+
+        function updateTimer() {
+            const startTime = new Date(localStorage.getItem('startTime')).getTime();
+            const currentTime = new Date().getTime();
+            const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
+            const savedDuration = parseInt(localStorage.getItem('lastDuration'));
+            timeLeft = savedDuration - elapsedSeconds;
+
+            if (timeLeft <= 0) {
+                stopTimer();
+                alert('Time is up!');
+                return;
+            }
+
+            const years = Math.floor(timeLeft / (365 * 24 * 3600));
+            const remainingAfterYears = timeLeft % (365 * 24 * 3600);
+
+            const months = Math.floor(remainingAfterYears / (30 * 24 * 3600));
+            const remainingAfterMonths = remainingAfterYears % (30 * 24 * 3600);
+            
+            const weeks = Math.floor(remainingAfterMonths / (7 * 24 * 3600));
+            const remainingAfterWeeks = remainingAfterMonths % (7 * 24 * 3600);
+            
+            const days = Math.floor(remainingAfterWeeks / (24 * 3600));
+            const remainingAfterDays = remainingAfterWeeks % (24 * 3600);
+            
+            const hours = Math.floor(remainingAfterDays / 3600);
+            const minutes = Math.floor((remainingAfterDays % 3600) / 60);
+            const seconds = remainingAfterDays % 60;
+
+            document.getElementById('timer').innerHTML = `
+                <div class="timer-unit">
+                    <div class="number">${String(years).padStart(2, '0')}</div>
+                    <span>yr</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">${String(months).padStart(2, '0')}</div>
+                    <span>mo</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">${String(weeks).padStart(2, '0')}</div>
+                    <span>wk</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">${String(days).padStart(2, '0')}</div>
+                    <span>d</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">${String(hours).padStart(2, '0')}</div>
+                    <span>hr</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">${String(minutes).padStart(2, '0')}</div>
+                    <span>min</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">${String(seconds).padStart(2, '0')}</div>
+                    <span>sec</span>
+                </div>
+            `;
+        }
+
+        function stopTimer() {
+            clearInterval(timerId);
+            timerId = null;
+        }
+
+        function resetTimer() {
+            stopTimer();
+            document.getElementById('timer').innerHTML = `
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>yr</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>mo</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>wk</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>d</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>hr</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>min</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>sec</span>
+                </div>
+            `;
+            document.getElementById('years').value = '';
+            document.getElementById('months').value = '';
+            document.getElementById('weeks').value = '';
+            document.getElementById('days').value = '';
+            document.getElementById('hours').value = '';
+            document.getElementById('minutes').value = '';
+            document.getElementById('seconds').value = '';
+            // Don't clear the lastTimeValues or localStorage
+            displaySavedValues();
+        }
+    </script>
+</body>
+</html>

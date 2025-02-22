@@ -292,131 +292,192 @@
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="create" role="tabpanel">
-                <div class="strategy-builder">
-                    <!-- Strategy Type Selection -->
-                    <div class="form-section">
-                        <h6 class="section-title">Strategy Type</h6>
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-outline-primary active" data-type="time">Time Based</button>
-                            <button class="btn btn-outline-primary" data-type="indicator">Indicator Based</button>
-                        </div>
+                <div class="card">
+                    <h5>Strategy Type</h5>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="strategy" id="time" checked>
+                        <label class="btn btn-outline-primary" for="time">Time Based</label>
+                        
+                        <input type="radio" class="btn-check" name="strategy" id="indicator">
+                        <label class="btn btn-outline-primary" for="indicator">Indicator Based</label>
                     </div>
+                </div>
 
-                    <!-- Instrument Selection -->
-                    <div class="form-section">
-                        <h6 class="section-title">Select Instruments</h6>
-                        <div class="instrument-cards">
-                            <div class="card instrument-card">
-                                <div class="card-header">
-                                    <div class="symbol-info">
-                                        <span class="symbol">NIFTY 50</span>
-                                        <span class="exchange">NSE</span>
-                                    </div>
-                                    <div class="price-info">
-                                        <span class="price-change">0.00 (0.00%)</span>
-                                        <span class="lot-size">Lot: 75</span>
-                                    </div>
-                                    <button class="btn-close" aria-label="Remove"></button>
-                                </div>
+                <div class="card">
+                    <h5>Select Instruments</h5>
+                    <select class="form-select mb-3" id="instrumentSelect" required>
+                        <option value="BANKNIFTY" selected>BANKNIFTY</option>
+                        <option value="NIFTY">NIFTY 50</option>
+                        <option value="FINNIFTY">FINNIFTY</option>
+                    </select>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text">Lot Size</span>
+                                <input type="number" class="form-control" value="25" style="margin: 0;">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text">Strike</span>
+                                <select class="form-select">
+                                    <option>ATM</option>
+                                    <option>ITM</option>
+                                    <option>OTM</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text">Option</span>
+                                <select class="form-select">
+                                    <option>CE</option>
+                                    <option>PE</option>
+                                </select>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Order Legs -->
-                    <div class="form-section">
-                        <h6 class="section-title">Order Legs</h6>
-                        <div class="order-leg">
-                            <div class="leg-controls">
-                                <button class="btn btn-outline-danger">SELL</button>
-                                <input type="number" class="form-control qty-input" value="75" step="75">
-                                <button class="btn btn-outline-primary">CE</button>
-                                <button class="btn btn-primary">Weekly</button>
-                                
-                                <!-- Strike Selection -->
-                                <div class="strike-selection">
-                                    <select class="form-select">
-                                        <option>ATM pt</option>
-                                        <option>ATM %</option>
-                                        <option>CP</option>
-                                    </select>
-                                    <select class="form-select">
-                                        <option>ATM</option>
-                                        <option>ITM 50</option>
-                                        <option>OTM 50</option>
-                                    </select>
-                                </div>
-
-                                <!-- SL/Target Controls -->
-                                <div class="sl-target-controls">
-                                    <div class="input-group">
-                                        <select class="form-select">
-                                            <option>SL pt</option>
-                                            <option>SL %</option>
-                                        </select>
-                                        <input type="number" class="form-control" value="30">
-                                        <select class="form-select">
-                                            <option>On Price</option>
-                                            <option>On Close</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary mt-3">
-                            <i class="fas fa-plus"></i> ADD LEG
+                </div>
+                <div class="card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Order Legs</h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="addLeg()" type="button">
+                            <i class="fas fa-plus"></i> Add Leg
                         </button>
                     </div>
+                    <div id="legsContainer">
+                        <div class="row leg-row mb-3" data-leg="1">
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <span class="input-group-text">Leg 1</span>
+                                    <select class="form-select">
+                                        <option>Buy</option>
+                                        <option>Sell</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <span class="input-group-text">Strike</span>
+                                    <select class="form-select">
+                                        <option>ATM</option>
+                                        <option>ITM</option>
+                                        <option>OTM</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <span class="input-group-text">Option</span>
+                                    <select class="form-select">
+                                        <option>CE</option>
+                                        <option>PE</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">Qty</span>
+                                    <input type="number" class="form-control" value="1" min="1">
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-outline-danger btn-sm w-100">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- Advanced Features -->
-                    <div class="form-section">
-                        <div class="accordion">
-                            <div class="accordion-item">
-                                <h6 class="accordion-header">
-                                    <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#advancedFeatures">
-                                        Advanced Features
-                                    </button>
-                                </h6>
-                                <div id="advancedFeatures" class="accordion-collapse collapse">
-                                    <div class="accordion-body">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="moveSL">
-                                            <label class="form-check-label" for="moveSL">Move SL to Cost</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="exitAll">
-                                            <label class="form-check-label" for="exitAll">Exit All on SL/Tgt</label>
-                                        </div>
-                                        <!-- Add other advanced features -->
-                                    </div>
+                <div class="card">
+                    <h5>Risk Management</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Exit when total profit amounts to</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Exit when total loss amounts to</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">No Trade After</label>
+                            <input type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Profit Management Options</label>
+                            <div class="d-flex">
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" name="profitManagement" id="noTrailing" value="noTrailing" checked>
+                                    <label class="form-check-label" for="noTrailing">No Trailing</label>
+                                </div>
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" name="profitManagement" id="lockFixProfit" value="lockFixProfit">
+                                    <label class="form-check-label" for="lockFixProfit">Lock Fix Profit</label>
+                                </div>
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" name="profitManagement" id="totalProfit" value="totalProfit">
+                                    <label class="form-check-label" for="totalProfit">Total Profit</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="profitManagement" id="lockAndTrail" value="lockAndTrail">
+                                    <label class="form-check-label" for="lockAndTrail">Lock and Trail</label>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Risk Management -->
-                    <div class="form-section">
-                        <h6 class="section-title">Risk Management</h6>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <input type="number" class="form-control" placeholder="Exit When Overall Profit (INR)">
+                    <div class="row mt-2" id="trailingOptions">
+                        <div class="col-md-6">
+                            <label class="form-label">Trail Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Increase by</span>
+                                <input type="number" class="form-control" id="trailStep" value="400" min="1">
+                                <span class="input-group-text">points</span>
                             </div>
-                            <div class="col-md-4">
-                                <input type="number" class="form-control" placeholder="Exit When Overall Loss (INR)">
-                            </div>
-                            <div class="col-md-4">
-                                <input type="time" class="form-control" value="15:15">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Profit Threshold</label>
+                            <div class="input-group">
+                                <span class="input-group-text">For every</span>
+                                <input type="number" class="form-control" id="profitStep" value="800" min="1">
+                                <span class="input-group-text">points profit</span>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Strategy Name and Save -->
-                    <div class="form-section">
-                        <div class="row align-items-center">
-                            <div class="col-md-8">
-                                <input type="text" class="form-control" placeholder="Strategy name">
+                    <div class="row mt-2" id="trailPreview">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small>
+                                        <i class="fas fa-info-circle"></i> Preview: 
+                                        <span id="previewText">Stop loss will increase by 400 points for every 800 points profit</span>
+                                    </small>
+                                    <button class="btn btn-sm btn-outline-primary" id="calculateBtn">Calculate</button>
+                                </div>
                             </div>
-                            <div class="col-md-4 text-end">
-                                <button class="btn btn-primary btn-lg">Save & Continue</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h5>Save Strategy</h5>
+                    <div class="row align-items-end">
+                        <div class="col-md-8">
+                            <label class="form-label">Strategy Name</label>
+                            <input type="text" class="form-control" placeholder="Enter a name for your strategy">
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-secondary" onclick="previewStrategyJson()">
+                                    <i class="fas fa-code"></i> Preview JSON
+                                </button>
+                                <button class="btn btn-primary" id="saveStrategyBtn" onclick="saveStrategy()">Save Strategy</button>
+                                <button class="btn btn-success">Deploy Strategy</button>
                             </div>
                         </div>
                     </div>

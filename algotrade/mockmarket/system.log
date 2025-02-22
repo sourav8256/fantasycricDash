@@ -267,3 +267,24 @@
     "BANKNIFTY"
   ]
 }
+2025-02-21T18:26:56.700Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T18:27:38.618Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T20:05:04.806Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "TEST2"
+  ]
+}
+2025-02-21T20:05:04.811Z: Created new symbol TEST2 with initial price 713.0096730862462
+2025-02-22T07:29:52.979Z: Client disconnected
+2025-02-22T07:29:58.411Z: Client connected

@@ -1,0 +1,58 @@
+{
+  "_id": "67b365ee9338cc007a8727ae",
+  "name": "fsdfwerrt223",
+  "type": "Time Based",
+  "instrument": "NIFTY50",
+  "orderType": "MIS",
+  "strategyStartTime": "09:20",
+  "strategyStopTime": "15:10",
+  "legs": [
+    {
+      "action": "sell",
+      "quantity": 75,
+      "optionType": "call",
+      "expiry": "present week",
+      "strikeType": "ITM 100",
+      "limitOrderCondition": "1% lower than market price",
+      "stopLoss": "60%",
+      "target": "20%",
+      "reExecuteLimit": 2,
+      "_id": "67c210d3b86374bcb7146294"
+    },
+    {
+      "action": "sell",
+      "quantity": 75,
+      "optionType": "put",
+      "expiry": "present week",
+      "strikeType": "ITM 100",
+      "limitOrderCondition": "1% lower than market price",
+      "stopLoss": "60%",
+      "target": "20%",
+      "reExecuteLimit": 2,
+      "_id": "67c210d3b86374bcb7146297"
+    }
+  ],
+  "target": 0,
+  "stopLoss": 0,
+  "userId": "679d9f5033b814dcd70e4c09",
+  "createdAt": "2025-02-17T16:38:06.172Z",
+  "updatedAt": "2025-02-17T16:38:06.172Z",
+  "__v": 0,
+  "lastExecuted": "2025-02-28T19:38:57.948Z",
+  "riskManagement": {
+    "profitTarget": 4500,
+    "stopLoss": 2600,
+    "noTradeTime": "",
+    "profitManagement": "trailing",
+    "trailStep": 2800,
+    "trailStopLoss": 1400,
+    "_id": "67c210d3b86374bcb7146295"
+  },
+  "deployment": {
+    "squareOffTime": "15:15",
+    "qtyMultiplier": "1",
+    "maxLoss": "",
+    "maxProfit": "",
+    "_id": "67c210d3b86374bcb7146296"
+  }
+}

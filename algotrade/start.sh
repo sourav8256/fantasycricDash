@@ -2,36 +2,47 @@
 
 # Function to handle cleanup on script exit
 cleanup() {
-    echo "Shutting down servers..."
-    kill $(jobs -p)
+    echo "Shutting down all services..."
+    # pm2 delete all
     exit
 }
 
 # Set up trap for cleanup
 trap cleanup SIGINT SIGTERM
 
-# Start frontend server
-echo "Starting frontend server on port 4300..."
-cd frontend && npm start &
+# Function to start or restart a service
+start_or_restart_service() {
+    local service_name=$1
+    local start_command=$2
+    if pm2 describe "$service_name" > /dev/null; then
+        echo "Restarting $service_name..."
+        pm2 restart "$service_name"
+    else
+        echo "Starting $service_name..."
+        eval "$start_command"
+    fi
+}
 
-# Wait a bit for frontend to initialize
-sleep 2
+# Start or restart frontend server
+cd frontend
+start_or_restart_service "frontend" "pm2 start npm --name 'frontend' -- start"
 
-# Start backend server
-echo "Starting backend server on port 4301..."
-cd backend && npm start &
+# Start or restart backend server
+cd ../backend
+start_or_restart_service "backend" "pm2 start npm --name 'backend' -- start"
 
-# Wait a bit for backend to initialize
-sleep 2
+# Start or restart live server
+cd ../live
+start_or_restart_service "live" "pm2 start npm --name 'live' -- start"
 
-# Start live server
-echo "Starting live server on port 4302..."
-cd live && npm start &
+# Start or restart mock market server
+cd ../mockmarket
+start_or_restart_service "mockmarket" "pm2 start app.js --name 'mockmarket'"
 
-# Start mock market server
-echo "Starting mock market server on port 5555..."
-cd mockmarket && node app.js &
+# Show running processes
+echo "All services started or restarted. Use 'pm2 list' to check status."
+pm2 list
 
 # Keep script running and show logs
-echo "All servers are running. Press Ctrl+C to stop all servers."
-wait
+echo "Showing logs from all services. Press Ctrl+C to stop all services."
+pm2 logs

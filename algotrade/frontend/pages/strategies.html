@@ -23,18 +23,21 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             margin-bottom: 1rem;
-            padding: 1.5rem;
+            padding: 1rem;
             width: 100%;
         }
         .card h5 {
             color: #1a237e;
             font-weight: 600;
-            margin-bottom: 1.2rem;
+            margin-bottom: 0.8rem;
+            font-size: 1rem;
         }
         .form-control, .form-select {
             border: 1.5px solid #e0e6ed;
             border-radius: 8px;
-            padding: 0.6rem 1rem;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.85rem;
+            height: auto;
         }
         .form-control:focus, .form-select:focus {
             border-color: #1a237e;
@@ -59,6 +62,8 @@
             border: 1.5px solid #e0e6ed;
             color: #2c3e50;
             font-weight: 500;
+            font-size: 0.85rem;
+            padding: 0.3rem 0.6rem;
         }
         .nav-pills {
             background: white;
@@ -80,6 +85,7 @@
         }
         .leg-row {
             transition: all 0.3s ease;
+            margin-bottom: 0.5rem !important;
         }
         .leg-row:hover {
             background: #f8f9fa;
@@ -232,6 +238,44 @@
         .tab-pane.fade.show {
             opacity: 1;
         }
+
+        /* Adjust spacing for risk management and deployment sections */
+        .input-group.mb-3 {
+            margin-bottom: 0.5rem !important;
+        }
+
+        /* Make the strategy type buttons smaller */
+        .btn-group .btn {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        /* Adjust spacing between sections */
+        .card + .card {
+            margin-top: 0.8rem;
+        }
+
+        /* Make the save strategy section more compact */
+        .card:last-child .form-control {
+            height: calc(1.5em + 0.5rem + 2px);
+        }
+
+        /* Adjust the leg controls to be more compact */
+        .leg-row .col-md-1 {
+            padding-left: 4px;
+            padding-right: 4px;
+        }
+
+        .leg-row .col-md-2 {
+            padding-left: 4px;
+            padding-right: 4px;
+        }
+
+        /* Make the remove leg button more compact */
+        .leg-row .btn-outline-danger {
+            padding: 0.25rem;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -311,29 +355,25 @@
                         <option value="FINNIFTY">FINNIFTY</option>
                     </select>
 
-                    <div class="row">
+                    <div class="row mb-3">
                         <div class="col-md-4">
                             <div class="input-group">
-                                <span class="input-group-text">Lot Size</span>
-                                <input type="number" class="form-control" value="25" style="margin: 0;">
+                                <span class="input-group-text">Start Time</span>
+                                <input type="time" class="form-control" id="strategyStartTime" value="09:20">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="input-group">
-                                <span class="input-group-text">Strike</span>
-                                <select class="form-select">
-                                    <option>ATM</option>
-                                    <option>ITM</option>
-                                    <option>OTM</option>
-                                </select>
+                                <span class="input-group-text">Stop Time</span>
+                                <input type="time" class="form-control" id="strategyStopTime" value="15:10">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="input-group">
-                                <span class="input-group-text">Option</span>
-                                <select class="form-select">
-                                    <option>CE</option>
-                                    <option>PE</option>
+                                <span class="input-group-text">Order Type</span>
+                                <select class="form-select" id="orderType">
+                                    <option value="MIS">MIS</option>
+                                    <option value="NRML">NRML</option>
                                 </select>
                             </div>
                         </div>
@@ -347,137 +387,86 @@
                         </button>
                     </div>
                     <div id="legsContainer">
-                        <div class="row leg-row mb-3" data-leg="1">
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">Leg 1</span>
-                                    <select class="form-select">
-                                        <option>Buy</option>
-                                        <option>Sell</option>
-                                    </select>
-                                </div>
+                        <!-- No initial leg HTML here -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h5 class="mb-2">Risk Management</h5>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Profit</span>
+                                <input type="number" class="form-control" id="profitTarget" value="4500">
                             </div>
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">Strike</span>
-                                    <select class="form-select">
-                                        <option>ATM</option>
-                                        <option>ITM</option>
-                                        <option>OTM</option>
-                                    </select>
-                                </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Stop Loss</span>
+                                <input type="number" class="form-control" id="stopLoss" value="2600">
                             </div>
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">Option</span>
-                                    <select class="form-select">
-                                        <option>CE</option>
-                                        <option>PE</option>
-                                    </select>
-                                </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Trail Step</span>
+                                <input type="number" class="form-control" id="trailStep" value="2800">
                             </div>
-                            <div class="col-md-2">
-                                <div class="input-group">
-                                    <span class="input-group-text">Qty</span>
-                                    <input type="number" class="form-control" value="1" min="1">
-                                </div>
-                            </div>
-                            <div class="col-md-1">
-                                <button class="btn btn-outline-danger btn-sm w-100">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Trail SL</span>
+                                <input type="number" class="form-control" id="trailStopLoss" value="1400">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h5>Risk Management</h5>
-                    
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label class="form-label">Exit when total profit amounts to</label>
-                            <input type="text" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Exit when total loss amounts to</label>
-                            <input type="text" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">No Trade After</label>
-                            <input type="text" class="form-control">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <label class="form-label">Profit Management Options</label>
-                            <div class="d-flex">
-                                <div class="form-check me-3">
-                                    <input class="form-check-input" type="radio" name="profitManagement" id="noTrailing" value="noTrailing" checked>
-                                    <label class="form-check-label" for="noTrailing">No Trailing</label>
-                                </div>
-                                <div class="form-check me-3">
-                                    <input class="form-check-input" type="radio" name="profitManagement" id="lockFixProfit" value="lockFixProfit">
-                                    <label class="form-check-label" for="lockFixProfit">Lock Fix Profit</label>
-                                </div>
-                                <div class="form-check me-3">
-                                    <input class="form-check-input" type="radio" name="profitManagement" id="totalProfit" value="totalProfit">
-                                    <label class="form-check-label" for="totalProfit">Total Profit</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="profitManagement" id="lockAndTrail" value="lockAndTrail">
-                                    <label class="form-check-label" for="lockAndTrail">Lock and Trail</label>
-                                </div>
+                    <h5 class="mb-2">Deployment</h5>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Square</span>
+                                <input type="time" class="form-control" id="squareOffTime" value="15:15">
                             </div>
                         </div>
-                    </div>
-                    <div class="row mt-2" id="trailingOptions">
-                        <div class="col-md-6">
-                            <label class="form-label">Trail Amount</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Increase by</span>
-                                <input type="number" class="form-control" id="trailStep" value="400" min="1">
-                                <span class="input-group-text">points</span>
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Qty Multiplier</span>
+                                <input type="number" class="form-control" id="qtyMultiplier" value="1" min="1">
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Profit Threshold</label>
-                            <div class="input-group">
-                                <span class="input-group-text">For every</span>
-                                <input type="number" class="form-control" id="profitStep" value="800" min="1">
-                                <span class="input-group-text">points profit</span>
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Max Loss</span>
+                                <input type="number" class="form-control" id="maxLoss">
                             </div>
                         </div>
-                    </div>
-                    <div class="row mt-2" id="trailPreview">
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small>
-                                        <i class="fas fa-info-circle"></i> Preview: 
-                                        <span id="previewText">Stop loss will increase by 400 points for every 800 points profit</span>
-                                    </small>
-                                    <button class="btn btn-sm btn-outline-primary" id="calculateBtn">Calculate</button>
-                                </div>
+                        <div class="col-md-3">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Max Profit</span>
+                                <input type="number" class="form-control" id="maxProfit">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h5>Save Strategy</h5>
-                    <div class="row align-items-end">
+                    <h5 class="mb-2">Save Strategy</h5>
+                    <div class="row g-2 align-items-center">
                         <div class="col-md-8">
-                            <label class="form-label">Strategy Name</label>
-                            <input type="text" class="form-control" placeholder="Enter a name for your strategy">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Name</span>
+                                <input type="text" class="form-control" placeholder="Enter strategy name">
+                            </div>
                         </div>
                         <div class="col-md-4 text-end">
-                            <div class="btn-group">
+                            <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-secondary" onclick="previewStrategyJson()">
-                                    <i class="fas fa-code"></i> Preview JSON
+                                    <i class="fas fa-code"></i> Preview
                                 </button>
-                                <button class="btn btn-primary" id="saveStrategyBtn" onclick="saveStrategy()">Save Strategy</button>
-                                <button class="btn btn-success">Deploy Strategy</button>
+                                <button class="btn btn-primary" id="saveStrategyBtn" onclick="saveStrategy()">Save</button>
+                                <button class="btn btn-success">Deploy</button>
                             </div>
                         </div>
                     </div>
@@ -654,6 +643,27 @@
         </div>
     </div>
 
+    <!-- New modal for strategy JSON -->
+    <div class="modal fade" id="strategyJsonModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Strategy JSON Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="strategyJsonContent" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; max-height: 500px; overflow-y: auto;"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="copyStrategyJson()">
+                        <i class="fas fa-copy"></i> Copy JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/live-feed.js"></script>
     <script src="../js/env.js"></script>
@@ -661,7 +671,7 @@
     console.log('Strategy page script starting...');
 
     // Initialize leg counter and saved strategies array
-    let legCount = 1;
+    let legCount = 0;
     let editingStrategyId = null; // Track which strategy is being edited
 
     // Helper functions for safe value retrieval
@@ -720,45 +730,103 @@
                 for (let i = 0; i < numLegs; i++) {
                     legCount++;
                     const legHtml = `
-                        <div class="row leg-row mb-3" data-leg="${legCount}">
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">Leg ${legCount}</span>
-                                    <select class="form-select">
-                                        <option>Buy</option>
-                                        <option>Sell</option>
-                                    </select>
+                        <div class="leg-container" data-leg="${legCount}">
+                            <div class="row leg-row mb-2">
+                                <div class="col-md-2 px-1">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">L${legCount}</span>
+                                        <select class="form-select action-select">
+                                            <option value="buy">Buy</option>
+                                            <option value="sell">Sell</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">Strike</span>
-                                    <select class="form-select">
-                                        <option>ATM</option>
-                                        <option>ITM</option>
-                                        <option>OTM</option>
-                                    </select>
+                                <div class="col-md-2 px-1">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Qty</span>
+                                        <input type="number" class="form-control quantity-input" value="75" min="1">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">Option</span>
-                                    <select class="form-select">
-                                        <option>CE</option>
-                                        <option>PE</option>
-                                    </select>
+                                <div class="col-md-2 px-1">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Option</span>
+                                        <select class="form-select option-type-select">
+                                            <option value="call">CE</option>
+                                            <option value="put">PE</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="input-group">
-                                    <span class="input-group-text">Qty</span>
-                                    <input type="number" class="form-control" value="1" min="1">
+                                <div class="col-md-2 px-1">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Expiry</span>
+                                        <select class="form-select expiry-select">
+                                            <option value="present week">Current Week</option>
+                                            <option value="next week">Next Week</option>
+                                            <option value="monthly">Monthly</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-1">
-                                <button class="btn btn-outline-danger btn-sm w-100" onclick="removeLeg(this)">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                                <div class="col-md-2 px-1">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Premium</span>
+                                        <select class="form-select premium-type-select" onchange="handlePremiumTypeChange(this)">
+                                            <option value="unselected"></option>
+                                            <option value="ATM pt">ATM pt</option>
+                                            <option value="ATM %">ATM %</option>
+                                            <option value="CP">CP</option>
+                                            <option value="CP >=">CP >=</option>
+                                            <option value="CP <=">CP <=</option>
+                                        </select>
+                                    </div>
+                                    <div class="dynamic-input-container input-group input-group-sm" style="display: none; margin-top: 2px;">
+                                        <select class="form-select itm-options-select" style="display: none;width: 100%;">
+                                            <option value="ITM 100">ITM 100</option>
+                                            <option value="ITM 150">ITM 150</option>
+                                            <option value="ITM 200">ITM 200</option>
+                                            <option value="ITM 250">ITM 250</option>
+                                            <option value="ITM 300">ITM 300</option>
+                                            <option value="ITM 350">ITM 350</option>
+                                            <option value="ITM 400">ITM 400</option>
+                                            <option value="ITM 450">ITM 450</option>
+                                            <option value="ITM 500">ITM 500</option>
+                                        </select>
+                                        <input type="text" class="form-control custom-input" placeholder="Enter value" style="display: none;">
+                                    </div>
+                                </div>
+                                <div class="col-md-2 px-1">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">SL%</span>
+                                        <input type="number" 
+                                               class="form-control stop-loss-input" 
+                                               value="60" 
+                                               min="0" 
+                                               max="100">
+                                    </div>
+                                </div>
+                                <div class="col-md-2 px-1">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Target%</span>
+                                        <input type="number" 
+                                               class="form-control target-input" 
+                                               value="20" 
+                                               min="0" 
+                                               max="100">
+                                    </div>
+                                </div>
+                                <div class="col-md-2 px-1">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Re-Exec</span>
+                                        <input type="number" 
+                                               class="form-control re-execute-input" 
+                                               value="2" 
+                                               min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-1 px-1">
+                                    <button class="btn btn-outline-danger btn-sm w-100" onclick="removeLeg(this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -792,23 +860,46 @@
     // Function to save strategy
     async function saveStrategy() {
         try {
-            // Get the max profit and max loss inputs
-            const maxProfitInput = document.getElementById('maxProfit');
-            const maxLossInput = document.getElementById('maxLoss');
-            const nameInput = document.querySelector('input[placeholder="Enter a name for your strategy"]');
-
-            if (!nameInput) {
-                throw new Error('Strategy name input not found');
-            }
+            const legs = Array.from(document.querySelectorAll('.leg-container')).map(container => ({
+                action: container.querySelector('.action-select').value,
+                quantity: parseInt(container.querySelector('.quantity-input').value),
+                optionType: container.querySelector('.option-type-select').value,
+                expiry: container.querySelector('.expiry-select').value,
+                premiumType: container.querySelector('.premium-type-select').value,
+                itmOption: container.querySelector('.premium-type-select').value === 'ATM pt' 
+                    ? container.querySelector('.itm-options-select').value 
+                    : null,
+                customValue: container.querySelector('.premium-type-select').value !== 'ATM pt' 
+                    ? container.querySelector('.custom-input').value 
+                    : null,
+                limitOrderCondition: "1% lower than market price",
+                stopLoss: container.querySelector('.stop-loss-input').value + "%",
+                target: container.querySelector('.target-input').value + "%",
+                reExecuteLimit: parseInt(container.querySelector('.re-execute-input').value)
+            }));
 
             const strategyData = {
-                name: nameInput.value,
+                name: document.querySelector('input[placeholder="Enter a name for your strategy"]').value,
                 type: document.querySelector('input[name="strategy"]:checked').id === 'time' ? 'Time Based' : 'Indicator Based',
-                instrument: document.querySelector('select').value,
-                legs: document.querySelectorAll('.leg-row').length,
-                target: maxProfitInput ? parseFloat(maxProfitInput.value) || 0 : 0,
-                stopLoss: maxLossInput ? parseFloat(maxLossInput.value) || 0 : 0,
-                created: new Date().toISOString()
+                instrument: document.getElementById('instrumentSelect').value,
+                orderType: document.getElementById('orderType').value,
+                strategyStartTime: document.getElementById('strategyStartTime').value,
+                strategyStopTime: document.getElementById('strategyStopTime').value,
+                legs: legs,
+                riskManagement: {
+                    profitTarget: parseInt(document.getElementById('profitTarget').value),
+                    stopLoss: parseInt(document.getElementById('stopLoss').value),
+                    noTradeTime: "",
+                    profitManagement: "trailing",
+                    trailStep: parseInt(document.getElementById('trailStep').value),
+                    trailStopLoss: parseInt(document.getElementById('trailStopLoss').value)
+                },
+                deployment: {
+                    squareOffTime: document.getElementById('squareOffTime').value,
+                    qtyMultiplier: document.getElementById('qtyMultiplier').value,
+                    maxLoss: document.getElementById('maxLoss').value || "",
+                    maxProfit: document.getElementById('maxProfit').value || ""
+                }
             };
 
             console.log('Sending strategy data:', strategyData);
@@ -981,51 +1072,116 @@
         }
     }
 
+    // Function to generate premium type selection HTML
+    function generatePremiumTypeHTML() {
+        return `
+            <div class="col-md-2 px-1">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">Premium</span>
+                    <select class="form-select premium-type-select" onchange="handlePremiumTypeChange(this)">
+                        <option value="unselected"></option>
+                        <option value="ATM pt">ATM pt</option>
+                        <option value="ATM %">ATM %</option>
+                        <option value="CP">CP</option>
+                        <option value="CP >=">CP >=</option>
+                        <option value="CP <=">CP <=</option>
+                    </select>
+                </div>
+                <div class="dynamic-input-container input-group input-group-sm" style="display: none; margin-top: 2px;">
+                    <select class="form-select itm-options-select" style="display: none;width: 100%;">
+                        <option value="ITM 100">ITM 100</option>
+                        <option value="ITM 150">ITM 150</option>
+                        <option value="ITM 200">ITM 200</option>
+                        <option value="ITM 250">ITM 250</option>
+                        <option value="ITM 300">ITM 300</option>
+                        <option value="ITM 350">ITM 350</option>
+                        <option value="ITM 400">ITM 400</option>
+                        <option value="ITM 450">ITM 450</option>
+                        <option value="ITM 500">ITM 500</option>
+                    </select>
+                    <input type="text" class="form-control custom-input" placeholder="Enter value" style="display: none;width: 100%;">
+                </div>
+            </div>
+        `;
+    }
+
     // Add leg function
     function addLeg() {
         console.log('addLeg function executing...');
         legCount++;
         
         const newLeg = `
-            <div class="row leg-row mb-3" data-leg="${legCount}">
-                <div class="col-md-3">
-                    <div class="input-group">
-                        <span class="input-group-text">Leg ${legCount}</span>
-                        <select class="form-select">
-                            <option>Buy</option>
-                            <option>Sell</option>
-                        </select>
+            <div class="leg-container" data-leg="${legCount}">
+                <div class="row leg-row mb-2">
+                    <div class="col-md-2 px-1">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">L${legCount}</span>
+                            <select class="form-select action-select">
+                                <option value="buy">Buy</option>
+                                <option value="sell">Sell</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="input-group">
-                        <span class="input-group-text">Strike</span>
-                        <select class="form-select">
-                            <option>ATM</option>
-                            <option>ITM</option>
-                            <option>OTM</option>
-                        </select>
+                    <div class="col-md-2 px-1">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">Qty</span>
+                            <input type="number" class="form-control quantity-input" value="75" min="1">
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="input-group">
-                        <span class="input-group-text">Option</span>
-                        <select class="form-select">
-                            <option>CE</option>
-                            <option>PE</option>
-                        </select>
+                    <div class="col-md-2 px-1">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">Option</span>
+                            <select class="form-select option-type-select">
+                                <option value="call">CE</option>
+                                <option value="put">PE</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="input-group">
-                        <span class="input-group-text">Qty</span>
-                        <input type="number" class="form-control" value="1" min="1">
+                    <div class="col-md-2 px-1">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">Expiry</span>
+                            <select class="form-select expiry-select">
+                                <option value="present week">Current Week</option>
+                                <option value="next week">Next Week</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-1">
-                    <button class="btn btn-outline-danger btn-sm w-100" onclick="removeLeg(this)">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    ${generatePremiumTypeHTML()}
+                    <div class="col-md-2 px-1">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">SL%</span>
+                            <input type="number" 
+                                   class="form-control stop-loss-input" 
+                                   value="60" 
+                                   min="0" 
+                                   max="100">
+                        </div>
+                    </div>
+                    <div class="col-md-2 px-1">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">Target%</span>
+                            <input type="number" 
+                                   class="form-control target-input" 
+                                   value="20" 
+                                   min="0" 
+                                   max="100">
+                        </div>
+                    </div>
+                    <div class="col-md-2 px-1">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">Re-Exec</span>
+                            <input type="number" 
+                                   class="form-control re-execute-input" 
+                                   value="2" 
+                                   min="0">
+                        </div>
+                    </div>
+                    <div class="col-md-1 px-1">
+                        <button class="btn btn-outline-danger btn-sm w-100" onclick="removeLeg(this)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -1036,9 +1192,12 @@
 
     // Remove leg function
     function removeLeg(button) {
-        button.closest('.leg-row').remove();
-        legCount--;
-        updateRemoveButtons();
+        const legContainer = button.closest('.leg-container');
+        if (legContainer) {
+            legContainer.remove();
+            legCount--;
+            updateRemoveButtons();
+        }
     }
 
     // Update remove buttons function
@@ -1365,7 +1524,7 @@
                         <br>
                         <small class="text-muted">ID: ${strategy._id}</small>
                     </td>
-                    <td>${strategy.type}</td>
+                    <td>${strategy.strategyId?.type || 'N/A'}</td>
                     <td>${strategy.mode}</td>
                     <td>${strategy.instrument}</td>
                     <td class="live-price-cell" data-symbol="${strategy.instrument}">
@@ -1391,8 +1550,11 @@
                                     <i class="fas fa-play"></i> Resume
                                 </button>
                             `}
-                            <button class="btn btn-danger" onclick="deleteDeployedStrategy('${strategy._id}')">
+                            <button class="btn btn-danger me-2" onclick="deleteDeployedStrategy('${strategy._id}')">
                                 <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <button class="btn btn-info" onclick='showStrategyJson(${JSON.stringify(strategy)})'>
+                                <i class="fas fa-code"></i>
                             </button>
                         </div>
                     </td>
@@ -1498,33 +1660,45 @@
             // Collect all strategy data with safer element selection
             const strategy = {
                 name: document.querySelector('input[placeholder="Enter a name for your strategy"]')?.value || '',
-                type: document.querySelector('input[name="strategy"]:checked')?.id || 'time', // default to 'time'
+                type: document.querySelector('input[name="strategy"]:checked')?.id === 'time' ? 'time' : 'indicator',
                 instrument: document.getElementById('instrumentSelect')?.value || 'BANKNIFTY',
-                legs: Array.from(document.querySelectorAll('.leg-row')).map(leg => {
-                    // Get selects inside input-groups
-                    const selects = leg.querySelectorAll('.input-group select');
-                    const quantityInput = leg.querySelector('.input-group input[type="number"]');
-                    
+                legs: Array.from(document.querySelectorAll('.leg-container')).map(container => {
+                    const action = container.querySelector('.action-select')?.value || 'Buy';
+                    const quantity = parseInt(container.querySelector('.quantity-input')?.value || '1', 10);
+                    const optionType = container.querySelector('.option-type-select')?.value || 'CE';
+                    const expiry = container.querySelector('.expiry-select')?.value || 'present week';
+                    const premiumType = container.querySelector('.premium-type-select')?.value || 'unselected';
+                    const itmOption = premiumType === 'ATM pt' ? container.querySelector('.itm-options-select')?.value : null;
+                    const customValue = premiumType !== 'ATM pt' ? container.querySelector('.custom-input')?.value : null;
+                    const stopLoss = parseFloat(container.querySelector('.stop-loss-input')?.value || '0');
+                    const target = parseFloat(container.querySelector('.target-input')?.value || '0');
+                    const reExecuteLimit = parseInt(container.querySelector('.re-execute-input')?.value || '0', 10);
+
                     return {
-                        type: selects[0]?.value || 'Buy',      // First select (Buy/Sell)
-                        strike: selects[1]?.value || 'ATM',    // Second select (Strike)
-                        option: selects[2]?.value || 'CE',     // Third select (Option type)
-                        quantity: parseInt(quantityInput?.value || '1')
+                        action,
+                        quantity,
+                        optionType,
+                        expiry,
+                        premiumType,
+                        itmOption,
+                        customValue,
+                        stopLoss,
+                        target,
+                        reExecuteLimit
                     };
                 }),
                 riskManagement: {
-                    profitTarget: document.querySelector('input[placeholder*="total profit"]')?.value || '',
-                    stopLoss: document.querySelector('input[placeholder*="total loss"]')?.value || '',
+                    profitTarget: parseFloat(document.querySelector('input[placeholder*="total profit"]')?.value || '0'),
+                    stopLoss: parseFloat(document.querySelector('input[placeholder*="total loss"]')?.value || '0'),
                     noTradeTime: document.querySelector('input[placeholder*="No Trade After"]')?.value || '',
-                    profitManagement: document.querySelector('input[name="profitManagement"]:checked')?.value || 'noTrailing',
-                    trailStep: document.getElementById('trailStep')?.value || '400',
-                    profitStep: document.getElementById('profitStep')?.value || '800'
+                    trailStep: parseFloat(document.getElementById('trailStep')?.value || '400'),
+                    profitStep: parseFloat(document.getElementById('profitStep')?.value || '800')
                 },
                 deployment: {
                     squareOffTime: document.getElementById('squareOffTime')?.value || '15:15',
-                    qtyMultiplier: document.getElementById('qtyMultiplier')?.value || '1',
-                    maxLoss: document.getElementById('maxLoss')?.value || '',
-                    maxProfit: document.getElementById('maxProfit')?.value || ''
+                    qtyMultiplier: parseInt(document.getElementById('qtyMultiplier')?.value || '1', 10),
+                    maxLoss: parseFloat(document.getElementById('maxLoss')?.value || '0'),
+                    maxProfit: parseFloat(document.getElementById('maxProfit')?.value || '0')
                 }
             };
 
@@ -1686,6 +1860,53 @@
             });
         });
     });
+
+    function showStrategyJson(strategy) {
+        const jsonContent = document.getElementById('strategyJsonContent');
+        jsonContent.textContent = JSON.stringify(strategy, null, 2);
+        const modal = new bootstrap.Modal(document.getElementById('strategyJsonModal'));
+        modal.show();
+    }
+
+    function copyStrategyJson() {
+        const jsonContent = document.getElementById('strategyJsonContent').textContent;
+        navigator.clipboard.writeText(jsonContent)
+            .then(() => {
+                // Show success feedback
+                const copyBtn = document.querySelector('#strategyJsonModal .btn-primary');
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy JSON:', err);
+                alert('Failed to copy JSON to clipboard');
+            });
+    }
+
+    function handlePremiumTypeChange(select) {
+        const container = select.closest('.col-md-2');
+        const dynamicInputContainer = container.querySelector('.dynamic-input-container');
+        const itmOptionsSelect = dynamicInputContainer.querySelector('.itm-options-select');
+        const customInput = dynamicInputContainer.querySelector('.custom-input');
+        const dynamicLabel = dynamicInputContainer.querySelector('.dynamic-label');
+        
+        if (select.value === 'ATM pt') {
+            dynamicInputContainer.style.display = 'block';
+            itmOptionsSelect.style.display = 'block';
+            customInput.style.display = 'none';
+            dynamicLabel.textContent = 'ITM';
+        } else if (select.value !== 'unselected') {
+            dynamicInputContainer.style.display = 'block';
+            itmOptionsSelect.style.display = 'none';
+            customInput.style.display = 'block';
+            dynamicLabel.textContent = 'Value';
+        } else {
+            dynamicInputContainer.style.display = 'none';
+        }
+    }
     </script>
 </body>
 </html>

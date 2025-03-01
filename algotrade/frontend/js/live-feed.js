@@ -38,28 +38,27 @@ class LiveFeedManager {
         // Remove all status classes
         this.statusElement.classList.remove('connected', 'disconnected', 'connecting');
         
-        // Format the WebSocket URL for display
-        const wsUrl = new URL(ENV.LIVE_WS_URL);
-        const displayUrl = `${wsUrl.hostname}:${wsUrl.port}${wsUrl.pathname}`;
+        // Get WebSocket URL from ENV configuration
+        const wsUrl = ENV.LIVE_WS_URL;
         
         switch (status) {
             case 'connected':
                 this.statusElement.classList.add('connected');
                 spinner.style.display = 'none';
                 this.reconnectButton.style.display = 'none';
-                connectionDetails.textContent = `Connected to ${displayUrl}`;
+                connectionDetails.textContent = `Connected to ${wsUrl}`;
                 break;
             case 'disconnected':
                 this.statusElement.classList.add('disconnected');
                 spinner.style.display = 'none';
                 this.reconnectButton.style.display = 'block';
-                connectionDetails.textContent = `Last attempted connection to ${displayUrl}`;
+                connectionDetails.textContent = `Last attempted connection to ${wsUrl}`;
                 break;
             case 'connecting':
                 this.statusElement.classList.add('connecting');
                 spinner.style.display = 'block';
                 this.reconnectButton.style.display = 'none';
-                connectionDetails.textContent = `Attempting connection to ${displayUrl}`;
+                connectionDetails.textContent = `Attempting connection to ${wsUrl}`;
                 break;
         }
         
@@ -149,11 +148,13 @@ class LiveFeedManager {
     }
 
     connect() {
+        // Get WebSocket URL from ENV configuration
         const wsUrl = ENV.LIVE_WS_URL;
         
         console.log('------------------------');
         console.log('WebSocket Connection Details:');
         console.log('URL:', wsUrl);
+        console.log('Current hostname:', window.location.hostname);
         console.log('------------------------');
         
         try {
@@ -163,7 +164,7 @@ class LiveFeedManager {
             this.ws = new WebSocket(wsUrl);
 
             this.ws.onopen = () => {
-                console.log('WebSocket connection established');
+                console.log('WebSocket connection established to:', wsUrl);
                 this.updateConnectionStatus('connected', 'Connected to market data');
                 this.updateFeedStatus(true);
             };

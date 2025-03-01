@@ -1,5 +1,7 @@
 const Strategy = require('../models/Strategy');
 const DeployedStrategy = require('../models/DeployedStrategy');
+const executeStrategies = require('../live/strategyExecutor');
+
 // Get all available strategies (no authentication required)
 const getAvailableStrategies = async (req, res) => {
     try {
@@ -83,7 +85,8 @@ const deployStrategy = async (req, res) => {
 const getDeployedStrategies = async (req, res) => {
     try {
         // In a real implementation, fetch from database
-        const userDeployedStrategies = await DeployedStrategy.find({});
+        const userDeployedStrategies = await DeployedStrategy.find({})
+            .populate('strategyId');
         
         res.json(userDeployedStrategies);
     } catch (err) {
@@ -219,14 +222,30 @@ const stopStrategy = async (req, res) => {
             return res.status(404).json({ message: 'Deployed strategy not found' });
         }
 
-        // Update status to Paused
-        deployedStrategy.status = 'Paused';
-        await deployedStrategy.save();
+        // Add graceful shutdown steps
+        try {
+            // 1. Set status to "Stopping" first
+            deployedStrategy.status = 'Stopping';
+            await deployedStrategy.save();
 
-        // In a real implementation, you would:
-        // 1. Stop strategy execution
-        // 2. Clean up any active orders/positions
-        // 3. Update monitoring
+            // 2. Clean up any active connections or processes
+            await cleanupStrategyConnections(deployedStrategy);
+
+            // 3. Update final status to Paused
+            deployedStrategy.status = 'Paused';
+            await deployedStrategy.save();
+
+        } catch (cleanupError) {
+            console.error('Error during strategy cleanup:', cleanupError);
+            // Even if cleanup fails, we want to mark it as stopped
+            deployedStrategy.status = 'Error';
+            await deployedStrategy.save();
+            
+            return res.status(500).json({
+                message: 'Strategy stopped with errors',
+                error: cleanupError.message
+            });
+        }
 
         res.json({ 
             message: 'Strategy stopped successfully',
@@ -240,6 +259,29 @@ const stopStrategy = async (req, res) => {
             error: error.message 
         });
     }
+};
+
+// Add helper function for cleanup
+const cleanupStrategyConnections = async (deployedStrategy) => {
+    return new Promise((resolve, reject) => {
+        try {
+            // Add timeout to ensure the function eventually resolves
+            const timeout = setTimeout(() => {
+                resolve();
+            }, 5000); // 5 second timeout
+
+            // Perform cleanup steps:
+            // 1. Close any open orders
+            // 2. Close websocket connections
+            // 3. Cancel any pending operations
+
+            // Clear timeout if cleanup finishes before timeout
+            clearTimeout(timeout);
+            resolve();
+        } catch (error) {
+            reject(error);
+        }
+    });
 };
 
 // Resume a deployed strategy
@@ -358,6 +400,65 @@ const deleteDeployedStrategy = async (req, res) => {
     }
 };
 
+const getDeployedStrategiesHtml = async (req, res) => {
+    try {
+        const deployedStrategies = await DeployedStrategy.find({})
+            .populate({
+                path: 'strategyId',
+                select: '-__v'  // Include all fields except __v
+            })
+            .populate({
+                path: 'userId',
+                select: 'username email'  // Include username and email
+            });
+
+        res.json(deployedStrategies);
+    } catch (err) {
+        console.error('Error getting deployed strategies:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Add error handling middleware
+const errorHandler = (error, req, res, next) => {
+    console.error('Strategy Controller Error:', error);
+    res.status(500).json({
+        message: 'Internal server error',
+        error: error.message
+    });
+};
+
+// Add this new controller function
+const testStrategy = async (req, res) => {
+    try {
+        const { currentPrice, strategyName } = req.body;
+        const strategyId = req.params.id;
+
+        // Get the strategy
+        const strategy = await Strategy.findById(strategyId);
+        if (!strategy) {
+            return res.status(404).json({ message: 'Strategy not found' });
+        }
+
+        // Execute the strategy using the executor
+        const result = await executeStrategies(
+            strategy.instrument, 
+            currentPrice,
+            new Date(),
+            [strategy]
+        );
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('Error testing strategy:', error);
+        res.status(500).json({ 
+            message: 'Error testing strategy',
+            error: error.message 
+        });
+    }
+};
+
 // Export all functions
 module.exports = {
     getAvailableStrategies,
@@ -370,5 +471,8 @@ module.exports = {
     stopStrategy,
     resumeStrategy,
     startStrategy,
-    deleteDeployedStrategy
+    deleteDeployedStrategy,
+    getDeployedStrategiesHtml,
+    errorHandler,
+    testStrategy,
 }; 

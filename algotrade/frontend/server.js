@@ -1,9 +1,18 @@
 const express = require('express');
 const path = require('path');
-const { createProxyMiddleware } = require('http-proxy-middleware');
 require('dotenv').config();
 
 const app = express();
+
+// Get configuration from environment variables with fallbacks
+const PORT = process.env.PORT || '4300';
+const HOST = process.env.HOST || '0.0.0.0';
+
+// Log configuration on startup
+console.log('Server Configuration:', {
+    PORT,
+    HOST
+});
 
 // Middleware to allow iframe loading
 app.use((req, res, next) => {
@@ -14,12 +23,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Proxy /api requests to backend server
-app.use('/api', createProxyMiddleware({ 
-    target: 'http://localhost:4301',
-    changeOrigin: true
-}));
-
 // Serve static files from frontend directory
 app.use(express.static(path.join(__dirname)));
 
@@ -28,9 +31,7 @@ app.use('/pages', express.static(path.join(__dirname, 'pages')));
 
 // Serve CSS files with correct MIME type
 app.use('/css', express.static(path.join(__dirname, 'css'), {
-    setHeaders: (res, path) => {
-        res.setHeader('Content-Type', 'text/css');
-    }
+    setHeaders: (res) => res.setHeader('Content-Type', 'text/css')
 }));
 
 // Serve env.js and config.js from root
@@ -47,14 +48,13 @@ app.get('/config.js', (req, res) => {
 // Handle all routes by serving index.html
 app.get('*', (req, res) => {
     if (req.path.startsWith('/pages/')) {
-        const pagePath = path.join(__dirname, req.path);
-        res.sendFile(pagePath);
+        res.sendFile(path.join(__dirname, req.path));
     } else {
         res.sendFile(path.join(__dirname, 'index.html'));
     }
 });
 
-const PORT = process.env.PORT || 4300;
-app.listen(PORT, () => {
-    console.log(`Frontend server running on port ${PORT}`);
+// Start server
+app.listen(PORT, HOST, () => {
+    console.log(`Frontend server running on http://${HOST}:${PORT}`);
 }); 

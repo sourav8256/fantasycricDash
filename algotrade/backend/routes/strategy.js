@@ -12,10 +12,16 @@ const {
     stopStrategy,
     resumeStrategy,
     startStrategy,
-    deleteDeployedStrategy
+    deleteDeployedStrategy,
+    getDeployedStrategiesHtml,
+    errorHandler,
+    testStrategy
 } = require('../controllers/strategyController');
 
-// All routes require authentication
+// Move the HTML route before authentication middleware
+router.get('/deployed/html', getDeployedStrategiesHtml);
+
+// All other routes require authentication
 router.use(authenticateToken);
 
 // CRUD operations
@@ -34,5 +40,11 @@ router.post('/:id/start', startStrategy);
 
 // Add new route for deleting deployed strategies
 router.delete('/deployed/:id', deleteDeployedStrategy);
+
+// Add this new route before the error handler
+router.post('/:id/test-strategy', testStrategy);
+
+// Add error handler as the last middleware
+router.use(errorHandler);
 
 module.exports = router; 

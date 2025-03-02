@@ -693,7 +693,27 @@
             };
         }
 
-        // Clean up the timer functions and remove redundancies
+        // Improved timer animation function with forced reflow
+        function addTimerAnimation() {
+            const timerUnits = document.querySelectorAll('.timer-unit');
+            timerUnits.forEach(unit => {
+                // Remove animation class first
+                unit.classList.remove('pulse-animation');
+                
+                // Force a reflow to ensure the animation can be restarted
+                void unit.offsetWidth;
+                
+                // Add animation class
+                unit.classList.add('pulse-animation');
+                
+                // Remove class after animation completes
+                setTimeout(() => {
+                    unit.classList.remove('pulse-animation');
+                }, 400);
+            });
+        }
+
+        // Make sure these functions call the animation function
         function startTimer() {
             const seconds = parseInt(document.getElementById('duration').value);
             if (seconds <= 0) {
@@ -701,7 +721,7 @@
                 return;
             }
             
-            // Add animation to timer units
+            // Call animation function BEFORE starting the timer
             addTimerAnimation();
             
             // Only save start time if this is a user-initiated start, not a page refresh
@@ -722,7 +742,7 @@
         }
 
         function stopTimer() {
-            // Add animation when stopping
+            // Call animation function
             addTimerAnimation();
             
             clearInterval(timerId);
@@ -730,7 +750,7 @@
         }
 
         function resetTimer() {
-            // Add animation when resetting
+            // Call animation function
             addTimerAnimation();
             
             stopTimer();
@@ -764,6 +784,7 @@
                     <span>sec</span>
                 </div>
             `;
+            
             // Reset slider to 0
             document.getElementById('duration').value = 0;
             updateDurationDisplay({years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0});
@@ -1276,16 +1297,33 @@
         `;
         document.head.appendChild(style);
 
-        // Add animation for start/stop/reset buttons
-        function addTimerAnimation() {
-            const timerUnits = document.querySelectorAll('.timer-unit');
-            timerUnits.forEach(unit => {
-                unit.classList.add('pulse-animation');
-                setTimeout(() => {
-                    unit.classList.remove('pulse-animation');
-                }, 400);
+        // Add direct click handlers for all buttons to ensure animations work
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation triggers to all buttons
+            document.getElementById('startBtn').addEventListener('click', function() {
+                addTimerAnimation();
             });
-        }
+            
+            document.getElementById('stopBtn').addEventListener('click', function() {
+                addTimerAnimation();
+            });
+            
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                addTimerAnimation();
+            });
+            
+            document.getElementById('rerunBtn').addEventListener('click', function() {
+                addTimerAnimation();
+            });
+            
+            // Also add to center button
+            const centerButton = document.getElementById('centerButton');
+            if (centerButton) {
+                centerButton.addEventListener('click', function() {
+                    addTimerAnimation();
+                });
+            }
+        });
     </script>
 </body>
 </html>

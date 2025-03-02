@@ -43,7 +43,12 @@ async function entryStrategy(params) {
 
     return Promise.resolve({
         result: "ORDER",
-        orderPrice : params.price
+        orders: [
+            {
+                orderPrice: params.price,
+                quantity: params.entryQuantity || 1
+            }
+        ],
     })
     
     console.log('Entry strategy for symbol:', params.symbol);

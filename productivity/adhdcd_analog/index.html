@@ -274,7 +274,7 @@
                 `${formatted.years}y ${formatted.months}m ${formatted.weeks}w ${formatted.days}d ${formatted.hours}h ${formatted.minutes}m ${formatted.seconds}s`;
 
             // Save the slider value to localStorage
-            localStorage.setItem('sliderValue', this.value);
+            localStorage.setItem('adhdcd_analog_sliderValue', this.value);
         });
 
         // Helper function to format duration
@@ -302,12 +302,12 @@
 
         // Load last time values from local storage when page loads
         window.onload = function() {
-            const savedTime = localStorage.getItem('lastTimeValues');
-            const savedDuration = localStorage.getItem('lastDuration');
-            const startTime = localStorage.getItem('startTime');
+            const savedTime = localStorage.getItem('adhdcd_analog_lastTimeValues');
+            const savedDuration = localStorage.getItem('adhdcd_analog_lastDuration');
+            const startTime = localStorage.getItem('adhdcd_analog_startTime');
 
             // Load the saved slider value
-            const savedSliderValue = localStorage.getItem('sliderValue');
+            const savedSliderValue = localStorage.getItem('adhdcd_analog_sliderValue');
             if (savedSliderValue !== null) {
                 slider.value = savedSliderValue;
                 const formatted = formatDuration(parseInt(savedSliderValue));
@@ -337,8 +337,8 @@
 
         function displaySavedValues() {
             const savedValuesDiv = document.getElementById('savedValues');
-            const savedDuration = localStorage.getItem('lastDuration');
-            const startTime = localStorage.getItem('startTime');
+            const savedDuration = localStorage.getItem('adhdcd_analog_lastDuration');
+            const startTime = localStorage.getItem('adhdcd_analog_startTime');
 
             if (savedDuration) {
                 const duration = parseInt(savedDuration);
@@ -378,14 +378,14 @@
             const duration = parseInt(document.getElementById('duration').value) || 0;
 
             // Save duration
-            localStorage.setItem('lastDuration', duration.toString());
+            localStorage.setItem('adhdcd_analog_lastDuration', duration.toString());
             
             // Create time values object for backward compatibility
             const timeValues = {
                 duration: duration
             };
             
-            localStorage.setItem('lastTimeValues', JSON.stringify(timeValues));
+            localStorage.setItem('adhdcd_analog_lastTimeValues', JSON.stringify(timeValues));
             lastTimeValues = timeValues;
             document.getElementById('rerunBtn').disabled = false;
             displaySavedValues();
@@ -393,7 +393,7 @@
 
         function saveStartTime() {
             // save current time in local storage
-            localStorage.setItem('startTime', new Date().toISOString());
+            localStorage.setItem('adhdcd_analog_startTime', new Date().toISOString());
         }
 
         function startTimer({resaveTime = true} = {}) {
@@ -407,7 +407,7 @@
                 saveStartTime();
             }
 
-            if (parseInt(localStorage.getItem('lastDuration')) <= 0) return;
+            if (parseInt(localStorage.getItem('adhdcd_analog_lastDuration')) <= 0) return;
 
             timerId = setInterval(updateTimer, 1000);
             updateTimer(); // Initial update
@@ -418,10 +418,10 @@
         }
 
         function updateTimer() {
-            const startTime = new Date(localStorage.getItem('startTime')).getTime();
+            const startTime = new Date(localStorage.getItem('adhdcd_analog_startTime')).getTime();
             const currentTime = new Date().getTime();
             const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
-            const savedDuration = parseInt(localStorage.getItem('lastDuration'));
+            const savedDuration = parseInt(localStorage.getItem('adhdcd_analog_lastDuration'));
             timeLeft = savedDuration - elapsedSeconds;
 
             // Update the custom progress bar

@@ -129,27 +129,39 @@
             text-align: right;
         }
 
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .rerun-btn.primary-btn {
+            width: 80%;
+            max-width: 300px;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background-color: #2196F3; /* Different color to make it stand out */
+            margin-bottom: 5px;
+        }
+
+        .rerun-btn.primary-btn:hover {
+            background-color: #0b7dda;
+        }
+
         .button-group {
             display: flex;
             gap: 10px;
             justify-content: center;
-            margin-top: 10px;
+            width: 100%;
         }
 
-        button {
-            padding: 12px 24px;
-            font-size: 1rem;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
+        /* Update the existing button styles to ensure proper width distribution */
+        .button-group button {
             flex: 1;
-            max-width: 150px;
-        }
-
-        button:hover {
-            background-color: #45a049;
+            max-width: 120px;
         }
 
         @media (min-width: 768px) {
@@ -271,13 +283,45 @@
             align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             z-index: 5;
-            /* Add hover effect */
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .center-button:hover {
             background: #d6d6d6;
+            transform: scale(1.05);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
             cursor: pointer;
+        }
+
+        .center-button:active {
+            transform: scale(0.95);
+            background: #c8c8c8;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .center-button::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, rgba(0,0,0,0.1) 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.5s;
+        }
+
+        .center-button:active::after {
+            transform: scale(0, 0);
+            opacity: 0.3;
+            transition: 0s;
         }
 
         .wheel-menu {
@@ -415,6 +459,149 @@
             position: absolute;
             transition: left 0.3s ease;
         }
+
+        /* Add button feedback animations */
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            flex: 1;
+            max-width: 150px;
+            transition: all 0.15s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Hover effect */
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Active/press effect */
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: #3d8b41;
+        }
+
+        /* Click ripple effect */
+        button::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.4) 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.5s;
+        }
+
+        button:active::after {
+            transform: scale(0, 0);
+            opacity: 0.3;
+            transition: 0s;
+        }
+
+        /* Center button animation */
+        .center-button {
+            width: 30%;
+            height: 30%;
+            border-radius: 50%;
+            background: #e6e6e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            z-index: 5;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .center-button:hover {
+            background: #d6d6d6;
+            transform: scale(1.05);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+
+        .center-button:active {
+            transform: scale(0.95);
+            background: #c8c8c8;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Center button click animation */
+        .center-button::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, rgba(0,0,0,0.1) 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.5s;
+        }
+
+        .center-button:active::after {
+            transform: scale(0, 0);
+            opacity: 0.3;
+            transition: 0s;
+        }
+
+        .ripple {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Add animation styles for the time display units */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background-color: #e8f5e9; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes flash {
+            0% { background-color: white; }
+            30% { background-color: rgba(76, 175, 80, 0.2); }
+            100% { background-color: white; }
+        }
+
+        .pulse-animation {
+            animation: pulse 0.4s ease-in-out;
+        }
+
+        .flash-animation {
+            animation: flash 0.8s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -447,11 +634,13 @@
                 <input type="range" min="0" max="94608000" value="0" class="slider" id="duration">
             </div>
         </div>
-        <div class="button-group">
-            <button onclick="startTimer()">Start</button>
-            <button onclick="stopTimer()">Stop</button>
-            <button onclick="resetTimer()">Reset</button>
-            <button onclick="rerunTimer()" id="rerunBtn" disabled>Rerun</button>
+        <div class="button-container">
+            <button id="rerunBtn" class="rerun-btn primary-btn" onclick="rerunTimer()">Rerun</button>
+            <div class="button-group">
+                <button id="startBtn" onclick="startTimer()">Start</button>
+                <button id="stopBtn" onclick="stopTimer()">Stop</button>
+                <button id="resetBtn" onclick="resetTimer()">Reset</button>
+            </div>
         </div>
     </div>
 
@@ -504,39 +693,178 @@
             };
         }
 
-        // Load last time values from local storage when page loads
-        window.onload = function() {
-            const savedTime = localStorage.getItem('adhdcd_analog_lastTimeValues');
-            const savedDuration = localStorage.getItem('adhdcd_analog_lastDuration');
-            const startTime = localStorage.getItem('adhdcd_analog_startTime');
-
-            // Load the saved slider value
-            const savedSliderValue = localStorage.getItem('adhdcd_analog_sliderValue');
-            if (savedSliderValue !== null) {
-                slider.value = savedSliderValue;
-                const formatted = formatDuration(parseInt(savedSliderValue));
-                updateDurationDisplay(formatted);
+        // Clean up the timer functions and remove redundancies
+        function startTimer() {
+            const seconds = parseInt(document.getElementById('duration').value);
+            if (seconds <= 0) {
+                alert('Please set a duration greater than 0.');
+                return;
             }
-
-            if (savedTime) {
-                lastTimeValues = JSON.parse(savedTime);
-                document.getElementById('rerunBtn').disabled = false;
-
-                // If there's a saved start time and duration, resume the timer
-                if (startTime && savedDuration) {
-                    const currentTime = new Date().getTime();
-                    const savedStartTime = new Date(startTime).getTime();
-                    const elapsedSeconds = Math.floor((currentTime - savedStartTime) / 1000);
-                    const duration = parseInt(savedDuration);
-
-                    // Only start if there's still time remaining
-                    if (duration - elapsedSeconds > 0) {
-                        startTimer({resaveTime: false});
-                    }
-                }
+            
+            // Add animation to timer units
+            addTimerAnimation();
+            
+            // Only save start time if this is a user-initiated start, not a page refresh
+            if (!window.isPageRefresh) {
+                saveStartTime();
             }
+            
+            if (timerId) {
+                clearInterval(timerId);
+            }
+            
+            const endTime = Date.now() + seconds * 1000;
+            updateTimer(endTime);
+            
+            timerId = setInterval(() => {
+                updateTimer(endTime);
+            }, 1000);
+        }
+
+        function stopTimer() {
+            // Add animation when stopping
+            addTimerAnimation();
+            
+            clearInterval(timerId);
+            timerId = null;
+        }
+
+        function resetTimer() {
+            // Add animation when resetting
+            addTimerAnimation();
+            
+            stopTimer();
+            document.getElementById('timer').innerHTML = `
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>yr</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>mo</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>wk</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>d</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>hr</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>min</span>
+                </div>
+                <div class="timer-unit">
+                    <div class="number">00</div>
+                    <span>sec</span>
+                </div>
+            `;
+            // Reset slider to 0
+            document.getElementById('duration').value = 0;
+            updateDurationDisplay({years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0});
+            
+            // Don't clear the lastTimeValues or localStorage
             displaySavedValues();
         }
+
+        function rerunTimer() {
+            // Ensure this is treated as a user action, not a page refresh
+            window.isPageRefresh = false;
+            
+            // Simply stop the timer and start it again
+            stopTimer();
+            startTimer(); // This will now save the start time since isPageRefresh is false
+        }
+
+        // Update the window.onload function to restore timer progress on page reload
+        window.onload = function() {
+            // Set a flag to indicate this is a page load/refresh
+            window.isPageRefresh = true;
+            
+            // Load saved values
+            const savedTime = localStorage.getItem('adhdcd_analog_lastTimeValues');
+            const savedDuration = localStorage.getItem('adhdcd_analog_lastDuration');
+            const savedSliderValue = localStorage.getItem('adhdcd_analog_sliderValue');
+            const savedStartTime = localStorage.getItem('adhdcd_analog_startTime');
+            
+            if (savedTime) {
+                lastTimeValues = JSON.parse(savedTime);
+            }
+            
+            // Use the most recent duration setting (either from lastDuration or sliderValue)
+            if (savedDuration || savedSliderValue) {
+                let durationValue = 0;
+                if (savedDuration) {
+                    durationValue = parseInt(savedDuration);
+                } else if (savedSliderValue) {
+                    durationValue = parseInt(savedSliderValue);
+                }
+                
+                // Set slider and current value
+                document.getElementById('duration').value = durationValue;
+                currentValue = durationValue;
+                
+                // Update display
+                const formatted = formatDuration(durationValue);
+                updateDurationDisplay(formatted);
+            }
+            
+            // Display saved values
+            displaySavedValues();
+            
+            // Create wheel indicators
+            createWheelIndicators();
+            
+            // Resume timer if it was running
+            if (savedStartTime && savedDuration) {
+                const startTimeMs = new Date(savedStartTime).getTime();
+                const currentTimeMs = new Date().getTime();
+                const elapsedMs = currentTimeMs - startTimeMs;
+                const durationMs = parseInt(savedDuration) * 1000;
+                
+                // Only resume if timer hasn't completed yet
+                if (elapsedMs < durationMs) {
+                    // Calculate remaining time
+                    const remainingMs = durationMs - elapsedMs;
+                    const endTime = currentTimeMs + remainingMs;
+                    
+                    // Start timer with calculated end time
+                    updateTimer(endTime);
+                    timerId = setInterval(() => {
+                        updateTimer(endTime);
+                    }, 1000);
+                }
+            }
+            
+            // Clear the page refresh flag after initialization
+            setTimeout(() => {
+                window.isPageRefresh = false;
+            }, 500);
+        };
+
+        // Remove redundant event listeners and function wrappers
+        function initializeEventListeners() {
+            // Clear any existing event listeners for center button
+            const centerButton = document.getElementById('centerButton');
+            const newCenterButton = centerButton.cloneNode(true);
+            centerButton.parentNode.replaceChild(newCenterButton, centerButton);
+            
+            // Add a single click event to center button
+            newCenterButton.addEventListener('click', function() {
+                startTimer();
+            });
+        }
+
+        // Run once after page load
+        document.addEventListener('DOMContentLoaded', initializeEventListeners);
+
+        // Remove these redundant function wrappers
+        // originalStartTimer, originalStopTimer, originalResetTimer
 
         function displaySavedValues() {
             const savedValuesDiv = document.getElementById('savedValues');
@@ -599,37 +927,14 @@
             localStorage.setItem('adhdcd_analog_startTime', new Date().toISOString());
         }
 
-        function startTimer({resaveTime = true} = {}) {
-            console.log('startTimer called');
-            if (timerId !== null) return;
-
-            const duration = parseInt(document.getElementById('duration').value) || 0;
-
-            if (resaveTime) {
-                saveTimeValues();
-                saveStartTime();
-            }
-
-            if (parseInt(localStorage.getItem('adhdcd_analog_lastDuration')) <= 0) return;
-
-            timerId = setInterval(updateTimer, 1000);
-            updateTimer(); // Initial update
-        }
-
-        function rerunTimer() {
-            saveStartTime();
-        }
-
-        function updateTimer() {
-            const startTime = new Date(localStorage.getItem('adhdcd_analog_startTime')).getTime();
+        function updateTimer(endTime) {
             const currentTime = new Date().getTime();
-            const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
-            const savedDuration = parseInt(localStorage.getItem('adhdcd_analog_lastDuration'));
-            timeLeft = savedDuration - elapsedSeconds;
+            const elapsedSeconds = Math.floor((endTime - currentTime) / 1000);
+            timeLeft = elapsedSeconds;
 
             // Update the custom progress bar
             const progressBar = document.getElementById('timeProgressBar');
-            const progressPercentage = (timeLeft / savedDuration) * 100; // Calculate based on time left
+            const progressPercentage = (timeLeft / parseInt(localStorage.getItem('adhdcd_analog_lastDuration'))) * 100; // Calculate based on time left
             progressBar.style.width = `${progressPercentage}%`;
 
             // Change color based on progress
@@ -693,51 +998,6 @@
                     <span>sec</span>
                 </div>
             `
-        }
-
-        function stopTimer() {
-            clearInterval(timerId);
-            timerId = null;
-        }
-
-        function resetTimer() {
-            stopTimer();
-            document.getElementById('timer').innerHTML = `
-                <div class="timer-unit">
-                    <div class="number">00</div>
-                    <span>yr</span>
-                </div>
-                <div class="timer-unit">
-                    <div class="number">00</div>
-                    <span>mo</span>
-                </div>
-                <div class="timer-unit">
-                    <div class="number">00</div>
-                    <span>wk</span>
-                </div>
-                <div class="timer-unit">
-                    <div class="number">00</div>
-                    <span>d</span>
-                </div>
-                <div class="timer-unit">
-                    <div class="number">00</div>
-                    <span>hr</span>
-                </div>
-                <div class="timer-unit">
-                    <div class="number">00</div>
-                    <span>min</span>
-                </div>
-                <div class="timer-unit">
-                    <div class="number">00</div>
-                    <span>sec</span>
-                </div>
-            `;
-            // Reset slider to 0
-            document.getElementById('duration').value = 0;
-            updateDurationDisplay({years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0});
-            
-            // Don't clear the lastTimeValues or localStorage
-            displaySavedValues();
         }
 
         // Update the duration display
@@ -807,11 +1067,6 @@
         document.addEventListener('mouseup', stopRotation);
         document.addEventListener('touchend', stopRotation);
         document.addEventListener('mouseleave', stopRotation);
-
-        // Center button starts the timer
-        centerButton.addEventListener('click', function() {
-            startTimer();
-        });
 
         function startRotation(e) {
             e.preventDefault();
@@ -929,8 +1184,10 @@
             const formatted = formatDuration(currentValue);
             updateDurationDisplay(formatted);
             
-            // Save to localStorage
-            localStorage.setItem('adhdcd_analog_sliderValue', Math.round(currentValue).toString());
+            // Save to localStorage - both the slider value and as the last duration
+            const roundedValue = Math.round(currentValue);
+            localStorage.setItem('adhdcd_analog_sliderValue', roundedValue.toString());
+            localStorage.setItem('adhdcd_analog_lastDuration', roundedValue.toString());
             
             // Update lastAngle for next movement
             lastAngle = currentAngle;
@@ -941,28 +1198,94 @@
             angularVelocity = 0;
         }
 
-        // Update the original onload to create wheel indicators
-        const originalOnload = window.onload;
-        window.onload = function() {
-            originalOnload();
-            createWheelIndicators();
+        // Add button animation feedback
+        function addButtonAnimations() {
+            // Get all buttons
+            const buttons = document.querySelectorAll('button');
+            const centerButton = document.getElementById('centerButton');
             
-            // Set initial wheel position from localStorage
-            const savedSliderValue = localStorage.getItem('adhdcd_analog_sliderValue');
-            if (savedSliderValue !== null) {
-                currentValue = parseInt(savedSliderValue);
+            // Add click animations to regular buttons
+            buttons.forEach(button => {
+                button.addEventListener('click', createRippleEffect);
+            });
+            
+            // Add click animation to center button
+            if (centerButton) {
+                centerButton.addEventListener('click', createRippleEffect);
             }
-        };
-
-        // Remove any remaining iPod display elements if they exist
-        const ipodDisplay = document.querySelector('.ipod-display');
-        if (ipodDisplay) {
-            ipodDisplay.parentNode.removeChild(ipodDisplay);
+            
+            // Specifically find and add animation to rerun button if it exists
+            const rerunButton = document.querySelector('.rerun-btn') || 
+                                document.querySelector('button[data-action="rerun"]') || 
+                                [...buttons].find(b => b.textContent.toLowerCase().includes('rerun'));
+            
+            if (rerunButton && !rerunButton.hasRippleEffect) {
+                rerunButton.hasRippleEffect = true;
+                rerunButton.addEventListener('click', function(e) {
+                    createRippleEffect.call(this, e);
+                    addTimerAnimation(); // Also add timer animation when rerun is clicked
+                });
+            }
         }
 
-        // You might also need to remove any references in your JavaScript
-        const scrollIndicator = document.getElementById('scrollIndicator');
-        // If there are any remaining functions that update the scroll indicator, they should be removed
+        // Create ripple effect
+        function createRippleEffect(e) {
+            // Remove any existing ripples
+            const ripples = this.getElementsByClassName('ripple');
+            for (let i = 0; i < ripples.length; i++) {
+                ripples[i].remove();
+            }
+            
+            // Create ripple element
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+            this.appendChild(ripple);
+            
+            // Position the ripple
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+            
+            // Remove ripple after animation completes
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        }
+
+        // Add CSS for ripple effect
+        const style = document.createElement('style');
+        style.textContent = `
+        .ripple {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        `;
+        document.head.appendChild(style);
+
+        // Add animation for start/stop/reset buttons
+        function addTimerAnimation() {
+            const timerUnits = document.querySelectorAll('.timer-unit');
+            timerUnits.forEach(unit => {
+                unit.classList.add('pulse-animation');
+                setTimeout(() => {
+                    unit.classList.remove('pulse-animation');
+                }, 400);
+            });
+        }
     </script>
 </body>
 </html>

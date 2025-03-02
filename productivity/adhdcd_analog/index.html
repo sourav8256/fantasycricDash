@@ -69,9 +69,7 @@
         }
 
         .slider-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            display: none;
         }
 
         .slider-label {
@@ -120,6 +118,15 @@
             text-align: center;
             font-size: 0.9rem;
             color: #333;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0;
+            white-space: nowrap;
+        }
+
+        .duration-unit {
+            display: inline-block;
+            width: 2.5em;
+            text-align: right;
         }
 
         .button-group {
@@ -231,6 +238,183 @@
             border-radius: 5px 0 0 5px;
             transition: width 0.25s, background-color 0.25s; /* Smooth transition for width and color changes */
         }
+
+        /* Replace the existing dial styles with iPod-like click wheel styles */
+        .dial-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 30px auto;
+        }
+
+        .click-wheel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(to bottom, #e6e6e6, #f2f2f2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .center-button {
+            width: 30%;
+            height: 30%;
+            border-radius: 50%;
+            background: #e6e6e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            z-index: 5;
+            /* Add hover effect */
+            transition: background-color 0.2s;
+        }
+
+        .center-button:hover {
+            background: #d6d6d6;
+            cursor: pointer;
+        }
+
+        .wheel-menu {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .menu-item {
+            position: absolute;
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: center;
+            width: 50px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .menu-top {
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .menu-right {
+            right: 15%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .menu-bottom {
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .menu-left {
+            left: 15%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .wheel-indicator {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .indicator-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #888;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        .indicator-dot.active {
+            background: #333;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            border: 2px dashed transparent;
+            top: 10%;
+            left: 10%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .dial-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        /* iPod-like display for the timer value */
+        .ipod-display {
+            width: 250px;
+            height: 140px;
+            background: linear-gradient(to bottom, #f0f0f0, #d8d8d8);
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 1px 5px rgba(0,0,0,0.2);
+            padding: 15px;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .ipod-display-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ipod-display-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .ipod-scroll-bar {
+            width: 80%;
+            height: 8px;
+            background: #ccc;
+            border-radius: 4px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ipod-scroll-indicator {
+            height: 100%;
+            background: #888;
+            border-radius: 4px;
+            width: 30%;
+            position: absolute;
+            transition: left 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -241,6 +425,24 @@
                 <div class="progress-bar" id="timeProgressBar"></div>
             </div>
             <div class="duration-display" id="duration-formatted">2y 4m 0w 5d 3h 51m 5s</div>
+            
+            <div class="dial-container">
+                <div class="click-wheel" id="clickWheel">
+                    <div class="wheel-menu">
+                        <div class="menu-item menu-top">MENU</div>
+                        <div class="menu-item menu-right">►II</div>
+                        <div class="menu-item menu-bottom">SET</div>
+                        <div class="menu-item menu-left">RESET</div>
+                    </div>
+                    <div class="wheel-indicator" id="wheelIndicator">
+                        <!-- Indicators will be added via JavaScript -->
+                    </div>
+                    <div class="center-button" id="centerButton"></div>
+                    <div class="scroll-indicator"></div>
+                </div>
+            </div>
+            
+            <!-- Keep the original slider for compatibility -->
             <div class="slider-row">
                 <input type="range" min="0" max="94608000" value="0" class="slider" id="duration">
             </div>
@@ -270,15 +472,17 @@
         slider.addEventListener('input', function() {
             const seconds = parseInt(this.value);
             const formatted = formatDuration(seconds);
-            document.getElementById('duration-formatted').textContent = 
-                `${formatted.years}y ${formatted.months}m ${formatted.weeks}w ${formatted.days}d ${formatted.hours}h ${formatted.minutes}m ${formatted.seconds}s`;
+            updateDurationDisplay(formatted);
 
             // Save the slider value to localStorage
             localStorage.setItem('adhdcd_analog_sliderValue', this.value);
         });
 
-        // Helper function to format duration
+        // Helper function to format duration - fixed to remove decimal seconds
         function formatDuration(totalSeconds) {
+            // Round to whole seconds first to avoid decimal display
+            totalSeconds = Math.round(totalSeconds);
+            
             const years = Math.floor(totalSeconds / (365 * 24 * 3600));
             const remainingAfterYears = totalSeconds % (365 * 24 * 3600);
             
@@ -293,7 +497,7 @@
             
             const hours = Math.floor(remainingAfterDays / 3600);
             const minutes = Math.floor((remainingAfterDays % 3600) / 60);
-            const seconds = remainingAfterDays % 60;
+            const seconds = Math.floor(remainingAfterDays % 60); // Ensure seconds is an integer
             
             return {
                 years, months, weeks, days, hours, minutes, seconds
@@ -311,8 +515,7 @@
             if (savedSliderValue !== null) {
                 slider.value = savedSliderValue;
                 const formatted = formatDuration(parseInt(savedSliderValue));
-                document.getElementById('duration-formatted').textContent = 
-                    `${formatted.years}y ${formatted.months}m ${formatted.weeks}w ${formatted.days}d ${formatted.hours}h ${formatted.minutes}m ${formatted.seconds}s`;
+                updateDurationDisplay(formatted);
             }
 
             if (savedTime) {
@@ -489,7 +692,7 @@
                     <div class="number">${String(seconds).padStart(2, '0')}</div>
                     <span>sec</span>
                 </div>
-            `;
+            `
         }
 
         function stopTimer() {
@@ -531,11 +734,235 @@
             `;
             // Reset slider to 0
             document.getElementById('duration').value = 0;
-            document.getElementById('duration-formatted').textContent = '0y 0m 0w 0d 0h 0m 0s';
+            updateDurationDisplay({years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0});
             
             // Don't clear the lastTimeValues or localStorage
             displaySavedValues();
         }
+
+        // Update the duration display
+        function updateDurationDisplay(formatted) {
+            document.getElementById('duration-formatted').innerHTML = 
+                `<span class="duration-unit">${formatted.years}y</span>` +
+                `<span class="duration-unit">${formatted.months}m</span>` +
+                `<span class="duration-unit">${formatted.weeks}w</span>` +
+                `<span class="duration-unit">${formatted.days}d</span>` +
+                `<span class="duration-unit">${formatted.hours}h</span>` +
+                `<span class="duration-unit">${formatted.minutes}m</span>` +
+                `<span class="duration-unit">${formatted.seconds}s</span>`;
+        }
+
+        // Restore the click wheel functionality
+        const clickWheel = document.getElementById('clickWheel');
+        const centerButton = document.getElementById('centerButton');
+        const wheelIndicator = document.getElementById('wheelIndicator');
+
+        let isDragging = false;
+        let lastAngle = 0;
+        let currentValue = 0;
+        let maxValue = 315360000; // 10 years in seconds (10 * 365 * 24 * 3600)
+
+        // Add these variables to track rotation speed
+        let lastMoveTime = 0;
+        let angularVelocity = 0;
+
+        // Create wheel indicators
+        function createWheelIndicators() {
+            const indicators = 36; // Number of indicators around the wheel
+            
+            for (let i = 0; i < indicators; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'indicator-dot';
+                const angle = (i * (360 / indicators)) * (Math.PI / 180);
+                const radius = clickWheel.offsetWidth * 0.4; // 40% of wheel radius
+                
+                // Position dots in a circle
+                const x = Math.cos(angle) * radius + clickWheel.offsetWidth / 2 - 3;
+                const y = Math.sin(angle) * radius + clickWheel.offsetHeight / 2 - 3;
+                
+                dot.style.left = `${x}px`;
+                dot.style.top = `${y}px`;
+                
+                // Highlight every 3rd indicator
+                if (i % 3 === 0) {
+                    dot.classList.add('active');
+                }
+                
+                wheelIndicator.appendChild(dot);
+            }
+        }
+
+        // Convert wheel rotation to duration value - 1 rotation = 1 month (30 days)
+        function rotationToDuration(rotation) {
+            // One full rotation (360 degrees) equals 1 month (30 days in seconds)
+            const oneMonthInSeconds = 30 * 24 * 3600; // 30 days in seconds
+            return Math.floor(rotation * oneMonthInSeconds / 360);
+        }
+
+        // Event handlers for click wheel
+        clickWheel.addEventListener('mousedown', startRotation);
+        clickWheel.addEventListener('touchstart', startRotation, { passive: false });
+        document.addEventListener('mousemove', rotateWheel);
+        document.addEventListener('touchmove', rotateWheel, { passive: false });
+        document.addEventListener('mouseup', stopRotation);
+        document.addEventListener('touchend', stopRotation);
+        document.addEventListener('mouseleave', stopRotation);
+
+        // Center button starts the timer
+        centerButton.addEventListener('click', function() {
+            startTimer();
+        });
+
+        function startRotation(e) {
+            e.preventDefault();
+            isDragging = true;
+            
+            const wheelRect = clickWheel.getBoundingClientRect();
+            const centerX = wheelRect.left + wheelRect.width / 2;
+            const centerY = wheelRect.top + wheelRect.height / 2;
+            
+            if (e.type === 'mousedown') {
+                lastAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+            } else if (e.type === 'touchstart') {
+                lastAngle = Math.atan2(
+                    e.touches[0].clientY - centerY,
+                    e.touches[0].clientX - centerX
+                );
+            }
+            
+            // Initialize timing and velocity tracking
+            lastMoveTime = Date.now();
+            angularVelocity = 0;
+        }
+
+        function rotateWheel(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const wheelRect = clickWheel.getBoundingClientRect();
+            const centerX = wheelRect.left + wheelRect.width / 2;
+            const centerY = wheelRect.top + wheelRect.height / 2;
+            
+            let clientX, clientY;
+            if (e.type === 'mousemove') {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            } else if (e.type === 'touchmove') {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+            
+            const currentAngle = Math.atan2(clientY - centerY, clientX - centerX);
+            let angleDiff = currentAngle - lastAngle;
+            
+            // Handle angle wrapping
+            if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+            if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+            
+            // Calculate time delta and angular velocity
+            const now = Date.now();
+            const timeDelta = now - lastMoveTime;
+            lastMoveTime = now;
+            
+            // Calculate angular velocity in radians per millisecond
+            if (timeDelta > 0) {
+                angularVelocity = angleDiff / timeDelta;
+            }
+            
+            // Calculate speed factor - slower movements get finer control
+            const absVelocity = Math.abs(angularVelocity);
+            let speedFactor;
+            
+            if (absVelocity < 0.001) {
+                // Very slow movements - fine precision (0.3x)
+                speedFactor = 0.3;
+            } else if (absVelocity < 0.005) {
+                // Medium speed movements - normal precision (1x)
+                speedFactor = 1;
+            } else {
+                // Fast movements - accelerated changes (3x)
+                speedFactor = 3;
+            }
+            
+            // Convert to degrees with variable sensitivity
+            const rotationDegrees = angleDiff * (180 / Math.PI) * speedFactor;
+            
+            // Dynamic rotation sensitivity based on current value
+            let timeScale, valueChange;
+            const oneMonthInSeconds = 30 * 24 * 3600;
+            const oneWeekInSeconds = 7 * 24 * 3600;
+            const oneDayInSeconds = 24 * 3600;
+            const sixHoursInSeconds = 6 * 3600;
+            const fifteenMinutesInSeconds = 15 * 60;
+            
+            if (currentValue < 3600) { // Less than 1 hour
+                // 1 rotation = 15 minutes
+                timeScale = fifteenMinutesInSeconds;
+            } else if (currentValue < oneDayInSeconds) { // Less than 1 day
+                // 1 rotation = 6 hours
+                timeScale = sixHoursInSeconds;
+            } else if (currentValue < oneWeekInSeconds) { // Less than 1 week
+                // 1 rotation = 1 day
+                timeScale = oneDayInSeconds;
+            } else if (currentValue < oneMonthInSeconds) { // Less than 1 month
+                // 1 rotation = 1 week
+                timeScale = oneWeekInSeconds;
+            } else {
+                // Default: 1 rotation = 1 month
+                timeScale = oneMonthInSeconds;
+            }
+            
+            // Calculate value change based on current time scale
+            valueChange = (rotationDegrees / 360) * timeScale;
+            
+            // Update the current value
+            currentValue += valueChange;
+            
+            // Clamp the value
+            currentValue = Math.max(0, Math.min(maxValue, currentValue));
+            
+            // Update the slider
+            const slider = document.getElementById('duration');
+            slider.value = Math.round(currentValue);
+            
+            // Update the duration display
+            const formatted = formatDuration(currentValue);
+            updateDurationDisplay(formatted);
+            
+            // Save to localStorage
+            localStorage.setItem('adhdcd_analog_sliderValue', Math.round(currentValue).toString());
+            
+            // Update lastAngle for next movement
+            lastAngle = currentAngle;
+        }
+
+        function stopRotation() {
+            isDragging = false;
+            angularVelocity = 0;
+        }
+
+        // Update the original onload to create wheel indicators
+        const originalOnload = window.onload;
+        window.onload = function() {
+            originalOnload();
+            createWheelIndicators();
+            
+            // Set initial wheel position from localStorage
+            const savedSliderValue = localStorage.getItem('adhdcd_analog_sliderValue');
+            if (savedSliderValue !== null) {
+                currentValue = parseInt(savedSliderValue);
+            }
+        };
+
+        // Remove any remaining iPod display elements if they exist
+        const ipodDisplay = document.querySelector('.ipod-display');
+        if (ipodDisplay) {
+            ipodDisplay.parentNode.removeChild(ipodDisplay);
+        }
+
+        // You might also need to remove any references in your JavaScript
+        const scrollIndicator = document.getElementById('scrollIndicator');
+        // If there are any remaining functions that update the scroll indicator, they should be removed
     </script>
 </body>
 </html>

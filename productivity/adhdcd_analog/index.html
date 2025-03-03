@@ -631,7 +631,7 @@
             
             <!-- Keep the original slider for compatibility -->
             <div class="slider-row">
-                <input type="range" min="0" max="94608000" value="0" class="slider" id="duration">
+                <input type="range" min="0" max="315360000" step="1" value="0" class="slider" id="duration">
             </div>
         </div>
         <div class="button-container">
@@ -668,12 +668,10 @@
         });
 
         // Helper function to format duration - fixed to remove decimal seconds
-        function formatDuration(totalSeconds) {
-            // Round to whole seconds first to avoid decimal display
-            totalSeconds = Math.round(totalSeconds);
-            
-            const years = Math.floor(totalSeconds / (365 * 24 * 3600));
-            const remainingAfterYears = totalSeconds % (365 * 24 * 3600);
+        function formatDuration(seconds) {
+            // Calculate each time unit from seconds
+            const years = Math.floor(seconds / (365 * 24 * 3600));
+            const remainingAfterYears = seconds % (365 * 24 * 3600);
             
             const months = Math.floor(remainingAfterYears / (30 * 24 * 3600));
             const remainingAfterMonths = remainingAfterYears % (30 * 24 * 3600);
@@ -686,10 +684,16 @@
             
             const hours = Math.floor(remainingAfterDays / 3600);
             const minutes = Math.floor((remainingAfterDays % 3600) / 60);
-            const seconds = Math.floor(remainingAfterDays % 60); // Ensure seconds is an integer
+            const secondsRemaining = Math.floor(remainingAfterDays % 60);
             
             return {
-                years, months, weeks, days, hours, minutes, seconds
+                years,
+                months,
+                weeks,
+                days,
+                hours,
+                minutes,
+                seconds: secondsRemaining
             };
         }
 
@@ -896,17 +900,7 @@
                 const duration = parseInt(savedDuration);
 
                 // Calculate readable duration
-                const years = Math.floor(duration / (365 * 24 * 3600));
-                const remainingAfterYears = duration % (365 * 24 * 3600);
-                const months = Math.floor(remainingAfterYears / (30 * 24 * 3600));
-                const remainingAfterMonths = remainingAfterYears % (30 * 24 * 3600);
-                const weeks = Math.floor(remainingAfterMonths / (7 * 24 * 3600));
-                const remainingAfterWeeks = remainingAfterMonths % (7 * 24 * 3600);
-                const days = Math.floor(remainingAfterWeeks / (24 * 3600));
-                const remainingAfterDays = remainingAfterWeeks % (24 * 3600);
-                const hours = Math.floor(remainingAfterDays / 3600);
-                const minutes = Math.floor((remainingAfterDays % 3600) / 60);
-                const seconds = remainingAfterDays % 60;
+                const formatted = formatDuration(duration);
 
                 // Format start time if it exists
                 const startTimeDisplay = startTime ? 
@@ -917,7 +911,7 @@
                     <p><strong>Last Timer Setting:</strong></p>
                     <p>Total Duration: ${duration} seconds</p>
                     <p><strong>Equivalent to:</strong></p>
-                    <p>${years}y ${months}m ${weeks}w ${days}d ${hours}h ${minutes}m ${seconds}s</p>
+                    <p>${formatted.years}y ${formatted.months}m ${formatted.weeks}w ${formatted.days}d ${formatted.hours}h ${formatted.minutes}m ${formatted.seconds}s</p>
                     <p><strong>Start Time:</strong></p>
                     <p>${startTimeDisplay}</p>
                 `;
@@ -973,49 +967,34 @@
                 return;
             }
 
-            const years = Math.floor(timeLeft / (365 * 24 * 3600));
-            const remainingAfterYears = timeLeft % (365 * 24 * 3600);
-
-            const months = Math.floor(remainingAfterYears / (30 * 24 * 3600));
-            const remainingAfterMonths = remainingAfterYears % (30 * 24 * 3600);
-            
-            const weeks = Math.floor(remainingAfterMonths / (7 * 24 * 3600));
-            const remainingAfterWeeks = remainingAfterMonths % (7 * 24 * 3600);
-            
-            const days = Math.floor(remainingAfterWeeks / (24 * 3600));
-            const remainingAfterDays = remainingAfterWeeks % (24 * 3600);
-            
-            const hours = Math.floor(remainingAfterDays / 3600);
-            const minutes = Math.floor((remainingAfterDays % 3600) / 60);
-            const seconds = remainingAfterDays % 60;
-
+            const formatted = formatDuration(timeLeft);
             document.getElementById('timer').innerHTML = `
                 <div class="timer-unit">
-                    <div class="number">${String(years).padStart(2, '0')}</div>
+                    <div class="number">${String(formatted.years).padStart(2, '0')}</div>
                     <span>yr</span>
                 </div>
                 <div class="timer-unit">
-                    <div class="number">${String(months).padStart(2, '0')}</div>
+                    <div class="number">${String(formatted.months).padStart(2, '0')}</div>
                     <span>mo</span>
                 </div>
                 <div class="timer-unit">
-                    <div class="number">${String(weeks).padStart(2, '0')}</div>
+                    <div class="number">${String(formatted.weeks).padStart(2, '0')}</div>
                     <span>wk</span>
                 </div>
                 <div class="timer-unit">
-                    <div class="number">${String(days).padStart(2, '0')}</div>
+                    <div class="number">${String(formatted.days).padStart(2, '0')}</div>
                     <span>d</span>
                 </div>
                 <div class="timer-unit">
-                    <div class="number">${String(hours).padStart(2, '0')}</div>
+                    <div class="number">${String(formatted.hours).padStart(2, '0')}</div>
                     <span>hr</span>
                 </div>
                 <div class="timer-unit">
-                    <div class="number">${String(minutes).padStart(2, '0')}</div>
+                    <div class="number">${String(formatted.minutes).padStart(2, '0')}</div>
                     <span>min</span>
                 </div>
                 <div class="timer-unit">
-                    <div class="number">${String(seconds).padStart(2, '0')}</div>
+                    <div class="number">${String(formatted.seconds).padStart(2, '0')}</div>
                     <span>sec</span>
                 </div>
             `

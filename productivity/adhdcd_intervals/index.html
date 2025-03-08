@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADHD Interval Timer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        .timer-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 20px;
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+            transform-origin: center;
+        }
+        
+        .progress-ring__circle {
+            stroke: #4CAF50;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s;
+            fill: transparent;
+        }
+        
+        .progress-ring__background {
+            stroke: #e0e0e0;
+            fill: transparent;
+        }
+        
+        .timer-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0;
+            color: #444;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .timer-inputs {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        input {
+            width: 60px;
+            padding: 8px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #resetButton {
+            background-color: #f44336;
+        }
+        
+        #resetButton:hover {
+            background-color: #d32f2f;
+        }
+        
+        #pauseButton {
+            background-color: #ff9800;
+        }
+        
+        #pauseButton:hover {
+            background-color: #fb8c00;
+        }
+        
+        .completed {
+            color: #4CAF50;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .primary-button {
+            font-size: 1.2rem;
+            padding: 12px 24px;
+            min-width: 120px;
+        }
+        
+        #resetButton {
+            background-color: #3f51b5;
+            order: 1;
+        }
+        
+        #resetButton:hover {
+            background-color: #303f9f;
+        }
+        
+        #startButton {
+            order: 2;
+        }
+        
+        #pauseButton {
+            order: 3;
+        }
+        
+        .log-container {
+            margin-top: 20px;
+            text-align: left;
+            max-height: 150px;
+            overflow-y: auto;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        
+        .calculation-log {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 3px solid #4CAF50;
+        }
+        
+        .log-reduced {
+            border-left-color: #f44336;
+        }
+        
+        .log-increased {
+            border-left-color: #2196F3;
+        }
+        
+        .log-unchanged {
+            border-left-color: #9e9e9e;
+        }
+        
+        .storage-key {
+            font-size: 0.8rem;
+            color: #9e9e9e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ADHD Interval Timer</h1>
+        
+        <div class="timer-container">
+            <svg class="progress-ring" width="300" height="300">
+                <circle class="progress-ring__background" cx="150" cy="150" r="120" stroke-width="15"></circle>
+                <circle class="progress-ring__circle" cx="150" cy="150" r="120" stroke-width="15" stroke-dasharray="754" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="timer-display" id="timer">00:00:00</div>
+        </div>
+        
+        <h2>Interval Time</h2>
+        <div class="timer-inputs">
+            <div>
+                <input type="number" id="years" min="0" max="10" value="0">
+                <label for="years">Years</label>
+            </div>
+            <div>
+                <input type="number" id="months" min="0" max="11" value="0">
+                <label for="months">Months</label>
+            </div>
+            <div>
+                <input type="number" id="days" min="0" max="30" value="0">
+                <label for="days">Days</label>
+            </div>
+            <div>
+                <input type="number" id="hours" min="0" max="23" value="0">
+                <label for="hours">Hours</label>
+            </div>
+            <div>
+                <input type="number" id="minutes" min="0" max="59" value="25">
+                <label for="minutes">Minutes</label>
+            </div>
+            <div>
+                <input type="number" id="seconds" min="0" max="59" value="0">
+                <label for="seconds">Seconds</label>
+            </div>
+        </div>
+        
+        <div class="timer-controls">
+            <button id="resetButton" class="primary-button">Reset</button>
+            <button id="startButton">Start</button>
+            <button id="pauseButton" disabled>Pause</button>
+        </div>
+        
+        <div class="log-container">
+            <h3>Adjustment Logs</h3>
+            <div id="calculation-log" class="calculation-log"></div>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const timerDisplay = document.getElementById('timer');
+        const yearsInput = document.getElementById('years');
+        const monthsInput = document.getElementById('months');
+        const daysInput = document.getElementById('days');
+        const hoursInput = document.getElementById('hours');
+        const minutesInput = document.getElementById('minutes');
+        const secondsInput = document.getElementById('seconds');
+        const startButton = document.getElementById('startButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const resetButton = document.getElementById('resetButton');
+        const progressRing = document.querySelector('.progress-ring__circle');
+        const progressCircumference = progressRing.getTotalLength();
+        
+        // Timer variables
+        let countdown;
+        let totalSeconds = 0;
+        let isRunning = false;
+        let isPaused = false;
+        let endTime;
+        let originalTime = { years: 0, months: 0, days: 0, hours: 0, minutes: 25, seconds: 0 };
+        
+        // Constants for time conversion (using fixed values for simplicity)
+        const SECONDS_PER_DAY = 86400;
+        const SECONDS_PER_MONTH = 2592000; // 30 days
+        const SECONDS_PER_YEAR = 31536000; // 365 days
+        
+        // Audio for timer completion
+        const alarmSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
+        
+        // Add these variables after other timer variables
+        const TIME_LEFT_THRESHOLD = 0.2;  // Keep at 20% threshold
+        const TIME_ADJUSTMENT = 0.2;      // Change to 20% adjustment (from 15%)
+        
+        // Save timer state to localStorage
+        function saveTimerState() {
+            const state = {
+                isRunning,
+                isPaused,
+                // For paused timers, store the paused time remaining
+                pausedTimeRemaining: isPaused ? totalSeconds : null,
+                endTime: endTime ? endTime : null,
+                originalTime
+            };
+            localStorage.setItem('timerState', JSON.stringify(state));
+        }
+        
+        // Load timer state from localStorage
+        function loadTimerState() {
+            const savedState = localStorage.getItem('timerState');
+            if (!savedState) return;
+            
+            const state = JSON.parse(savedState);
+            isRunning = state.isRunning;
+            isPaused = state.isPaused;
+            
+            // Handle backward compatibility
+            if (state.originalTime) {
+                originalTime = state.originalTime;
+                
+                // Ensure all time fields exist
+                ['years', 'months', 'days'].forEach(field => {
+                    if (originalTime[field] === undefined) originalTime[field] = 0;
+                });
+                
+                updateInputFields(originalTime);
+            }
+            
+            if (isRunning) {
+                if (!isPaused && state.endTime) {
+                    // Timer was running
+                    endTime = state.endTime;
+                    const secondsLeft = Math.round((endTime - Date.now()) / 1000);
+                    
+                    if (secondsLeft > 0) {
+                        // Resume timer
+                        countdown = setInterval(tick, 1000);
+                        updateDisplay(secondsLeft);
+                        updateUIState(true, false);
+                    } else {
+                        // Timer completed while away
+                        resetTimerState();
+                        updateDisplay(0);
+                    }
+                } else if (isPaused) {
+                    // Timer was paused
+                    totalSeconds = state.pausedTimeRemaining || 0;
+                    updateDisplay(totalSeconds);
+                    updateUIState(true, true);
+                }
+            } else {
+                // Timer was not running
+                updateDisplay(0);
+            }
+        }
+        
+        // Format time as YY:MM:DD:HH:MM:SS
+        function formatTime(totalSecs) {
+            // Calculate all time components
+            let remainingSecs = totalSecs;
+            
+            const years = Math.floor(remainingSecs / SECONDS_PER_YEAR);
+            remainingSecs %= SECONDS_PER_YEAR;
+            
+            const months = Math.floor(remainingSecs / SECONDS_PER_MONTH);
+            remainingSecs %= SECONDS_PER_MONTH;
+            
+            const days = Math.floor(remainingSecs / SECONDS_PER_DAY);
+            remainingSecs %= SECONDS_PER_DAY;
+            
+            const hours = Math.floor(remainingSecs / 3600);
+            remainingSecs %= 3600;
+            
+            const minutes = Math.floor(remainingSecs / 60);
+            const seconds = remainingSecs % 60;
+            
+            // Format based on highest non-zero unit
+            let formattedTime = '';
+            
+            if (years > 0) {
+                formattedTime = `${years}y ${months}m ${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else if (months > 0) {
+                formattedTime = `${months}m ${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else if (days > 0) {
+                formattedTime = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            return formattedTime;
+        }
+        
+        // Update the timer display and progress ring
+        function updateDisplay(seconds) {
+            timerDisplay.textContent = formatTime(seconds);
+            
+            // Update circle progress
+            if (isRunning && !isPaused) {
+                const totalIntervalSeconds = calculateTotalSeconds(originalTime);
+                
+                const progress = seconds / totalIntervalSeconds;
+                const offset = progressCircumference - (progress * progressCircumference);
+                progressRing.style.strokeDashoffset = offset;
+            }
+        }
+        
+        // Timer tick function
+        function tick() {
+            const now = Date.now();
+            const secondsLeft = Math.round((endTime - now) / 1000);
+            
+            // Check if timer is done
+            if (secondsLeft < 0) {
+                clearInterval(countdown);
+                timerDisplay.textContent = '00:00:00';
+                timerDisplay.classList.add('completed');
+                alarmSound.play();
+                resetTimerState();
+                saveTimerState(); // Save the reset state
+                return;
+            }
+            
+            // Update the display
+            updateDisplay(secondsLeft);
+        }
+        
+        // Consolidate input field reading
+        function getInputValues() {
+            return {
+                years: parseInt(yearsInput.value) || 0,
+                months: parseInt(monthsInput.value) || 0,
+                days: parseInt(daysInput.value) || 0,
+                hours: parseInt(hoursInput.value) || 0,
+                minutes: parseInt(minutesInput.value) || 0,
+                seconds: parseInt(secondsInput.value) || 0
+            };
+        }
+        
+        // Update UI state based on timer status
+        function updateUIState(running, paused) {
+            startButton.disabled = running;
+            pauseButton.disabled = !running;
+            pauseButton.textContent = paused ? 'Resume' : 'Pause';
+            
+            if (!running) {
+                // Reset progress ring
+                progressRing.style.strokeDashoffset = progressCircumference;
+            }
+        }
+        
+        // Update input fields with time values
+        function updateInputFields(timeObj) {
+            yearsInput.value = timeObj.years;
+            monthsInput.value = timeObj.months;
+            daysInput.value = timeObj.days;
+            hoursInput.value = timeObj.hours;
+            minutesInput.value = timeObj.minutes;
+            secondsInput.value = timeObj.seconds;
+        }
+        
+        // Start the timer
+        function startTimer() {
+            // Read values once
+            originalTime = getInputValues();
+            
+            // Calculate duration
+            const durationSeconds = calculateTotalSeconds(originalTime);
+            
+            if (durationSeconds <= 0) {
+                alert('Please set a time greater than zero!');
+                return;
+            }
+            
+            // Update state
+            isRunning = true;
+            isPaused = false;
+            endTime = Date.now() + durationSeconds * 1000;
+            
+            // Update UI
+            updateUIState(true, false);
+            timerDisplay.classList.remove('completed');
+            updateDisplay(durationSeconds);
+            
+            // Start countdown
+            countdown = setInterval(tick, 1000);
+            
+            // Save state
+            saveTimerState();
+        }
+        
+        // Handle input changes
+        function handleInputChange() {
+            if (isRunning && !isPaused) {
+                // Get values once
+                originalTime = getInputValues();
+                
+                // Update timer
+                endTime = Date.now() + calculateTotalSeconds(originalTime) * 1000;
+                saveTimerState();
+            }
+        }
+        
+        // Reset timer state
+        function resetTimerState() {
+            clearInterval(countdown);
+            isRunning = false;
+            isPaused = false;
+            updateUIState(false, false);
+        }
+        
+        // Pause the timer
+        function pauseTimer() {
+            if (isPaused) {
+                // Resume
+                endTime = Date.now() + totalSeconds * 1000;
+                countdown = setInterval(tick, 1000);
+                isPaused = false;
+            } else {
+                // Pause
+                clearInterval(countdown);
+                totalSeconds = Math.round((endTime - Date.now()) / 1000);
+                isPaused = true;
+            }
+            
+            updateUIState(true, isPaused);
+            saveTimerState();
+        }
+        
+        // Reset the timer
+        function resetTimer() {
+            let logMessage = "";
+            let logClass = "log-unchanged";
+            
+            if (isRunning && !isPaused) {
+                // Get remaining time
+                const remainingSeconds = Math.round((endTime - Date.now()) / 1000);
+                const totalIntervalSeconds = calculateTotalSeconds(originalTime);
+                
+                // Store values for logging
+                const oldMinutes = originalTime.minutes;
+                const oldSeconds = originalTime.seconds;
+                
+                // Calculate adjustment
+                const timeLeftRatio = remainingSeconds / totalIntervalSeconds;
+                const timeLeftPercent = Math.round(timeLeftRatio * 100);
+                
+                let adjustmentFactor = 1;
+                if (timeLeftRatio >= TIME_LEFT_THRESHOLD) {
+                    // Completed with significant time left - reduce interval by 20%
+                    adjustmentFactor = 1 - TIME_ADJUSTMENT;  // 0.8
+                    logClass = "log-reduced";
+                } else if (timeLeftRatio < TIME_LEFT_THRESHOLD) {
+                    // Completed just in time - increase by 20% (instead of 7.5%)
+                    adjustmentFactor = 1 + TIME_ADJUSTMENT;  // 1.2
+                    logClass = "log-increased";
+                }
+
+                // Apply adjustment to hours, minutes and seconds
+                const originalTotalSeconds = (originalTime.hours * 3600) + (originalTime.minutes * 60) + originalTime.seconds;
+                const newTotalSeconds = Math.max(30, Math.round(originalTotalSeconds * adjustmentFactor));
+
+                // Recalculate hours, minutes and seconds
+                const newHours = Math.floor(newTotalSeconds / 3600);
+                const secondsAfterHours = newTotalSeconds % 3600;
+                const newMinutes = Math.floor(secondsAfterHours / 60);
+                const newSeconds = secondsAfterHours % 60;
+
+                // Update the time values
+                originalTime.hours = newHours;
+                originalTime.minutes = newMinutes;
+                originalTime.seconds = newSeconds;
+                
+                // Format the complete original interval for logging
+                let originalIntervalText = '';
+                if (originalTime.years > 0) originalIntervalText += `${originalTime.years}y `;
+                if (originalTime.months > 0) originalIntervalText += `${originalTime.months}mo `;
+                if (originalTime.days > 0) originalIntervalText += `${originalTime.days}d `;
+                if (originalTime.hours > 0) originalIntervalText += `${originalTime.hours}h `;
+                originalIntervalText += `${oldMinutes}m ${oldSeconds}s`;
+
+                // Format the complete new interval for logging
+                let newIntervalText = '';
+                if (originalTime.years > 0) newIntervalText += `${originalTime.years}y `;
+                if (originalTime.months > 0) newIntervalText += `${originalTime.months}mo `;
+                if (originalTime.days > 0) newIntervalText += `${originalTime.days}d `;
+                if (originalTime.hours > 0) newIntervalText += `${originalTime.hours}h `;
+                newIntervalText += `${originalTime.minutes}m ${originalTime.seconds}s`;
+
+                // Create log message
+                logMessage = `
+                    <div class="log-entry ${logClass}">
+                        <strong>${new Date().toLocaleTimeString()}</strong> - Reset pressed<br>
+                        Time remaining: ${formatTime(remainingSeconds)} (${timeLeftPercent}% left) <span class="storage-key">→ when paused: timerState.pausedTimeRemaining</span><br>
+                        Original interval: ${originalIntervalText} <span class="storage-key">→ timerState.originalTime</span><br>
+                        Adjustment factor: ${adjustmentFactor.toFixed(2)}
+                        ${logClass === "log-reduced" ? " (reduced by 20%)" : 
+                          logClass === "log-increased" ? " (increased by 20%)" : " (unchanged)"}
+                        <br>
+                        New interval: ${newIntervalText} <span class="storage-key">→ timerState.originalTime (updated)</span>
+                    </div>
+                `;
+            } else {
+                logMessage = `
+                    <div class="log-entry">
+                        <strong>${new Date().toLocaleTimeString()}</strong> - Timer restarted with existing settings
+                    </div>
+                `;
+            }
+
+            // Add log to the log container
+            const logContainer = document.getElementById('calculation-log');
+            logContainer.innerHTML = logMessage + logContainer.innerHTML;
+
+            resetTimerState();
+            updateInputFields(originalTime);
+            timerDisplay.classList.remove('completed');
+            
+            // Save state and start new timer
+            saveTimerState();
+            startTimer();
+        }
+        
+        // Event listeners
+        startButton.addEventListener('click', startTimer);
+        pauseButton.addEventListener('click', pauseTimer);
+        resetButton.addEventListener('click', resetTimer);
+        yearsInput.addEventListener('change', handleInputChange);
+        monthsInput.addEventListener('change', handleInputChange);
+        daysInput.addEventListener('change', handleInputChange);
+        hoursInput.addEventListener('change', handleInputChange);
+        minutesInput.addEventListener('change', handleInputChange);
+        secondsInput.addEventListener('change', handleInputChange);
+        
+        // Initialize the display and load saved state
+        updateDisplay(0);
+        loadTimerState();
+        
+        // Add beforeunload listener to save state when navigating away
+        window.addEventListener('beforeunload', saveTimerState);
+
+        // Helper function to calculate total seconds from originalTime
+        function calculateTotalSeconds(timeObj) {
+            return (timeObj.years * SECONDS_PER_YEAR) + 
+                   (timeObj.months * SECONDS_PER_MONTH) + 
+                   (timeObj.days * SECONDS_PER_DAY) + 
+                   (timeObj.hours * 3600) + 
+                   (timeObj.minutes * 60) + 
+                   timeObj.seconds;
+        }
+    </script>
+</body>
+</html>

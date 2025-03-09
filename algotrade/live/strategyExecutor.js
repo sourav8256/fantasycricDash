@@ -37,24 +37,27 @@ async function entryStrategy(params) {
         
         if (currentTime < startTime) {
             console.log('Start time not yet reached. Skipping entry.');
-            return Promise.resolve('Entry skipped due to start time not reached');
+            return Promise.resolve({
+                decision: 'HOLD',
+                message: 'Entry skipped due to start time not reached'
+            });
         }
     }
 
     return Promise.resolve({
-        result: "ORDER",
+        decision: "BUY",
         orders: [
             {
                 orderPrice: params.price,
                 quantity: params.entryQuantity || 1
             }
         ],
-    })
+        message: 'Entry strategy executed'
+    });
     
     console.log('Entry strategy for symbol:', params.symbol);
     console.log('Entry Price:', params.entryPrice);
     console.log('Entry Quantity:', params.entryQuantity);
-    return Promise.resolve('Entry strategy executed');
 }
 
 async function processingStrategy(params) {
@@ -94,7 +97,10 @@ async function processingStrategy(params) {
         }
     }
     
-    return Promise.resolve('Processing strategy executed');
+    return Promise.resolve({
+        decision: 'HOLD',
+        message: 'Processing strategy executed'
+    });
 }
 
 async function exitStrategy(params) {
@@ -106,19 +112,28 @@ async function exitStrategy(params) {
     // Check if profit exceeds the profit limit
     if (profit >= params.profitLimit) {
         console.log('Profit limit reached. Exiting position.');
-        return Promise.resolve('Profit limit reached. Position closed.');
+        return Promise.resolve({
+            decision: 'SELL',
+            message: 'Profit limit reached. Position closed.'
+        });
     }
     
     // Check if loss exceeds the calculated loss limit
     if (params.calculatedLossLimit && profit <= -params.calculatedLossLimit) {
         console.log('Loss limit reached. Exiting position.');
-        return Promise.resolve('Loss limit reached. Position closed.');
+        return Promise.resolve({
+            decision: 'SELL',
+            message: 'Loss limit reached. Position closed.'
+        });
     }
     
     // Check trailing stop loss exit condition
     if (params.trailingStopPrice && params.price <= params.trailingStopPrice) {
         console.log('Trailing stop loss triggered. Exiting position.');
-        return Promise.resolve('Trailing stop loss triggered. Position closed.');
+        return Promise.resolve({
+            decision: 'SELL',
+            message: 'Trailing stop loss triggered. Position closed.'
+        });
     }
     
     // Check if stop time is provided and current time is after stop time
@@ -128,27 +143,39 @@ async function exitStrategy(params) {
         
         if (currentTime >= stopTime) {
             console.log('Stop time reached. Exiting position.');
-            return Promise.resolve('Stop time reached. Position closed.');
+            return Promise.resolve({
+                decision: 'SELL',
+                message: 'Stop time reached. Position closed.'
+            });
         }
     }
     
     console.log('Exit strategy for symbol:', params.symbol);
-    return Promise.resolve('No exit strategy executed');
+    return Promise.resolve({
+        decision: 'HOLD',
+        message: 'No exit strategy executed'
+    });
 }
 
 async function executeStrategy(params) {
     console.log('Executing strategies for symbol:', params.symbol);
     
     // Call entry strategy
-    await entryStrategy(params);
+    const entryResult = await entryStrategy(params);
+    if (entryResult.decision !== 'HOLD') {
+        return entryResult;
+    }
     
     // Call processing strategy
-    await processingStrategy(params);
+    const processingResult = await processingStrategy(params);
+    if (processingResult.decision !== 'HOLD') {
+        return processingResult;
+    }
     
     // Call exit strategy
     const exitResult = await exitStrategy(params);
     
-    return Promise.resolve('Mock execution complete: ' + exitResult);
+    return exitResult;
 }
 
 module.exports = executeStrategy; 

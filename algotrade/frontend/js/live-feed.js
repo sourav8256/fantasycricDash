@@ -205,7 +205,8 @@ class LiveFeedManager {
                                 symbol: data.symbol,
                                 price: data.data.price,
                                 timestamp: data.data.timestamp,
-                                volume: data.data.volume
+                                volume: data.data.volume,
+                                decision: data.decision
                             };
                             this.updatePriceInTable(priceData);
                             this.addMarketDataItem(priceData);
@@ -328,8 +329,58 @@ class LiveFeedManager {
                 }
             });
 
+            // Add new code to update decision if it exists
+            if (data.decision !== undefined) {
+                // Find the row containing this symbol
+                const rows = document.querySelectorAll(`#deployedTableBody tr`);
+                rows.forEach(row => {
+                    const symbolCell = row.querySelector(`.live-price-cell[data-symbol="${data.symbol}"]`);
+                    if (symbolCell) {
+                        // This is the matching row for our symbol
+                        const decisionCell = row.querySelector('td:nth-child(8)'); // 8th column is decision
+                        if (decisionCell) {
+                            const decisionBadge = decisionCell.querySelector('.badge');
+                            if (decisionBadge) {
+                                // Update badge text
+                                decisionBadge.textContent = data.decision || '';
+                                
+                                // Remove all badge background classes
+                                decisionBadge.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-secondary', 'bg-info');
+                                
+                                // Apply appropriate badge color
+                                if (window.getBadgeColorForDecision) {
+                                    decisionBadge.classList.add(window.getBadgeColorForDecision(data.decision));
+                                } else {
+                                    // Fallback if function not available
+                                    const colorClass = this.getDecisionColor(data.decision);
+                                    decisionBadge.classList.add(colorClass);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
         } catch (error) {
             console.error('Error in updatePriceInTable:', error);
+        }
+    }
+
+    // Add a backup decision color method in case the window function isn't available
+    getDecisionColor(decision) {
+        if (!decision) return 'bg-secondary';
+        
+        switch(decision.toUpperCase()) {
+            case 'BUY':
+                return 'bg-success';
+            case 'SELL':
+                return 'bg-danger';
+            case 'HOLD':
+                return 'bg-warning';
+            case 'WAIT':
+                return 'bg-secondary';
+            default:
+                return 'bg-info';
         }
     }
 

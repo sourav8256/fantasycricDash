@@ -511,6 +511,7 @@
                                     <th>Live Price</th>
                                     <th>P&L</th>
                                     <th>Status</th>
+                                    <th>Decision</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -1540,6 +1541,11 @@
                         </span>
                     </td>
                     <td>
+                        <span class="badge ${getBadgeColorForDecision(strategy.decision)}">
+                            ${strategy.decision}
+                        </span>
+                    </td>
+                    <td>
                         <div class="btn-group btn-group-sm">
                             ${strategy.status.toLowerCase() === 'running' ? `
                                 <button class="btn btn-warning me-2" onclick="stopStrategy('${strategy._id}')">
@@ -1905,6 +1911,24 @@
             dynamicLabel.textContent = 'Value';
         } else {
             dynamicInputContainer.style.display = 'none';
+        }
+    }
+
+    // Add this helper function before the displayDeployedStrategies function
+    function getBadgeColorForDecision(decision) {
+        if (!decision) return 'bg-secondary';
+        
+        switch(decision.toUpperCase()) {
+            case 'BUY':
+                return 'bg-success';
+            case 'SELL':
+                return 'bg-danger';
+            case 'HOLD':
+                return 'bg-warning';
+            case 'WAIT':
+                return 'bg-secondary';
+            default:
+                return 'bg-info';
         }
     }
     </script>

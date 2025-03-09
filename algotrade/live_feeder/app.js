@@ -8,6 +8,8 @@ const path = require('path');
 const { spawn } = require('child_process');
 const FyersAPI = require("fyers-api-v3").fyersModel;
 const FyersSocket = require("fyers-api-v3").fyersDataSocket;
+const WebSocket = require('ws');
+const http = require('http');
 
 // Load environment variables
 dotenv.config();
@@ -146,6 +148,140 @@ async function getAccessToken() {
 
 // Function to stream market data using the official Fyers Socket API
 async function streamMarketData() {
+    // Create a http server
+    const server = http.createServer((req, res) => {
+        // Serve the WebSocket tester at /test endpoint
+        if (req.url === '/test') {
+            const testerPath = path.join(__dirname, 'websocket-tester.html');
+            fs.readFile(testerPath, (err, content) => {
+                if (err) {
+                    res.writeHead(500);
+                    res.end(`Error loading tester: ${err.message}`);
+                    return;
+                }
+                
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.end(content);
+            });
+        } else {
+            // Handle other routes or provide a simple response for the root
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end('Live Feeder API Running - Visit /test for WebSocket tester');
+        }
+    });
+    
+    // Initialize WebSocket server to handle client connections
+    const wss = new WebSocket.Server({ server });
+    
+    // Keep track of clients and their subscriptions
+    const clients = new Map();
+    
+    // Flag to track if we have a valid Fyers connection
+    let hasFyersConnection = false;
+    let fyersdata = null;
+    
+    // WebSocket server connection handler
+    wss.on('connection', (ws) => {
+        console.log('Client connected to WebSocket server');
+        
+        // Store client connection with empty subscriptions array
+        clients.set(ws, { 
+            subscriptions: [] 
+        });
+        
+        // Send connection confirmation according to protocol
+        ws.send(JSON.stringify({
+            event: "connected",
+            message: hasFyersConnection ? 
+                "Connected to market data stream" : 
+                "Connected to server. WARNING: No connection to market data source."
+        }));
+        
+        // Handle messages from clients
+        ws.on('message', (message) => {
+            try {
+                const data = JSON.parse(message);
+                console.log('Received message from client:', data);
+                
+                // Handle subscription requests
+                if (data.action === 'subscribe' && Array.isArray(data.symbols)) {
+                    // Get client info
+                    const clientInfo = clients.get(ws);
+                    
+                    // Update client's subscriptions
+                    clientInfo.subscriptions = [...new Set([
+                        ...clientInfo.subscriptions,
+                        ...data.symbols.map(symbol => symbol.toUpperCase())
+                    ])];
+                    
+                    // Save updated client info
+                    clients.set(ws, clientInfo);
+                    
+                    // Send subscription confirmation to client
+                    ws.send(JSON.stringify({
+                        event: "subscribed",
+                        symbols: data.symbols,
+                        message: `Subscribed to ${data.symbols.join(', ')}`
+                    }));
+                    
+                    console.log('Client subscribed to symbols:', data.symbols);
+                    
+                    // Subscribe to these symbols in Fyers if connected
+                    if (hasFyersConnection && fyersdata) {
+                        // Convert to Fyers symbol format (assuming NSE exchange and EQ market type)
+                        const fyersSymbols = data.symbols.map(symbol => `NSE:${symbol}-EQ`);
+                        fyersdata.subscribe(fyersSymbols);
+                    } else {
+                        console.log('Note: Fyers connection not available, subscription only tracked locally');
+                    }
+                }
+                
+                // Handle unsubscribe requests
+                if (data.action === 'unsubscribe' && Array.isArray(data.symbols)) {
+                    // Get client info
+                    const clientInfo = clients.get(ws);
+                    
+                    // Update client's subscriptions by removing unsubscribed symbols
+                    const symbolsToRemove = data.symbols.map(symbol => symbol.toUpperCase());
+                    clientInfo.subscriptions = clientInfo.subscriptions.filter(
+                        symbol => !symbolsToRemove.includes(symbol)
+                    );
+                    
+                    // Save updated client info
+                    clients.set(ws, clientInfo);
+                    
+                    // Send unsubscription confirmation to client
+                    ws.send(JSON.stringify({
+                        event: "unsubscribed",
+                        symbols: data.symbols,
+                        message: `Unsubscribed from ${data.symbols.join(', ')}`
+                    }));
+                    
+                    console.log('Client unsubscribed from symbols:', data.symbols);
+                }
+            } catch (error) {
+                console.error('Error processing client message:', error);
+                // Send error message to client according to protocol
+                ws.send(JSON.stringify({
+                    error: "Invalid message format"
+                }));
+            }
+        });
+        
+        // Handle client disconnection
+        ws.on('close', () => {
+            console.log('Client disconnected from WebSocket server');
+            clients.delete(ws);
+        });
+    });
+
+    // Start the WebSocket server first
+    const PORT = process.env.WS_PORT || 3001;
+    server.listen(PORT, () => {
+        console.log(`WebSocket server listening on port ${PORT}`);
+    });
+    
+    // Try to connect to Fyers in parallel
     try {
         // Ensure we have authentication
         await ensureAuthentication();
@@ -155,15 +291,57 @@ async function streamMarketData() {
         console.log('Access token obtained, connecting to data socket...');
         
         // Initialize Fyers data socket with access token
-        const fyersdata = new FyersSocket(`${appId}:${accessToken}`);
+        fyersdata = new FyersSocket(`${appId}:${accessToken}`);
         
-        // Define event handlers
+        // Define event handlers for Fyers WebSocket
         function onmsg(message) {
             console.log('Market Data:', message);
+            
+            // Process and forward market data to all clients that have subscribed to the symbol
+            try {
+                // Parse the Fyers data
+                if (Array.isArray(message)) {
+                    message.forEach(item => {
+                        if (item && item.symbol) {
+                            // Extract symbol from Fyers format (NSE:SBIN-EQ -> SBIN)
+                            const parts = item.symbol.split(':');
+                            if (parts.length >= 2) {
+                                const symbolParts = parts[1].split('-');
+                                const symbol = symbolParts[0];
+                                
+                                // Prepare protocol-compliant message
+                                const priceUpdateMsg = {
+                                    event: "price_update",
+                                    symbol: symbol,
+                                    data: {
+                                        price: item.ltp || 0,
+                                        volume: item.volume || 0,
+                                        timestamp: new Date().toISOString()
+                                    }
+                                };
+                                
+                                // Send to all subscribed clients
+                                clients.forEach((clientInfo, ws) => {
+                                    // Check if client is subscribed to this symbol
+                                    if (clientInfo.subscriptions.includes(symbol)) {
+                                        if (ws.readyState === WebSocket.OPEN) {
+                                            ws.send(JSON.stringify(priceUpdateMsg));
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error processing and forwarding market data:', error);
+            }
         }
         
         function onconnect() {
             console.log('Connected to Fyers WebSocket');
+            hasFyersConnection = true;
+            
             // Subscribe to SBIN symbol
             fyersdata.subscribe(['NSE:SBIN-EQ']);
             console.log('Subscribed to NSE:SBIN-EQ');
@@ -171,18 +349,16 @@ async function streamMarketData() {
             // Enable auto reconnection
             fyersdata.autoreconnect();
             console.log('Auto-reconnect enabled');
-            
-            // Optionally set data mode (default is FullMode)
-            // fyersdata.mode(fyersdata.LiteMode); // For lite mode
-            // fyersdata.mode(fyersdata.FullMode); // For full mode
         }
         
         function onerror(err) {
-            console.error('WebSocket Error:', err);
+            console.error('Fyers WebSocket Error:', err);
+            hasFyersConnection = false;
         }
         
         function onclose() {
-            console.log('Connection closed.');
+            console.log('Fyers connection closed.');
+            hasFyersConnection = false;
         }
         
         // Register event handlers
@@ -191,11 +367,14 @@ async function streamMarketData() {
         fyersdata.on("error", onerror);
         fyersdata.on("close", onclose);
         
-        // Connect to the socket
+        // Connect to the Fyers socket
         fyersdata.connect();
         
     } catch (error) {
-        console.error('Failed to start streaming market data:', error.message);
+        console.error('Failed to connect to Fyers data service:', error.message);
+        console.log('WebSocket server will run without market data - NO DUMMY DATA WILL BE GENERATED');
+        
+        // Previously there was mock data generation here - REMOVED
     }
 }
 

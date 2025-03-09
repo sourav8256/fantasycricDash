@@ -122,6 +122,9 @@
         <button class="time-btn" onclick="setDrainTime(360)">6hr</button>
         <button class="time-btn" onclick="setDrainTime(720)">12hr</button>
         <button class="time-btn" onclick="setDrainTime(1440)">24hr</button>
+        <button class="time-btn" onclick="setDrainTime(10080)">1week</button>
+        <button class="time-btn" onclick="setDrainTime(43200)">1month</button>
+        <button class="time-btn" onclick="setDrainTime(525600)">1year</button>
     </div>
     <div class="time-left" id="timeLeft"></div>
     <div class="tank-container">
@@ -160,7 +163,10 @@
             document.querySelectorAll('.time-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.textContent.includes(minutes.toString()) || 
-                    (minutes >= 60 && btn.textContent === (minutes/60).toString() + 'hr')) {
+                    (minutes >= 60 && btn.textContent === (minutes/60).toString() + 'hr') ||
+                    (minutes === 10080 && btn.textContent === "1week") ||
+                    (minutes === 43200 && btn.textContent === "1month") ||
+                    (minutes === 525600 && btn.textContent === "1year")) {
                     btn.classList.add('active');
                 }
             });
@@ -233,7 +239,10 @@
             const minutes = DRAIN_TIME_SECONDS / 60;
             document.querySelectorAll('.time-btn').forEach(btn => {
                 if (btn.textContent.includes(minutes.toString()) || 
-                    (minutes >= 60 && btn.textContent === (minutes/60).toString() + 'hr')) {
+                    (minutes >= 60 && btn.textContent === (minutes/60).toString() + 'hr') ||
+                    (minutes === 10080 && btn.textContent === "1week") ||
+                    (minutes === 43200 && btn.textContent === "1month") ||
+                    (minutes === 525600 && btn.textContent === "1year")) {
                     btn.classList.add('active');
                 }
             });

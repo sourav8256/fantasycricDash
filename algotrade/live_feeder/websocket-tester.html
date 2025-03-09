@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Data WebSocket Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        .status {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+        }
+        .data-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .symbol-card {
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 250px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input, button {
+            padding: 8px;
+            margin-right: 10px;
+        }
+        .log-area {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            background: #f9f9f9;
+        }
+        .price-up {
+            color: green;
+        }
+        .price-down {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Market Data WebSocket Tester</h1>
+        
+        <div class="controls">
+            <h2>Connection</h2>
+            <input type="text" id="serverUrl" value="ws://localhost:3000" placeholder="WebSocket URL">
+            <button id="connectBtn">Connect</button>
+            <button id="disconnectBtn" disabled>Disconnect</button>
+        </div>
+        
+        <div class="status" id="statusDisplay">
+            Status: Disconnected
+        </div>
+        
+        <div class="controls">
+            <h2>Subscribe to Symbols</h2>
+            <input type="text" id="symbolInput" placeholder="Enter symbol (e.g., SBIN, RELIANCE)">
+            <button id="subscribeBtn" disabled>Subscribe</button>
+            <button id="unsubscribeBtn" disabled>Unsubscribe</button>
+        </div>
+        
+        <h2>Market Data</h2>
+        <div class="data-display" id="dataDisplay"></div>
+        
+        <h2>Message Log</h2>
+        <div class="log-area" id="logArea"></div>
+    </div>
+    
+    <script>
+        // Store WebSocket connection
+        let socket = null;
+        
+        // Store last prices for comparison
+        const lastPrices = {};
+        
+        // Store subscribed symbols
+        const subscribedSymbols = new Set();
+        
+        // DOM References
+        const serverUrlInput = document.getElementById('serverUrl');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const statusDisplay = document.getElementById('statusDisplay');
+        const symbolInput = document.getElementById('symbolInput');
+        const subscribeBtn = document.getElementById('subscribeBtn');
+        const unsubscribeBtn = document.getElementById('unsubscribeBtn');
+        const dataDisplay = document.getElementById('dataDisplay');
+        const logArea = document.getElementById('logArea');
+        
+        // Log message to the log area
+        function logMessage(message, isIncoming = true) {
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `${new Date().toLocaleTimeString()} ${isIncoming ? '← Received' : '→ Sent'}: ${message}`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        // Update UI status
+        function updateStatus(status, isConnected) {
+            statusDisplay.textContent = `Status: ${status}`;
+            connectBtn.disabled = isConnected;
+            disconnectBtn.disabled = !isConnected;
+            subscribeBtn.disabled = !isConnected;
+            unsubscribeBtn.disabled = !isConnected;
+        }
+        
+        // Connect to WebSocket server
+        connectBtn.addEventListener('click', () => {
+            const serverUrl = serverUrlInput.value.trim();
+            if (!serverUrl) {
+                alert('Please enter a valid WebSocket URL');
+                return;
+            }
+            
+            try {
+                socket = new WebSocket(serverUrl);
+                
+                socket.onopen = () => {
+                    updateStatus('Connected', true);
+                    logMessage('WebSocket connection established', false);
+                };
+                
+                socket.onmessage = (event) => {
+                    logMessage(event.data);
+                    handleIncomingMessage(event.data);
+                };
+                
+                socket.onerror = (error) => {
+                    logMessage(`Error: ${error}`, true);
+                    updateStatus('Error', false);
+                };
+                
+                socket.onclose = () => {
+                    updateStatus('Disconnected', false);
+                    logMessage('WebSocket connection closed', false);
+                    socket = null;
+                };
+                
+            } catch (error) {
+                alert(`Failed to connect: ${error.message}`);
+            }
+        });
+        
+        // Disconnect from WebSocket server
+        disconnectBtn.addEventListener('click', () => {
+            if (socket) {
+                socket.close();
+                socket = null;
+                
+                // Clear display
+                dataDisplay.innerHTML = '';
+                subscribedSymbols.clear();
+            }
+        });
+        
+        // Subscribe to a symbol
+        subscribeBtn.addEventListener('click', () => {
+            const symbol = symbolInput.value.trim().toUpperCase();
+            if (!symbol) {
+                alert('Please enter a symbol');
+                return;
+            }
+            
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const subscribeMsg = {
+                    action: 'subscribe',
+                    symbols: [symbol]
+                };
+                
+                socket.send(JSON.stringify(subscribeMsg));
+                logMessage(JSON.stringify(subscribeMsg), false);
+                
+                // Add to our tracking
+                subscribedSymbols.add(symbol);
+                
+                // Clear input
+                symbolInput.value = '';
+            }
+        });
+        
+        // Unsubscribe from a symbol
+        unsubscribeBtn.addEventListener('click', () => {
+            const symbol = symbolInput.value.trim().toUpperCase();
+            if (!symbol) {
+                alert('Please enter a symbol');
+                return;
+            }
+            
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const unsubscribeMsg = {
+                    action: 'unsubscribe',
+                    symbols: [symbol]
+                };
+                
+                socket.send(JSON.stringify(unsubscribeMsg));
+                logMessage(JSON.stringify(unsubscribeMsg), false);
+                
+                // Remove from our tracking
+                subscribedSymbols.delete(symbol);
+                
+                // Remove from display
+                const symbolCard = document.getElementById(`symbol-${symbol}`);
+                if (symbolCard) {
+                    symbolCard.remove();
+                }
+                
+                // Clear input
+                symbolInput.value = '';
+            }
+        });
+        
+        // Handle incoming messages
+        function handleIncomingMessage(data) {
+            try {
+                const message = JSON.parse(data);
+                
+                // Handle connected event
+                if (message.event === 'connected') {
+                    updateStatus('Connected: ' + message.message, true);
+                }
+                
+                // Handle subscribed event
+                if (message.event === 'subscribed') {
+                    message.symbols.forEach(symbol => {
+                        // Create symbol card if it doesn't exist
+                        createSymbolCardIfNeeded(symbol);
+                    });
+                }
+                
+                // Handle unsubscribed event
+                if (message.event === 'unsubscribed') {
+                    message.symbols.forEach(symbol => {
+                        const symbolElement = document.getElementById(`symbol-${symbol}`);
+                        if (symbolElement) {
+                            symbolElement.remove();
+                        }
+                    });
+                }
+                
+                // Handle price update event
+                if (message.event === 'price_update') {
+                    updateSymbolPrice(message.symbol, message.data);
+                }
+                
+            } catch (error) {
+                console.error('Error parsing message:', error);
+            }
+        }
+        
+        // Create symbol card if it doesn't exist
+        function createSymbolCardIfNeeded(symbol) {
+            if (!document.getElementById(`symbol-${symbol}`)) {
+                const symbolCard = document.createElement('div');
+                symbolCard.className = 'symbol-card';
+                symbolCard.id = `symbol-${symbol}`;
+                
+                symbolCard.innerHTML = `
+                    <h3>${symbol}</h3>
+                    <div>Price: <span id="price-${symbol}">-</span></div>
+                    <div>Volume: <span id="volume-${symbol}">-</span></div>
+                    <div>Last Updated: <span id="time-${symbol}">-</span></div>
+                `;
+                
+                dataDisplay.appendChild(symbolCard);
+            }
+        }
+        
+        // Update symbol price card
+        function updateSymbolPrice(symbol, data) {
+            createSymbolCardIfNeeded(symbol);
+            
+            const priceElement = document.getElementById(`price-${symbol}`);
+            const volumeElement = document.getElementById(`volume-${symbol}`);
+            const timeElement = document.getElementById(`time-${symbol}`);
+            
+            if (priceElement && volumeElement && timeElement) {
+                // Determine price direction for color coding
+                const oldPrice = lastPrices[symbol] || 0;
+                const newPrice = data.price;
+                lastPrices[symbol] = newPrice;
+                
+                // Reset classes
+                priceElement.className = '';
+                
+                // Add appropriate class
+                if (newPrice > oldPrice) {
+                    priceElement.className = 'price-up';
+                } else if (newPrice < oldPrice) {
+                    priceElement.className = 'price-down';
+                }
+                
+                // Update content
+                priceElement.textContent = data.price.toFixed(2);
+                volumeElement.textContent = data.volume.toLocaleString();
+                
+                // Format timestamp
+                const timestamp = new Date(data.timestamp);
+                timeElement.textContent = timestamp.toLocaleString();
+            }
+        }
+    </script>
+</body>
+</html> 

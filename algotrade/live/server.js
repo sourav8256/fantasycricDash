@@ -197,6 +197,11 @@ function connectToMarketFeed() {
             // Log the received price
             console.log(`Received price for ${symbol}: ${price} at ${timestamp}`);
 
+            // Execute strategies for this symbol
+            const result = await executeStrategies(symbol, price, timestamp, loadedStrategies);
+            marketData.decision = result.decision;
+
+
             // Get subscribers for this symbol
             const subscribers = activeSymbols.get(symbol);
             if (subscribers) {
@@ -209,8 +214,7 @@ function connectToMarketFeed() {
                 });
             }
 
-            // Execute strategies for this symbol
-            await executeStrategies(symbol, price, timestamp, loadedStrategies);
+            
         } catch (error) {
             console.error('Error processing market data:', error);
         }

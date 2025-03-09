@@ -4,141 +4,374 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Programming Languages & Technologies</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #0f172a;
+            --accent: #06b6d4;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --success: #10b981;
+        }
+        
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
             line-height: 1.6;
             padding: 40px;
-            max-width: 850px;
+            max-width: 900px;
             margin: 0 auto;
-            background-color: #f5f5f5;
-            color: #333;
+            background-color: #f1f5f9;
+            color: var(--dark);
         }
 
         .container {
             background: white;
             padding: 40px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            border-top: 5px solid var(--primary);
         }
 
         .header {
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid #2c3e50;
+            border-bottom: 2px solid var(--secondary);
             padding-bottom: 20px;
+            position: relative;
+        }
+        
+        .header::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 30%;
+            width: 40%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
         }
 
         .header h1 {
-            color: #2c3e50;
-            font-size: 32px;
+            color: var(--secondary);
+            font-size: 36px;
             margin: 0;
             letter-spacing: 2px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .header h1::before, .header h1::after {
+            content: "<";
+            font-family: monospace;
+            color: var(--accent);
+            opacity: 0.7;
+            position: absolute;
+            font-size: 24px;
+            top: 8px;
+            left: -20px;
+        }
+        
+        .header h1::after {
+            content: "/>";
+            left: auto;
+            right: -30px;
         }
 
         .header h2 {
-            color: #3498db;
-            font-size: 24px;
-            margin: 0;
-            letter-spacing: 2px;
+            color: var(--primary);
+            font-size: 22px;
+            margin: 5px 0 0;
+            letter-spacing: 1px;
+            font-weight: 400;
         }
 
         .category {
-            margin-bottom: 30px;
+            margin-bottom: 35px;
+            position: relative;
+            border-radius: 8px;
+            padding: 20px;
+            background: linear-gradient(145deg, #ffffff, #f5f7fa);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .category:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
         }
 
         .category h2 {
-            color: #3498db;
-            border-bottom: 1px solid #eee;
+            color: var(--primary);
+            border-bottom: 1px solid #e2e8f0;
             padding-bottom: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
         }
+        
+        .category h2::before {
+            font-family: "Font Awesome 6 Free";
+            margin-right: 10px;
+            font-weight: 900;
+            color: var(--accent);
+        }
+        
+        .category:nth-child(2) h2::before { content: "\f121"; } /* Programming Languages */
+        .category:nth-child(3) h2::before { content: "\f13b"; } /* Web Technologies */
+        .category:nth-child(4) h2::before { content: "\f1c0"; } /* Database */
+        .category:nth-child(5) h2::before { content: "\f085"; } /* DevOps */
+        .category:nth-child(6) h2::before { content: "\f3cd"; } /* Mobile */
+        .category:nth-child(7) h2::before { content: "\f0ae"; } /* Project */
 
         .skills-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
         }
 
         .skill-item {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
             padding: 8px 15px;
             margin-bottom: 10px;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .skill-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.1);
+        }
+        
+        .skill-item::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+        
+        .skill-item:hover::before {
+            transform: scaleX(1);
         }
 
         .proficiency {
             font-size: 0.8em;
-            color: #6c757d;
+            color: #64748b;
             margin-left: 5px;
+            position: relative;
         }
-
-        .back-button {
+        
+        .proficiency::before {
+            content: "";
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 15px;
-            background-color: #2c3e50;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: background-color 0.3s;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .proficiency:contains("Advanced")::before {
+            background-color: var(--success);
+        }
+        
+        .proficiency:contains("Intermediate")::before {
+            background-color: var(--primary);
+        }
+        
+        .proficiency:contains("Basic")::before {
+            background-color: var(--accent);
         }
 
-        .back-button:hover {
-            background-color: #1a252f;
+        .projects-list {
+            margin-top: 20px;
+        }
+
+        .project-item {
+            margin-bottom: 20px;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+            border-left: 4px solid var(--primary);
+            position: relative;
+        }
+        
+        .project-item::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 30%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.03));
+            border-radius: 0 8px 8px 0;
+            pointer-events: none;
+        }
+
+        .project-item h3 {
+            color: var(--primary);
+            font-size: 22px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .project-item h3::before {
+            content: "\f135";
+            font-family: "Font Awesome 6 Free";
+            margin-right: 10px;
+            font-weight: 900;
+            color: var(--accent);
+            font-size: 18px;
+        }
+
+        .project-description {
+            margin-bottom: 15px;
+            line-height: 1.7;
+            color: #475569;
+        }
+
+        .project-item h4 {
+            color: var(--secondary);
+            margin-bottom: 12px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .project-item h4::before {
+            content: "\f0c2";
+            font-family: "Font Awesome 6 Free";
+            margin-right: 8px;
+            font-weight: 900;
+            color: var(--accent);
+            font-size: 16px;
+        }
+
+        .component-list {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        .component-list li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 5px;
+        }
+        
+        .component-list li::marker {
+            color: var(--primary);
+        }
+        
+        .component-list li strong {
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .project-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tech-tag {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .tech-tag:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .tech-tag::before {
+            content: "#";
+            margin-right: 4px;
+            opacity: 0.7;
         }
 
         /* Add print-specific styles */
         @media print {
             body {
                 padding: 0;
-                font-size: 11pt;
+                font-size: 10pt;
                 background-color: white;
                 color: black;
             }
             
             .container {
-                padding: 10mm;
+                padding: 8mm;
                 box-shadow: none;
                 max-width: 100%;
                 margin: 0;
                 background: white;
+                border-top: none;
             }
             
             .header {
-                margin-bottom: 15px;
-                padding-bottom: 10px;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
             }
             
             .header h1 {
                 font-size: 16pt;
             }
             
+            .header h1::before, .header h1::after {
+                display: none;
+            }
+            
             .header h2 {
-                font-size: 14pt;
+                font-size: 13pt;
             }
             
             .category {
-                margin-bottom: 15px;
+                margin-bottom: 12px;
+                padding: 10px;
+                box-shadow: none;
+                background: white;
                 page-break-inside: avoid;
+                border: 1px solid #eee;
+                transform: none !important;
             }
             
             .category h2 {
-                font-size: 14pt;
-                margin-bottom: 8px;
-                padding-bottom: 5px;
+                font-size: 13pt;
+                margin-bottom: 6px;
+                padding-bottom: 4px;
+            }
+            
+            .category h2::before {
+                font-size: 12pt;
             }
             
             .skills-list {
-                gap: 5px;
+                gap: 4px;
             }
             
             .skill-item {
-                padding: 4px 8px;
-                margin-bottom: 5px;
-                font-size: 10pt;
+                padding: 3px 6px;
+                margin-bottom: 4px;
+                font-size: 9pt;
                 border: 1px solid #ddd;
                 background-color: white;
                 print-color-adjust: exact;
@@ -146,18 +379,78 @@
             }
             
             .proficiency {
-                font-size: 9pt;
+                font-size: 8pt;
             }
             
-            /* Ensure proper page breaks */
-            h1, h2 {
+            .project-item {
+                padding: 10px;
+                margin-bottom: 10px;
+                background: white;
+                box-shadow: none;
+                border-left: 2px solid var(--primary);
+            }
+            
+            .project-item::after {
+                display: none;
+            }
+            
+            .project-item h3 {
+                font-size: 12pt;
+                margin-bottom: 6px;
+            }
+            
+            .project-item h3::before {
+                font-size: 10pt;
+            }
+            
+            .project-description {
+                font-size: 9pt;
+                margin-bottom: 8px;
+                line-height: 1.4;
+            }
+            
+            .project-item h4 {
+                font-size: 11pt;
+                margin-bottom: 6px;
+            }
+            
+            .project-item h4::before {
+                font-size: 10pt;
+            }
+            
+            .component-list {
+                margin-bottom: 8px;
+                padding-left: 15px;
+            }
+            
+            .component-list li {
+                margin-bottom: 3px;
+                font-size: 9pt;
+                line-height: 1.3;
+            }
+            
+            .tech-tag {
+                padding: 2px 6px;
+                font-size: 8pt;
+                background-color: white;
+                border: 1px solid var(--primary);
+            }
+            
+            .tech-tag::before {
+                display: none;
+            }
+            
+            h1, h2, h3, h4 {
                 page-break-after: avoid;
             }
             
-            /* Set A4 page size explicitly */
+            ul, li {
+                page-break-inside: avoid;
+            }
+            
             @page {
                 size: A4;
-                margin: 10mm;
+                margin: 8mm;
             }
         }
     </style>
@@ -189,7 +482,6 @@
                 <span class="skill-item">React <span class="proficiency">(Advanced)</span></span>
                 <span class="skill-item">Node.js <span class="proficiency">(Advanced)</span></span>
                 <span class="skill-item">Express.js <span class="proficiency">(Advanced)</span></span>
-                <span class="skill-item">Angular <span class="proficiency">(Intermediate)</span></span>
                 <span class="skill-item">Bootstrap <span class="proficiency">(Advanced)</span></span>
             </div>
         </div>
@@ -201,7 +493,6 @@
                 <span class="skill-item">MySQL <span class="proficiency">(Advanced)</span></span>
                 <span class="skill-item">SQLite <span class="proficiency">(Intermediate)</span></span>
                 <span class="skill-item">Firebase <span class="proficiency">(Intermediate)</span></span>
-                <span class="skill-item">Redis <span class="proficiency">(Basic)</span></span>
             </div>
         </div>
 
@@ -227,6 +518,183 @@
                 <span class="skill-item">Android (Java) <span class="proficiency">(Basic)</span></span>
             </div>
         </div>
+
+        <div class="category">
+            <h2>Recent Project</h2>
+            <div class="projects-list">
+                <div class="project-item">
+                    <h3>High Speed Trading System</h3>
+                    <p class="project-description">Developed a low-latency trading platform with optimized performance. Implemented advanced algorithms for market analysis and automated trading decisions.</p>
+                    
+                    <h4>Components</h4>
+                    <ul class="component-list">
+                        <li><strong>Frontend</strong> - UI for configuring and deploying algorithms and data visualization</li>
+                        <li><strong>Backend</strong> - For supporting the frontend</li>
+                        <li><strong>Live</strong> - Node.js server that keeps on running, listens to the prices, runs them through the strategies and takes buy/sell/hold decisions</li>
+                        <li><strong>Mockmarket</strong> - WebSocket server that simulates live market prices for testing</li>
+                        <li><strong>deploy-ssh.js</strong> - A simple but useful script for uploading the changes to an AWS virtual machine and restart the server</li>
+                        <li><strong>start.sh/start.bat</strong> - Useful script for starting all the components in a single command</li>
+                    </ul>
+                    
+                    <div class="project-tech">
+                        <span class="tech-tag">JavaScript</span>
+                        <span class="tech-tag">Node.js</span>
+                        <span class="tech-tag">Express.js</span>
+                        <span class="tech-tag">MongoDB</span>
+                        <span class="tech-tag">WebSockets</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <button onclick="captureCV()" style="position:fixed; bottom:20px; right:20px; z-index:1000; padding:10px; background:#2563eb; color:white; border:none; border-radius:4px; cursor:pointer;">
+      Save as A4 Images
+    </button>
+
+    <script>
+    function captureCV() {
+      const container = document.querySelector('.container');
+      const containerWidth = container.offsetWidth;
+      
+      // A4 aspect ratio is approximately 1:1.414 (width:height)
+      const a4Height = Math.floor(containerWidth * 1.414);
+      
+      // Get total height to determine how many pages we need
+      const totalHeight = container.offsetHeight;
+      
+      // Create a loading indicator
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.style.position = 'fixed';
+      loadingIndicator.style.top = '50%';
+      loadingIndicator.style.left = '50%';
+      loadingIndicator.style.transform = 'translate(-50%, -50%)';
+      loadingIndicator.style.background = 'rgba(0,0,0,0.7)';
+      loadingIndicator.style.color = 'white';
+      loadingIndicator.style.padding = '20px';
+      loadingIndicator.style.borderRadius = '10px';
+      loadingIndicator.style.zIndex = '2000';
+      loadingIndicator.textContent = 'Generating images...';
+      document.body.appendChild(loadingIndicator);
+      
+      // Capture first page
+      html2canvas(container, {
+        height: a4Height,
+        windowHeight: a4Height,
+        y: 0
+      }).then(canvas1 => {
+        // Save first page
+        const link1 = document.createElement('a');
+        link1.download = 'sourav-mandal-cv-page1.png';
+        link1.href = canvas1.toDataURL('image/png');
+        
+        // Capture second page
+        html2canvas(container, {
+          height: a4Height,
+          windowHeight: a4Height,
+          y: a4Height
+        }).then(canvas2 => {
+          // Save second page
+          const link2 = document.createElement('a');
+          link2.download = 'sourav-mandal-cv-page2.png';
+          link2.href = canvas2.toDataURL('image/png');
+          
+          // Remove loading indicator
+          document.body.removeChild(loadingIndicator);
+          
+          // Create a modal to show the images
+          const modal = document.createElement('div');
+          modal.style.position = 'fixed';
+          modal.style.top = '0';
+          modal.style.left = '0';
+          modal.style.width = '100%';
+          modal.style.height = '100%';
+          modal.style.background = 'rgba(0,0,0,0.8)';
+          modal.style.zIndex = '1500';
+          modal.style.display = 'flex';
+          modal.style.flexDirection = 'column';
+          modal.style.alignItems = 'center';
+          modal.style.justifyContent = 'center';
+          modal.style.padding = '20px';
+          modal.style.boxSizing = 'border-box';
+          modal.style.overflow = 'auto';
+          
+          // Add close button
+          const closeBtn = document.createElement('button');
+          closeBtn.textContent = 'Close';
+          closeBtn.style.position = 'absolute';
+          closeBtn.style.top = '20px';
+          closeBtn.style.right = '20px';
+          closeBtn.style.padding = '10px 15px';
+          closeBtn.style.background = '#2563eb';
+          closeBtn.style.color = 'white';
+          closeBtn.style.border = 'none';
+          closeBtn.style.borderRadius = '4px';
+          closeBtn.style.cursor = 'pointer';
+          closeBtn.onclick = () => document.body.removeChild(modal);
+          
+          // Create container for images and buttons
+          const content = document.createElement('div');
+          content.style.display = 'flex';
+          content.style.flexDirection = 'column';
+          content.style.alignItems = 'center';
+          content.style.gap = '20px';
+          content.style.maxWidth = '100%';
+          
+          // Add images
+          const img1 = document.createElement('img');
+          img1.src = canvas1.toDataURL('image/png');
+          img1.style.maxWidth = '100%';
+          img1.style.height = 'auto';
+          img1.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+          
+          const img2 = document.createElement('img');
+          img2.src = canvas2.toDataURL('image/png');
+          img2.style.maxWidth = '100%';
+          img2.style.height = 'auto';
+          img2.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+          
+          // Add download buttons
+          const downloadBtns = document.createElement('div');
+          downloadBtns.style.display = 'flex';
+          downloadBtns.style.gap = '15px';
+          
+          const btn1 = document.createElement('button');
+          btn1.textContent = 'Download Page 1';
+          btn1.style.padding = '10px 15px';
+          btn1.style.background = '#2563eb';
+          btn1.style.color = 'white';
+          btn1.style.border = 'none';
+          btn1.style.borderRadius = '4px';
+          btn1.style.cursor = 'pointer';
+          btn1.onclick = () => link1.click();
+          
+          const btn2 = document.createElement('button');
+          btn2.textContent = 'Download Page 2';
+          btn2.style.padding = '10px 15px';
+          btn2.style.background = '#2563eb';
+          btn2.style.color = 'white';
+          btn2.style.border = 'none';
+          btn2.style.borderRadius = '4px';
+          btn2.style.cursor = 'pointer';
+          btn2.onclick = () => link2.click();
+          
+          // Assemble the modal
+          downloadBtns.appendChild(btn1);
+          downloadBtns.appendChild(btn2);
+          
+          content.appendChild(img1);
+          content.appendChild(img2);
+          content.appendChild(downloadBtns);
+          
+          modal.appendChild(closeBtn);
+          modal.appendChild(content);
+          
+          document.body.appendChild(modal);
+        });
+      });
+    }
+    </script>
 </body>
 </html>

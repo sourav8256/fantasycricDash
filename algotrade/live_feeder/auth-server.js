@@ -11,7 +11,7 @@ require('dotenv').config();
 const appId = process.env.FYERS_APP_ID;
 const appSecret = process.env.FYERS_APP_SECRET;
 const redirectUri = process.env.FYERS_REDIRECT_URI;
-const PORT = 3000;
+const PORT = 3001;
 
 // Create express app
 const app = express();

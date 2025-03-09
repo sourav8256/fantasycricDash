@@ -1,6 +1,6 @@
 const Strategy = require('../models/Strategy');
 const DeployedStrategy = require('../models/DeployedStrategy');
-const executeStrategies = require('../live/strategyExecutor');
+const executeStrategies = require('../../live/strategyExecutor');
 
 // Get all available strategies (no authentication required)
 const getAvailableStrategies = async (req, res) => {

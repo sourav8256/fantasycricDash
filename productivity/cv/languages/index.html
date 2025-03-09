@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programming Languages & Technologies</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            padding: 40px;
+            max-width: 850px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 32px;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .header h2 {
+            color: #3498db;
+            font-size: 24px;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .category {
+            margin-bottom: 30px;
+        }
+
+        .category h2 {
+            color: #3498db;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .skill-item {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 8px 15px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .proficiency {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-left: 5px;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #1a252f;
+        }
+
+        /* Add print-specific styles */
+        @media print {
+            body {
+                padding: 0;
+                font-size: 11pt;
+                background-color: white;
+                color: black;
+            }
+            
+            .container {
+                padding: 10mm;
+                box-shadow: none;
+                max-width: 100%;
+                margin: 0;
+                background: white;
+            }
+            
+            .header {
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+            
+            .header h1 {
+                font-size: 16pt;
+            }
+            
+            .header h2 {
+                font-size: 14pt;
+            }
+            
+            .category {
+                margin-bottom: 15px;
+                page-break-inside: avoid;
+            }
+            
+            .category h2 {
+                font-size: 14pt;
+                margin-bottom: 8px;
+                padding-bottom: 5px;
+            }
+            
+            .skills-list {
+                gap: 5px;
+            }
+            
+            .skill-item {
+                padding: 4px 8px;
+                margin-bottom: 5px;
+                font-size: 10pt;
+                border: 1px solid #ddd;
+                background-color: white;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .proficiency {
+                font-size: 9pt;
+            }
+            
+            /* Ensure proper page breaks */
+            h1, h2 {
+                page-break-after: avoid;
+            }
+            
+            /* Set A4 page size explicitly */
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sourav Mandal</h1>
+            <h2>Programming Languages & Technologies</h2>
+        </div>
+
+        <div class="category">
+            <h2>Programming Languages</h2>
+            <div class="skills-list">
+                <span class="skill-item">JavaScript <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">Python <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">Java <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">TypeScript <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">PHP <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">C++ <span class="proficiency">(Basic)</span></span>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2>Web Technologies</h2>
+            <div class="skills-list">
+                <span class="skill-item">HTML5 <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">CSS3 <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">React <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">Node.js <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">Express.js <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">Angular <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">Bootstrap <span class="proficiency">(Advanced)</span></span>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2>Database Technologies</h2>
+            <div class="skills-list">
+                <span class="skill-item">MongoDB <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">MySQL <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">SQLite <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">Firebase <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">Redis <span class="proficiency">(Basic)</span></span>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2>DevOps & Tools</h2>
+            <div class="skills-list">
+                <span class="skill-item">Git <span class="proficiency">(Advanced)</span></span>
+                <span class="skill-item">CI/CD Pipelines <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">GitHub Actions <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">AWS <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">Azure <span class="proficiency">(Basic)</span></span>
+                <span class="skill-item">Linux <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">Shell Scripts <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">Batch Scripts <span class="proficiency">(Intermediate)</span></span>
+            </div>
+        </div>
+
+        <div class="category">
+            <h2>Mobile Development</h2>
+            <div class="skills-list">
+                <span class="skill-item">React Native <span class="proficiency">(Intermediate)</span></span>
+                <span class="skill-item">Flutter <span class="proficiency">(Basic)</span></span>
+                <span class="skill-item">Android (Java) <span class="proficiency">(Basic)</span></span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

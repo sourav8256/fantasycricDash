@@ -551,17 +551,37 @@
                     logClass = "log-increased";
                 }
 
-                // Apply adjustment to hours, minutes and seconds
-                const originalTotalSeconds = (originalTime.hours * 3600) + (originalTime.minutes * 60) + originalTime.seconds;
+                // Apply adjustment to ALL time units
+                const originalTotalSeconds = calculateTotalSeconds(originalTime);
                 const newTotalSeconds = Math.max(30, Math.round(originalTotalSeconds * adjustmentFactor));
 
-                // Recalculate hours, minutes and seconds
-                const newHours = Math.floor(newTotalSeconds / 3600);
-                const secondsAfterHours = newTotalSeconds % 3600;
-                const newMinutes = Math.floor(secondsAfterHours / 60);
-                const newSeconds = secondsAfterHours % 60;
+                // Complete recalculation of all time units
+                let secondsRemaining = newTotalSeconds;
 
-                // Update the time values
+                // Years
+                const newYears = Math.floor(secondsRemaining / SECONDS_PER_YEAR);
+                secondsRemaining %= SECONDS_PER_YEAR;
+
+                // Months
+                const newMonths = Math.floor(secondsRemaining / SECONDS_PER_MONTH);
+                secondsRemaining %= SECONDS_PER_MONTH;
+
+                // Days
+                const newDays = Math.floor(secondsRemaining / SECONDS_PER_DAY);
+                secondsRemaining %= SECONDS_PER_DAY;
+
+                // Hours
+                const newHours = Math.floor(secondsRemaining / 3600);
+                secondsRemaining %= 3600;
+
+                // Minutes and Seconds
+                const newMinutes = Math.floor(secondsRemaining / 60);
+                const newSeconds = secondsRemaining % 60;
+
+                // Update all time values
+                originalTime.years = newYears;
+                originalTime.months = newMonths;
+                originalTime.days = newDays;
                 originalTime.hours = newHours;
                 originalTime.minutes = newMinutes;
                 originalTime.seconds = newSeconds;

@@ -1,14 +1,13 @@
-const executeStrategies = require('../live/strategyExecutor');
+const executeStrategy = require('../live/strategyExecutor');
 
 // Mock data
 const mockSymbol = 'AAPL';
 const mockPrice = 150.25;
 const mockTimestamp = new Date().toISOString();
-const mockLoadedStrategies = ['Strategy1', 'Strategy2'];
 const mockEntryPrice = 130.50;
 const mockEntryQuantity = 100;
 const mockProfitLimit = 15000; // Added mock profit limit
-const mockLossLimit = 30; // Added mock loss limit
+const mockStopLoss = 120.00; // Stop loss price
 const mockOnStoplossProfit = 10; // Added mock onStoplossProit
 const mockTrailBy = 5; // Added mock trailBy
 
@@ -39,21 +38,23 @@ const mockStopTimeStr = '03:00 AM';
 const mockStartTime = parseTimeString(mockStartTimeStr);
 const mockStopTime = parseTimeString(mockStopTimeStr);
 
-// Call the mock executeStrategies function with params object
-executeStrategies({
+// Create params object as expected by executeStrategy
+const params = {
     symbol: mockSymbol,
     price: mockPrice,
     timestamp: mockTimestamp,
-    loadedStrategies: mockLoadedStrategies,
     entryPrice: mockEntryPrice,
     entryQuantity: mockEntryQuantity,
     profitLimit: mockProfitLimit,
-    lossLimit: mockLossLimit,
+    stopLoss: mockStopLoss,
     startTime: mockStartTime,
     stopTime: mockStopTime,
     onStoplossProfit: mockOnStoplossProfit,
     trailBy: mockTrailBy
-})
+};
+
+// Call the executeStrategy function with params object
+executeStrategy(params)
     .then(result => {
         console.log('Execution result:', result);
     })

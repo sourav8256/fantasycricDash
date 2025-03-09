@@ -1,6 +1,16 @@
+// Check for ENV at the beginning of the file
+if (typeof window.ENV === 'undefined') {
+    console.error('ENV is not defined. Make sure env.js is loaded before auth.js');
+    window.ENV = {
+        AUTH_TOKEN_KEY: 'token',
+        USER_DATA_KEY: 'user',
+        API_BASE_URL: '/api'  // Default fallback values
+    };
+}
+
 // Check if user is authenticated
 async function checkAuth() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(window.ENV.AUTH_TOKEN_KEY);
     if (!token) {
         logout();
         return false;
@@ -8,7 +18,7 @@ async function checkAuth() {
 
     try {
         // Verify token with backend
-        const response = await fetch(`${ENV.API_BASE_URL}/api/auth/verify`, {
+        const response = await fetch(`${window.ENV.API_BASE_URL}/api/auth/verify`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -31,8 +41,8 @@ async function checkAuth() {
 // Function to handle logout
 function logout() {
     console.log('Logging out due to invalid token');
-    localStorage.removeItem(ENV.AUTH_TOKEN_KEY);
-    localStorage.removeItem(ENV.USER_DATA_KEY);
+    localStorage.removeItem(window.ENV.AUTH_TOKEN_KEY);
+    localStorage.removeItem(window.ENV.USER_DATA_KEY);
     
     // Only redirect if we're not already on the auth page
     if (!window.location.pathname.includes('auth.html')) {

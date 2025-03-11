@@ -187,37 +187,40 @@ function connectToMarketFeed() {
 
     marketWs.on('message', async (data) => {
         // Log incoming market data messages
-        try {
+        // try {
             console.log('Received message from market feed:');
             console.log(data.toString());
             const marketData = JSON.parse(data);
-            const { symbol } = marketData;
-            const { price, timestamp } = marketData.data;
-
-            // Log the received price
-            console.log(`Received price for ${symbol}: ${price} at ${timestamp}`);
-
-            // Execute strategies for this symbol
-            const result = await executeStrategies(symbol, price, timestamp, loadedStrategies);
-            marketData.decision = result.decision;
-
-
-            // Get subscribers for this symbol
-            const subscribers = activeSymbols.get(symbol);
-            if (subscribers) {
-                // Forward market data to all subscribers
-                subscribers.forEach(client => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        console.log('Sent data to client:', marketData);
-                        client.send(JSON.stringify(marketData));
-                    }
-                });
-            }
-
             
-        } catch (error) {
-            console.error('Error processing market data:', error);
-        }
+            // Check if the event is a price update
+            if (marketData.event === "price_update") {
+                const { symbol } = marketData;
+                const { price, timestamp } = marketData.data;
+
+                // Log the received price
+                console.log(`Received price for ${symbol}: ${price} at ${timestamp}`);
+
+                // Execute strategies for this symbol
+                const result = await executeStrategies(symbol, price, timestamp, loadedStrategies);
+                marketData.decision = result.decision;
+
+                // Get subscribers for this symbol
+                const subscribers = activeSymbols.get(symbol);
+                if (subscribers) {
+                    // Forward market data to all subscribers
+                    subscribers.forEach(client => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            console.log('Sent data to client:', marketData);
+                            client.send(JSON.stringify(marketData));
+                        }
+                    });
+                }
+            } else {
+                console.log('Received non-price update event:', marketData.event);
+            }
+        // } catch (error) {
+        //     console.error('Error processing market data:', error);
+        // }
     });
 
     marketWs.on('close', () => {

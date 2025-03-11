@@ -148,30 +148,11 @@ async function getAccessToken() {
 
 // Function to stream market data using the official Fyers Socket API
 async function streamMarketData() {
-    // Create a http server
-    const server = http.createServer((req, res) => {
-        // Serve the WebSocket tester at /test endpoint
-        if (req.url === '/test') {
-            const testerPath = path.join(__dirname, 'websocket-tester.html');
-            fs.readFile(testerPath, (err, content) => {
-                if (err) {
-                    res.writeHead(500);
-                    res.end(`Error loading tester: ${err.message}`);
-                    return;
-                }
-                
-                res.writeHead(200, { 'Content-Type': 'text/html' });
-                res.end(content);
-            });
-        } else {
-            // Handle other routes or provide a simple response for the root
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
-            res.end('Live Feeder API Running - Visit /test for WebSocket tester');
-        }
-    });
+    // Create a WebSocket server directly without http
+    const PORT = process.env.WS_PORT || 5555;
+    const wss = new WebSocket.Server({ port: PORT });
     
-    // Initialize WebSocket server to handle client connections
-    const wss = new WebSocket.Server({ server });
+    console.log(`WebSocket server listening on ws://localhost:${PORT}`);
     
     // Keep track of clients and their subscriptions
     const clients = new Map();
@@ -274,12 +255,6 @@ async function streamMarketData() {
             clients.delete(ws);
         });
     });
-
-    // Start the WebSocket server first
-    const PORT = process.env.WS_PORT || 3001;
-    server.listen(PORT, () => {
-        console.log(`WebSocket server listening on port ${PORT}`);
-    });
     
     // Try to connect to Fyers in parallel
     try {
@@ -298,44 +273,41 @@ async function streamMarketData() {
             console.log('Market Data:', message);
             
             // Process and forward market data to all clients that have subscribed to the symbol
-            try {
-                // Parse the Fyers data
-                if (Array.isArray(message)) {
-                    message.forEach(item => {
-                        if (item && item.symbol) {
-                            // Extract symbol from Fyers format (NSE:SBIN-EQ -> SBIN)
-                            const parts = item.symbol.split(':');
-                            if (parts.length >= 2) {
-                                const symbolParts = parts[1].split('-');
-                                const symbol = symbolParts[0];
-                                
-                                // Prepare protocol-compliant message
-                                const priceUpdateMsg = {
-                                    event: "price_update",
-                                    symbol: symbol,
-                                    data: {
-                                        price: item.ltp || 0,
-                                        volume: item.volume || 0,
-                                        timestamp: new Date().toISOString()
-                                    }
-                                };
-                                
-                                // Send to all subscribed clients
-                                clients.forEach((clientInfo, ws) => {
-                                    // Check if client is subscribed to this symbol
-                                    if (clientInfo.subscriptions.includes(symbol)) {
-                                        if (ws.readyState === WebSocket.OPEN) {
-                                            ws.send(JSON.stringify(priceUpdateMsg));
-                                        }
-                                    }
-                                });
+            // try {
+                // Parse the Fyers data - it's an object, not an array
+                if (message && message.symbol) {
+                    // Extract symbol from Fyers format (NSE:SBIN-EQ -> SBIN)
+                    const parts = message.symbol.split(':');
+                    if (parts.length >= 2) {
+                        const symbolParts = parts[1].split('-');
+                        const symbol = symbolParts[0];
+                        
+                        // Prepare protocol-compliant message
+                        const priceUpdateMsg = {
+                            event: "price_update",
+                            symbol: symbol,
+                            data: {
+                                price: message.ltp || 0,
+                                volume: message.vol_traded_today || 0,
+                                timestamp: new Date().toISOString()
                             }
-                        }
-                    });
+                        };
+                        
+                        // Send to all subscribed clients
+                        clients.forEach((clientInfo, ws) => {
+                            // Check if client is subscribed to this symbol
+                            if (clientInfo.subscriptions.includes(symbol)) {
+                                if (ws.readyState === WebSocket.OPEN) {
+                                console.log('Sending price update to client:', priceUpdateMsg);
+                                    ws.send(JSON.stringify(priceUpdateMsg));
+                                }
+                            }
+                        });
+                    }
                 }
-            } catch (error) {
-                console.error('Error processing and forwarding market data:', error);
-            }
+            // } catch (error) {
+            //     console.error('Error processing and forwarding market data:', error);
+            // }
         }
         
         function onconnect() {

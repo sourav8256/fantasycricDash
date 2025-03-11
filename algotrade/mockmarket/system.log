@@ -1263,3 +1263,18 @@
     "BANKNIFTY"
   ]
 }
+2025-03-11T05:04:20.853Z: Client disconnected
+2025-03-11T05:04:25.581Z: Client connected
+2025-03-11T05:04:25.583Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-11T05:04:25.583Z: Created new symbol BANKNIFTY with initial price 913.2411949367475
+2025-03-11T05:04:37.675Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}

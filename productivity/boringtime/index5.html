@@ -402,6 +402,7 @@
             <p>Total Boring Time: <span id="totalTime">0</span> minutes</p>
             <p>Sessions Completed: <span id="sessionsCompleted">0</span></p>
             <p>Completion Rate: <span id="completionRate">0</span>%</p>
+            <p>Daily Streak (< 100min): <span id="dailyStreak">0</span> days</p>
         </div>
 
         <div class="log-section">
@@ -430,6 +431,8 @@
         let sessionNotes = localStorage.getItem('sessionNotes') || '';
         let lastPendingTimeUpdate = Date.now();
         let realTimePendingInterval = null;
+        let dailyStreak = parseInt(localStorage.getItem('dailyStreak')) || 0;
+        let lastStreakCheck = localStorage.getItem('lastStreakCheck') || new Date().toDateString();
 
         // Initialize notes from localStorage
         document.addEventListener('DOMContentLoaded', function() {
@@ -711,6 +714,7 @@
             localStorage.setItem('pendingBoringTime', pendingBoringTime);
             document.getElementById('pendingTime').textContent = pendingBoringTime;
             updateResultantTime();
+            updateDailyStreak();
             // Reset real-time counter
             lastPendingTimeUpdate = Date.now();
             document.getElementById('realTimePending').textContent = '';
@@ -835,6 +839,7 @@
             document.getElementById('sessionsCompleted').textContent = sessionsCompleted;
             const rate = sessionsStarted === 0 ? 100 : Math.round((sessionsCompleted / sessionsStarted) * 100);
             document.getElementById('completionRate').textContent = rate;
+            updateDailyStreak();
         }
 
         function addLogEntry(type, minutes, timestamp = new Date()) {
@@ -1029,6 +1034,32 @@
             } else {
                 resultantTime.textContent = `${pendingBoringTime}:00`;
             }
+        }
+
+        function updateDailyStreak() {
+            const today = new Date().toDateString();
+            const yesterday = new Date(Date.now() - 86400000).toDateString(); // 24 hours ago
+            
+            if (lastStreakCheck !== today) {
+                // If we missed a day and pending time was over 100, reset streak
+                if (lastStreakCheck !== yesterday && pendingBoringTime >= 100) {
+                    dailyStreak = 0;
+                }
+                // If pending time is under 100, increment streak
+                else if (pendingBoringTime < 100) {
+                    dailyStreak++;
+                }
+                // If pending time is over 100, reset streak
+                else {
+                    dailyStreak = 0;
+                }
+                
+                lastStreakCheck = today;
+                localStorage.setItem('lastStreakCheck', lastStreakCheck);
+                localStorage.setItem('dailyStreak', dailyStreak);
+            }
+            
+            document.getElementById('dailyStreak').textContent = dailyStreak;
         }
     </script>
 </body>

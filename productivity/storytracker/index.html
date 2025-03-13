@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Point Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .input-container {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        input {
+            padding: 8px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .log-container {
+            border-top: 2px solid #ccc;
+            margin-top: 20px;
+        }
+        .log-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .time-left {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .accumulated {
+            background-color: #f0f0f0;
+            font-style: italic;
+            margin-top: 20px;
+            border-top: 2px dashed #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Story Point Tracker</h1>
+    
+    <div class="time-left">
+        Time Left: <span id="timeLeft">8:00</span>
+    </div>
+
+    <div class="input-container">
+        <div class="form-group">
+            <input type="text" id="storyName" placeholder="Enter story name" required>
+            <input type="number" id="storyPoints" placeholder="Story points" required min="0" step="0.5">
+            <button onclick="addStory()">Add Story</button>
+            <button onclick="resetAll()" style="background-color: #ff4444;">Reset All</button>
+        </div>
+    </div>
+
+    <div class="log-container">
+        <h2>Log of Previous Entries</h2>
+        <div id="logEntries"></div>
+    </div>
+
+    <script>
+        // Initialize local storage keys if they don't exist
+        if (!localStorage.getItem('initialTime')) {
+            localStorage.setItem('initialTime', new Date().getTime());
+            localStorage.setItem('totalStoryHours', '0');
+            localStorage.setItem('entries', JSON.stringify([]));
+        }
+
+        let entries = JSON.parse(localStorage.getItem('entries') || '[]');
+        let totalStoryHours = parseFloat(localStorage.getItem('totalStoryHours'));
+        const initialTime = parseInt(localStorage.getItem('initialTime'));
+
+        function updateTimeLeft() {
+            const currentTime = new Date().getTime();
+            const elapsedHours = (currentTime - initialTime) / (1000 * 60 * 60); // Convert ms to hours
+            const remainingMinutes = (totalStoryHours * 3 - elapsedHours) * 60;
+            
+            const isNegative = remainingMinutes < 0;
+            const absoluteMinutes = Math.abs(remainingMinutes);
+            const hours = Math.floor(absoluteMinutes / 60);
+            const minutes = Math.floor(absoluteMinutes % 60);
+            
+            document.getElementById('timeLeft').textContent = 
+                `${isNegative ? '-' : ''}${hours}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        function addStory() {
+            const storyName = document.getElementById('storyName').value;
+            const storyPoints = parseFloat(document.getElementById('storyPoints').value);
+
+            if (!storyName || isNaN(storyPoints)) {
+                alert('Please fill in both fields');
+                return;
+            }
+
+            const timestamp = new Date().toLocaleString();
+            entries.unshift({
+                timestamp,
+                storyName,
+                storyPoints
+            });
+
+            // Update total story hours
+            totalStoryHours += storyPoints;
+            
+            // Save to local storage
+            localStorage.setItem('entries', JSON.stringify(entries));
+            localStorage.setItem('totalStoryHours', totalStoryHours.toString());
+
+            updateTimeLeft();
+            updateLog();
+
+            // Clear inputs
+            document.getElementById('storyName').value = '';
+            document.getElementById('storyPoints').value = '';
+        }
+
+        function updateLog() {
+            const logContainer = document.getElementById('logEntries');
+            
+            // Split entries into recent and old
+            const recentEntries = entries.slice(0, 10);
+            const oldEntries = entries.slice(10);
+            
+            // Calculate accumulated points from old entries
+            const accumulatedPoints = oldEntries.reduce((sum, entry) => sum + entry.storyPoints, 0);
+            
+            // Generate HTML for recent entries
+            let html = recentEntries.map(entry => `
+                <div class="log-entry">
+                    <span>${entry.timestamp} - ${entry.storyName}</span>
+                    <span>${entry.storyPoints} points</span>
+                </div>
+            `).join('');
+            
+            // Add accumulated entry if there are old entries
+            if (oldEntries.length > 0) {
+                html += `
+                    <div class="log-entry accumulated">
+                        <span>Accumulated from ${oldEntries.length} older entries</span>
+                        <span>${accumulatedPoints} points</span>
+                    </div>
+                `;
+            }
+            
+            logContainer.innerHTML = html;
+        }
+
+        function resetAll() {
+            if (confirm('Are you sure you want to reset everything? This cannot be undone.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // Initialize the display
+        updateTimeLeft();
+        updateLog();
+
+        // Update timer every minute
+        setInterval(updateTimeLeft, 60000);
+    </script>
+</body>
+</html>

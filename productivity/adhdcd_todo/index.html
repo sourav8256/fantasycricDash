@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADHD-Friendly To-Do List with Countdown Progress</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .todo-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .separator {
+            border-top: 1px dashed #999;
+            margin: 10px 0;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+        }
+        
+        .task-checkbox {
+            margin-right: 10px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .task-checkbox:hover::after {
+            content: attr(data-task-id);
+            position: absolute;
+            top: -25px;
+            left: 0;
+            background-color: #333;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 10;
+            font-family: monospace;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .task-name {
+            width: 250px;
+            margin-right: 20px;
+        }
+        
+        .task-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        
+        .task-id {
+            font-size: 0.7em;
+            color: #999;
+            margin-top: -5px;
+            margin-bottom: 5px;
+            margin-left: 25px;
+            font-family: monospace;
+        }
+        
+        .progress-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .progress-bar {
+            margin-right: 15px;
+            letter-spacing: -2px;
+        }
+        
+        .progress-percentage {
+            width: 50px;
+            margin-right: 15px;
+            text-align: right;
+        }
+        
+        .time-remaining {
+            width: 120px;
+        }
+        
+        .completed {
+            color: #28a745;
+        }
+        
+        .legend {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+        }
+        
+        .add-task-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        input, button, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .task-input {
+            flex: 2;
+        }
+        
+        .time-input {
+            flex: 1;
+        }
+        
+        .task-counter {
+            text-align: right;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .time-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="todo-container">
+        <h1>📌 TO-DO LIST (With Countdown Progress)</h1>
+        <div class="separator"></div>
+        
+        <div id="task-counter" class="task-counter">Active Tasks: 0/10</div>
+        <div id="active-task-list">
+            <!-- Active task items will be added here dynamically -->
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="legend">
+            Legend: [ ] = Pending | [x] = Completed | ⏳ = Time Remaining
+        </div>
+        
+        <div class="add-task-container">
+            <div id="max-tasks-warning" style="display: none; color: #d9534f; text-align: center; margin-bottom: 10px;">
+                ⚠️ Maximum of 10 active tasks reached. Please complete some tasks before adding new ones.
+            </div>
+            <div class="form-row">
+                <input type="text" id="task-input" class="task-input" placeholder="Enter a new task...">
+            </div>
+            <div class="form-row">
+                <div class="time-label">Time remaining:</div>
+            </div>
+            <div class="form-row">
+                <input type="number" id="months-input" class="time-input" placeholder="Months" min="0" max="12">
+                <input type="number" id="weeks-input" class="time-input" placeholder="Weeks" min="0" max="4">
+                <input type="number" id="days-input" class="time-input" placeholder="Days" min="0" max="31">
+            </div>
+            <div class="form-row">
+                <input type="number" id="hours-input" class="time-input" placeholder="Hours" min="0" max="24">
+                <input type="number" id="minutes-input" class="time-input" placeholder="Minutes" min="0" max="59">
+                <select id="progress-input">
+                    <option value="100">100% remaining</option>
+                    <option value="90">90% remaining</option>
+                    <option value="80">80% remaining</option>
+                    <option value="70">70% remaining</option>
+                    <option value="60">60% remaining</option>
+                    <option value="50">50% remaining</option>
+                    <option value="40">40% remaining</option>
+                    <option value="30">30% remaining</option>
+                    <option value="20">20% remaining</option>
+                    <option value="10">10% remaining</option>
+                    <option value="0">0% remaining</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <button id="add-task-btn">Add Task</button>
+            </div>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <h3 id="completed-header" style="display: none;">✅ COMPLETED ITEMS</h3>
+        <div id="completed-task-list">
+            <!-- Completed task items will be added here dynamically -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial empty tasks array (removed default items)
+            const initialTasks = [];
+
+            // Load tasks from localStorage or use initial tasks
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || initialTasks;
+            
+            // Add unique IDs to tasks if they don't have them
+            tasks = tasks.map(task => {
+                if (!task.id) {
+                    return {
+                        ...task,
+                        id: generateUniqueId()
+                    };
+                }
+                return task;
+            });
+            
+            // Restore form field values from localStorage if available
+            restoreFormValues();
+            
+            // Function to save form field values to localStorage
+            function saveFormValues() {
+                const formValues = {
+                    months: document.getElementById('months-input').value,
+                    weeks: document.getElementById('weeks-input').value,
+                    days: document.getElementById('days-input').value,
+                    hours: document.getElementById('hours-input').value,
+                    minutes: document.getElementById('minutes-input').value,
+                    progress: document.getElementById('progress-input').value
+                };
+                localStorage.setItem('formValues', JSON.stringify(formValues));
+            }
+            
+            // Function to restore form field values from localStorage
+            function restoreFormValues() {
+                const savedValues = JSON.parse(localStorage.getItem('formValues'));
+                if (savedValues) {
+                    document.getElementById('months-input').value = savedValues.months || '';
+                    document.getElementById('weeks-input').value = savedValues.weeks || '';
+                    document.getElementById('days-input').value = savedValues.days || '';
+                    document.getElementById('hours-input').value = savedValues.hours || '';
+                    document.getElementById('minutes-input').value = savedValues.minutes || '';
+                    document.getElementById('progress-input').value = savedValues.progress || '100'; // Default to 100% remaining
+                }
+            }
+            
+            // Generate a unique ID
+            function generateUniqueId() {
+                return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            // Update task format if needed (for users with old format in localStorage)
+            tasks = tasks.map(task => {
+                if (!task.timeLeft.hasOwnProperty('months')) {
+                    return {
+                        ...task,
+                        timeLeft: {
+                            months: 0,
+                            weeks: 0,
+                            days: 0,
+                            hours: task.timeLeft.hours || 0,
+                            minutes: task.timeLeft.minutes || 0
+                        }
+                    };
+                }
+                return task;
+            });
+            
+            // Update and render tasks
+            function renderTasks() {
+                const activeTaskList = document.getElementById('active-task-list');
+                const completedTaskList = document.getElementById('completed-task-list');
+                const completedHeader = document.getElementById('completed-header');
+                const taskCounter = document.getElementById('task-counter');
+                const maxTasksWarning = document.getElementById('max-tasks-warning');
+                
+                // Clear both lists
+                activeTaskList.innerHTML = '';
+                completedTaskList.innerHTML = '';
+                
+                // Filter tasks into active and completed
+                const activeTasks = tasks.filter(task => !task.completed);
+                const completedTasks = tasks.filter(task => task.completed);
+                
+                // Update task counter
+                taskCounter.textContent = `Active Tasks: ${activeTasks.length}/10`;
+                
+                // Show warning if max tasks reached
+                maxTasksWarning.style.display = activeTasks.length >= 10 ? 'block' : 'none';
+                
+                // Show or hide completed header based on if there are completed tasks
+                completedHeader.style.display = completedTasks.length > 0 ? 'block' : 'none';
+                
+                // Render active tasks
+                activeTasks.forEach((task, globalIndex) => {
+                    const taskItem = createTaskElement(task, globalIndex);
+                    activeTaskList.appendChild(taskItem);
+                });
+                
+                // Render completed tasks
+                completedTasks.forEach((task) => {
+                    // Find the actual index in the global tasks array using the task ID
+                    const globalIndex = tasks.findIndex(t => t.id === task.id);
+                    
+                    const taskItem = createTaskElement(task, globalIndex);
+                    completedTaskList.appendChild(taskItem);
+                });
+                
+                // Save to localStorage
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+            
+            // Create a task list item element
+            function createTaskElement(task, index) {
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                taskItem.dataset.taskId = task.id;
+                
+                // Create checkbox
+                const checkbox = document.createElement('div');
+                checkbox.className = 'task-checkbox';
+                checkbox.textContent = task.completed ? '[x]' : '[ ]';
+                checkbox.dataset.taskId = task.id;
+                checkbox.title = `Task ID: ${task.id}`;
+                checkbox.addEventListener('click', () => toggleTask(task.id));
+                
+                // Task info container (name and ID)
+                const taskInfoContainer = document.createElement('div');
+                taskInfoContainer.style.display = 'flex';
+                taskInfoContainer.style.flexDirection = 'column';
+                taskInfoContainer.className = 'task-info';
+                
+                // Task name
+                const taskName = document.createElement('div');
+                taskName.className = 'task-name';
+                taskName.textContent = task.name;
+                
+                // Task ID
+                const taskId = document.createElement('div');
+                taskId.className = 'task-id';
+                taskId.textContent = `ID: ${task.id}`;
+                
+                // Add name and ID to container
+                taskInfoContainer.appendChild(taskName);
+                taskInfoContainer.appendChild(taskId);
+                
+                // Progress container
+                const progressContainer = document.createElement('div');
+                progressContainer.className = 'progress-container';
+                
+                if (task.completed) {
+                    // For completed tasks
+                    const completedStatus = document.createElement('div');
+                    completedStatus.className = 'completed';
+                    completedStatus.textContent = '✅ Completed';
+                    progressContainer.appendChild(completedStatus);
+                } else {
+                    // Calculate real time remaining
+                    const realTimeRemaining = calculateRealTimeRemaining(task);
+                    
+                    // Progress bar
+                    const progressBar = document.createElement('div');
+                    progressBar.className = 'progress-bar';
+                    progressBar.textContent = createProgressBar(task.progress);
+                    
+                    // Progress percentage
+                    const progressPercentage = document.createElement('div');
+                    progressPercentage.className = 'progress-percentage';
+                    progressPercentage.textContent = `${task.progress}% remaining`;
+                    
+                    // Time remaining
+                    const timeRemaining = document.createElement('div');
+                    timeRemaining.className = 'time-remaining';
+                    timeRemaining.textContent = formatTimeRemaining(realTimeRemaining);
+                    
+                    progressContainer.appendChild(progressBar);
+                    progressContainer.appendChild(progressPercentage);
+                    progressContainer.appendChild(timeRemaining);
+                }
+                
+                // Add all elements to task item
+                taskItem.appendChild(checkbox);
+                taskItem.appendChild(taskInfoContainer);
+                taskItem.appendChild(progressContainer);
+                
+                return taskItem;
+            }
+            
+            // Create visual progress bar
+            function createProgressBar(percentage) {
+                const totalBlocks = 10;
+                const filledBlocks = Math.round(percentage / 10); // For countdown: filled = remaining
+                const emptyBlocks = totalBlocks - filledBlocks;
+                
+                return '[' + '█'.repeat(filledBlocks) + '░'.repeat(emptyBlocks) + ']';
+            }
+            
+            // Format time remaining
+            function formatTimeRemaining(timeLeft) {
+                if (timeLeft.months === 0 && timeLeft.weeks === 0 && timeLeft.days === 0 && 
+                    timeLeft.hours === 0 && timeLeft.minutes === 0) {
+                    return "0m left";
+                }
+                
+                let result = '';
+                if (timeLeft.months > 0) {
+                    result += `${timeLeft.months}mo `;
+                }
+                if (timeLeft.weeks > 0) {
+                    result += `${timeLeft.weeks}w `;
+                }
+                if (timeLeft.days > 0) {
+                    result += `${timeLeft.days}d `;
+                }
+                if (timeLeft.hours > 0) {
+                    result += `${timeLeft.hours}h `;
+                }
+                if (timeLeft.minutes > 0) {
+                    result += `${timeLeft.minutes}m`;
+                }
+                
+                return `(${result.trim()} left)`;
+            }
+            
+            // Calculate actual time remaining based on creation time and initial duration
+            function calculateRealTimeRemaining(task) {
+                if (task.completed) {
+                    return { months: 0, weeks: 0, days: 0, hours: 0, minutes: 0 };
+                }
+                
+                // If task doesn't have createdAt or initialTime (for backward compatibility)
+                if (!task.createdAt || !task.initialTime) {
+                    return task.timeLeft;
+                }
+                
+                // Calculate total minutes of initial time
+                const minutesInMonth = 43200; // 30 days * 24 hours * 60 minutes
+                const minutesInWeek = 10080;  // 7 days * 24 hours * 60 minutes
+                const minutesInDay = 1440;    // 24 hours * 60 minutes
+                const minutesInHour = 60;
+                
+                const initialTotalMinutes = 
+                    (task.initialTime.months * minutesInMonth) +
+                    (task.initialTime.weeks * minutesInWeek) +
+                    (task.initialTime.days * minutesInDay) +
+                    (task.initialTime.hours * minutesInHour) +
+                    task.initialTime.minutes;
+                
+                // Calculate elapsed minutes since creation
+                const elapsedMinutes = Math.floor((Date.now() - task.createdAt) / 60000);
+                
+                // Calculate remaining minutes
+                let remainingMinutes = Math.max(0, initialTotalMinutes - elapsedMinutes);
+                
+                // Convert back to months, weeks, days, hours, minutes
+                const months = Math.floor(remainingMinutes / minutesInMonth);
+                remainingMinutes -= months * minutesInMonth;
+                
+                const weeks = Math.floor(remainingMinutes / minutesInWeek);
+                remainingMinutes -= weeks * minutesInWeek;
+                
+                const days = Math.floor(remainingMinutes / minutesInDay);
+                remainingMinutes -= days * minutesInDay;
+                
+                const hours = Math.floor(remainingMinutes / minutesInHour);
+                remainingMinutes -= hours * minutesInHour;
+                
+                const minutes = remainingMinutes;
+                
+                return { months, weeks, days, hours, minutes };
+            }
+            
+            // Toggle task completed status
+            function toggleTask(taskId) {
+                // Find the task by ID
+                const taskIndex = tasks.findIndex(task => task.id === taskId);
+                
+                if (taskIndex !== -1) {
+                    // Toggle completed status
+                    tasks[taskIndex].completed = !tasks[taskIndex].completed;
+                    
+                    if (tasks[taskIndex].completed) {
+                        tasks[taskIndex].progress = 0; // Set to 0% remaining when completed
+                        tasks[taskIndex].timeLeft = { months: 0, weeks: 0, days: 0, hours: 0, minutes: 0 };
+                    }
+                    
+                    renderTasks();
+                }
+            }
+            
+            // Add new task
+            document.getElementById('add-task-btn').addEventListener('click', function() {
+                const taskName = document.getElementById('task-input').value.trim();
+                const months = parseInt(document.getElementById('months-input').value) || 0;
+                const weeks = parseInt(document.getElementById('weeks-input').value) || 0;
+                const days = parseInt(document.getElementById('days-input').value) || 0;
+                const hours = parseInt(document.getElementById('hours-input').value) || 0;
+                const minutes = parseInt(document.getElementById('minutes-input').value) || 0;
+                const progress = parseInt(document.getElementById('progress-input').value);
+                
+                // Count active tasks
+                const activeTasks = tasks.filter(task => !task.completed);
+                
+                if (activeTasks.length >= 10) {
+                    // Show the max tasks warning
+                    document.getElementById('max-tasks-warning').style.display = 'block';
+                    return; // Don't add the task
+                }
+                
+                // Check if any time is specified
+                const hasTimeSpecified = months > 0 || weeks > 0 || days > 0 || hours > 0 || minutes > 0;
+                
+                if (taskName && hasTimeSpecified) {
+                    const newTask = {
+                        id: generateUniqueId(),
+                        name: taskName,
+                        progress: progress,
+                        timeLeft: { months, weeks, days, hours, minutes },
+                        initialTime: { months, weeks, days, hours, minutes }, // Store initial time setting
+                        createdAt: Date.now(), // Store timestamp when task was created
+                        completed: false
+                    };
+                    
+                    tasks.push(newTask);
+                    renderTasks();
+                    
+                    // Clear only the task name field, retain time values
+                    document.getElementById('task-input').value = '';
+                    
+                    // Save form values to localStorage
+                    saveFormValues();
+                }
+            });
+            
+            // Add event listeners to form fields to save values when changed
+            document.getElementById('months-input').addEventListener('change', saveFormValues);
+            document.getElementById('weeks-input').addEventListener('change', saveFormValues);
+            document.getElementById('days-input').addEventListener('change', saveFormValues);
+            document.getElementById('hours-input').addEventListener('change', saveFormValues);
+            document.getElementById('minutes-input').addEventListener('change', saveFormValues);
+            document.getElementById('progress-input').addEventListener('change', saveFormValues);
+            
+            // Initialize the app
+            renderTasks();
+            
+            // Update task times and render (now running every second to be more responsive)
+            function updateTasks() {
+                let updated = false;
+                
+                tasks.forEach(task => {
+                    if (!task.completed) {
+                        // Calculate real time remaining
+                        const realTimeRemaining = calculateRealTimeRemaining(task);
+                        
+                        // Store the calculated time remaining back in the task object
+                        task.timeLeft = realTimeRemaining;
+                        
+                        // If time is up, update the task progress accordingly
+                        if (realTimeRemaining.months === 0 && realTimeRemaining.weeks === 0 && 
+                            realTimeRemaining.days === 0 && realTimeRemaining.hours === 0 && 
+                            realTimeRemaining.minutes === 0) {
+                            // Optionally reduce progress to 0 or mark as completed when time is up
+                            // task.progress = 0;
+                            // task.completed = true;
+                        }
+                        
+                        updated = true;
+                    }
+                });
+                
+                if (updated) {
+                    renderTasks();
+                }
+            }
+            
+            // Start a more frequent timer (update every second)
+            setInterval(updateTasks, 1000);
+            
+            // Add initialTime and createdAt for backward compatibility with existing tasks
+            tasks = tasks.map(task => {
+                if (!task.initialTime) {
+                    task.initialTime = { ...task.timeLeft };
+                }
+                if (!task.createdAt) {
+                    task.createdAt = Date.now(); // Set current time for existing tasks
+                }
+                return task;
+            });
+        });
+    </script>
+</body>
+</html>

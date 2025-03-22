@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADHD Countdown Timer</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .timer-row {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .timer-index {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background-color: #3498db;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+        }
+        
+        .timer-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        
+        .progress-container {
+            flex-grow: 1;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 10px;
+            transition: width 1s linear;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-right: 15px;
+        }
+        
+        .reset-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .reset-button:hover {
+            background-color: #2980b9;
+        }
+        
+        .delete-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .delete-button:hover {
+            background-color: #c0392b;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .time-settings {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .time-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .time-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .time-input-group input {
+            width: 60px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .time-input-group label {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .apply-button {
+            display: block;
+            margin: 10px auto 0;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .apply-button:hover {
+            background-color: #388E3C;
+        }
+        
+        /* Confirmation dialog styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .confirmation-dialog {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .dialog-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .dialog-message {
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .dialog-cancel {
+            padding: 8px 15px;
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .dialog-confirm {
+            padding: 8px 15px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .dialog-cancel:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .dialog-confirm:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <h1>ADHD Countdown Timer</h1>
+    
+    <div class="time-settings">
+        <h3 style="text-align: center; margin-top: 0;">Set Timer Duration</h3>
+        <div class="time-inputs">
+            <div class="time-input-group">
+                <input type="number" id="minutes" min="0" value="0">
+                <label for="minutes">mn</label>
+            </div>
+            <div class="time-input-group">
+                <input type="number" id="hours" min="0" value="0">
+                <label for="hours">h</label>
+            </div>
+            <div class="time-input-group">
+                <input type="number" id="days" min="0" value="0">
+                <label for="days">d</label>
+            </div>
+            <div class="time-input-group">
+                <input type="number" id="weeks" min="0" value="0">
+                <label for="weeks">w</label>
+            </div>
+            <div class="time-input-group">
+                <input type="number" id="months" min="0" value="0">
+                <label for="months">m</label>
+            </div>
+            <div class="time-input-group">
+                <input type="number" id="years" min="0" value="0">
+                <label for="years">y</label>
+            </div>
+        </div>
+        <button id="applyTimeSettings" class="apply-button">Apply to All Timers</button>
+    </div>
+    
+    <div class="timer-container" id="timerContainer">
+        <!-- Timer rows will be added here by JavaScript -->
+    </div>
+    
+    <div class="controls">
+        <button id="addTimer">Add Timer</button>
+        <button id="resetAll">Reset All</button>
+    </div>
+    
+    <script>
+        // Default timer settings
+        let DEFAULT_TIME = 60; // Default time in seconds
+        let timers = [];
+        
+        // Create initial timers
+        window.addEventListener('DOMContentLoaded', () => {
+            // Load saved timer settings from localStorage
+            loadSavedSettings();
+            
+            // Calculate initial default time from saved settings
+            DEFAULT_TIME = calculateTotalSeconds();
+            
+            // Load saved timer states or create new ones
+            const savedTimerStates = loadTimerStates();
+            
+            if (savedTimerStates && savedTimerStates.length > 0) {
+                // Restore saved timer states
+                savedTimerStates.forEach(savedTimer => {
+                    addNewTimerWithState(savedTimer);
+                });
+            } else {
+                // Create 4 initial timers if no saved states
+                for (let i = 0; i < 4; i++) {
+                    addNewTimer();
+                }
+            }
+            
+            document.getElementById('addTimer').addEventListener('click', addNewTimer);
+            document.getElementById('resetAll').addEventListener('click', resetAllTimers);
+            document.getElementById('applyTimeSettings').addEventListener('click', applyTimeSettings);
+            
+            // Add input change listeners to save settings
+            const timeInputs = ['minutes', 'hours', 'days', 'weeks', 'months', 'years'];
+            timeInputs.forEach(id => {
+                document.getElementById(id).addEventListener('change', saveSettings);
+            });
+            
+            // Save timer states periodically
+            setInterval(saveTimerStates, 1000);
+            
+            // Save timer states before page unloads
+            window.addEventListener('beforeunload', saveTimerStates);
+            
+            // Add debug info for time conversion
+            console.log("Time conversion constants:");
+            console.log(`1 minute = ${60} seconds`);
+            console.log(`1 hour = ${60 * 60} seconds`);
+            console.log(`1 day = ${60 * 60 * 24} seconds`);
+            console.log(`1 week = ${60 * 60 * 24 * 7} seconds`);
+            console.log(`1 month ≈ ${60 * 60 * 24 * 30} seconds`);
+            console.log(`1 year ≈ ${60 * 60 * 24 * 365} seconds`);
+        });
+        
+        function saveSettings() {
+            const settings = {
+                minutes: document.getElementById('minutes').value,
+                hours: document.getElementById('hours').value,
+                days: document.getElementById('days').value,
+                weeks: document.getElementById('weeks').value,
+                months: document.getElementById('months').value,
+                years: document.getElementById('years').value
+            };
+            
+            localStorage.setItem('timerSettings', JSON.stringify(settings));
+        }
+        
+        function loadSavedSettings() {
+            const savedSettings = localStorage.getItem('timerSettings');
+            
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                
+                document.getElementById('minutes').value = settings.minutes || 0;
+                document.getElementById('hours').value = settings.hours || 0;
+                document.getElementById('days').value = settings.days || 0;
+                document.getElementById('weeks').value = settings.weeks || 0;
+                document.getElementById('months').value = settings.months || 0;
+                document.getElementById('years').value = settings.years || 0;
+            }
+        }
+        
+        function saveTimerStates() {
+            const timerStates = timers.map(timer => ({
+                startTime: timer.startTime,
+                duration: timer.duration,
+                isRunning: timer.isRunning,
+                endTime: timer.endTime
+            }));
+            
+            localStorage.setItem('timerStates', JSON.stringify(timerStates));
+        }
+        
+        function loadTimerStates() {
+            const savedStates = localStorage.getItem('timerStates');
+            return savedStates ? JSON.parse(savedStates) : null;
+        }
+        
+        function calculateTotalSeconds() {
+            // Get values from inputs
+            const minutes = parseInt(document.getElementById('minutes').value) || 0;
+            const hours = parseInt(document.getElementById('hours').value) || 0;
+            const days = parseInt(document.getElementById('days').value) || 0;
+            const weeks = parseInt(document.getElementById('weeks').value) || 0;
+            const months = parseInt(document.getElementById('months').value) || 0;
+            const years = parseInt(document.getElementById('years').value) || 0;
+            
+            // Define time constants (in seconds)
+            const SECONDS_PER_MINUTE = 60;
+            const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;         // 3,600
+            const SECONDS_PER_DAY = SECONDS_PER_HOUR * 24;            // 86,400
+            const SECONDS_PER_WEEK = SECONDS_PER_DAY * 7;             // 604,800
+            const SECONDS_PER_MONTH = SECONDS_PER_DAY * 30;           // 2,592,000 (approx)
+            const SECONDS_PER_YEAR = SECONDS_PER_DAY * 365;           // 31,536,000 (approx)
+            
+            // Calculate total seconds
+            const totalSeconds = (minutes * SECONDS_PER_MINUTE) +
+                                (hours * SECONDS_PER_HOUR) +
+                                (days * SECONDS_PER_DAY) +
+                                (weeks * SECONDS_PER_WEEK) +
+                                (months * SECONDS_PER_MONTH) +
+                                (years * SECONDS_PER_YEAR);
+            
+            console.log(`Time calculation:
+                Minutes: ${minutes} × ${SECONDS_PER_MINUTE} = ${minutes * SECONDS_PER_MINUTE} seconds
+                Hours: ${hours} × ${SECONDS_PER_HOUR} = ${hours * SECONDS_PER_HOUR} seconds
+                Days: ${days} × ${SECONDS_PER_DAY} = ${days * SECONDS_PER_DAY} seconds
+                Weeks: ${weeks} × ${SECONDS_PER_WEEK} = ${weeks * SECONDS_PER_WEEK} seconds
+                Months: ${months} × ${SECONDS_PER_MONTH} = ${months * SECONDS_PER_MONTH} seconds
+                Years: ${years} × ${SECONDS_PER_YEAR} = ${years * SECONDS_PER_YEAR} seconds
+                Total: ${totalSeconds} seconds`);
+            
+            // Return at least 1 second if all inputs are 0
+            return totalSeconds > 0 ? totalSeconds : 60;
+        }
+        
+        function applyTimeSettings() {
+            // Save settings before applying
+            saveSettings();
+            
+            // Calculate new duration and log it
+            DEFAULT_TIME = calculateTotalSeconds();
+            console.log(`Applied new timer duration: ${DEFAULT_TIME} seconds`);
+            console.log(`That's approximately ${formatTime(DEFAULT_TIME)}`);
+            
+            // Update all existing timers
+            timers.forEach((timer, index) => {
+                timer.duration = DEFAULT_TIME * 1000; // Convert to milliseconds
+                resetTimer(index);
+            });
+            
+            // Save updated timer states
+            saveTimerStates();
+        }
+        
+        function addNewTimer() {
+            const now = Date.now();
+            const timerState = {
+                startTime: now,
+                duration: DEFAULT_TIME * 1000, // Convert to milliseconds
+                isRunning: true,
+                endTime: now + (DEFAULT_TIME * 1000)
+            };
+            
+            addNewTimerWithState(timerState);
+        }
+        
+        function updateTimerIndexes() {
+            // Update the visual index numbers of all timers
+            const timerElements = document.querySelectorAll('.timer-row');
+            timerElements.forEach((element, index) => {
+                const indexElement = element.querySelector('.timer-index');
+                if (indexElement) {
+                    indexElement.textContent = (index + 1).toString();
+                }
+            });
+        }
+        
+        function addNewTimerWithState(timerState) {
+            const timerContainer = document.getElementById('timerContainer');
+            const timerIndex = timers.length;
+            
+            // Handle timers that should have already ended
+            const now = Date.now();
+            let isRunning = timerState.isRunning;
+            
+            // If the timer should have ended while the page was closed
+            if (timerState.endTime < now && isRunning) {
+                isRunning = false;
+            }
+            
+            // Calculate remaining time in milliseconds
+            const remainingMs = Math.max(0, timerState.endTime - now);
+            const remainingSeconds = Math.ceil(remainingMs / 1000);
+            
+            // Create timer row elements
+            const timerRow = document.createElement('div');
+            timerRow.className = 'timer-row';
+            
+            // Add index number
+            const indexElement = document.createElement('div');
+            indexElement.className = 'timer-index';
+            indexElement.textContent = (timerIndex + 1).toString();
+            timerRow.appendChild(indexElement);
+            
+            // Create button group
+            const buttonGroup = document.createElement('div');
+            buttonGroup.className = 'button-group';
+            
+            // Create reset button
+            const resetButton = document.createElement('button');
+            resetButton.className = 'reset-button';
+            resetButton.textContent = 'Reset';
+            resetButton.addEventListener('click', () => resetTimer(timerIndex));
+            
+            // Create delete button with confirmation
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.textContent = 'Delete';
+            deleteButton.addEventListener('click', () => showDeleteConfirmation(timerIndex));
+            
+            // Add buttons to button group
+            buttonGroup.appendChild(resetButton);
+            buttonGroup.appendChild(deleteButton);
+            
+            const timerValue = document.createElement('div');
+            timerValue.className = 'timer-value';
+            timerValue.textContent = `(${formatTime(remainingSeconds)})`;
+            
+            const progressContainer = document.createElement('div');
+            progressContainer.className = 'progress-container';
+            
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            const progressPercentage = (remainingMs / timerState.duration) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+            
+            // Build the timer row
+            progressContainer.appendChild(progressBar);
+            timerRow.appendChild(buttonGroup);
+            timerRow.appendChild(timerValue);
+            timerRow.appendChild(progressContainer);
+            timerContainer.appendChild(timerRow);
+            
+            // Create timer object with timestamp-based tracking
+            const timer = {
+                element: timerRow,
+                valueElement: timerValue,
+                progressBar: progressBar,
+                indexElement: indexElement,
+                startTime: timerState.startTime,
+                duration: timerState.duration,
+                endTime: timerState.endTime,
+                isRunning: isRunning,
+                interval: null
+            };
+            
+            // Start the timer if it should be running
+            if (isRunning) {
+                startTimer(timer, timerIndex);
+            } else {
+                // For completed timers, just show 0
+                updateTimerDisplay(timer);
+            }
+            
+            // Add to timers array
+            timers.push(timer);
+            
+            // Save timer states after adding a new one
+            saveTimerStates();
+        }
+        
+        function showDeleteConfirmation(index) {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            
+            // Create confirmation dialog
+            const dialog = document.createElement('div');
+            dialog.className = 'confirmation-dialog';
+            
+            // Add dialog content
+            const title = document.createElement('div');
+            title.className = 'dialog-title';
+            title.textContent = 'Delete Timer';
+            
+            const message = document.createElement('div');
+            message.className = 'dialog-message';
+            message.textContent = `Are you sure you want to delete Timer #${index + 1}?`;
+            
+            const buttonGroup = document.createElement('div');
+            buttonGroup.className = 'dialog-buttons';
+            
+            // Add cancel button
+            const cancelButton = document.createElement('button');
+            cancelButton.className = 'dialog-cancel';
+            cancelButton.textContent = 'Cancel';
+            cancelButton.addEventListener('click', () => {
+                document.body.removeChild(overlay);
+            });
+            
+            // Add confirm button
+            const confirmButton = document.createElement('button');
+            confirmButton.className = 'dialog-confirm';
+            confirmButton.textContent = 'Delete';
+            confirmButton.addEventListener('click', () => {
+                document.body.removeChild(overlay);
+                deleteTimer(index);
+            });
+            
+            // Build dialog
+            buttonGroup.appendChild(cancelButton);
+            buttonGroup.appendChild(confirmButton);
+            dialog.appendChild(title);
+            dialog.appendChild(message);
+            dialog.appendChild(buttonGroup);
+            overlay.appendChild(dialog);
+            
+            // Add to document
+            document.body.appendChild(overlay);
+        }
+        
+        function deleteTimer(index) {
+            // Get the timer to delete
+            const timer = timers[index];
+            
+            // Stop the interval if it's running
+            if (timer.interval) {
+                clearInterval(timer.interval);
+            }
+            
+            // Remove the timer element from DOM
+            timer.element.remove();
+            
+            // Remove the timer from our array
+            timers.splice(index, 1);
+            
+            // Update indexes
+            updateTimerIndexes();
+            
+            // Recreate event listeners for all timers since indexes have changed
+            rebindEventListeners();
+            
+            // Save timer states after deletion
+            saveTimerStates();
+        }
+        
+        function rebindEventListeners() {
+            // Rebind all event listeners with correct indexes
+            document.querySelectorAll('.reset-button').forEach((button, index) => {
+                // Clone and replace to remove old event listeners
+                const newButton = button.cloneNode(true);
+                newButton.addEventListener('click', () => resetTimer(index));
+                button.parentNode.replaceChild(newButton, button);
+            });
+            
+            document.querySelectorAll('.delete-button').forEach((button, index) => {
+                // Clone and replace to remove old event listeners
+                const newButton = button.cloneNode(true);
+                newButton.addEventListener('click', () => showDeleteConfirmation(index));
+                button.parentNode.replaceChild(newButton, button);
+            });
+        }
+        
+        function startTimer(timer, index) {
+            // Clear any existing interval
+            if (timer.interval) {
+                clearInterval(timer.interval);
+            }
+            
+            timer.isRunning = true;
+            
+            timer.interval = setInterval(() => {
+                const now = Date.now();
+                const remainingMs = Math.max(0, timer.endTime - now);
+                
+                if (remainingMs > 0) {
+                    updateTimerDisplay(timer);
+                } else {
+                    clearInterval(timer.interval);
+                    timer.isRunning = false;
+                    updateTimerDisplay(timer);
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay(timer) {
+            // Calculate remaining time based on end timestamp
+            const now = Date.now();
+            const remainingMs = Math.max(0, timer.endTime - now);
+            const remainingSeconds = Math.ceil(remainingMs / 1000);
+            
+            // Format the timer display value
+            const displayValue = formatTime(remainingSeconds);
+            timer.valueElement.textContent = `(${displayValue})`;
+            
+            // Update the progress bar
+            const progressPercentage = (remainingMs / timer.duration) * 100;
+            timer.progressBar.style.width = `${progressPercentage}%`;
+        }
+        
+        function formatTime(seconds) {
+            // For very large values
+            if (seconds >= 86400) { // More than a day
+                const days = Math.floor(seconds / 86400);
+                const hours = Math.floor((seconds % 86400) / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                
+                if (days >= 7) {
+                    const weeks = Math.floor(days / 7);
+                    const remainingDays = days % 7;
+                    
+                    if (weeks >= 4) {
+                        const months = Math.floor(weeks / 4);
+                        const remainingWeeks = weeks % 4;
+                        
+                        if (months >= 12) {
+                            const years = Math.floor(months / 12);
+                            const remainingMonths = months % 12;
+                            
+                            return `${years}y ${remainingMonths}m`;
+                        }
+                        
+                        return `${months}m ${remainingWeeks}w`;
+                    }
+                    
+                    return `${weeks}w ${remainingDays}d`;
+                }
+                
+                return `${days}d ${hours}h`;
+            }
+            
+            // Format as hh:mm:ss for smaller values
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m ${secs}s`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            } else {
+                return `${secs}s`;
+            }
+        }
+        
+        function resetTimer(index) {
+            const timer = timers[index];
+            if (timer) {
+                const now = Date.now();
+                
+                // Reset timer state
+                timer.startTime = now;
+                timer.endTime = now + timer.duration;
+                timer.isRunning = true;
+                
+                // Update display
+                updateTimerDisplay(timer);
+                
+                // Restart the timer
+                startTimer(timer, index);
+                
+                // Save timer states after reset
+                saveTimerStates();
+            }
+        }
+        
+        function resetAllTimers() {
+            timers.forEach((timer, index) => {
+                resetTimer(index);
+            });
+            
+            // Save timer states after reset all
+            saveTimerStates();
+        }
+    </script>
+</body>
+</html>

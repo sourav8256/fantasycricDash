@@ -289,27 +289,25 @@ button:hover {
     .section-title {
         font-size: 1.1rem;
         width: 100%;
+        margin-bottom: 10px;
     }
     
     .section-header {
-        flex-direction: column;
-        align-items: flex-start;
+        position: relative;
+        padding-bottom: 50px; /* Make space for the buttons below */
     }
     
     .add-task-btn, .delete-section-btn {
-        margin-top: 5px;
-        align-self: flex-end;
+        position: absolute;
+        bottom: 0;
+        margin: 0;
     }
     
-    .section-header .delete-section-btn {
-        position: absolute;
-        top: 0;
-        right: 50px;
+    .delete-section-btn {
+        left: 0;
     }
     
-    .section-header .add-task-btn {
-        position: absolute;
-        top: 0;
+    .add-task-btn {
         right: 0;
     }
     
@@ -355,5 +353,14 @@ button:hover {
         font-size: 0.8rem;
         color: #999;
         padding-bottom: 5px;
+    }
+    
+    /* Ensure buttons are visible in very small screens */
+    .section-header {
+        padding-bottom: 60px;
+    }
+    
+    .delete-section-btn, .add-task-btn {
+        padding: 10px;
     }
 } 

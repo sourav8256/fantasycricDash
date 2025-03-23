@@ -50,6 +50,42 @@ h1 {
     width: 100%;
 }
 
+/* Data controls (import/export) */
+.data-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.export-btn, .import-btn {
+    background-color: #4285f4;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.export-btn:hover, .import-btn:hover {
+    background-color: #3367d6;
+}
+
+.export-btn::before {
+    content: "📤";
+}
+
+.import-btn::before {
+    content: "📥";
+}
+
+#import-file {
+    display: none; /* Hide the actual file input */
+}
+
 /* Section styles */
 .habit-section {
     margin-bottom: 20px;
@@ -280,6 +316,16 @@ button:hover {
         justify-content: center;
     }
     
+    .data-controls {
+        flex-wrap: wrap;
+    }
+    
+    .export-btn, .import-btn {
+        flex: 1;
+        justify-content: center;
+        min-width: 120px;
+    }
+    
     #prev-week, #next-week {
         width: 45%;
         text-align: center;
@@ -362,5 +408,14 @@ button:hover {
     
     .delete-section-btn, .add-task-btn {
         padding: 10px;
+    }
+    
+    .data-controls {
+        gap: 5px;
+    }
+    
+    .export-btn, .import-btn {
+        font-size: 0.9rem;
+        padding: 8px 10px;
     }
 } 

@@ -238,7 +238,10 @@ document.addEventListener('DOMContentLoaded', () => {
         inputName: document.getElementById('input-name'),
         modalSaveBtn: document.getElementById('modal-save'),
         sectionTemplate: document.getElementById('section-template'),
-        habitRowTemplate: document.getElementById('habit-row-template')
+        habitRowTemplate: document.getElementById('habit-row-template'),
+        exportBtn: document.getElementById('export-btn'),
+        importBtn: document.getElementById('import-btn'),
+        importFile: document.getElementById('import-file')
     };
 
     // Edit state
@@ -578,6 +581,116 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Data import and export functions
+    const dataTransfer = {
+        // Export current data to a JSON file
+        exportData: function() {
+            try {
+                // Get the current formatted data for storage
+                const formattedData = {
+                    currentWeekStart: data.currentWeekStart,
+                    sections: data.sections.map(section => ({
+                        name: storage._stripEmoji(section.title),
+                        tasks: section.habits.map(habit => ({
+                            name: habit.name,
+                            progress: { ...habit.status }
+                        }))
+                    }))
+                };
+                
+                // Convert to JSON string
+                const jsonData = JSON.stringify(formattedData, null, 2);
+                
+                // Create a Blob containing the data
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                
+                // Create a URL for the blob
+                const url = URL.createObjectURL(blob);
+                
+                // Create a temporary anchor element
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Generate a filename with the current date
+                const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+                a.download = `habit_tracker_${date}.json`;
+                
+                // Simulate a click on the anchor
+                document.body.appendChild(a);
+                a.click();
+                
+                // Clean up
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Confirm to user
+                alert('Data exported successfully!');
+            } catch (error) {
+                console.error('Error exporting data:', error);
+                alert('There was an error exporting your data. Please try again.');
+            }
+        },
+        
+        // Import data from a JSON file
+        importData: function(file) {
+            try {
+                if (!file) {
+                    alert('No file selected.');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        
+                        // Validate the imported data structure
+                        if (!importedData.sections || !Array.isArray(importedData.sections) || !importedData.currentWeekStart) {
+                            throw new Error('Invalid data format');
+                        }
+                        
+                        // Ask for confirmation before overwriting
+                        if (confirm('This will replace all your current data. Continue?')) {
+                            // Load and format the imported data
+                            data = {
+                                currentWeekStart: new Date(importedData.currentWeekStart),
+                                sections: importedData.sections.map((section, sIndex) => ({
+                                    id: `section_${sIndex}`,
+                                    title: storage._getIconForSection(section.name) + ' ' + section.name,
+                                    habits: section.tasks.map((task, tIndex) => ({
+                                        id: `habit_${sIndex}_${tIndex}`,
+                                        name: task.name,
+                                        status: task.progress || {}
+                                    }))
+                                }))
+                            };
+                            
+                            // Save to localStorage and update UI
+                            storage.save(data);
+                            ui.updateDateRange();
+                            ui.renderSections();
+                            
+                            alert('Data imported successfully!');
+                        }
+                    } catch (error) {
+                        console.error('Error processing imported data:', error);
+                        alert('Invalid data format. Please select a valid habit tracker export file.');
+                    }
+                };
+                
+                reader.onerror = function() {
+                    alert('Error reading file. Please try again.');
+                };
+                
+                reader.readAsText(file);
+            } catch (error) {
+                console.error('Error importing data:', error);
+                alert('There was an error importing your data. Please try again.');
+            }
+        }
+    };
+
     // Set up event listeners
     function setupEventListeners() {
         // Navigation buttons
@@ -604,6 +717,22 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('click', (event) => {
             if (event.target === elements.modal) {
                 elements.modal.style.display = 'none';
+            }
+        });
+        
+        // Export and import buttons
+        elements.exportBtn.addEventListener('click', () => dataTransfer.exportData());
+        
+        elements.importBtn.addEventListener('click', () => {
+            // Trigger the hidden file input
+            elements.importFile.click();
+        });
+        
+        elements.importFile.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                dataTransfer.importData(event.target.files[0]);
+                // Reset the file input so the same file can be selected again
+                event.target.value = '';
             }
         });
         

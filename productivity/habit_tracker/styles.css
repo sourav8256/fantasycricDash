@@ -1,0 +1,359 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Header styles */
+header {
+    padding: 20px;
+}
+
+.header-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+h1 {
+    font-size: 1.5rem;
+    text-align: center;
+    color: #333;
+    width: 100%;
+    order: -1;
+    margin-bottom: 10px;
+}
+
+.header-divider {
+    height: 2px;
+    background-color: #333;
+    margin: 5px 0;
+    width: 100%;
+}
+
+/* Section styles */
+.habit-section {
+    margin-bottom: 20px;
+    padding: 0 20px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0 5px 0;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    color: #333;
+    flex-grow: 1;
+}
+
+.delete-section-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 10px;
+    border-radius: 4px;
+    margin-right: 10px;
+    transition: background-color 0.2s;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.delete-section-btn:hover {
+    background-color: #ffeeee;
+}
+
+.section-divider {
+    height: 1px;
+    background-color: #ccc;
+    margin: 5px 0;
+}
+
+.section-divider.bottom {
+    margin-top: 10px;
+}
+
+/* Table styles */
+.habit-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    position: relative;
+}
+
+/* Remove the shadow completely - no ::after pseudo-element */
+.habit-table-container::after {
+    content: none !important; /* Use !important to override any other styles */
+    display: none !important;
+}
+
+.habit-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Ensures table doesn't get too squished */
+}
+
+.habit-table th, .habit-table td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.task-header {
+    width: 25%;
+    text-align: left;
+}
+
+.actions-header {
+    width: 100px;
+    text-align: center;
+}
+
+.task-name {
+    text-align: left;
+    font-weight: normal;
+}
+
+.status-cell {
+    cursor: pointer;
+    font-size: 1.2rem;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.status-cell:hover {
+    background-color: #f5f5f5;
+}
+
+/* Task action buttons */
+.task-actions {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.edit-task-btn, .delete-task-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.edit-task-btn:hover {
+    background-color: #e8f4fc;
+}
+
+.delete-task-btn:hover {
+    background-color: #ffeeee;
+}
+
+/* Buttons */
+button {
+    padding: 8px 12px;
+    border: none;
+    background-color: #f0f0f0;
+    color: #333;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-height: 44px;
+    min-width: 44px;
+}
+
+button:hover {
+    background-color: #e0e0e0;
+}
+
+.add-section-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+#add-section-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+}
+
+.close-modal {
+    float: right;
+    cursor: pointer;
+    font-size: 1.5rem;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#modal-form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#input-name {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px; /* Prevents iOS zoom on input focus */
+    min-height: 44px;
+}
+
+#modal-save {
+    align-self: flex-end;
+    background-color: #4caf50;
+    color: white;
+    padding: 10px 15px;
+}
+
+#modal-save:hover {
+    background-color: #45a049;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        border-radius: 6px;
+    }
+    
+    h1 {
+        font-size: 1.2rem;
+    }
+    
+    .header-nav {
+        justify-content: center;
+    }
+    
+    #prev-week, #next-week {
+        width: 45%;
+        text-align: center;
+        padding: 12px 8px;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        width: 100%;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .add-task-btn, .delete-section-btn {
+        margin-top: 5px;
+        align-self: flex-end;
+    }
+    
+    .section-header .delete-section-btn {
+        position: absolute;
+        top: 0;
+        right: 50px;
+    }
+    
+    .section-header .add-task-btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+    
+    .habit-section {
+        position: relative;
+        padding-top: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .modal-content {
+        width: 95%;
+        margin: 30% auto;
+    }
+    
+    h1 {
+        font-size: 1.1rem;
+    }
+    
+    .habit-table th, .habit-table td {
+        padding: 8px 5px;
+    }
+    
+    .container {
+        box-shadow: none;
+    }
+    
+    /* Remove any shadow indicators in mobile view */
+    .habit-table-container::after,
+    .habit-section::after {
+        content: none !important;
+        display: none !important;
+    }
+    
+    /* Add subtle horizontal scroll indicator text under the table instead */
+    .habit-section .habit-table-container {
+        margin-bottom: 5px;
+    }
+    
+    .habit-section .habit-table-container + div.scroll-hint {
+        display: block;
+        text-align: center;
+        font-size: 0.8rem;
+        color: #999;
+        padding-bottom: 5px;
+    }
+} 

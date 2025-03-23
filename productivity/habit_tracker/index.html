@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-nav">
+                <button id="prev-week">← Older Dates</button>
+                <h1 id="date-range">Daily Habit Tracker (18 Mar - 24 Mar)</h1>
+                <button id="next-week">Future Dates →</button>
+            </div>
+            <div class="header-divider"></div>
+        </header>
+
+        <main id="habit-sections">
+            <!-- Sections will be dynamically generated -->
+        </main>
+
+        <div class="add-section-container">
+            <button id="add-section-btn">➕ Add Section</button>
+        </div>
+    </div>
+
+    <!-- Templates -->
+    <template id="section-template">
+        <section class="habit-section">
+            <div class="section-header">
+                <h2 class="section-title"></h2>
+                <button class="add-task-btn">➕ Add Task</button>
+            </div>
+            <div class="section-divider"></div>
+            <div class="habit-table-container">
+                <table class="habit-table">
+                    <thead>
+                        <tr>
+                            <th class="task-header">Task</th>
+                            <!-- Day headers will be added dynamically -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Habit rows will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="section-divider bottom"></div>
+        </section>
+    </template>
+
+    <template id="habit-row-template">
+        <tr class="habit-row">
+            <td class="task-name"></td>
+            <!-- Status cells will be added dynamically -->
+        </tr>
+    </template>
+
+    <!-- Modal for adding new tasks/sections -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="modal-title">Add New Task</h2>
+            <div id="modal-form">
+                <input type="text" id="input-name" placeholder="Enter name">
+                <button id="modal-save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

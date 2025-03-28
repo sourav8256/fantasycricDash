@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px 0;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            overflow-y: auto;
+        }
+
+        body::after {
+            content: "";
+            display: block;
+            height: 20px;
+        }
+
+        .timer-container {
+            width: 350px;
+            border: 2px solid #333;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .timer-header {
+            text-align: center;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            font-weight: bold;
+        }
+
+        .timer-body {
+            padding: 15px;
+        }
+
+        .timer-footer {
+            padding: 10px;
+            border-top: 1px solid #333;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #eee;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #333;
+            border-radius: 10px;
+            transition: width 1s;
+        }
+
+        .timer-info {
+            margin: 10px 0;
+        }
+
+        .button {
+            cursor: pointer;
+            padding: 5px 10px;
+            margin: 0 5px;
+            background: none;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+        }
+
+        .button:hover {
+            text-decoration: underline;
+        }
+
+        .focus .timer-header {
+            background-color: #ffcdd2;
+        }
+
+        .break .timer-header {
+            background-color: #c8e6c9;
+        }
+
+        .settings .timer-header {
+            background-color: #e1f5fe;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .settings-input {
+            width: 50px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            padding: 3px;
+            margin: 0 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .save-button {
+            cursor: pointer;
+            padding: 5px 15px;
+            margin-top: 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .save-button:hover {
+            background-color: #555;
+        }
+
+        .points {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        /* Rewards Shop Styles */
+        .reward-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .reward-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .reward-title {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .reward-cost {
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .redeem-button {
+            cursor: pointer;
+            padding: 3px 8px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .redeem-button:hover {
+            background-color: #388e3c;
+        }
+
+        .redeem-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .add-reward-row {
+            display: flex;
+            margin-top: 15px;
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+        }
+
+        .reward-input {
+            flex-grow: 1;
+            font-family: 'Courier New', monospace;
+            padding: 5px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .history-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Modal styles for displaying storage data */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: auto;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        .json-display {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            margin-top: 15px;
+        }
+
+        .copy-json {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* JSON Display at bottom */
+        .json-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 5px;
+            border: 2px solid #333;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .json-container-header {
+            text-align: center;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            font-weight: bold;
+            background-color: #e1f5fe;
+        }
+
+        .json-container .json-display {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 0;
+            padding: 15px;
+        }
+
+        .json-actions {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <!-- Storage Data Display Modal -->
+    <div id="storage-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>localStorage Data</h2>
+            <button id="copy-json-btn" class="copy-json">Copy to Clipboard</button>
+            <div id="json-display" class="json-display"></div>
+        </div>
+    </div>
+
+    <!-- Focus Timer -->
+    <div id="focus-timer" class="timer-container focus">
+        <div class="timer-header">🍅 POMODORO TIMER</div>
+        <div class="timer-body">
+            <div class="timer-info">Session Type: 🔴 Focus</div>
+            <div class="timer-info">Time Left: <span id="focus-time">25:00</span></div>
+            <div class="progress-bar">
+                <div id="focus-progress" class="progress" style="width: 0%;"></div>
+            </div>
+            <div class="timer-info">Next Break in: <span id="focus-next">25:00</span> min</div>
+        </div>
+        <div class="timer-footer">
+            <button id="focus-pause" class="button">⏯ Pause</button>
+            <button id="focus-restart" class="button">🔄 Restart</button>
+            <button id="focus-skip" class="button">⏭ Skip</button>
+        </div>
+    </div>
+
+    <!-- Break Timer -->
+    <div id="break-timer" class="timer-container break hidden">
+        <div class="timer-header">🍃 BREAK TIME</div>
+        <div class="timer-body">
+            <div class="timer-info">Session Type: ☕ Short Break</div>
+            <div class="timer-info">Time Left: <span id="break-time">05:00</span></div>
+            <div class="progress-bar">
+                <div id="break-progress" class="progress" style="width: 0%;"></div>
+            </div>
+            <div class="timer-info">Next Focus in: <span id="break-next">05:00</span> min</div>
+        </div>
+        <div class="timer-footer">
+            <button id="break-pause" class="button">⏯ Pause</button>
+            <button id="break-restart" class="button">🔄 Restart</button>
+            <button id="break-skip" class="button">⏭ Skip</button>
+        </div>
+    </div>
+
+    <!-- Cycle Tracker -->
+    <div class="timer-container">
+        <div class="timer-header">🏆 POMODORO CYCLE</div>
+        <div class="timer-body" id="cycle-tracker">
+            <!-- Cycle status will be dynamically inserted -->
+        </div>
+        <div class="timer-footer">
+            <div id="points-summary">💰 Purse: 0 Coins | 🎯 Goal: 100 Coins = Reward</div>
+            <div id="reminder-message">🔔 Reminder: Stay Focused!</div>
+        </div>
+    </div>
+
+    <!-- Rewards Shop Panel -->
+    <div id="rewards-panel" class="timer-container settings">
+        <div class="timer-header">🎁 REWARDS SHOP</div>
+        <div class="timer-body">
+            <div class="tab-container">
+                <div class="tab active" data-tab="shop">Available Rewards</div>
+                <div class="tab" data-tab="history">Redemption History</div>
+            </div>
+            
+            <div id="shop-tab" class="tab-content active">
+                <div id="rewards-list">
+                    <!-- Rewards will be dynamically inserted here -->
+                </div>
+                
+                <!-- Custom Redemption Section -->
+                <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                    <h3 style="margin-top: 0;">Custom Redemption</h3>
+                    <div class="reward-item" style="background-color: #f0f0f0;">
+                        <input id="custom-reward-title" class="reward-input" type="text" placeholder="Enter custom reward...">
+                        <input id="custom-redeem-points" class="settings-input" type="number" min="1" value="10" style="width: 60px;">
+                        <button id="custom-redeem-btn" class="redeem-button">Redeem</button>
+                    </div>
+                </div>
+                
+                <div class="add-reward-row">
+                    <input id="new-reward-title" class="reward-input" type="text" placeholder="Add new reward...">
+                    <input id="new-reward-cost" class="settings-input" type="number" min="1" value="25">
+                    <button id="add-reward-btn" class="redeem-button">Add</button>
+                </div>
+            </div>
+            
+            <div id="history-tab" class="tab-content">
+                <div id="redemption-history">
+                    <!-- Redemption history will be dynamically inserted here -->
+                    <div class="history-item">No rewards redeemed yet.</div>
+                </div>
+            </div>
+        </div>
+        <div class="timer-footer">
+            <div id="rewards-points-summary">💰 Available Coins: 0</div>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="timer-container settings">
+        <div class="timer-header">⚙️ POMODORO SETTINGS</div>
+        <div class="timer-body">
+            <div class="settings-row">
+                <div>⏱️ Focus Time (minutes):</div>
+                <input id="focus-time-setting" type="number" min="1" max="120" value="25" class="settings-input">
+            </div>
+            <div class="settings-row">
+                <div>☕ Short Break (minutes):</div>
+                <input id="short-break-setting" type="number" min="1" max="30" value="5" class="settings-input">
+            </div>
+            <div class="settings-row">
+                <div>🌴 Long Break (minutes):</div>
+                <input id="long-break-setting" type="number" min="5" max="60" value="15" class="settings-input">
+            </div>
+            <div class="settings-row" style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 20px;">
+                <div>🎯 Focus Session Points:</div>
+                <input id="focus-points" type="number" min="1" max="100" value="10" class="settings-input">
+            </div>
+            <div class="settings-row">
+                <div>☕ Break Session Points:</div>
+                <input id="break-points" type="number" min="0" max="50" value="5" class="settings-input">
+            </div>
+            <div class="settings-row">
+                <div>🔥 Streak Bonus:</div>
+                <input id="streak-bonus" type="number" min="0" max="20" value="3" class="settings-input">
+            </div>
+            <div class="settings-row">
+                <div>🎯 Goal Points:</div>
+                <input id="goal-points" type="number" min="1" max="1000" value="100" class="settings-input">
+            </div>
+        </div>
+        <div class="timer-footer">
+            <button id="save-settings" class="save-button">💾 Save Settings</button>
+            <button id="export-settings" class="save-button" style="margin-left: 10px; background-color: #4caf50;">📤 Export</button>
+            <button id="show-storage" class="save-button" style="margin-left: 10px; background-color: #2196F3;">🔍 View Storage</button>
+        </div>
+    </div>
+
+    <!-- JSON Display Container -->
+    <div id="json-container" class="json-container" style="display: none;">
+        <div class="json-container-header">🔄 Current Saved Data (pomodoroData)</div>
+        <pre id="bottom-json-display" class="json-display"></pre>
+        <div class="json-actions">
+            <button id="copy-bottom-json" class="copy-json">📋 Copy to Clipboard</button>
+            <button id="hide-json" class="save-button" style="background-color: #f44336;">❌ Hide</button>
+        </div>
+    </div>
+
+    <script>
+        // Timer variables - now based on settings
+        let focusTimeSetting = 25; // Default: 25 minutes
+        let shortBreakSetting = 5; // Default: 5 minutes
+        let longBreakSetting = 15; // Default: 15 minutes
+        
+        // Calculated time in seconds
+        let FOCUS_TIME = focusTimeSetting * 60;
+        let SHORT_BREAK_TIME = shortBreakSetting * 60;
+        let LONG_BREAK_TIME = longBreakSetting * 60;
+        
+        // Timer state
+        let currentMode = 'focus';
+        let currentTime = FOCUS_TIME;
+        let timerInterval = null;
+        let isPaused = false;
+        let currentPomodoro = 0;
+        let currentStreak = 0;
+        let totalPoints = 0;
+        
+        // Timestamp variables for accurate timing
+        let sessionStartTime = null;
+        let sessionDuration = FOCUS_TIME * 1000; // in milliseconds
+        let pauseStartTime = null;
+        let totalPausedTime = 0; // total time spent paused in milliseconds
+        
+        // Points system
+        let pointsSettings = {
+            focusPoints: 10,
+            breakPoints: 5,
+            streakBonus: 3,
+            goalPoints: 100
+        };
+        
+        // Rewards system
+        let rewards = [
+            // Default rewards removed as requested
+        ];
+        
+        let redeemHistory = [];
+        
+        // Initialize cycle status with points tracking
+        let cycleStatus = [
+            { focus: '⏳', break: '☐', focusPoints: 0 },
+            { focus: '☐', break: '☐', focusPoints: 0 },
+            { focus: '☐', break: '☐', focusPoints: 0 },
+            { focus: '☐', break: '☐', focusPoints: 0 }
+        ];
+        
+        // DOM elements
+        const focusTimer = document.getElementById('focus-timer');
+        const breakTimer = document.getElementById('break-timer');
+        const cycleTracker = document.getElementById('cycle-tracker');
+        
+        const focusTimeEl = document.getElementById('focus-time');
+        const focusNextEl = document.getElementById('focus-next');
+        const focusProgressEl = document.getElementById('focus-progress');
+        const focusPauseBtn = document.getElementById('focus-pause');
+        const focusRestartBtn = document.getElementById('focus-restart');
+        const focusSkipBtn = document.getElementById('focus-skip');
+        
+        const breakTimeEl = document.getElementById('break-time');
+        const breakNextEl = document.getElementById('break-next');
+        const breakProgressEl = document.getElementById('break-progress');
+        const breakPauseBtn = document.getElementById('break-pause');
+        const breakRestartBtn = document.getElementById('break-restart');
+        const breakSkipBtn = document.getElementById('break-skip');
+        
+        const reminderEl = document.getElementById('reminder-message');
+        const pointsSummaryEl = document.getElementById('points-summary');
+        
+        // Settings elements
+        const focusPointsInput = document.getElementById('focus-points');
+        const breakPointsInput = document.getElementById('break-points');
+        const streakBonusInput = document.getElementById('streak-bonus');
+        const goalPointsInput = document.getElementById('goal-points');
+        const saveSettingsBtn = document.getElementById('save-settings');
+        
+        // Time settings elements
+        const focusTimeSettingInput = document.getElementById('focus-time-setting');
+        const shortBreakSettingInput = document.getElementById('short-break-setting');
+        const longBreakSettingInput = document.getElementById('long-break-setting');
+        
+        // Rewards elements
+        const rewardsListEl = document.getElementById('rewards-list');
+        const rewardsPointsSummaryEl = document.getElementById('rewards-points-summary');
+        const newRewardTitleInput = document.getElementById('new-reward-title');
+        const newRewardCostInput = document.getElementById('new-reward-cost');
+        const addRewardBtn = document.getElementById('add-reward-btn');
+        const redemptionHistoryEl = document.getElementById('redemption-history');
+        const tabButtons = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Custom redemption elements
+        const customRewardTitleInput = document.getElementById('custom-reward-title');
+        const customRedeemPointsInput = document.getElementById('custom-redeem-points');
+        const customRedeemBtn = document.getElementById('custom-redeem-btn');
+        
+        // Helper functions
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function startTimer() {
+            clearInterval(timerInterval);
+            isPaused = false;
+            
+            // If timer is being resumed after pause
+            if (pauseStartTime !== null) {
+                // Add the pause duration to totalPausedTime
+                totalPausedTime += Date.now() - pauseStartTime;
+                pauseStartTime = null;
+            }
+            
+            // If starting a fresh session
+            if (sessionStartTime === null) {
+                sessionStartTime = Date.now();
+                if (currentMode === 'focus') {
+                    sessionDuration = FOCUS_TIME * 1000;
+                } else {
+                    sessionDuration = (currentPomodoro === 3 ? LONG_BREAK_TIME : SHORT_BREAK_TIME) * 1000;
+                }
+                totalPausedTime = 0;
+            }
+            
+            updatePauseButton();
+            
+            timerInterval = setInterval(() => {
+                updateTimerDisplay();
+                
+                // Check if time is up
+                const elapsedTime = Date.now() - sessionStartTime - totalPausedTime;
+                if (elapsedTime >= sessionDuration) {
+                    clearInterval(timerInterval);
+                    completeCurrentSession();
+                }
+            }, 200); // Update more frequently for smoother display
+        }
+        
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isPaused = true;
+            // Record the time when paused
+            pauseStartTime = Date.now();
+            updatePauseButton();
+        }
+        
+        function updatePauseButton() {
+            const pauseBtn = currentMode === 'focus' ? focusPauseBtn : breakPauseBtn;
+            pauseBtn.textContent = isPaused ? '▶️ Resume' : '⏯ Pause';
+        }
+        
+        function updateTimerDisplay() {
+            // Calculate remaining time using timestamps
+            const elapsedTime = sessionStartTime ? (Date.now() - sessionStartTime - totalPausedTime) : 0;
+            const remainingTime = Math.max(0, Math.ceil((sessionDuration - elapsedTime) / 1000));
+            
+            // Update time display and progress
+            if (currentMode === 'focus') {
+                focusTimeEl.textContent = formatTime(remainingTime);
+                focusNextEl.textContent = formatTime(remainingTime);
+                const progress = 100 - (remainingTime / FOCUS_TIME * 100);
+                focusProgressEl.style.width = `${progress}%`;
+                
+                // Update the current time variable for state saving
+                currentTime = remainingTime;
+            } else {
+                const breakTimeTotal = currentPomodoro === 3 ? LONG_BREAK_TIME : SHORT_BREAK_TIME;
+                breakTimeEl.textContent = formatTime(remainingTime);
+                breakNextEl.textContent = formatTime(remainingTime);
+                const progress = 100 - (remainingTime / breakTimeTotal * 100);
+                breakProgressEl.style.width = `${progress}%`;
+                
+                // Update the current time variable for state saving
+                currentTime = remainingTime;
+            }
+        }
+        
+        function awardPoints(isBreak) {
+            let pointsEarned = 0;
+            
+            if (!isBreak) {
+                // Award focus points
+                pointsEarned = pointsSettings.focusPoints;
+                
+                // Add streak bonus if applicable
+                if (currentStreak > 0) {
+                    pointsEarned += pointsSettings.streakBonus;
+                }
+                
+                cycleStatus[currentPomodoro].focusPoints = pointsEarned;
+                currentStreak++;
+            } else {
+                // Award break points
+                pointsEarned = pointsSettings.breakPoints;
+            }
+            
+            // Add to total
+            totalPoints += pointsEarned;
+            updatePointsSummary();
+            
+            return pointsEarned;
+        }
+        
+        function updatePointsSummary() {
+            pointsSummaryEl.textContent = `💰 Purse: ${totalPoints} Coins | 🎯 Goal: ${pointsSettings.goalPoints} Coins = Reward`;
+            rewardsPointsSummaryEl.textContent = `💰 Available Coins: ${totalPoints}`;
+            
+            // Check if goal reached
+            if (totalPoints >= pointsSettings.goalPoints) {
+                reminderEl.textContent = '🎉 Congratulations! You reached your goal!';
+            }
+            
+            // Update reward buttons (enable/disable based on available points)
+            updateRewardButtons();
+            updateCustomRedeemButton();
+        }
+        
+        function completeCurrentSession() {
+            // Reset session timing variables for next session
+            sessionStartTime = null;
+            totalPausedTime = 0;
+            pauseStartTime = null;
+            
+            if (currentMode === 'focus') {
+                // Complete focus session
+                cycleStatus[currentPomodoro].focus = '✅';
+                cycleStatus[currentPomodoro].break = '⏳';
+                
+                // Award points
+                const pointsEarned = awardPoints(false);
+                
+                updateCycleTracker();
+                
+                // Instead of automatically switching to break mode, set up for confirmation
+                prepareBreakMode();
+                playNotificationSound();
+                reminderEl.textContent = `🔔 Focus session complete! (Earned ${pointsEarned} coins) Click Start to begin your break.`;
+            } else {
+                // Complete break session
+                cycleStatus[currentPomodoro].break = '✅';
+                
+                // Award break points
+                const pointsEarned = awardPoints(true);
+                
+                currentPomodoro = (currentPomodoro + 1) % 4;
+                
+                if (currentPomodoro === 0) {
+                    // Reset cycle after completing all 4 pomodoros
+                    resetCycle();
+                } else {
+                    cycleStatus[currentPomodoro].focus = '⏳';
+                }
+                
+                updateCycleTracker();
+                
+                // Instead of automatically switching to focus mode, set up for confirmation
+                prepareFocusMode();
+                playNotificationSound();
+                reminderEl.textContent = '🔔 Break complete! Click Start to begin your next focus session.';
+            }
+        }
+        
+        // New function to prepare for break mode but not start automatically
+        function prepareBreakMode() {
+            currentMode = 'break';
+            const breakTime = currentPomodoro === 3 ? LONG_BREAK_TIME : SHORT_BREAK_TIME;
+            currentTime = breakTime;
+            sessionStartTime = null; // Reset timing variables
+            totalPausedTime = 0;
+            pauseStartTime = null;
+            sessionDuration = breakTime * 1000;
+            
+            focusTimer.classList.add('hidden');
+            breakTimer.classList.remove('hidden');
+            
+            // Update break type text
+            const breakTypeEl = breakTimer.querySelector('.timer-info');
+            breakTypeEl.textContent = currentPomodoro === 3 ? 
+                'Session Type: 🌴 Long Break' : 
+                'Session Type: ☕ Short Break';
+                
+            updateTimerDisplay();
+            
+            // Change pause button to a start button
+            breakPauseBtn.textContent = '▶️ Start';
+            isPaused = true;
+        }
+        
+        // New function to prepare for focus mode but not start automatically
+        function prepareFocusMode() {
+            currentMode = 'focus';
+            currentTime = FOCUS_TIME;
+            sessionStartTime = null; // Reset timing variables
+            totalPausedTime = 0;
+            pauseStartTime = null;
+            sessionDuration = FOCUS_TIME * 1000;
+            
+            focusTimer.classList.remove('hidden');
+            breakTimer.classList.add('hidden');
+            updateTimerDisplay();
+            
+            // Change pause button to a start button
+            focusPauseBtn.textContent = '▶️ Start';
+            isPaused = true;
+        }
+        
+        // These functions no longer need to start the timer automatically
+        function switchToFocusMode() {
+            prepareFocusMode();
+            startTimer();
+        }
+        
+        function switchToBreakMode() {
+            prepareBreakMode();
+            startTimer();
+        }
+        
+        function resetTimer() {
+            pauseTimer();
+            
+            // Reset session timing variables
+            sessionStartTime = null;
+            totalPausedTime = 0;
+            pauseStartTime = null;
+            
+            if (currentMode === 'focus') {
+                currentTime = FOCUS_TIME;
+            } else {
+                currentTime = currentPomodoro === 3 ? LONG_BREAK_TIME : SHORT_BREAK_TIME;
+            }
+            
+            updateTimerDisplay();
+        }
+        
+        function skipSession() {
+            pauseTimer();
+            completeCurrentSession();
+        }
+        
+        function resetCycle() {
+            currentPomodoro = 0;
+            currentStreak = 0;
+            cycleStatus = [
+                { focus: '⏳', break: '☐', focusPoints: 0 },
+                { focus: '☐', break: '☐', focusPoints: 0 },
+                { focus: '☐', break: '☐', focusPoints: 0 },
+                { focus: '☐', break: '☐', focusPoints: 0 }
+            ];
+            updateCycleTracker();
+        }
+        
+        function updateCycleTracker() {
+            let trackerHTML = '';
+            
+            for (let i = 0; i < 4; i++) {
+                const focusStatus = cycleStatus[i].focus;
+                const breakStatus = cycleStatus[i].break;
+                const focusPoints = cycleStatus[i].focusPoints;
+                const breakText = i === 3 ? 'Long Break' : `Break ${i + 1}`;
+                
+                // Create HTML for points display if any earned
+                let pointsHTML = '';
+                if (focusPoints > 0) {
+                    pointsHTML = ` +<span class="points">💰 ${focusPoints}</span> Coins`;
+                }
+                
+                trackerHTML += `<div class="timer-info">${focusStatus} Focus ${i + 1}${pointsHTML}</div>`;
+                trackerHTML += `<div class="timer-info">${breakStatus} ${breakText}</div>`;
+            }
+            
+            cycleTracker.innerHTML = trackerHTML;
+        }
+        
+        function playNotificationSound() {
+            // Create an audio context and play a simple beep
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch (e) {
+                console.log('Audio notification failed:', e);
+            }
+        }
+        
+        function saveSettings() {
+            // Get values from inputs - Point settings without default fallbacks
+            pointsSettings.focusPoints = parseInt(focusPointsInput.value);
+            if (isNaN(pointsSettings.focusPoints)) pointsSettings.focusPoints = 0;
+            
+            pointsSettings.breakPoints = parseInt(breakPointsInput.value);
+            if (isNaN(pointsSettings.breakPoints)) pointsSettings.breakPoints = 0;
+            
+            pointsSettings.streakBonus = parseInt(streakBonusInput.value);
+            if (isNaN(pointsSettings.streakBonus)) pointsSettings.streakBonus = 0;
+            
+            pointsSettings.goalPoints = parseInt(goalPointsInput.value);
+            if (isNaN(pointsSettings.goalPoints)) pointsSettings.goalPoints = 0;
+            
+            // Get time settings without default fallbacks
+            const newFocusTime = parseInt(focusTimeSettingInput.value);
+            const newShortBreak = parseInt(shortBreakSettingInput.value);
+            const newLongBreak = parseInt(longBreakSettingInput.value);
+            
+            // Ensure minimum values for time settings (can't have 0 or negative)
+            focusTimeSetting = isNaN(newFocusTime) || newFocusTime <= 0 ? 1 : newFocusTime;
+            shortBreakSetting = isNaN(newShortBreak) || newShortBreak <= 0 ? 1 : newShortBreak;
+            longBreakSetting = isNaN(newLongBreak) || newLongBreak <= 0 ? 1 : newLongBreak;
+            
+            // Check if time settings changed
+            const timeSettingsChanged = (
+                newFocusTime !== focusTimeSetting ||
+                newShortBreak !== shortBreakSetting ||
+                newLongBreak !== longBreakSetting
+            );
+            
+            // Update times in seconds
+            FOCUS_TIME = focusTimeSetting * 60;
+            SHORT_BREAK_TIME = shortBreakSetting * 60;
+            LONG_BREAK_TIME = longBreakSetting * 60;
+            
+            // Update the input fields with the validated values
+            focusTimeSettingInput.value = focusTimeSetting;
+            shortBreakSettingInput.value = shortBreakSetting;
+            longBreakSettingInput.value = longBreakSetting;
+            
+            // Reset current timer if time settings changed and user confirms
+            if (timeSettingsChanged) {
+                if (confirm('Time settings have changed. Reset current timer?')) {
+                    resetTimer();
+                }
+            }
+            
+            // Update display
+            updatePointsSummary();
+            
+            // Save combined data
+            saveAllData();
+            
+            // Visual feedback for saving
+            const saveBtn = document.getElementById('save-settings');
+            saveBtn.textContent = '✅ Saved!';
+            reminderEl.textContent = '🔔 Settings saved successfully!';
+            
+            // Display JSON at the bottom of the page
+            displayJsonAtBottom();
+            
+            // Clean up old storage format
+            cleanupOldStorage();
+            
+            // Reset button text after delay
+            setTimeout(() => {
+                saveBtn.textContent = '💾 Save Settings';
+            }, 2000);
+        }
+        
+        function saveTimerState() {
+            // Save combined data
+            saveAllData();
+        }
+        
+        function saveAllData() {
+            // Create a combined object with all app data
+            const pomodoroData = {
+                settings: {
+                    ...pointsSettings,
+                    focusTime: focusTimeSetting,
+                    shortBreak: shortBreakSetting,
+                    longBreak: longBreakSetting
+                },
+                timerState: {
+                    currentMode,
+                    currentTime,
+                    isPaused,
+                    sessionStartTime,
+                    totalPausedTime,
+                    pauseStartTime,
+                    sessionDuration,
+                    currentPomodoro,
+                    currentStreak,
+                    totalPoints,
+                    cycleStatus
+                },
+                rewards: rewards,
+                redeemHistory: redeemHistory,
+                timestamp: new Date().getTime()
+            };
+            
+            // Save to localStorage as a single JSON object
+            localStorage.setItem('pomodoroData', JSON.stringify(pomodoroData));
+            
+            // Log to console for debugging
+            console.log('Data saved to localStorage:', pomodoroData);
+        }
+        
+        function loadSettings() {
+            // Load from combined data
+            loadAllData();
+        }
+        
+        function loadTimerState() {
+            // Load from combined data
+            loadAllData();
+        }
+        
+        function loadAllData() {
+            const savedData = localStorage.getItem('pomodoroData');
+            
+            if (savedData) {
+                try {
+                    const pomodoroData = JSON.parse(savedData);
+                    console.log('Loaded data from localStorage:', pomodoroData);
+                    
+                    // Load settings
+                    if (pomodoroData.settings) {
+                        // Load points settings without using default fallbacks
+                        pointsSettings = {
+                            focusPoints: pomodoroData.settings.focusPoints !== undefined ? pomodoroData.settings.focusPoints : 0,
+                            breakPoints: pomodoroData.settings.breakPoints !== undefined ? pomodoroData.settings.breakPoints : 0,
+                            streakBonus: pomodoroData.settings.streakBonus !== undefined ? pomodoroData.settings.streakBonus : 0,
+                            goalPoints: pomodoroData.settings.goalPoints !== undefined ? pomodoroData.settings.goalPoints : 0
+                        };
+                        
+                        // Load time settings without default fallbacks
+                        // But ensure minimum values for time (can't have 0 minutes)
+                        const savedFocusTime = pomodoroData.settings.focusTime;
+                        const savedShortBreak = pomodoroData.settings.shortBreak;
+                        const savedLongBreak = pomodoroData.settings.longBreak;
+                        
+                        focusTimeSetting = savedFocusTime !== undefined && savedFocusTime > 0 ? savedFocusTime : 1;
+                        shortBreakSetting = savedShortBreak !== undefined && savedShortBreak > 0 ? savedShortBreak : 1;
+                        longBreakSetting = savedLongBreak !== undefined && savedLongBreak > 0 ? savedLongBreak : 1;
+                        
+                        // Update times in seconds
+                        FOCUS_TIME = focusTimeSetting * 60;
+                        SHORT_BREAK_TIME = shortBreakSetting * 60;
+                        LONG_BREAK_TIME = longBreakSetting * 60;
+                        
+                        // Update input fields - points settings
+                        focusPointsInput.value = pointsSettings.focusPoints;
+                        breakPointsInput.value = pointsSettings.breakPoints;
+                        streakBonusInput.value = pointsSettings.streakBonus;
+                        goalPointsInput.value = pointsSettings.goalPoints;
+                        
+                        // Update input fields - time settings
+                        focusTimeSettingInput.value = focusTimeSetting;
+                        shortBreakSettingInput.value = shortBreakSetting;
+                        longBreakSettingInput.value = longBreakSetting;
+                        
+                        console.log('Settings loaded successfully:', pointsSettings);
+                        console.log('Time settings loaded:', {focusTimeSetting, shortBreakSetting, longBreakSetting});
+                    } else {
+                        console.log('No settings found in saved data, using minimal values');
+                        initializeMinimalSettings();
+                    }
+                    
+                    // Load timer state
+                    if (pomodoroData.timerState) {
+                        const state = pomodoroData.timerState;
+                        
+                        // Restore timer state
+                        currentMode = state.currentMode;
+                        currentTime = state.currentTime;
+                        isPaused = state.isPaused;
+                        currentPomodoro = state.currentPomodoro;
+                        currentStreak = state.currentStreak;
+                        totalPoints = state.totalPoints || 0;
+                        
+                        // Restore timestamp variables
+                        if (state.sessionStartTime) {
+                            sessionStartTime = state.sessionStartTime;
+                            sessionDuration = state.sessionDuration || currentTime * 1000;
+                            totalPausedTime = state.totalPausedTime || 0;
+                            pauseStartTime = state.pauseStartTime;
+                            
+                            // Check if the timer has been off for a while
+                            const now = Date.now();
+                            const savedTimestamp = pomodoroData.timestamp;
+                            
+                            // If the app has been closed for a significant time, 
+                            // adjust the pausedTime to account for it
+                            if (savedTimestamp && !isPaused) {
+                                const timeOffline = now - savedTimestamp;
+                                console.log(`App was closed for ${timeOffline/1000} seconds`);
+                                totalPausedTime += timeOffline;
+                            }
+                        } else {
+                            // Handle legacy format by converting currentTime to timestamp format
+                            sessionStartTime = Date.now() - (currentTime * 1000);
+                            sessionDuration = currentMode === 'focus' ? 
+                                FOCUS_TIME * 1000 : 
+                                (currentPomodoro === 3 ? LONG_BREAK_TIME : SHORT_BREAK_TIME) * 1000;
+                            totalPausedTime = 0;
+                        }
+                        
+                        // Restore cycle status
+                        if (state.cycleStatus) {
+                            cycleStatus = state.cycleStatus;
+                        }
+                        
+                        // Update UI based on mode
+                        if (currentMode === 'focus') {
+                            focusTimer.classList.remove('hidden');
+                            breakTimer.classList.add('hidden');
+                        } else {
+                            focusTimer.classList.add('hidden');
+                            breakTimer.classList.remove('hidden');
+                            
+                            // Update break type text
+                            const breakTypeEl = breakTimer.querySelector('.timer-info');
+                            breakTypeEl.textContent = currentPomodoro === 3 ? 
+                                'Session Type: 🌴 Long Break' : 
+                                'Session Type: ☕ Short Break';
+                        }
+                        
+                        // Update displays
+                        updateTimerDisplay();
+                        updateCycleTracker();
+                        
+                        // If the timer was paused, keep it paused
+                        if (isPaused) {
+                            pauseTimer();
+                        } else {
+                            startTimer();
+                        }
+                        
+                        console.log('Timer state loaded successfully');
+                    } else {
+                        console.log('No timer state found, starting fresh');
+                        startTimer();
+                    }
+                    
+                    // IMPORTANT: Clear all rewards as requested by user
+                    // Override any saved rewards with an empty array
+                    rewards = [];
+                    
+                    // Still load redemption history if available
+                    if (pomodoroData.redeemHistory) {
+                        redeemHistory = pomodoroData.redeemHistory;
+                    }
+                    
+                    // Update rewards UI
+                    updateRewardsList();
+                    updateRedemptionHistory();
+                    
+                    updatePointsSummary();
+                    
+                    // Save the data back to localStorage with empty rewards
+                    saveAllData();
+                    
+                } catch (e) {
+                    console.error('Error loading saved data:', e);
+                    initializeDefaultSettings();
+                    startTimer(); // Start fresh on error
+                }
+            } else {
+                console.log('No saved data found in localStorage, initializing with defaults');
+                initializeDefaultSettings();
+                startTimer();
+            }
+        }
+        
+        // Add a function to clear all rewards
+        function clearAllRewards() {
+            rewards = [];
+            saveAllData();
+            updateRewardsList();
+            reminderEl.textContent = '🔔 All saved rewards have been cleared.';
+        }
+        
+        // Initialize with minimal settings instead of defaults
+        function initializeDefaultSettings() {
+            console.log('Initializing minimal settings');
+            
+            // Set minimal point values (0 instead of defaults)
+            pointsSettings = {
+                focusPoints: 0,
+                breakPoints: 0,
+                streakBonus: 0,
+                goalPoints: 0
+            };
+            
+            // Set minimal time values (1 minute minimum to prevent errors)
+            focusTimeSetting = 1;
+            shortBreakSetting = 1;
+            longBreakSetting = 1;
+            
+            // Update times in seconds
+            FOCUS_TIME = focusTimeSetting * 60;
+            SHORT_BREAK_TIME = shortBreakSetting * 60;
+            LONG_BREAK_TIME = longBreakSetting * 60;
+            
+            // Update input fields - points
+            focusPointsInput.value = pointsSettings.focusPoints;
+            breakPointsInput.value = pointsSettings.breakPoints;
+            streakBonusInput.value = pointsSettings.streakBonus;
+            goalPointsInput.value = pointsSettings.goalPoints;
+            
+            // Update input fields - time
+            focusTimeSettingInput.value = focusTimeSetting;
+            shortBreakSettingInput.value = shortBreakSetting;
+            longBreakSettingInput.value = longBreakSetting;
+            
+            // Ensure rewards is empty
+            rewards = [];
+            
+            // Save settings to localStorage
+            saveAllData();
+            
+            updatePointsSummary();
+        }
+        
+        // Alias for backward compatibility
+        const initializeMinimalSettings = initializeDefaultSettings;
+        
+        // Clean up old storage keys (migration)
+        function cleanupOldStorage() {
+            const oldKeys = ['pomodoroSettings', 'pomodoroTotalPoints', 'pomodoroTimerState'];
+            oldKeys.forEach(key => {
+                if (localStorage.getItem(key)) {
+                    console.log('Removing old storage key:', key);
+                    localStorage.removeItem(key);
+                }
+            });
+        }
+        
+        // Add a function to export/download settings as JSON
+        function exportSettings() {
+            const dataStr = localStorage.getItem('pomodoroData');
+            if (!dataStr) return;
+            
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'pomodoro-settings.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        // Add window events to save state when page is unloaded
+        window.addEventListener('beforeunload', saveAllData);
+        
+        // Auto-save state periodically
+        setInterval(saveAllData, 5000); // Save every 5 seconds
+        
+        // Event listeners
+        focusPauseBtn.addEventListener('click', () => {
+            isPaused ? startTimer() : pauseTimer();
+        });
+        
+        focusRestartBtn.addEventListener('click', resetTimer);
+        focusSkipBtn.addEventListener('click', skipSession);
+        
+        breakPauseBtn.addEventListener('click', () => {
+            isPaused ? startTimer() : pauseTimer();
+        });
+        
+        breakRestartBtn.addEventListener('click', resetTimer);
+        breakSkipBtn.addEventListener('click', skipSession);
+        
+        saveSettingsBtn.addEventListener('click', saveSettings);
+        
+        // Add export button event listener
+        document.getElementById('export-settings').addEventListener('click', exportSettings);
+        
+        // Add show storage button event listener
+        document.getElementById('show-storage').addEventListener('click', showStorageData);
+        
+        // Add click event to close modal
+        document.querySelector('.close-modal').addEventListener('click', () => {
+            document.getElementById('storage-modal').style.display = 'none';
+        });
+        
+        // Add click event to copy JSON to clipboard
+        document.getElementById('copy-json-btn').addEventListener('click', copyJsonToClipboard);
+        
+        // Close modal when clicking outside of it
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('storage-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Add reward event listeners
+        addRewardBtn.addEventListener('click', addNewReward);
+        newRewardTitleInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                addNewReward();
+            }
+        });
+        
+        // Add custom redemption event listeners
+        customRedeemBtn.addEventListener('click', redeemCustomReward);
+        customRedeemPointsInput.addEventListener('input', updateCustomRedeemButton);
+        customRewardTitleInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                redeemCustomReward();
+            }
+        });
+        
+        // Handle tab switching
+        handleTabs();
+        
+        // Call cleanup on initial load to remove old format data
+        cleanupOldStorage();
+        
+        // Initialize the app
+        console.log('Initializing Pomodoro Timer App');
+        loadAllData();
+        updateRewardsList();
+        updateRedemptionHistory();
+
+        // Rewards functions
+        function updateRewardsList() {
+            rewardsListEl.innerHTML = '';
+            
+            if (rewards.length === 0) {
+                rewardsListEl.innerHTML = '<div class="timer-info">Use the custom redemption section below or add your own rewards.</div>';
+                return;
+            }
+            
+            rewards.forEach((reward, index) => {
+                const rewardItem = document.createElement('div');
+                rewardItem.className = 'reward-item';
+                
+                const canAfford = totalPoints >= reward.cost;
+                
+                rewardItem.innerHTML = `
+                    <div class="reward-title">${reward.title}</div>
+                    <div class="reward-cost">💰${reward.cost}</div>
+                    <button class="redeem-button" data-index="${index}" ${canAfford ? '' : 'disabled'}>
+                        ${canAfford ? 'Redeem' : 'Need more points'}
+                    </button>
+                `;
+                
+                rewardsListEl.appendChild(rewardItem);
+            });
+            
+            // Add event listeners to redeem buttons
+            document.querySelectorAll('.redeem-button[data-index]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.getAttribute('data-index'));
+                    redeemReward(index);
+                });
+            });
+        }
+        
+        function updateRewardButtons() {
+            document.querySelectorAll('.redeem-button[data-index]').forEach(button => {
+                const index = parseInt(button.getAttribute('data-index'));
+                const reward = rewards[index];
+                
+                if (totalPoints >= reward.cost) {
+                    button.removeAttribute('disabled');
+                    button.textContent = 'Redeem';
+                } else {
+                    button.setAttribute('disabled', 'disabled');
+                    button.textContent = 'Need more points';
+                }
+            });
+        }
+        
+        function updateCustomRedeemButton() {
+            const pointsToRedeem = parseInt(customRedeemPointsInput.value) || 0;
+            
+            if (totalPoints >= pointsToRedeem && pointsToRedeem > 0) {
+                customRedeemBtn.removeAttribute('disabled');
+            } else {
+                customRedeemBtn.setAttribute('disabled', 'disabled');
+            }
+        }
+        
+        function redeemReward(index) {
+            const reward = rewards[index];
+            
+            if (totalPoints >= reward.cost) {
+                // Deduct points
+                totalPoints -= reward.cost;
+                
+                // Add to history
+                const redeemTime = new Date();
+                redeemHistory.unshift({
+                    title: reward.title,
+                    cost: reward.cost,
+                    time: redeemTime.getTime()
+                });
+                
+                // Limit history to 20 items
+                if (redeemHistory.length > 20) {
+                    redeemHistory.pop();
+                }
+                
+                // Update UI
+                updatePointsSummary();
+                updateRedemptionHistory();
+                
+                // Save data
+                saveAllData();
+                
+                // Show notification
+                reminderEl.textContent = `🎉 Reward redeemed: ${reward.title} (-💰${reward.cost})`;
+                
+                // Play sound
+                playNotificationSound();
+            }
+        }
+        
+        function redeemCustomReward() {
+            const title = customRewardTitleInput.value.trim() || "Custom reward";
+            const points = parseInt(customRedeemPointsInput.value) || 0;
+            
+            if (points <= 0) {
+                alert("Please enter a positive number of points to redeem.");
+                return;
+            }
+            
+            if (totalPoints >= points) {
+                // Deduct points
+                totalPoints -= points;
+                
+                // Add to history
+                const redeemTime = new Date();
+                redeemHistory.unshift({
+                    title: title,
+                    cost: points,
+                    time: redeemTime.getTime(),
+                    custom: true
+                });
+                
+                // Limit history to 20 items
+                if (redeemHistory.length > 20) {
+                    redeemHistory.pop();
+                }
+                
+                // Reset inputs
+                customRewardTitleInput.value = '';
+                customRedeemPointsInput.value = '10';
+                
+                // Update UI
+                updatePointsSummary();
+                updateRedemptionHistory();
+                
+                // Save data
+                saveAllData();
+                
+                // Show notification
+                reminderEl.textContent = `🎉 Custom reward redeemed: ${title} (-💰${points})`;
+                
+                // Play sound
+                playNotificationSound();
+            } else {
+                alert("You don't have enough points for this redemption.");
+            }
+        }
+        
+        function updateRedemptionHistory() {
+            if (redeemHistory.length === 0) {
+                redemptionHistoryEl.innerHTML = '<div class="history-item">No rewards redeemed yet.</div>';
+                return;
+            }
+            
+            redemptionHistoryEl.innerHTML = '';
+            
+            redeemHistory.forEach(item => {
+                const date = new Date(item.time);
+                const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <strong>${item.title}</strong> (💰${item.cost}) - ${formattedDate}
+                `;
+                
+                redemptionHistoryEl.appendChild(historyItem);
+            });
+        }
+        
+        function addNewReward() {
+            const title = newRewardTitleInput.value.trim();
+            const cost = parseInt(newRewardCostInput.value) || 25;
+            
+            if (title) {
+                rewards.push({
+                    title: title,
+                    cost: cost
+                });
+                
+                newRewardTitleInput.value = '';
+                newRewardCostInput.value = '25';
+                
+                updateRewardsList();
+                saveAllData();
+            }
+        }
+        
+        function handleTabs() {
+            tabButtons.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    tabButtons.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    const tabName = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabName}-tab`).classList.add('active');
+                });
+            });
+        }
+
+        // Function to display localStorage data in modal
+        function showStorageData() {
+            const jsonDisplay = document.getElementById('json-display');
+            const storageModal = document.getElementById('storage-modal');
+            const dataStr = localStorage.getItem('pomodoroData');
+            
+            if (dataStr) {
+                try {
+                    // Parse and then stringify with formatting for better readability
+                    const data = JSON.parse(dataStr);
+                    jsonDisplay.textContent = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    jsonDisplay.textContent = "Error parsing JSON: " + e.message + "\n\nRaw data:\n" + dataStr;
+                }
+            } else {
+                jsonDisplay.textContent = "No data found in localStorage under key 'pomodoroData'";
+            }
+            
+            storageModal.style.display = 'block';
+        }
+        
+        // Function to copy JSON to clipboard
+        function copyJsonToClipboard() {
+            const jsonDisplay = document.getElementById('json-display');
+            
+            // Create a temporary textarea to copy from
+            const textarea = document.createElement('textarea');
+            textarea.value = jsonDisplay.textContent;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                // Execute copy command
+                document.execCommand('copy');
+                alert('JSON copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy text. Your browser may not support this feature.');
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        // Add a function to display JSON at the bottom of the page
+        function displayJsonAtBottom() {
+            const jsonDisplay = document.getElementById('bottom-json-display');
+            const jsonContainer = document.getElementById('json-container');
+            const dataStr = localStorage.getItem('pomodoroData');
+            
+            if (dataStr) {
+                try {
+                    // Parse and then stringify with formatting for better readability
+                    const data = JSON.parse(dataStr);
+                    jsonDisplay.textContent = JSON.stringify(data, null, 2);
+                    
+                    // Show the container
+                    jsonContainer.style.display = 'block';
+                    
+                    // Scroll to the JSON display
+                    jsonContainer.scrollIntoView({ behavior: 'smooth' });
+                } catch (e) {
+                    jsonDisplay.textContent = "Error parsing JSON: " + e.message + "\n\nRaw data:\n" + dataStr;
+                    jsonContainer.style.display = 'block';
+                }
+            } else {
+                jsonDisplay.textContent = "No data found in localStorage under key 'pomodoroData'";
+                jsonContainer.style.display = 'block';
+            }
+        }
+        
+        // Function to copy bottom JSON to clipboard
+        function copyBottomJsonToClipboard() {
+            const jsonDisplay = document.getElementById('bottom-json-display');
+            
+            // Create a temporary textarea to copy from
+            const textarea = document.createElement('textarea');
+            textarea.value = jsonDisplay.textContent;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                // Execute copy command
+                document.execCommand('copy');
+                reminderEl.textContent = '✅ JSON copied to clipboard!';
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                reminderEl.textContent = '❌ Failed to copy JSON to clipboard.';
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+    </script>
+</body>
+</html>

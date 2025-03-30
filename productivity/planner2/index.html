@@ -249,6 +249,7 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .task-card:hover {
@@ -282,11 +283,13 @@
             margin-bottom: 1rem;
             border-radius: 4px;
             height: 60px;
+            transition: all 0.2s ease;
         }
         
         .task-card.dragging {
             opacity: 0.5;
             transform: scale(0.98);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
         }
         
         .task-complete-checkbox {
@@ -902,6 +905,7 @@
                     // Only proceed with reordering if we're in the same bucket
                     // and this is the active tasks list (not completed)
                     if (taskResult && taskResult.bucketId === targetBucketId && !taskResult.task.completed) {
+                        // Get the tasks position from mouse position
                         const afterElement = getDragAfterElement(taskList, e.clientY);
                         
                         // Remove existing placeholder
@@ -938,19 +942,31 @@
                 taskList.classList.remove('drag-over');
                 
                 const taskId = e.dataTransfer.getData('text/plain');
+                let dragData = {};
+                try {
+                    const jsonData = e.dataTransfer.getData('application/json');
+                    if (jsonData) {
+                        dragData = JSON.parse(jsonData);
+                    }
+                } catch (err) {
+                    console.error('Error parsing drag data:', err);
+                }
+                
                 const taskResult = findTask(taskId);
                 
                 // Clean up any placeholders
                 document.querySelectorAll('.drag-placeholder').forEach(el => el.remove());
                 
                 if (taskResult) {
-                    if (taskResult.bucketId === taskList.dataset.bucketId && !taskResult.task.completed) {
+                    const currentBucketId = taskList.dataset.bucketId;
+                    
+                    if (taskResult.bucketId === currentBucketId && !taskResult.task.completed) {
                         // Reordering within the same bucket
                         const afterElement = getDragAfterElement(taskList, e.clientY);
                         
                         // Find the position to insert the task
                         let newPosition;
-                        const bucket = appData.buckets.find(b => b.id === taskList.dataset.bucketId);
+                        const bucket = appData.buckets.find(b => b.id === currentBucketId);
                         
                         if (afterElement) {
                             const afterTaskId = afterElement.dataset.id;
@@ -966,20 +982,32 @@
                             }
                         } else {
                             // If no afterElement, find position right before the end of active tasks
-                            newPosition = bucket.tasks.filter(t => !t.completed).length;
+                            const activeTaskCount = bucket.tasks.filter(t => !t.completed).length;
+                            newPosition = activeTaskCount > 0 ? activeTaskCount : 0;
                         }
                         
-                        // Reorder the task
-                        reorderTask(taskId, taskList.dataset.bucketId, newPosition);
+                        // If we have a valid position, proceed with reordering
+                        if (newPosition !== undefined) {
+                            reorderTask(taskId, currentBucketId, newPosition);
+                        }
                     } else {
                         // Moving between buckets
-                        moveTask(taskId, taskList.dataset.bucketId, false);
+                        moveTask(taskId, currentBucketId, false);
                     }
                 }
             });
             
             // Add active task cards to the list (non-completed tasks)
             const activeTasks = bucket.tasks.filter(task => !task.completed);
+            
+            // Sort tasks by sequence
+            activeTasks.sort((a, b) => {
+                // If sequence is undefined (for legacy tasks), use default order
+                if (a.sequence === undefined) a.sequence = 0;
+                if (b.sequence === undefined) b.sequence = 0;
+                return a.sequence - b.sequence;
+            });
+            
             activeTasks.forEach(task => {
                 const taskCard = createTaskCard(task);
                 taskList.appendChild(taskCard);
@@ -1099,6 +1127,9 @@
             const taskCard = document.createElement('div');
             taskCard.className = 'task-card';
             taskCard.dataset.id = task.id;
+            if (task.sequence) {
+                taskCard.dataset.sequence = task.sequence; // Store sequence in data attribute
+            }
             taskCard.draggable = true;
             
             // Calculate progress percentage - still needed for other functionality
@@ -1159,6 +1190,11 @@
                 }, 0);
                 
                 e.dataTransfer.setData('text/plain', task.id);
+                e.dataTransfer.setData('application/json', JSON.stringify({
+                    id: task.id,
+                    sequence: task.sequence,
+                    sourceBucketId: findTask(task.id).bucketId
+                }));
                 e.dataTransfer.effectAllowed = 'move';
             });
             
@@ -1192,14 +1228,23 @@
             let sourceTask = null;
             let sourceBucketId = null;
             let wasCompleted = false;
+            let sourceTaskIndex = -1;
             
             for (const bucket of appData.buckets) {
                 const taskIndex = bucket.tasks.findIndex(task => task.id == taskId);
                 if (taskIndex !== -1) {
                     sourceTask = {...bucket.tasks[taskIndex]};
+                    sourceTaskIndex = taskIndex;
                     wasCompleted = sourceTask.completed;
                     sourceBucketId = bucket.id;
                     bucket.tasks.splice(taskIndex, 1);
+                    
+                    // Update sequences for remaining tasks in source bucket
+                    const remainingTasksInSection = bucket.tasks.filter(t => t.completed === wasCompleted);
+                    remainingTasksInSection.forEach((t, index) => {
+                        t.sequence = index + 1;
+                    });
+                    
                     break;
                 }
             }
@@ -1212,7 +1257,8 @@
                     sourceBucketId,
                     targetBucketId,
                     wasCompleted,
-                    setCompleted
+                    setCompleted,
+                    originalIndex: sourceTaskIndex
                 };
                 
                 // Set completed flag if specified
@@ -1223,11 +1269,25 @@
                 // Add to target bucket
                 const targetBucket = appData.buckets.find(b => b.id === targetBucketId);
                 if (targetBucket) {
+                    // If moving to a different bucket or changing completion status,
+                    // assign a new sequence at the end
+                    if (targetBucketId !== sourceBucketId || wasCompleted !== sourceTask.completed) {
+                        // Find the max sequence in the target section (active or completed)
+                        const relevantTasks = targetBucket.tasks.filter(t => t.completed === sourceTask.completed);
+                        let maxSequence = 0;
+                        if (relevantTasks.length > 0) {
+                            maxSequence = Math.max(...relevantTasks.map(t => t.sequence || 0));
+                        }
+                        sourceTask.sequence = maxSequence + 1;
+                    }
+                    
                     targetBucket.tasks.push(sourceTask);
                     
                     // Show notification when marking as completed
                     if (!wasCompleted && sourceTask.completed) {
                         showNotification('Task marked as completed');
+                    } else if (targetBucketId !== sourceBucketId) {
+                        showNotification(`Task moved to ${targetBucket.name}`);
                     }
                     
                     saveData();
@@ -1240,6 +1300,13 @@
         function addTask(bucketId, taskData) {
             const bucket = appData.buckets.find(b => b.id === bucketId);
             if (bucket) {
+                // Find max sequence number in the bucket
+                let maxSequence = 0;
+                const activeTasks = bucket.tasks.filter(task => !task.completed);
+                if (activeTasks.length > 0) {
+                    maxSequence = Math.max(...activeTasks.map(task => task.sequence || 0));
+                }
+                
                 const newTask = {
                     id: generateTaskId(),
                     title: taskData.title,
@@ -1247,7 +1314,8 @@
                     subtasks: taskData.subtasks || [],
                     dueDate: taskData.dueDate || '',
                     priority: taskData.priority || 'medium',
-                    completed: false
+                    completed: false,
+                    sequence: maxSequence + 1 // Assign sequence number
                 };
                 
                 bucket.tasks.push(newTask);
@@ -1404,13 +1472,36 @@
                 
                 const sourceBucket = appData.buckets.find(b => b.id === action.sourceBucketId);
                 if (sourceBucket) {
-                    sourceBucket.tasks.push(action.task);
+                    // Restore task at its original position
+                    if (action.originalIndex >= 0 && action.originalIndex <= sourceBucket.tasks.length) {
+                        sourceBucket.tasks.splice(action.originalIndex, 0, action.task);
+                    } else {
+                        sourceBucket.tasks.push(action.task);
+                    }
+                    
+                    // Update sequences
+                    const tasksInSection = sourceBucket.tasks.filter(t => t.completed === action.wasCompleted);
+                    tasksInSection.forEach((t, index) => {
+                        t.sequence = index + 1;
+                    });
                 }
             } else if (action.type === 'delete') {
                 // Undo task delete
                 const bucket = appData.buckets.find(b => b.id === action.bucketId);
                 if (bucket) {
                     bucket.tasks.push(action.task);
+                    
+                    // Update sequences for tasks in the same section
+                    const tasksInSection = bucket.tasks.filter(t => t.completed === action.task.completed);
+                    tasksInSection.forEach((t, index) => {
+                        t.sequence = index + 1;
+                    });
+                }
+            } else if (action.type === 'reorder') {
+                // Undo reordering by restoring the original array
+                const bucket = appData.buckets.find(b => b.id === action.bucketId);
+                if (bucket) {
+                    bucket.tasks = action.originalTasks;
                 }
             }
             
@@ -1925,6 +2016,45 @@
 
         // Initialize app
         function init() {
+            const savedData = localStorage.getItem('plannerAppData');
+            if (savedData) {
+                // Initialize missing sequence numbers for legacy data
+                const data = JSON.parse(savedData);
+                let updated = false;
+                
+                data.buckets.forEach(bucket => {
+                    // Separate active and completed tasks
+                    const activeTasks = bucket.tasks.filter(task => !task.completed);
+                    const completedTasks = bucket.tasks.filter(task => task.completed);
+                    
+                    // Check if any task is missing sequence number
+                    const needsSequence = bucket.tasks.some(task => task.sequence === undefined);
+                    
+                    if (needsSequence) {
+                        // Assign sequence numbers to active tasks
+                        activeTasks.forEach((task, index) => {
+                            if (task.sequence === undefined) {
+                                task.sequence = index + 1;
+                                updated = true;
+                            }
+                        });
+                        
+                        // Assign sequence numbers to completed tasks
+                        completedTasks.forEach((task, index) => {
+                            if (task.sequence === undefined) {
+                                task.sequence = index + 1;
+                                updated = true;
+                            }
+                        });
+                    }
+                });
+                
+                // Save the updated data if needed
+                if (updated) {
+                    localStorage.setItem('plannerAppData', JSON.stringify(data));
+                }
+            }
+            
             loadData();
             setupEventListeners();
             checkDarkModePreference();
@@ -1984,12 +2114,35 @@
             
             // Extract the task
             const task = bucket.tasks[taskIndex];
+            const wasCompleted = task.completed;
+            
+            // Skip if trying to drop at the same position
+            if (taskIndex === newPosition) return;
+            
+            // Store the original task order for potential undo
+            const originalTasks = [...bucket.tasks];
+            
+            // Save the last action for potential undo
+            appData.lastAction = {
+                type: 'reorder',
+                taskId: task.id,
+                bucketId: bucketId,
+                originalPosition: taskIndex,
+                newPosition: newPosition,
+                originalTasks: originalTasks
+            };
             
             // Remove the task from its current position
             bucket.tasks.splice(taskIndex, 1);
             
             // Insert at the new position
             bucket.tasks.splice(newPosition, 0, task);
+            
+            // Update sequence numbers for all tasks in this bucket with the same completion status
+            const tasksInSameSection = bucket.tasks.filter(t => t.completed === wasCompleted);
+            tasksInSameSection.forEach((t, index) => {
+                t.sequence = index + 1;
+            });
             
             // Save the new order
             saveData();

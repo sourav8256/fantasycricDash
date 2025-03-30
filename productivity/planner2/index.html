@@ -284,6 +284,20 @@
             border-radius: 4px;
             height: 60px;
             transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        /* Add styling for the placeholder sequence number */
+        .placeholder-sequence {
+            position: absolute;
+            top: 0.3rem;
+            left: 0.3rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 0.1rem 0.4rem;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            color: #666;
         }
         
         .task-card.dragging {
@@ -734,35 +748,65 @@
         function loadData() {
             const savedData = localStorage.getItem('plannerAppData');
             if (savedData) {
-                appData = JSON.parse(savedData);
-                
-                // Make sure each task has a completed property
-                appData.buckets.forEach(bucket => {
-                    bucket.tasks.forEach(task => {
-                        if (task.completed === undefined) {
-                            task.completed = false;
-                        }
+                try {
+                    appData = JSON.parse(savedData);
+                    
+                    // Ensure each bucket's tasks have proper sequence numbers
+                    appData.buckets.forEach(bucket => {
+                        // Process active and completed tasks separately
+                        const activeTasks = bucket.tasks.filter(task => !task.completed);
+                        const completedTasks = bucket.tasks.filter(task => task.completed);
+                        
+                        // Reset sequence numbers for active tasks
+                        activeTasks.forEach((task, index) => {
+                            if (task.completed === undefined) {
+                                task.completed = false;
+                            }
+                            // Always assign a fresh sequence number
+                            task.sequence = index + 1;
+                        });
+                        
+                        // Reset sequence numbers for completed tasks
+                        completedTasks.forEach((task, index) => {
+                            if (task.completed === undefined) {
+                                task.completed = true;
+                            }
+                            // Always assign a fresh sequence number
+                            task.sequence = index + 1;
+                        });
                     });
-                });
-                
-                // Initialize lastFocusedBucketId if it doesn't exist
-                if (!appData.lastFocusedBucketId && appData.buckets.length > 0) {
-                    appData.lastFocusedBucketId = appData.buckets[0].id;
+                    
+                    // Initialize lastFocusedBucketId if it doesn't exist
+                    if (!appData.lastFocusedBucketId && appData.buckets.length > 0) {
+                        appData.lastFocusedBucketId = appData.buckets[0].id;
+                    }
+                    
+                    // Save the updated data with fixed sequence numbers
+                    saveData();
+                } catch (e) {
+                    console.error("Error loading data:", e);
+                    // Initialize with default data if loading fails
+                    resetToDefaultData();
                 }
             } else {
                 // Initialize with default buckets if no data exists
-                appData = {
-                    buckets: [
-                        { id: 'todo', name: 'To Do', tasks: [] },
-                        { id: 'inprogress', name: 'In Progress', tasks: [] }
-                    ],
-                    lastTaskId: 0,
-                    lastAction: null,
-                    lastFocusedBucketId: 'todo'
-                };
-                saveData();
+                resetToDefaultData();
             }
             renderBoard();
+        }
+        
+        // Reset to default data
+        function resetToDefaultData() {
+            appData = {
+                buckets: [
+                    { id: 'todo', name: 'To Do', tasks: [] },
+                    { id: 'inprogress', name: 'In Progress', tasks: [] }
+                ],
+                lastTaskId: 0,
+                lastAction: null,
+                lastFocusedBucketId: 'todo'
+            };
+            saveData();
         }
 
         // Save data to localStorage
@@ -778,7 +822,7 @@
         }
 
         // Render the entire board
-        function renderBoard() {
+        function renderBoard(skipFocus = false) {
             board.innerHTML = '';
             
             // Render each bucket
@@ -795,27 +839,29 @@
             board.appendChild(addBucketElement);
             
             // Focus the appropriate quick add task input after rendering
-            // But only if lastFocusedBucketId is set
-            setTimeout(() => {
-                if (appData.lastFocusedBucketId) {
-                    // Try to focus the last used bucket's input
-                    const bucketInput = document.querySelector(`.quick-add-task input[data-bucket-id="${appData.lastFocusedBucketId}"]`);
-                    if (bucketInput) {
-                        bucketInput.focus();
-                    } else {
-                        // Fallback to first input if the bucket no longer exists
-                        const firstQuickAddInput = document.querySelector('.quick-add-task input');
-                        if (firstQuickAddInput) {
-                            firstQuickAddInput.focus();
-                            // Update the last focused bucket
-                            if (firstQuickAddInput.dataset.bucketId) {
-                                appData.lastFocusedBucketId = firstQuickAddInput.dataset.bucketId;
-                                saveData();
+            // But only if lastFocusedBucketId is set AND we're not skipping focus (for search)
+            if (!skipFocus) {
+                setTimeout(() => {
+                    if (appData.lastFocusedBucketId) {
+                        // Try to focus the last used bucket's input
+                        const bucketInput = document.querySelector(`.quick-add-task input[data-bucket-id="${appData.lastFocusedBucketId}"]`);
+                        if (bucketInput) {
+                            bucketInput.focus();
+                        } else {
+                            // Fallback to first input if the bucket no longer exists
+                            const firstQuickAddInput = document.querySelector('.quick-add-task input');
+                            if (firstQuickAddInput) {
+                                firstQuickAddInput.focus();
+                                // Update the last focused bucket
+                                if (firstQuickAddInput.dataset.bucketId) {
+                                    appData.lastFocusedBucketId = firstQuickAddInput.dataset.bucketId;
+                                    saveData();
+                                }
                             }
                         }
                     }
-                }
-            }, 100);
+                }, 100);
+            }
         }
 
         // Create a bucket element
@@ -918,6 +964,44 @@
                         const placeholder = document.createElement('div');
                         placeholder.className = 'drag-placeholder';
                         
+                        // Calculate what the new sequence number would be
+                        const bucket = appData.buckets.find(b => b.id === targetBucketId);
+                        if (bucket) {
+                            // Get all active tasks
+                            const activeTasks = [...bucket.tasks.filter(t => !t.completed)];
+                            
+                            // Remove the dragged task temporarily
+                            const draggedTaskIndex = activeTasks.findIndex(t => t.id == taskId);
+                            if (draggedTaskIndex !== -1) {
+                                activeTasks.splice(draggedTaskIndex, 1);
+                            }
+                            
+                            // Sort tasks by sequence
+                            activeTasks.sort((a, b) => a.sequence - b.sequence);
+                            
+                            // Determine placeholder position
+                            let placeholderIndex = 0;
+                            if (afterElement) {
+                                const afterTaskId = afterElement.dataset.id;
+                                const afterTaskIndex = activeTasks.findIndex(t => t.id == afterTaskId);
+                                if (afterTaskIndex !== -1) {
+                                    placeholderIndex = afterTaskIndex;
+                                }
+                            } else {
+                                placeholderIndex = activeTasks.length;
+                            }
+                            
+                            // Add sequence number indicator to placeholder
+                            const sequenceIndicator = document.createElement('div');
+                            sequenceIndicator.className = 'placeholder-sequence';
+                            sequenceIndicator.textContent = `#${placeholderIndex + 1}`;
+                            placeholder.appendChild(sequenceIndicator);
+                            
+                            // Update the visible sequence numbers on all task cards to show what they would be
+                            // after the reordering
+                            updateVisibleSequenceNumbers(targetBucketId, taskId, placeholderIndex);
+                        }
+                        
                         if (afterElement) {
                             taskList.insertBefore(placeholder, afterElement);
                         } else {
@@ -937,9 +1021,20 @@
                 taskList.classList.remove('drag-over');
             });
             
+            taskList.addEventListener('dragend', e => {
+                // Reset all temporary sequence number displays
+                resetVisibleSequenceNumbers();
+            });
+            
             taskList.addEventListener('drop', e => {
                 e.preventDefault();
                 taskList.classList.remove('drag-over');
+                
+                // Log drop coordinates and target information
+                console.log("DROP EVENT DETAILS:");
+                console.log(`- Mouse position: X: ${e.clientX}, Y: ${e.clientY}`);
+                console.log(`- Drop target element:`, e.target);
+                console.log(`- Current task list:`, taskList);
                 
                 const taskId = e.dataTransfer.getData('text/plain');
                 let dragData = {};
@@ -947,6 +1042,7 @@
                     const jsonData = e.dataTransfer.getData('application/json');
                     if (jsonData) {
                         dragData = JSON.parse(jsonData);
+                        console.log(`- Drag data:`, dragData);
                     }
                 } catch (err) {
                     console.error('Error parsing drag data:', err);
@@ -954,80 +1050,202 @@
                 
                 const taskResult = findTask(taskId);
                 
+                // Find the placeholder before removing it
+                const placeholder = taskList.querySelector('.drag-placeholder');
+                let placeholderIndex = -1;
+                
+                if (placeholder) {
+                    // Log placeholder position details
+                    const placeholderRect = placeholder.getBoundingClientRect();
+                    console.log(`- Placeholder found:`, placeholder);
+                    console.log(`- Placeholder position: top: ${placeholderRect.top}, bottom: ${placeholderRect.bottom}, height: ${placeholderRect.height}`);
+                    
+                    // Determine the placeholder's position among task cards
+                    const taskCards = [...taskList.querySelectorAll('.task-card:not(.dragging):not(.completed-tasks .task-card)')];
+                    const taskCardsWithPlaceholder = [...taskList.children].filter(el => 
+                        el.classList.contains('task-card') || el.classList.contains('drag-placeholder'));
+                    
+                    console.log(`- Task cards:`, taskCards.map(card => card.dataset.id));
+                    console.log(`- Task cards with placeholder:`, taskCardsWithPlaceholder.map(el => 
+                        el.classList.contains('drag-placeholder') ? 'PLACEHOLDER' : el.dataset.id));
+                    
+                    // Find where the placeholder is in the list of elements
+                    placeholderIndex = taskCardsWithPlaceholder.indexOf(placeholder);
+                    console.log(`- Placeholder found at position: ${placeholderIndex}`);
+                }
+                
                 // Clean up any placeholders
                 document.querySelectorAll('.drag-placeholder').forEach(el => el.remove());
                 
-                if (taskResult) {
-                    const currentBucketId = taskList.dataset.bucketId;
+                if (!taskResult) {
+                    console.error("Task not found:", taskId);
+                    return;
+                }
+                
+                const currentBucketId = taskList.dataset.bucketId;
+                
+                // Calculate drop position using getDragAfterElement
+                const calculatedAfterElement = getDragAfterElement(taskList, e.clientY);
+                console.log(`- Calculated after element:`, calculatedAfterElement ? calculatedAfterElement.dataset.id : 'null');
+                
+                if (taskResult.bucketId === currentBucketId && !taskResult.task.completed) {
+                    // Reordering within the same bucket
+                    console.log("-- Reordering within same bucket --");
                     
-                    if (taskResult.bucketId === currentBucketId && !taskResult.task.completed) {
-                        // Reordering within the same bucket
+                    const bucket = appData.buckets.find(b => b.id === currentBucketId);
+                    
+                    if (!bucket) {
+                        console.error("Bucket not found:", currentBucketId);
+                        return;
+                    }
+                    
+                    // Get non-completed tasks (active tasks)
+                    const activeTasks = bucket.tasks.filter(t => !t.completed);
+                    
+                    // Force sequence numbers to be numeric
+                    activeTasks.forEach(task => {
+                        task.sequence = Number(task.sequence || 0);
+                    });
+                    
+                    // Sort by sequence
+                    activeTasks.sort((a, b) => a.sequence - b.sequence);
+                    
+                    console.log("Active tasks:", activeTasks.map(t => ({ id: t.id, title: t.title, seq: t.sequence })));
+                    
+                    // Current index in the full tasks array
+                    const currentIndex = bucket.tasks.findIndex(t => t.id == taskId);
+                    console.log(`Current index of task ${taskId} in bucket.tasks: ${currentIndex}`);
+                    
+                    // Current index in active tasks array (for sequence-based positioning)
+                    const currentActiveIndex = activeTasks.findIndex(t => t.id == taskId);
+                    console.log(`Current index of task ${taskId} in active tasks: ${currentActiveIndex}`);
+                    
+                    let newPosition = currentIndex; // Default to current position
+                    let targetSequence = -1;
+                    
+                    // If we have a valid placeholder position, use it directly
+                    if (placeholderIndex >= 0) {
+                        console.log(`Using placeholder position: ${placeholderIndex}`);
+                        
+                        // Adjust for the task card that's being dragged since it's not in the DOM
+                        // The new sequence should be the placeholder's position + 1
+                        targetSequence = placeholderIndex + 1;
+                        
+                        // Now map this to an actual position in the task array
+                        const activeTasksInBucket = [...bucket.tasks.filter(t => !t.completed)];
+                        
+                        // Remove the dragged task temporarily to find where it would go
+                        const draggedTaskIndex = activeTasksInBucket.findIndex(t => t.id == taskId);
+                        if (draggedTaskIndex !== -1) {
+                            activeTasksInBucket.splice(draggedTaskIndex, 1);
+                        }
+                        
+                        // Now sort by current sequence to simulate the DOM order
+                        activeTasksInBucket.sort((a, b) => a.sequence - b.sequence);
+                        
+                        // If the placeholder is at the end
+                        if (placeholderIndex >= activeTasksInBucket.length) {
+                            // Position at the end of active tasks
+                            newPosition = bucket.tasks.findIndex(t => !t.completed && 
+                                activeTasksInBucket[activeTasksInBucket.length - 1].id == t.id) + 1;
+                        } else {
+                            // Position before the task at the placeholder position
+                            const taskAtPlaceholder = activeTasksInBucket[placeholderIndex];
+                            newPosition = bucket.tasks.findIndex(t => t.id == taskAtPlaceholder.id);
+                        }
+                        
+                        console.log(`Target sequence: ${targetSequence}, new position: ${newPosition}`);
+                    } else {
+                        // Fallback to old method using afterElement if no placeholder found
                         const afterElement = getDragAfterElement(taskList, e.clientY);
                         
-                        // Find the active tasks in this bucket (non-completed)
-                        const bucket = appData.buckets.find(b => b.id === currentBucketId);
-                        if (!bucket) return;
-                        
-                        const activeTasks = bucket.tasks.filter(t => !t.completed);
-                        
-                        // Calculate new position based on the visual drop position
-                        let newPosition;
-                        
                         if (afterElement) {
+                            // Get the task we're placing after
                             const afterTaskId = afterElement.dataset.id;
+                            console.log(`Dropping after task ${afterTaskId}`);
                             
-                            // Find the index in the activeTasks array (not in the bucket.tasks)
-                            const afterActiveIndex = activeTasks.findIndex(t => t.id == afterTaskId);
+                            // Find where that task is in the full tasks array
+                            const afterTaskIndex = bucket.tasks.findIndex(t => t.id == afterTaskId);
                             
-                            if (afterActiveIndex !== -1) {
-                                // Set the new position in the bucket.tasks array
-                                const currentActiveIndex = activeTasks.findIndex(t => t.id == taskId);
-                                
-                                // Get all the non-completed tasks before our current position
-                                const nonCompletedIndexInBucket = bucket.tasks.filter(t => !t.completed)
-                                                                   .findIndex(t => t.id == taskId);
-                                                                
-                                // If dropping after current position, compensate for the task being removed first
-                                if (afterActiveIndex > currentActiveIndex) {
-                                    newPosition = bucket.tasks.findIndex(t => t.id == afterTaskId);
-                                } else {
-                                    // If dropping before, account for task removal
-                                    const afterTaskIndexInBucket = bucket.tasks.findIndex(t => t.id == afterTaskId);
-                                    newPosition = afterTaskIndexInBucket;
+                            if (afterTaskIndex !== -1) {
+                                // If moving a task after itself, don't do anything
+                                if (currentIndex === afterTaskIndex) {
+                                    console.log("No change in position - same position");
+                                    return;
                                 }
+                                
+                                // If dropping after a task, we want to insert it right after
+                                newPosition = afterTaskIndex;
+                                
+                                // If we're moving from before this position to after it,
+                                // we need to adjust because the task will be removed first
+                                if (currentIndex < afterTaskIndex) {
+                                    newPosition--;
+                                }
+                                
+                                console.log(`New position will be ${newPosition}`);
                             }
                         } else {
-                            // If no afterElement, place at the end of active tasks
-                            const lastActiveTaskIndex = bucket.tasks.reduce((lastIndex, task, index) => {
-                                if (!task.completed && task.id != taskId) lastIndex = index;
-                                return lastIndex;
-                            }, -1);
+                            // If no afterElement, we're dropping at the end of active tasks
+                            // Find the last active task
+                            let lastActiveTaskIndex = -1;
+                            for (let i = bucket.tasks.length - 1; i >= 0; i--) {
+                                if (!bucket.tasks[i].completed && bucket.tasks[i].id != taskId) {
+                                    lastActiveTaskIndex = i;
+                                    break;
+                                }
+                            }
                             
-                            // Place after the last active task
-                            newPosition = lastActiveTaskIndex + 1;
+                            if (lastActiveTaskIndex !== -1) {
+                                newPosition = lastActiveTaskIndex + 1;
+                                
+                                // Adjust if the task being moved is before the insertion point
+                                if (currentIndex < lastActiveTaskIndex) {
+                                    newPosition--;
+                                }
+                                
+                                console.log(`Dropping at end, new position: ${newPosition}`);
+                            } else {
+                                // If there are no other active tasks, position at beginning of active tasks
+                                newPosition = 0;
+                                console.log(`No other active tasks, positioning at beginning: ${newPosition}`);
+                            }
                         }
-                        
-                        // If we have a valid position, proceed with reordering
-                        if (newPosition !== undefined) {
-                            reorderTask(taskId, currentBucketId, newPosition);
-                        }
-                    } else {
-                        // Moving between buckets
-                        moveTask(taskId, currentBucketId, false);
                     }
+                    
+                    // Only reorder if the position is actually changing
+                    if (newPosition !== currentIndex || targetSequence > 0) {
+                        const currentSequence = taskResult.task.sequence || 0;
+                        console.log(`Reordering from index ${currentIndex} to ${newPosition} (sequence: ${currentSequence} -> ${targetSequence > 0 ? targetSequence : '?'})`);
+                        reorderTaskWithSequence(taskId, currentBucketId, newPosition, targetSequence);
+                    } else {
+                        console.log("No change in position - same index");
+                    }
+                } else {
+                    // Moving between buckets
+                    moveTask(taskId, currentBucketId, false);
                 }
             });
             
             // Add active task cards to the list (non-completed tasks)
             const activeTasks = bucket.tasks.filter(task => !task.completed);
             
+            // Force sequence numbers to be numeric for consistent sorting
+            activeTasks.forEach(task => {
+                if (task.sequence === undefined) {
+                    task.sequence = 0;
+                }
+                // Ensure sequence is a number not a string
+                task.sequence = Number(task.sequence);
+            });
+            
             // Sort tasks by sequence
             activeTasks.sort((a, b) => {
-                // If sequence is undefined (for legacy tasks), use default order
-                if (a.sequence === undefined) a.sequence = 0;
-                if (b.sequence === undefined) b.sequence = 0;
                 return a.sequence - b.sequence;
             });
+            
+            console.log(`Bucket ${bucket.id} active tasks after sorting:`, 
+                activeTasks.map(t => ({ id: t.id, title: t.title, seq: t.sequence })));
             
             activeTasks.forEach(task => {
                 const taskCard = createTaskCard(task);
@@ -1148,9 +1366,17 @@
             const taskCard = document.createElement('div');
             taskCard.className = 'task-card';
             taskCard.dataset.id = task.id;
-            if (task.sequence) {
-                taskCard.dataset.sequence = task.sequence; // Store sequence in data attribute
+            
+            // Ensure every task has a sequence property
+            if (task.sequence === undefined) {
+                task.sequence = 0;
+                console.warn(`Task ${task.id} had no sequence, assigned 0`);
             }
+            
+            // Convert sequence to number explicitly
+            task.sequence = Number(task.sequence);
+            
+            taskCard.dataset.sequence = task.sequence; // Store sequence in data attribute
             taskCard.draggable = true;
             
             // Calculate progress percentage - still needed for other functionality
@@ -1172,15 +1398,30 @@
             dragHandle.className = 'task-drag-handle';
             dragHandle.innerHTML = '<i class="fas fa-grip-lines"></i>';
             
+            // Make the sequence display more noticeable
+            const sequenceDisplay = document.createElement('div');
+            sequenceDisplay.style.position = 'absolute';
+            sequenceDisplay.style.top = '0.3rem';
+            sequenceDisplay.style.left = '0.3rem';
+            sequenceDisplay.style.fontSize = '0.8rem';
+            sequenceDisplay.style.fontWeight = 'bold';
+            sequenceDisplay.style.padding = '0.1rem 0.4rem';
+            sequenceDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+            sequenceDisplay.style.borderRadius = '3px';
+            sequenceDisplay.style.color = '#666';
+            sequenceDisplay.textContent = `#${task.sequence}`;
+            sequenceDisplay.dataset.originalSequence = `#${task.sequence}`;
+            
             // Simplify the task card to just title and description
             taskCard.innerHTML = `
-                <div class="task-title">${task.title}</div>
+                <div class="task-title" style="margin-left: 15px;">${task.title}</div>
                 <div class="task-description">${task.description.slice(0, 75)}${task.description.length > 75 ? '...' : ''}</div>
             `;
             
-            // Append the checkbox and drag handle to the task card
+            // Append the checkbox, drag handle, and sequence display to the task card
             taskCard.appendChild(checkbox);
             taskCard.appendChild(dragHandle);
+            taskCard.appendChild(sequenceDisplay);
             
             // Add checkbox event listener to toggle completion
             checkbox.addEventListener('click', (e) => {
@@ -1205,25 +1446,37 @@
             
             // Enhance drag event listeners for reordering
             taskCard.addEventListener('dragstart', e => {
+                console.log(`Starting drag for task ${task.id} with sequence ${task.sequence}`);
+                
                 // Allow time for the ghost image to be created before adding the dragging class
                 setTimeout(() => {
                     taskCard.classList.add('dragging');
                 }, 0);
                 
+                // Store essential data for the drag operation
                 e.dataTransfer.setData('text/plain', task.id);
-                e.dataTransfer.setData('application/json', JSON.stringify({
+                
+                // Store additional data about the drag operation
+                const result = findTask(task.id);
+                const sourceBucketId = result ? result.bucketId : '';
+                
+                const dragInfo = {
                     id: task.id,
                     sequence: task.sequence,
-                    sourceBucketId: findTask(task.id).bucketId
-                }));
+                    sourceBucketId: sourceBucketId,
+                    timestamp: Date.now() // Add timestamp to ensure unique operation
+                };
+                
+                e.dataTransfer.setData('application/json', JSON.stringify(dragInfo));
                 e.dataTransfer.effectAllowed = 'move';
             });
             
             taskCard.addEventListener('dragend', () => {
+                console.log(`Ending drag for task ${task.id}`);
                 taskCard.classList.remove('dragging');
                 
-                // Remove any placeholder elements
-                document.querySelectorAll('.drag-placeholder').forEach(el => el.remove());
+                // Reset sequence displays to normal
+                resetVisibleSequenceNumbers();
             });
             
             // Add click event to open task details (except when clicking drag handle)
@@ -1522,8 +1775,7 @@
                 // Undo reordering by restoring the original array
                 const bucket = appData.buckets.find(b => b.id === action.bucketId);
                 if (bucket) {
-                    // Use a deep copy to avoid reference issues
-                    bucket.tasks = JSON.parse(JSON.stringify(action.originalTasks));
+                    bucket.tasks = action.originalTasks;
                 }
             }
             
@@ -1536,6 +1788,9 @@
 
         // Search tasks
         function searchTasks(query) {
+            // Store focus element for restoration after search
+            const activeElement = document.activeElement;
+            
             if (!query) {
                 renderBoard();
                 return;
@@ -1559,14 +1814,25 @@
             const originalBuckets = appData.buckets;
             appData.buckets = filteredBuckets;
             
-            renderBoard();
+            // Pass true to renderBoard to skip auto-focusing inputs
+            renderBoard(true);
             
             // Restore original data
             appData.buckets = originalBuckets;
+            
+            // Restore focus to search input
+            if (activeElement) {
+                setTimeout(() => {
+                    activeElement.focus();
+                }, 10);
+            }
         }
 
         // Filter tasks
         function filterTasks(filterType) {
+            // Store focus element for restoration
+            const activeElement = document.activeElement;
+            
             if (filterType === 'all') {
                 renderBoard();
                 return;
@@ -1595,10 +1861,18 @@
             const originalBuckets = appData.buckets;
             appData.buckets = filteredBuckets;
             
-            renderBoard();
+            // Pass true to renderBoard to skip auto-focusing inputs
+            renderBoard(true);
             
             // Restore original data
             appData.buckets = originalBuckets;
+            
+            // Restore previous focus if needed
+            if (activeElement && activeElement !== document.body) {
+                setTimeout(() => {
+                    activeElement.focus();
+                }, 10);
+            }
         }
 
         // Toggle dark mode
@@ -2108,72 +2382,234 @@
 
         // Add this function to determine where to place the dragged element
         function getDragAfterElement(container, y) {
+            
             // Get all task cards that are not being dragged
             const taskElements = [...container.querySelectorAll('.task-card:not(.dragging):not(.completed-tasks .task-card)')];
             
-            // Find the task element that comes after the current position
-            return taskElements.reduce((closest, child) => {
+            if (taskElements.length === 0) {
+                return null; // No other tasks to compare against
+            }
+            
+            // Replace reduce with a simpler approach that won't generate logs
+            let closestElement = null;
+            let closestOffset = Number.NEGATIVE_INFINITY;
+            
+            // Loop through each element to find the closest
+            for (const child of taskElements) {
                 const box = child.getBoundingClientRect();
                 const offset = y - box.top - box.height / 2;
                 
-                // If offset is negative but greater than closest, this is the new closest
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
+                // We want to find the element where the mouse is closest to being above it
+                // (i.e., the element with the smallest negative offset)
+                if (offset < 0 && offset > closestOffset) {
+                    closestOffset = offset;
+                    closestElement = child;
                 }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            console.log(`-------------- GETTING DRAG AFTER ELEMENT --------------`);
+            console.log(`Container:`, container);
+            console.log(`Y:`, y);
+            console.log(`Closest element:`, closestElement);
+            return closestElement;
         }
         
-        // New function to reorder a task within a bucket
-        function reorderTask(taskId, bucketId, newPosition) {
+        // Enhanced reordering function that uses sequence numbers directly
+        function reorderTaskWithSequence(taskId, bucketId, newPosition, targetSequence) {
+            console.log(`-------------- REORDERING TASK --------------`);
+            console.log(`Task ID: ${taskId}, Target position: ${newPosition}, Target sequence: ${targetSequence}`);
+            
             const bucket = appData.buckets.find(b => b.id === bucketId);
-            if (!bucket) return;
+            if (!bucket) {
+                console.error("Bucket not found!");
+                return;
+            }
             
-            // Find the task to reorder
-            const taskIndex = bucket.tasks.findIndex(task => task.id == taskId);
-            if (taskIndex === -1) return;
+            // Log the state of all tasks in the bucket before reordering
+            console.log("BEFORE REORDERING - All tasks in bucket:");
+            bucket.tasks.forEach(t => {
+                console.log(`Task ID: ${t.id}, Title: "${t.title}", Sequence: ${t.sequence}, Completed: ${t.completed}`);
+            });
             
-            // Extract the task
-            const task = {...bucket.tasks[taskIndex]};
-            const wasCompleted = task.completed;
+            // Find the task to reorder by ID
+            const taskToMove = bucket.tasks.find(task => task.id == taskId);
+            if (!taskToMove) {
+                console.error("Task not found in bucket!");
+                return;
+            }
             
-            // Skip if trying to drop at the same position
-            if (taskIndex === newPosition) return;
+            // Store original completion state
+            const wasCompleted = taskToMove.completed;
             
-            // Store the original task order for potential undo
+            // Store original sequence
+            const originalSequence = taskToMove.sequence;
+            
+            // Store original tasks for undo
             const originalTasks = JSON.parse(JSON.stringify(bucket.tasks));
+            
+            // Extract active tasks (or completed tasks depending on task's completion status)
+            const tasksInSameSection = bucket.tasks.filter(t => t.completed === wasCompleted);
+            
+            console.log(`Working with ${wasCompleted ? 'completed' : 'active'} tasks. Found ${tasksInSameSection.length} tasks in this section.`);
+            
+            // Sort tasks by sequence to ensure proper order
+            tasksInSameSection.sort((a, b) => Number(a.sequence) - Number(b.sequence));
+            
+            console.log("Tasks in same section sorted by sequence before changes:", 
+                tasksInSameSection.map(t => ({ id: t.id, title: t.title, seq: t.sequence })));
+            
+            // If we have a specific target sequence provided, use it
+            if (typeof targetSequence === 'number' && targetSequence > 0) {
+                console.log(`Using provided target sequence: ${targetSequence}`);
+                
+                // Set the task's new sequence
+                taskToMove.sequence = targetSequence;
+                
+                // Update all sequences to be consecutive
+                // First, get all tasks in the section except the one we moved
+                const otherTasks = tasksInSameSection.filter(t => t.id != taskId);
+                
+                // Insert our moved task at the right position based on its new sequence
+                let inserted = false;
+                let tempSequencedTasks = [];
+                
+                for (let i = 0; i < otherTasks.length; i++) {
+                    if (!inserted && targetSequence <= i + 1) {
+                        tempSequencedTasks.push(taskToMove);
+                        inserted = true;
+                    }
+                    tempSequencedTasks.push(otherTasks[i]);
+                }
+                
+                // If not inserted yet, add at the end
+                if (!inserted) {
+                    tempSequencedTasks.push(taskToMove);
+                }
+                
+                // Now reassign sequences to be consecutive
+                tempSequencedTasks.forEach((task, idx) => {
+                    task.sequence = idx + 1;
+                    console.log(`Set ${wasCompleted ? 'completed' : 'active'} task ${task.id} (${task.title}) sequence to ${task.sequence}`);
+                });
+            } else {
+                console.log("No target sequence provided. Calculating based on position.");
+                
+                // Find the task's current position in the sorted array
+                const currentIndex = tasksInSameSection.findIndex(t => t.id == taskId);
+                
+                // Remove the task from its current position
+                if (currentIndex !== -1) {
+                    tasksInSameSection.splice(currentIndex, 1);
+                }
+                
+                // Determine the effective insertion position (based on the sorting by sequence, not DOM order)
+                let insertPosition = Math.min(newPosition, tasksInSameSection.length);
+                console.log(`Inserting at position ${insertPosition} in the sorted sequence array`);
+                
+                // Insert at the new position
+                tasksInSameSection.splice(insertPosition, 0, taskToMove);
+                
+                // Reassign all sequence numbers to be consecutive
+                tasksInSameSection.forEach((task, idx) => {
+                    task.sequence = idx + 1;
+                    console.log(`Updated task ${task.id} (${task.title}): new sequence = ${task.sequence}`);
+                });
+            }
+            
+            // Log the final sequence order
+            console.log("AFTER REORDERING - Sequence order:");
+            bucket.tasks.filter(t => t.completed === wasCompleted)
+                .sort((a, b) => a.sequence - b.sequence)
+                .forEach(t => {
+                    console.log(`Task ID: ${t.id}, Title: "${t.title}", Sequence: ${t.sequence}`);
+                });
             
             // Save the last action for potential undo
             appData.lastAction = {
                 type: 'reorder',
-                taskId: task.id,
+                taskId: taskId,
                 bucketId: bucketId,
-                originalPosition: taskIndex,
-                newPosition: newPosition,
+                originalSequence: originalSequence,
+                newSequence: taskToMove.sequence,
                 originalTasks: originalTasks
             };
             
-            // Remove the task from its current position
-            bucket.tasks.splice(taskIndex, 1);
-            
-            // Insert at the new position
-            bucket.tasks.splice(newPosition, 0, task);
-            
-            // Update sequence numbers for all tasks in this bucket with the same completion status
-            const tasksInSameSection = bucket.tasks.filter(t => t.completed === wasCompleted);
-            tasksInSameSection.forEach((t, index) => {
-                t.sequence = index + 1;
-            });
-            
-            // Save the new order
+            // Force save ALL data to localStorage
             saveData();
-            
-            // Render the board with the new order
-            renderBoard();
             
             // Show notification
             showNotification('Task reordered');
+            
+            // Render the board with the new order
+            renderBoard();
+        }
+
+        // Add this function to update sequence numbers visually during drag
+        function updateVisibleSequenceNumbers(bucketId, excludedTaskId, newPosition) {
+            const bucket = appData.buckets.find(b => b.id === bucketId);
+            if (!bucket) return;
+            
+            // Get active tasks
+            const activeTasks = bucket.tasks.filter(t => !t.completed);
+            
+            // Create a copy of tasks without the dragged one
+            const remainingTasks = activeTasks.filter(t => t.id != excludedTaskId);
+            
+            // Sort by current sequence
+            remainingTasks.sort((a, b) => a.sequence - b.sequence);
+            
+            // This is what the sequence numbers would be
+            const taskElements = document.querySelectorAll(`.bucket[data-id="${bucketId}"] .task-list .task-card:not(.dragging):not(.completed-tasks .task-card)`);
+            
+            // Update each visible task card's sequence display
+            taskElements.forEach(taskEl => {
+                const taskId = taskEl.dataset.id;
+                if (taskId != excludedTaskId) {
+                    const taskIndex = remainingTasks.findIndex(t => t.id == taskId);
+                    
+                    // Determine what the new sequence would be
+                    let newSequence = taskIndex + 1;
+                    
+                    // If this task would be after the insert position, increment its sequence
+                    if (taskIndex >= newPosition) {
+                        newSequence++;
+                    }
+                    
+                    // Update the sequence display
+                    const sequenceDisplay = taskEl.querySelector('[style*="position: absolute"][style*="top: 0.3rem"][style*="left: 0.3rem"]');
+                    if (sequenceDisplay) {
+                        // Add a class to indicate this is a temporary display
+                        sequenceDisplay.classList.add('temp-sequence');
+                        
+                        // Remember original sequence
+                        if (!sequenceDisplay.dataset.originalSequence) {
+                            sequenceDisplay.dataset.originalSequence = sequenceDisplay.textContent;
+                        }
+                        
+                        // Apply a visual style to indicate this is a preview
+                        sequenceDisplay.style.backgroundColor = 'rgba(0, 120, 212, 0.2)';
+                        
+                        // Update text
+                        sequenceDisplay.textContent = `#${newSequence}`;
+                    }
+                }
+            });
+        }
+        
+        // Reset sequence displays to their original values
+        function resetVisibleSequenceNumbers() {
+            const tempSequences = document.querySelectorAll('.temp-sequence');
+            tempSequences.forEach(element => {
+                if (element.dataset.originalSequence) {
+                    element.textContent = element.dataset.originalSequence;
+                    element.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+                }
+                element.classList.remove('temp-sequence');
+                delete element.dataset.originalSequence;
+            });
+            
+            // Remove any placeholder elements
+            document.querySelectorAll('.drag-placeholder').forEach(el => el.remove());
         }
     </script>
 </body>

@@ -964,26 +964,47 @@
                         // Reordering within the same bucket
                         const afterElement = getDragAfterElement(taskList, e.clientY);
                         
-                        // Find the position to insert the task
-                        let newPosition;
+                        // Find the active tasks in this bucket (non-completed)
                         const bucket = appData.buckets.find(b => b.id === currentBucketId);
+                        if (!bucket) return;
+                        
+                        const activeTasks = bucket.tasks.filter(t => !t.completed);
+                        
+                        // Calculate new position based on the visual drop position
+                        let newPosition;
                         
                         if (afterElement) {
                             const afterTaskId = afterElement.dataset.id;
-                            // Find the index of the task we're placing after
-                            const afterTaskIndex = bucket.tasks.findIndex(t => t.id == afterTaskId);
                             
-                            if (afterTaskIndex !== -1) {
-                                // Get current position of the task being dragged
-                                const currentPos = bucket.tasks.findIndex(t => t.id == taskId);
+                            // Find the index in the activeTasks array (not in the bucket.tasks)
+                            const afterActiveIndex = activeTasks.findIndex(t => t.id == afterTaskId);
+                            
+                            if (afterActiveIndex !== -1) {
+                                // Set the new position in the bucket.tasks array
+                                const currentActiveIndex = activeTasks.findIndex(t => t.id == taskId);
                                 
-                                // Adjust for if we're moving a task to after a task that comes later in the array
-                                newPosition = afterTaskIndex > currentPos ? afterTaskIndex : afterTaskIndex + 1;
+                                // Get all the non-completed tasks before our current position
+                                const nonCompletedIndexInBucket = bucket.tasks.filter(t => !t.completed)
+                                                                   .findIndex(t => t.id == taskId);
+                                                                
+                                // If dropping after current position, compensate for the task being removed first
+                                if (afterActiveIndex > currentActiveIndex) {
+                                    newPosition = bucket.tasks.findIndex(t => t.id == afterTaskId);
+                                } else {
+                                    // If dropping before, account for task removal
+                                    const afterTaskIndexInBucket = bucket.tasks.findIndex(t => t.id == afterTaskId);
+                                    newPosition = afterTaskIndexInBucket;
+                                }
                             }
                         } else {
-                            // If no afterElement, find position right before the end of active tasks
-                            const activeTaskCount = bucket.tasks.filter(t => !t.completed).length;
-                            newPosition = activeTaskCount > 0 ? activeTaskCount : 0;
+                            // If no afterElement, place at the end of active tasks
+                            const lastActiveTaskIndex = bucket.tasks.reduce((lastIndex, task, index) => {
+                                if (!task.completed && task.id != taskId) lastIndex = index;
+                                return lastIndex;
+                            }, -1);
+                            
+                            // Place after the last active task
+                            newPosition = lastActiveTaskIndex + 1;
                         }
                         
                         // If we have a valid position, proceed with reordering
@@ -1501,7 +1522,8 @@
                 // Undo reordering by restoring the original array
                 const bucket = appData.buckets.find(b => b.id === action.bucketId);
                 if (bucket) {
-                    bucket.tasks = action.originalTasks;
+                    // Use a deep copy to avoid reference issues
+                    bucket.tasks = JSON.parse(JSON.stringify(action.originalTasks));
                 }
             }
             
@@ -2113,14 +2135,14 @@
             if (taskIndex === -1) return;
             
             // Extract the task
-            const task = bucket.tasks[taskIndex];
+            const task = {...bucket.tasks[taskIndex]};
             const wasCompleted = task.completed;
             
             // Skip if trying to drop at the same position
             if (taskIndex === newPosition) return;
             
             // Store the original task order for potential undo
-            const originalTasks = [...bucket.tasks];
+            const originalTasks = JSON.parse(JSON.stringify(bucket.tasks));
             
             // Save the last action for potential undo
             appData.lastAction = {

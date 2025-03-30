@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incremental Donation Counter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .balance-display {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #2e7d32;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .balance-display:hover {
+            color: #1b5e20;
+            text-decoration: underline;
+        }
+        .rate-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .rate-input label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .rate-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .add-button {
+            background-color: #2196f3;
+            color: white;
+            flex: 1;
+        }
+        .add-button:hover {
+            background-color: #1976d2;
+        }
+        .action-button {
+            flex: 1;
+            min-width: 100px;
+        }
+        .donate-button {
+            background-color: #2e7d32;
+            color: white;
+        }
+        .donate-button:hover {
+            background-color: #1b5e20;
+        }
+        .reset-button {
+            background-color: #f44336;
+            color: white;
+        }
+        .reset-button:hover {
+            background-color: #d32f2f;
+        }
+        .pause-button {
+            background-color: #ff9800;
+            color: white;
+        }
+        .pause-button:hover {
+            background-color: #f57c00;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        .modal {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            flex: 1;
+            margin: 0 5px;
+        }
+        .confirm-button {
+            background-color: #2e7d32;
+            color: white;
+        }
+        .cancel-button {
+            background-color: #757575;
+            color: white;
+        }
+        #amount-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .history-container {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        .history-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .history-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .error-message {
+            color: #f44336;
+            text-align: center;
+            margin: 10px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Donation Counter</h1>
+        </div>
+        
+        <div class="balance-display" id="balance-display">
+            ₹<span id="balance">0.00</span>
+        </div>
+        
+        <div class="rate-input">
+            <label for="monthly-rate">Monthly Rate (₹):</label>
+            <input type="number" id="monthly-rate" min="0" step="100" placeholder="Enter monthly donation rate" value="3000">
+        </div>
+        
+        <div class="button-group">
+            <button class="action-button donate-button" id="donate-btn">Donate</button>
+            <button class="action-button pause-button" id="pause-btn">Pause</button>
+            <button class="action-button reset-button" id="reset-btn">Reset</button>
+        </div>
+        
+        <div class="history-container">
+            <div class="history-title">Transaction History</div>
+            <div id="history-list">
+                <!-- Transaction history will be populated here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reset Confirmation Modal -->
+    <div class="modal-overlay" id="reset-modal">
+        <div class="modal">
+            <div class="modal-title">Are you sure you want to reset?</div>
+            <div class="modal-buttons">
+                <button class="confirm-button" id="confirm-reset">Yes, Reset</button>
+                <button class="cancel-button" id="cancel-reset">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Donate Modal -->
+    <div class="modal-overlay" id="donate-modal">
+        <div class="modal">
+            <div class="modal-title">Enter Donation Amount</div>
+            <div>
+                <label for="amount-input">Amount: ₹</label>
+                <input type="number" id="amount-input" min="1" step="1" placeholder="Enter amount">
+                <div class="error-message" id="error-message">Insufficient balance!</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="confirm-button" id="confirm-donate">Donate Now</button>
+                <button class="cancel-button" id="cancel-donate">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Adjust Balance Modal -->
+    <div class="modal-overlay" id="adjust-modal">
+        <div class="modal">
+            <div class="modal-title">Adjust Wallet Balance</div>
+            <div>
+                <label for="adjust-input">Amount: ₹</label>
+                <input type="number" id="adjust-input" min="0" step="1" placeholder="Enter new balance">
+            </div>
+            <div class="modal-buttons">
+                <button class="confirm-button" id="confirm-adjust">Save</button>
+                <button class="cancel-button" id="cancel-adjust">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const balanceDisplay = document.getElementById('balance');
+        const balanceContainer = document.getElementById('balance-display');
+        const monthlyRateInput = document.getElementById('monthly-rate');
+        const addButtons = document.querySelectorAll('.add-button');
+        const donateBtn = document.getElementById('donate-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetModal = document.getElementById('reset-modal');
+        const confirmReset = document.getElementById('confirm-reset');
+        const cancelReset = document.getElementById('cancel-reset');
+        const donateModal = document.getElementById('donate-modal');
+        const amountInput = document.getElementById('amount-input');
+        const confirmDonate = document.getElementById('confirm-donate');
+        const cancelDonate = document.getElementById('cancel-donate');
+        const errorMessage = document.getElementById('error-message');
+        const historyList = document.getElementById('history-list');
+        const adjustModal = document.getElementById('adjust-modal');
+        const adjustInput = document.getElementById('adjust-input');
+        const confirmAdjust = document.getElementById('confirm-adjust');
+        const cancelAdjust = document.getElementById('cancel-adjust');
+        
+        // App State
+        let state = {
+            balance: 0,
+            monthlyRate: 3000,
+            isPaused: false,
+            lastUpdated: Date.now(),
+            transactionHistory: []
+        };
+        
+        // Interval for auto-incrementing
+        let incrementInterval;
+        
+        // Initialize the app
+        function init() {
+            loadState();
+            updateDisplay();
+            calculateMissedTime();
+            setupEventListeners();
+            startAutoIncrement();
+        }
+        
+        // Save state to localStorage
+        function saveState() {
+            state.lastUpdated = Date.now();
+            localStorage.setItem('donationApp', JSON.stringify(state));
+        }
+        
+        // Load state from localStorage
+        function loadState() {
+            const savedState = localStorage.getItem('donationApp');
+            if (savedState) {
+                state = JSON.parse(savedState);
+                monthlyRateInput.value = state.monthlyRate;
+                updatePauseButtonText();
+            }
+        }
+        
+        // Calculate missed time and compensate
+        function calculateMissedTime() {
+            const now = Date.now();
+            const lastTime = state.lastUpdated;
+            const secondsElapsed = (now - lastTime) / 1000;
+            
+            if (secondsElapsed > 0 && !state.isPaused) {
+                const secondRate = (state.monthlyRate / 30 / 24 / 60 / 60);
+                const amountToAdd = secondRate * secondsElapsed;
+                
+                if (amountToAdd > 0) {
+                    state.balance += amountToAdd;
+                    addToHistory(`Added ₹${amountToAdd.toFixed(2)} for missed time (${Math.round(secondsElapsed)}s)`);
+                    updateDisplay();
+                    saveState();
+                }
+            }
+        }
+        
+        // Update the display with current state
+        function updateDisplay() {
+            balanceDisplay.textContent = state.balance.toFixed(2);
+            updateHistoryDisplay();
+        }
+        
+        // Start auto-increment functionality
+        function startAutoIncrement() {
+            // Clear any existing interval
+            if (incrementInterval) {
+                clearInterval(incrementInterval);
+            }
+            
+            // Start new interval if not paused
+            if (!state.isPaused) {
+                incrementInterval = setInterval(() => {
+                    const secondRate = (state.monthlyRate / 30 / 24 / 60 / 60);
+                    state.balance += secondRate;
+                    updateDisplay();
+                    saveState();
+                }, 1000);
+            }
+        }
+        
+        // Toggle pause/resume
+        function togglePause() {
+            state.isPaused = !state.isPaused;
+            updatePauseButtonText();
+            
+            if (state.isPaused) {
+                clearInterval(incrementInterval);
+                addToHistory('Auto-increment paused');
+            } else {
+                startAutoIncrement();
+                addToHistory('Auto-increment resumed');
+            }
+            
+            saveState();
+        }
+        
+        // Update pause button text based on state
+        function updatePauseButtonText() {
+            pauseBtn.textContent = state.isPaused ? 'Resume' : 'Pause';
+        }
+        
+        // Add amount to balance
+        function addAmount(amount) {
+            state.balance += amount;
+            addToHistory(`Added ₹${amount}`);
+            updateDisplay();
+            saveState();
+        }
+        
+        // Reset balance
+        function resetBalance() {
+            state.balance = 0;
+            addToHistory('Balance reset to ₹0');
+            updateDisplay();
+            saveState();
+        }
+        
+        // Make a donation
+        function makeDonation(amount) {
+            if (amount > state.balance) {
+                errorMessage.style.display = 'block';
+                return false;
+            }
+            
+            state.balance -= amount;
+            addToHistory(`Donated ₹${amount}`);
+            updateDisplay();
+            saveState();
+            return true;
+        }
+        
+        // Adjust balance directly
+        function adjustBalance(newBalance) {
+            const oldBalance = state.balance;
+            state.balance = newBalance;
+            const difference = newBalance - oldBalance;
+            
+            if (difference > 0) {
+                addToHistory(`Manually added ₹${difference.toFixed(2)} to wallet`);
+            } else if (difference < 0) {
+                addToHistory(`Manually removed ₹${Math.abs(difference).toFixed(2)} from wallet`);
+            } else {
+                addToHistory(`Wallet balance verified (no change)`);
+            }
+            
+            updateDisplay();
+            saveState();
+        }
+        
+        // Add entry to transaction history
+        function addToHistory(message) {
+            // Add timestamp to message
+            const timestamp = new Date().toLocaleTimeString();
+            const fullMessage = `[${timestamp}] ${message}`;
+            
+            // Add to state
+            state.transactionHistory.unshift(fullMessage);
+            
+            // Keep history limited to most recent 50 entries
+            if (state.transactionHistory.length > 50) {
+                state.transactionHistory.pop();
+            }
+        }
+        
+        // Update history display
+        function updateHistoryDisplay() {
+            historyList.innerHTML = '';
+            state.transactionHistory.forEach(transaction => {
+                const item = document.createElement('div');
+                item.classList.add('history-item');
+                item.textContent = transaction;
+                historyList.appendChild(item);
+            });
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Monthly rate change
+            monthlyRateInput.addEventListener('change', () => {
+                const newRate = parseFloat(monthlyRateInput.value);
+                if (!isNaN(newRate) && newRate >= 0) {
+                    state.monthlyRate = newRate;
+                    addToHistory(`Monthly rate changed to ₹${newRate}`);
+                    saveState();
+                    startAutoIncrement(); // Restart with new rate
+                }
+            });
+            
+            // Add buttons
+            addButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const amount = parseFloat(button.dataset.amount);
+                    addAmount(amount);
+                });
+            });
+            
+            // Donate button
+            donateBtn.addEventListener('click', () => {
+                donateModal.style.display = 'flex';
+                errorMessage.style.display = 'none';
+                amountInput.value = '';
+                amountInput.focus();
+            });
+            
+            // Reset button
+            resetBtn.addEventListener('click', () => {
+                resetModal.style.display = 'flex';
+            });
+            
+            // Pause button
+            pauseBtn.addEventListener('click', togglePause);
+            
+            // Confirm reset
+            confirmReset.addEventListener('click', () => {
+                resetBalance();
+                resetModal.style.display = 'none';
+            });
+            
+            // Cancel reset
+            cancelReset.addEventListener('click', () => {
+                resetModal.style.display = 'none';
+            });
+            
+            // Confirm donation
+            confirmDonate.addEventListener('click', () => {
+                const amount = parseFloat(amountInput.value);
+                if (!isNaN(amount) && amount > 0) {
+                    if (makeDonation(amount)) {
+                        donateModal.style.display = 'none';
+                    }
+                }
+            });
+            
+            // Cancel donation
+            cancelDonate.addEventListener('click', () => {
+                donateModal.style.display = 'none';
+            });
+            
+            // Balance display click
+            balanceContainer.addEventListener('click', () => {
+                adjustModal.style.display = 'flex';
+                adjustInput.value = state.balance.toFixed(2);
+                adjustInput.focus();
+                adjustInput.select();
+            });
+            
+            // Confirm adjust
+            confirmAdjust.addEventListener('click', () => {
+                const newBalance = parseFloat(adjustInput.value);
+                if (!isNaN(newBalance) && newBalance >= 0) {
+                    adjustBalance(newBalance);
+                    adjustModal.style.display = 'none';
+                }
+            });
+            
+            // Cancel adjust
+            cancelAdjust.addEventListener('click', () => {
+                adjustModal.style.display = 'none';
+            });
+            
+            // Save state before unload
+            window.addEventListener('beforeunload', saveState);
+            
+            // Close modals when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === resetModal) {
+                    resetModal.style.display = 'none';
+                }
+                if (e.target === donateModal) {
+                    donateModal.style.display = 'none';
+                }
+                if (e.target === adjustModal) {
+                    adjustModal.style.display = 'none';
+                }
+            });
+        }
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

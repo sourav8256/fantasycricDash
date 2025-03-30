@@ -255,6 +255,40 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
         }
         
+        .task-drag-handle {
+            position: absolute;
+            left: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: grab;
+            color: #aaa;
+            font-size: 0.8rem;
+            padding: 0.25rem;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        
+        .task-card:hover .task-drag-handle {
+            opacity: 1;
+        }
+        
+        .task-drag-handle:hover {
+            color: var(--primary-color);
+        }
+        
+        .drag-placeholder {
+            border: 2px dashed var(--primary-color);
+            background-color: rgba(0, 120, 212, 0.05);
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            height: 60px;
+        }
+        
+        .task-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+        
         .task-complete-checkbox {
             position: absolute;
             top: 0.7rem;
@@ -856,6 +890,43 @@
             taskList.addEventListener('dragover', e => {
                 e.preventDefault();
                 taskList.classList.add('drag-over');
+                
+                const draggingElement = document.querySelector('.dragging');
+                
+                // Only handle reordering if we're dragging a task card
+                if (draggingElement && draggingElement.classList.contains('task-card')) {
+                    const targetBucketId = taskList.dataset.bucketId;
+                    const taskId = draggingElement.dataset.id;
+                    const taskResult = findTask(taskId);
+                    
+                    // Only proceed with reordering if we're in the same bucket
+                    // and this is the active tasks list (not completed)
+                    if (taskResult && taskResult.bucketId === targetBucketId && !taskResult.task.completed) {
+                        const afterElement = getDragAfterElement(taskList, e.clientY);
+                        
+                        // Remove existing placeholder
+                        const existingPlaceholder = taskList.querySelector('.drag-placeholder');
+                        if (existingPlaceholder) {
+                            existingPlaceholder.remove();
+                        }
+                        
+                        // Create placeholder
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'drag-placeholder';
+                        
+                        if (afterElement) {
+                            taskList.insertBefore(placeholder, afterElement);
+                        } else {
+                            // Insert before the quick add task input
+                            const quickAddTask = taskList.querySelector('.quick-add-task');
+                            if (quickAddTask) {
+                                taskList.insertBefore(placeholder, quickAddTask);
+                            } else {
+                                taskList.appendChild(placeholder);
+                            }
+                        }
+                    }
+                }
             });
             
             taskList.addEventListener('dragleave', () => {
@@ -867,7 +938,44 @@
                 taskList.classList.remove('drag-over');
                 
                 const taskId = e.dataTransfer.getData('text/plain');
-                moveTask(taskId, bucket.id, false);
+                const taskResult = findTask(taskId);
+                
+                // Clean up any placeholders
+                document.querySelectorAll('.drag-placeholder').forEach(el => el.remove());
+                
+                if (taskResult) {
+                    if (taskResult.bucketId === taskList.dataset.bucketId && !taskResult.task.completed) {
+                        // Reordering within the same bucket
+                        const afterElement = getDragAfterElement(taskList, e.clientY);
+                        
+                        // Find the position to insert the task
+                        let newPosition;
+                        const bucket = appData.buckets.find(b => b.id === taskList.dataset.bucketId);
+                        
+                        if (afterElement) {
+                            const afterTaskId = afterElement.dataset.id;
+                            // Find the index of the task we're placing after
+                            const afterTaskIndex = bucket.tasks.findIndex(t => t.id == afterTaskId);
+                            
+                            if (afterTaskIndex !== -1) {
+                                // Get current position of the task being dragged
+                                const currentPos = bucket.tasks.findIndex(t => t.id == taskId);
+                                
+                                // Adjust for if we're moving a task to after a task that comes later in the array
+                                newPosition = afterTaskIndex > currentPos ? afterTaskIndex : afterTaskIndex + 1;
+                            }
+                        } else {
+                            // If no afterElement, find position right before the end of active tasks
+                            newPosition = bucket.tasks.filter(t => !t.completed).length;
+                        }
+                        
+                        // Reorder the task
+                        reorderTask(taskId, taskList.dataset.bucketId, newPosition);
+                    } else {
+                        // Moving between buckets
+                        moveTask(taskId, taskList.dataset.bucketId, false);
+                    }
+                }
             });
             
             // Add active task cards to the list (non-completed tasks)
@@ -1007,14 +1115,20 @@
             checkbox.checked = task.completed;
             checkbox.dataset.taskId = task.id;
             
+            // Add drag handle
+            const dragHandle = document.createElement('div');
+            dragHandle.className = 'task-drag-handle';
+            dragHandle.innerHTML = '<i class="fas fa-grip-lines"></i>';
+            
             // Simplify the task card to just title and description
             taskCard.innerHTML = `
                 <div class="task-title">${task.title}</div>
                 <div class="task-description">${task.description.slice(0, 75)}${task.description.length > 75 ? '...' : ''}</div>
             `;
             
-            // Append the checkbox to the task card
+            // Append the checkbox and drag handle to the task card
             taskCard.appendChild(checkbox);
+            taskCard.appendChild(dragHandle);
             
             // Add checkbox event listener to toggle completion
             checkbox.addEventListener('click', (e) => {
@@ -1037,17 +1151,36 @@
                 }
             });
             
-            // Add drag event listeners
+            // Enhance drag event listeners for reordering
             taskCard.addEventListener('dragstart', e => {
+                // Allow time for the ghost image to be created before adding the dragging class
+                setTimeout(() => {
+                    taskCard.classList.add('dragging');
+                }, 0);
+                
                 e.dataTransfer.setData('text/plain', task.id);
+                e.dataTransfer.effectAllowed = 'move';
             });
             
-            // Add click event to open task details
+            taskCard.addEventListener('dragend', () => {
+                taskCard.classList.remove('dragging');
+                
+                // Remove any placeholder elements
+                document.querySelectorAll('.drag-placeholder').forEach(el => el.remove());
+            });
+            
+            // Add click event to open task details (except when clicking drag handle)
             taskCard.addEventListener('click', (e) => {
-                // Only open details if not clicking the checkbox
-                if (!e.target.classList.contains('task-complete-checkbox')) {
+                // Only open details if not clicking the checkbox or drag handle
+                if (!e.target.classList.contains('task-complete-checkbox') && 
+                    !e.target.closest('.task-drag-handle')) {
                     openViewTaskModal(task);
                 }
+            });
+            
+            // Prevent task card from opening when starting to drag
+            dragHandle.addEventListener('mousedown', e => {
+                e.stopPropagation();
             });
             
             return taskCard;
@@ -1820,6 +1953,53 @@
 
         // Start the app
         document.addEventListener('DOMContentLoaded', init);
+
+        // Add this function to determine where to place the dragged element
+        function getDragAfterElement(container, y) {
+            // Get all task cards that are not being dragged
+            const taskElements = [...container.querySelectorAll('.task-card:not(.dragging):not(.completed-tasks .task-card)')];
+            
+            // Find the task element that comes after the current position
+            return taskElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                // If offset is negative but greater than closest, this is the new closest
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+        
+        // New function to reorder a task within a bucket
+        function reorderTask(taskId, bucketId, newPosition) {
+            const bucket = appData.buckets.find(b => b.id === bucketId);
+            if (!bucket) return;
+            
+            // Find the task to reorder
+            const taskIndex = bucket.tasks.findIndex(task => task.id == taskId);
+            if (taskIndex === -1) return;
+            
+            // Extract the task
+            const task = bucket.tasks[taskIndex];
+            
+            // Remove the task from its current position
+            bucket.tasks.splice(taskIndex, 1);
+            
+            // Insert at the new position
+            bucket.tasks.splice(newPosition, 0, task);
+            
+            // Save the new order
+            saveData();
+            
+            // Render the board with the new order
+            renderBoard();
+            
+            // Show notification
+            showNotification('Task reordered');
+        }
     </script>
 </body>
 </html>

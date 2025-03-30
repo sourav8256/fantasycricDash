@@ -30,6 +30,12 @@ if not exist mockmarket (
     exit /b 1
 )
 
+if not exist live_feeder (
+    echo Error: live_feeder directory not found
+    pause
+    exit /b 1
+)
+
 :: Start all services with PM2
 echo Starting frontend server on port 4300...
 cd frontend
@@ -62,6 +68,15 @@ cd ..\mockmarket
 call pm2 start node --name "mockmarket" -- app.js
 if errorlevel 1 (
     echo Failed to start mock market server
+    pause
+    exit /b 1
+)
+
+echo Starting live feeder server...
+cd ..\live_feeder
+call pm2 start node --name "live_feeder" -- app.js
+if errorlevel 1 (
+    echo Failed to start live feeder server
     pause
     exit /b 1
 )

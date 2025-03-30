@@ -36,8 +36,12 @@ cd ../live
 start_or_restart_service "live" "pm2 start npm --name 'live' -- start"
 
 # Start or restart mock market server
-cd ../mockmarket
-start_or_restart_service "mockmarket" "pm2 start app.js --name 'mockmarket'"
+# cd ../mockmarket
+# start_or_restart_service "mockmarket" "pm2 start app.js --name 'mockmarket'"
+
+# Start or restart live feeder server
+cd ../live_feeder
+start_or_restart_service "live_feeder" "pm2 start app.js --name 'live_feeder'"
 
 # Show running processes
 echo "All services started or restarted. Use 'pm2 list' to check status."

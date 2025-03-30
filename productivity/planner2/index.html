@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0078d4;
+            --secondary-color: #106ebe;
+            --text-color: #333;
+            --bg-color: #f5f5f5;
+            --card-bg: #fff;
+            --border-color: #e0e0e0;
+            --low-priority: #5db300;
+            --medium-priority: #ffaa44;
+            --high-priority: #d13438;
+            --completed-color: #107c10;
+        }
+
+        body.dark-mode {
+            --primary-color: #0078d4;
+            --secondary-color: #106ebe;
+            --text-color: #f5f5f5;
+            --bg-color: #1e1e1e;
+            --card-bg: #2d2d2d;
+            --border-color: #444;
+            --low-priority: #5db300;
+            --medium-priority: #ffaa44;
+            --high-priority: #d13438;
+            --completed-color: #107c10;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        button {
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border-radius: 4px;
+            border: none;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .theme-switch {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: white;
+        }
+
+        main {
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .board {
+            display: flex;
+            gap: 1rem;
+            min-height: calc(100vh - 120px);
+        }
+
+        .bucket {
+            background-color: var(--card-bg);
+            border-radius: 4px;
+            min-width: 300px;
+            max-width: 300px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bucket-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bucket-name {
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .bucket-name-edit {
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            border-bottom: 1px solid var(--primary-color);
+            font-size: inherit;
+            padding: 0 0 2px 0;
+            width: 80%;
+            color: var(--text-color);
+            outline: none;
+        }
+
+        .add-task {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .task-list {
+            padding: 1rem;
+            flex-grow: 1;
+            min-height: 50px;
+            overflow-y: auto;
+        }
+        
+        .quick-add-task {
+            display: flex;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .quick-add-task input {
+            flex-grow: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .quick-add-task input::placeholder {
+            color: #888;
+            font-style: italic;
+        }
+        
+        .quick-add-task input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .completed-section {
+            border-top: 1px dashed var(--border-color);
+            margin-top: 1rem;
+        }
+        
+        .completed-header {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .completed-header i {
+            margin-right: 0.5rem;
+        }
+        
+        .completed-tasks {
+            padding: 0 1rem 1rem 1rem;
+            overflow-y: auto;
+        }
+        
+        .completed-tasks .task-card {
+            opacity: 0.8;
+        }
+        
+        .collapse-completed .completed-tasks {
+            display: none;
+        }
+
+        .add-bucket {
+            border: 2px dashed var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-color);
+            cursor: pointer;
+            min-width: 300px;
+            max-width: 300px;
+            padding: 1rem;
+            border-radius: 4px;
+            background-color: var(--card-bg);
+        }
+
+        .add-bucket:hover {
+            background-color: rgba(0, 120, 212, 0.05);
+        }
+
+        .task-card {
+            background-color: var(--card-bg);
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+        
+        .task-complete-checkbox {
+            position: absolute;
+            top: 0.7rem;
+            right: 0.7rem;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            z-index: 5;
+        }
+        
+        .completed-tasks .task-complete-checkbox {
+            opacity: 1;
+        }
+
+        .task-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            padding-right: 25px;
+        }
+
+        .task-description {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .priority {
+            display: inline-block;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        .priority.low {
+            background-color: var(--low-priority);
+        }
+
+        .priority.medium {
+            background-color: var(--medium-priority);
+        }
+
+        .priority.high {
+            background-color: var(--high-priority);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .subtasks {
+            margin-top: 1rem;
+        }
+
+        .subtask-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtask-checkbox {
+            margin-right: 0.5rem;
+            width: auto;
+        }
+
+        .add-subtask {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .subtask-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .delete-subtask, .edit-subtask {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .delete-subtask:hover, .edit-subtask:hover {
+            color: var(--primary-color);
+        }
+
+        .task-description {
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .save-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .cancel-btn {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .task-details {
+            margin-top: 1rem;
+        }
+
+        .subtask-list {
+            list-style-type: none;
+            margin-top: 0.5rem;
+        }
+
+        .drag-over {
+            background-color: rgba(0, 120, 212, 0.1);
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+            z-index: 1001;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .undo-btn {
+            background-color: white;
+            color: #333;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .board {
+                flex-wrap: wrap;
+            }
+            .bucket, .add-bucket {
+                min-width: 100%;
+                max-width: 100%;
+            }
+        }
+
+        .filter-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-btn {
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filter-content {
+            display: none;
+            position: absolute;
+            background-color: var(--card-bg);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+            right: 0;
+        }
+
+        .filter-dropdown.active .filter-content {
+            display: block;
+        }
+
+        .filter-option {
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .filter-option:hover {
+            background-color: rgba(0, 120, 212, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Task Planner</h1>
+        <div class="controls">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search tasks...">
+            </div>
+            <div class="filter-dropdown">
+                <button class="filter-btn"><i class="fas fa-filter"></i> Filter</button>
+                <div class="filter-content">
+                    <div class="filter-option" data-filter="all">All Tasks</div>
+                    <div class="filter-option" data-filter="low">Low Priority</div>
+                    <div class="filter-option" data-filter="medium">Medium Priority</div>
+                    <div class="filter-option" data-filter="high">High Priority</div>
+                    <div class="filter-option" data-filter="overdue">Overdue</div>
+                </div>
+            </div>
+            <button id="add-bucket-btn"><i class="fas fa-plus"></i> Add Bucket</button>
+            <button class="theme-switch" id="theme-toggle"><i class="fas fa-moon"></i></button>
+        </div>
+    </header>
+
+    <main>
+        <div class="board" id="board">
+            <!-- Buckets will be generated here -->
+        </div>
+    </main>
+
+    <!-- Task Modal -->
+    <div class="modal" id="task-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Task</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <input type="hidden" id="bucket-id">
+                <div class="form-group">
+                    <label for="task-title">Title</label>
+                    <input type="text" id="task-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Description</label>
+                    <textarea id="task-description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-due-date">Due Date</label>
+                    <input type="date" id="task-due-date">
+                </div>
+                <div class="form-group">
+                    <label for="task-priority">Priority</label>
+                    <select id="task-priority">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Subtasks</label>
+                    <div id="subtasks-container" class="subtasks">
+                        <!-- Subtasks will be added here -->
+                    </div>
+                    <div class="add-subtask">
+                        <input type="text" id="new-subtask" placeholder="Add a subtask">
+                        <button type="button" id="add-subtask-btn">Add</button>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button type="button" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="save-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bucket Modal -->
+    <div class="modal" id="bucket-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Bucket</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="bucket-form">
+                <input type="hidden" id="edit-bucket-id">
+                <div class="form-group">
+                    <label for="bucket-name">Bucket Name</label>
+                    <input type="text" id="bucket-name" required>
+                </div>
+                <div class="action-buttons">
+                    <button type="button" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="save-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Task Modal -->
+    <div class="modal" id="view-task-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="view-task-title">Task Title</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="task-details">
+                <p id="view-task-description"></p>
+                <div class="task-meta">
+                    <div id="view-task-due-date"></div>
+                    <div id="view-task-priority"></div>
+                </div>
+                <div class="subtasks">
+                    <h4>Subtasks</h4>
+                    <ul class="subtask-list" id="view-subtasks-list">
+                        <!-- Subtasks will be added here -->
+                    </ul>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress" id="view-task-progress"></div>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button type="button" id="edit-task-btn" class="save-btn">Edit</button>
+                <button type="button" id="delete-task-btn" class="cancel-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <span id="notification-message">Task moved to Completed</span>
+        <button class="undo-btn" id="undo-btn">Undo</button>
+    </div>
+
+    <script>
+        // Data management
+        let appData = {
+            buckets: [],
+            lastTaskId: 0,
+            lastAction: null,
+            lastFocusedBucketId: null // Track which bucket's input was last focused
+        };
+
+        // DOM Elements
+        const board = document.getElementById('board');
+        const taskModal = document.getElementById('task-modal');
+        const bucketModal = document.getElementById('bucket-modal');
+        const viewTaskModal = document.getElementById('view-task-modal');
+        const taskForm = document.getElementById('task-form');
+        const bucketForm = document.getElementById('bucket-form');
+        const addBucketBtn = document.getElementById('add-bucket-btn');
+        const themeToggle = document.getElementById('theme-toggle');
+        const searchInput = document.getElementById('search-input');
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notification-message');
+        const undoBtn = document.getElementById('undo-btn');
+        const filterDropdown = document.querySelector('.filter-dropdown');
+        const filterBtn = document.querySelector('.filter-btn');
+        const addSubtaskBtn = document.getElementById('add-subtask-btn');
+        const newSubtaskInput = document.getElementById('new-subtask');
+
+        // Load data from localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('plannerAppData');
+            if (savedData) {
+                appData = JSON.parse(savedData);
+                
+                // Make sure each task has a completed property
+                appData.buckets.forEach(bucket => {
+                    bucket.tasks.forEach(task => {
+                        if (task.completed === undefined) {
+                            task.completed = false;
+                        }
+                    });
+                });
+                
+                // Initialize lastFocusedBucketId if it doesn't exist
+                if (!appData.lastFocusedBucketId && appData.buckets.length > 0) {
+                    appData.lastFocusedBucketId = appData.buckets[0].id;
+                }
+            } else {
+                // Initialize with default buckets if no data exists
+                appData = {
+                    buckets: [
+                        { id: 'todo', name: 'To Do', tasks: [] },
+                        { id: 'inprogress', name: 'In Progress', tasks: [] }
+                    ],
+                    lastTaskId: 0,
+                    lastAction: null,
+                    lastFocusedBucketId: 'todo'
+                };
+                saveData();
+            }
+            renderBoard();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('plannerAppData', JSON.stringify(appData));
+        }
+
+        // Generate a unique ID for tasks
+        function generateTaskId() {
+            appData.lastTaskId++;
+            saveData();
+            return appData.lastTaskId;
+        }
+
+        // Render the entire board
+        function renderBoard() {
+            board.innerHTML = '';
+            
+            // Render each bucket
+            appData.buckets.forEach(bucket => {
+                const bucketElement = createBucketElement(bucket);
+                board.appendChild(bucketElement);
+            });
+            
+            // Add the "Add Bucket" button at the end
+            const addBucketElement = document.createElement('div');
+            addBucketElement.className = 'add-bucket';
+            addBucketElement.innerHTML = '<i class="fas fa-plus"></i> Add Bucket';
+            addBucketElement.addEventListener('click', () => openBucketModal());
+            board.appendChild(addBucketElement);
+            
+            // Focus the appropriate quick add task input after rendering
+            // But only if lastFocusedBucketId is set
+            setTimeout(() => {
+                if (appData.lastFocusedBucketId) {
+                    // Try to focus the last used bucket's input
+                    const bucketInput = document.querySelector(`.quick-add-task input[data-bucket-id="${appData.lastFocusedBucketId}"]`);
+                    if (bucketInput) {
+                        bucketInput.focus();
+                    } else {
+                        // Fallback to first input if the bucket no longer exists
+                        const firstQuickAddInput = document.querySelector('.quick-add-task input');
+                        if (firstQuickAddInput) {
+                            firstQuickAddInput.focus();
+                            // Update the last focused bucket
+                            if (firstQuickAddInput.dataset.bucketId) {
+                                appData.lastFocusedBucketId = firstQuickAddInput.dataset.bucketId;
+                                saveData();
+                            }
+                        }
+                    }
+                }
+            }, 100);
+        }
+
+        // Create a bucket element
+        function createBucketElement(bucket) {
+            const bucketElement = document.createElement('div');
+            bucketElement.className = 'bucket';
+            bucketElement.dataset.id = bucket.id;
+            
+            const bucketHeader = document.createElement('div');
+            bucketHeader.className = 'bucket-header';
+            
+            // Create bucket name element that can be edited on double click
+            const bucketNameElement = document.createElement('div');
+            bucketNameElement.className = 'bucket-name';
+            bucketNameElement.textContent = bucket.name;
+            bucketNameElement.title = 'Double-click to edit';
+            
+            // Add double click event to make bucket name editable
+            bucketNameElement.addEventListener('dblclick', () => {
+                // Create input element to edit the bucket name
+                const inputElement = document.createElement('input');
+                inputElement.type = 'text';
+                inputElement.className = 'bucket-name-edit';
+                inputElement.value = bucket.name;
+                
+                // Replace bucket name element with input
+                bucketHeader.replaceChild(inputElement, bucketNameElement);
+                
+                // Focus the input
+                inputElement.focus();
+                
+                // Select all text in the input
+                inputElement.select();
+                
+                // Save on enter key
+                inputElement.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveBucketName();
+                    } else if (e.key === 'Escape') {
+                        // Restore original name on escape
+                        bucketHeader.replaceChild(bucketNameElement, inputElement);
+                    }
+                });
+                
+                // Save on blur (when focus is lost)
+                inputElement.addEventListener('blur', saveBucketName);
+                
+                // Function to save the bucket name
+                function saveBucketName() {
+                    const newName = inputElement.value.trim();
+                    if (newName && newName !== bucket.name) {
+                        // Update bucket name in data
+                        updateBucket(bucket.id, newName);
+                    } else {
+                        // If empty or unchanged, just restore the original element
+                        bucketHeader.replaceChild(bucketNameElement, inputElement);
+                    }
+                }
+            });
+            
+            const addTaskButton = document.createElement('button');
+            addTaskButton.className = 'add-task';
+            addTaskButton.innerHTML = '<i class="fas fa-plus"></i>';
+            addTaskButton.dataset.bucket = bucket.id;
+            
+            bucketHeader.appendChild(bucketNameElement);
+            bucketHeader.appendChild(addTaskButton);
+            
+            const taskList = document.createElement('div');
+            taskList.className = 'task-list';
+            taskList.dataset.bucketId = bucket.id;
+            
+            // Make the task list a drop target
+            taskList.addEventListener('dragover', e => {
+                e.preventDefault();
+                taskList.classList.add('drag-over');
+            });
+            
+            taskList.addEventListener('dragleave', () => {
+                taskList.classList.remove('drag-over');
+            });
+            
+            taskList.addEventListener('drop', e => {
+                e.preventDefault();
+                taskList.classList.remove('drag-over');
+                
+                const taskId = e.dataTransfer.getData('text/plain');
+                moveTask(taskId, bucket.id, false);
+            });
+            
+            // Add active task cards to the list (non-completed tasks)
+            const activeTasks = bucket.tasks.filter(task => !task.completed);
+            activeTasks.forEach(task => {
+                const taskCard = createTaskCard(task);
+                taskList.appendChild(taskCard);
+            });
+            
+            // Add quick task creation input
+            const quickAddTask = document.createElement('div');
+            quickAddTask.className = 'quick-add-task';
+            
+            const quickAddInput = document.createElement('input');
+            quickAddInput.type = 'text';
+            quickAddInput.placeholder = '+ Add a task...';
+            quickAddInput.dataset.bucketId = bucket.id;
+            
+            quickAddInput.addEventListener('focus', () => {
+                // Update the last focused bucket id when an input receives focus
+                appData.lastFocusedBucketId = bucket.id;
+                saveData();
+            });
+            
+            quickAddInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') {
+                    const taskTitle = e.target.value.trim();
+                    if (taskTitle) {
+                        // Create a new task with just the title
+                        addTask(bucket.id, {
+                            title: taskTitle,
+                            description: '',
+                            subtasks: [],
+                            dueDate: '',
+                            priority: 'medium'
+                        });
+                        
+                        // Clear the input
+                        e.target.value = '';
+                        
+                        // Show notification
+                        showNotification('Task added');
+                        
+                        // Make sure the current bucket is tracked as the last focused
+                        appData.lastFocusedBucketId = bucket.id;
+                        saveData();
+                        
+                        // Keep focus on the input for adding the next task
+                        // This won't immediately work because renderBoard() will be called
+                        // The focus will be handled in renderBoard based on lastFocusedBucketId
+                    }
+                }
+            });
+            
+            quickAddTask.appendChild(quickAddInput);
+            taskList.appendChild(quickAddTask);
+            
+            // Create completed section
+            const completedSection = document.createElement('div');
+            completedSection.className = 'completed-section collapse-completed';
+            
+            const completedHeader = document.createElement('div');
+            completedHeader.className = 'completed-header';
+            
+            // Get count of completed tasks
+            const completedTasks = bucket.tasks.filter(task => task.completed);
+            const completedCount = completedTasks.length;
+            
+            completedHeader.innerHTML = `<i class="fas fa-chevron-right"></i> Completed (${completedCount})`;
+            
+            completedHeader.addEventListener('click', () => {
+                completedSection.classList.toggle('collapse-completed');
+                const icon = completedHeader.querySelector('i');
+                if (completedSection.classList.contains('collapse-completed')) {
+                    icon.className = 'fas fa-chevron-right';
+                } else {
+                    icon.className = 'fas fa-chevron-down';
+                }
+            });
+            
+            const completedTasksList = document.createElement('div');
+            completedTasksList.className = 'completed-tasks';
+            completedTasksList.dataset.bucketId = bucket.id;
+            
+            // Make the completed tasks list a drop target
+            completedTasksList.addEventListener('dragover', e => {
+                e.preventDefault();
+                completedTasksList.classList.add('drag-over');
+            });
+            
+            completedTasksList.addEventListener('dragleave', () => {
+                completedTasksList.classList.remove('drag-over');
+            });
+            
+            completedTasksList.addEventListener('drop', e => {
+                e.preventDefault();
+                completedTasksList.classList.remove('drag-over');
+                
+                const taskId = e.dataTransfer.getData('text/plain');
+                moveTask(taskId, bucket.id, true);
+            });
+            
+            // Add completed task cards
+            completedTasks.forEach(task => {
+                const taskCard = createTaskCard(task);
+                completedTasksList.appendChild(taskCard);
+            });
+            
+            completedSection.appendChild(completedHeader);
+            completedSection.appendChild(completedTasksList);
+            
+            bucketElement.appendChild(bucketHeader);
+            bucketElement.appendChild(taskList);
+            bucketElement.appendChild(completedSection);
+            
+            return bucketElement;
+        }
+
+        // Create a task card
+        function createTaskCard(task) {
+            const taskCard = document.createElement('div');
+            taskCard.className = 'task-card';
+            taskCard.dataset.id = task.id;
+            taskCard.draggable = true;
+            
+            // Calculate progress percentage - still needed for other functionality
+            let progress = 0;
+            if (task.subtasks && task.subtasks.length > 0) {
+                const completedSubtasks = task.subtasks.filter(subtask => subtask.completed).length;
+                progress = Math.round((completedSubtasks / task.subtasks.length) * 100);
+            }
+            
+            // Create completed checkbox
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'task-complete-checkbox';
+            checkbox.checked = task.completed;
+            checkbox.dataset.taskId = task.id;
+            
+            // Simplify the task card to just title and description
+            taskCard.innerHTML = `
+                <div class="task-title">${task.title}</div>
+                <div class="task-description">${task.description.slice(0, 75)}${task.description.length > 75 ? '...' : ''}</div>
+            `;
+            
+            // Append the checkbox to the task card
+            taskCard.appendChild(checkbox);
+            
+            // Add checkbox event listener to toggle completion
+            checkbox.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent opening task details when clicking checkbox
+                
+                const result = findTask(task.id);
+                if (result) {
+                    const isCompleted = e.target.checked;
+                    result.task.completed = isCompleted;
+                    
+                    // Show notification
+                    if (isCompleted) {
+                        showNotification('Task marked as completed');
+                    } else {
+                        showNotification('Task marked as incomplete');
+                    }
+                    
+                    saveData();
+                    renderBoard();
+                }
+            });
+            
+            // Add drag event listeners
+            taskCard.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('text/plain', task.id);
+            });
+            
+            // Add click event to open task details
+            taskCard.addEventListener('click', (e) => {
+                // Only open details if not clicking the checkbox
+                if (!e.target.classList.contains('task-complete-checkbox')) {
+                    openViewTaskModal(task);
+                }
+            });
+            
+            return taskCard;
+        }
+
+        // Move a task between buckets
+        function moveTask(taskId, targetBucketId, setCompleted = null) {
+            // Find the task and source bucket
+            let sourceTask = null;
+            let sourceBucketId = null;
+            let wasCompleted = false;
+            
+            for (const bucket of appData.buckets) {
+                const taskIndex = bucket.tasks.findIndex(task => task.id == taskId);
+                if (taskIndex !== -1) {
+                    sourceTask = {...bucket.tasks[taskIndex]};
+                    wasCompleted = sourceTask.completed;
+                    sourceBucketId = bucket.id;
+                    bucket.tasks.splice(taskIndex, 1);
+                    break;
+                }
+            }
+            
+            if (sourceTask) {
+                // Save the last action for potential undo
+                appData.lastAction = {
+                    type: 'move',
+                    task: sourceTask,
+                    sourceBucketId,
+                    targetBucketId,
+                    wasCompleted,
+                    setCompleted
+                };
+                
+                // Set completed flag if specified
+                if (setCompleted !== null) {
+                    sourceTask.completed = setCompleted;
+                }
+                
+                // Add to target bucket
+                const targetBucket = appData.buckets.find(b => b.id === targetBucketId);
+                if (targetBucket) {
+                    targetBucket.tasks.push(sourceTask);
+                    
+                    // Show notification when marking as completed
+                    if (!wasCompleted && sourceTask.completed) {
+                        showNotification('Task marked as completed');
+                    }
+                    
+                    saveData();
+                    renderBoard();
+                }
+            }
+        }
+
+        // Add a new task
+        function addTask(bucketId, taskData) {
+            const bucket = appData.buckets.find(b => b.id === bucketId);
+            if (bucket) {
+                const newTask = {
+                    id: generateTaskId(),
+                    title: taskData.title,
+                    description: taskData.description || '',
+                    subtasks: taskData.subtasks || [],
+                    dueDate: taskData.dueDate || '',
+                    priority: taskData.priority || 'medium',
+                    completed: false
+                };
+                
+                bucket.tasks.push(newTask);
+                saveData();
+                renderBoard();
+                return newTask;
+            }
+            return null;
+        }
+
+        // Update an existing task
+        function updateTask(taskId, taskData) {
+            for (const bucket of appData.buckets) {
+                const taskIndex = bucket.tasks.findIndex(task => task.id == taskId);
+                if (taskIndex !== -1) {
+                    const wasCompleted = bucket.tasks[taskIndex].completed;
+                    
+                    // Update task properties
+                    bucket.tasks[taskIndex] = {
+                        ...bucket.tasks[taskIndex],
+                        title: taskData.title,
+                        description: taskData.description || '',
+                        subtasks: taskData.subtasks || [],
+                        dueDate: taskData.dueDate || '',
+                        priority: taskData.priority || 'medium'
+                    };
+                    
+                    // Check if all subtasks are completed
+                    const allCompleted = bucket.tasks[taskIndex].subtasks.length > 0 && 
+                        bucket.tasks[taskIndex].subtasks.every(subtask => subtask.completed);
+                    
+                    // Auto-mark as completed if all subtasks are done and not already completed
+                    if (allCompleted && !bucket.tasks[taskIndex].completed) {
+                        bucket.tasks[taskIndex].completed = true;
+                        showNotification('Task automatically marked as completed');
+                    }
+                    
+                    saveData();
+                    renderBoard();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Delete a task
+        function deleteTask(taskId) {
+            for (const bucket of appData.buckets) {
+                const taskIndex = bucket.tasks.findIndex(task => task.id == taskId);
+                if (taskIndex !== -1) {
+                    const deletedTask = bucket.tasks[taskIndex];
+                    bucket.tasks.splice(taskIndex, 1);
+                    
+                    // Save for potential undo
+                    appData.lastAction = {
+                        type: 'delete',
+                        task: deletedTask,
+                        bucketId: bucket.id
+                    };
+                    
+                    saveData();
+                    renderBoard();
+                    showNotification('Task deleted');
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Add a new bucket
+        function addBucket(name) {
+            const id = 'bucket_' + Date.now();
+            const newBucket = {
+                id,
+                name,
+                tasks: []
+            };
+            
+            appData.buckets.push(newBucket);
+            saveData();
+            renderBoard();
+            return newBucket;
+        }
+
+        // Update bucket name
+        function updateBucket(bucketId, name) {
+            const bucket = appData.buckets.find(b => b.id === bucketId);
+            if (bucket) {
+                bucket.name = name;
+                saveData();
+                renderBoard();
+                return true;
+            }
+            return false;
+        }
+
+        // Delete a bucket
+        function deleteBucket(bucketId) {
+            const bucketIndex = appData.buckets.findIndex(b => b.id === bucketId);
+            if (bucketIndex !== -1) {
+                appData.buckets.splice(bucketIndex, 1);
+                saveData();
+                renderBoard();
+                return true;
+            }
+            return false;
+        }
+
+        // Find a task by ID
+        function findTask(taskId) {
+            for (const bucket of appData.buckets) {
+                const task = bucket.tasks.find(t => t.id == taskId);
+                if (task) {
+                    return {
+                        task,
+                        bucketId: bucket.id
+                    };
+                }
+            }
+            return null;
+        }
+
+        // Show notification with undo option
+        function showNotification(message) {
+            notificationMessage.textContent = message;
+            notification.classList.add('show');
+            
+            // Hide notification after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Undo last action
+        function undoLastAction() {
+            if (!appData.lastAction) return;
+            
+            const action = appData.lastAction;
+            
+            if (action.type === 'move') {
+                // Undo task move
+                for (const bucket of appData.buckets) {
+                    const taskIndex = bucket.tasks.findIndex(task => task.id == action.task.id);
+                    if (taskIndex !== -1) {
+                        bucket.tasks.splice(taskIndex, 1);
+                        break;
+                    }
+                }
+                
+                // Restore completion state
+                if (action.wasCompleted !== undefined) {
+                    action.task.completed = action.wasCompleted;
+                }
+                
+                const sourceBucket = appData.buckets.find(b => b.id === action.sourceBucketId);
+                if (sourceBucket) {
+                    sourceBucket.tasks.push(action.task);
+                }
+            } else if (action.type === 'delete') {
+                // Undo task delete
+                const bucket = appData.buckets.find(b => b.id === action.bucketId);
+                if (bucket) {
+                    bucket.tasks.push(action.task);
+                }
+            }
+            
+            // Clear last action
+            appData.lastAction = null;
+            saveData();
+            renderBoard();
+            notification.classList.remove('show');
+        }
+
+        // Search tasks
+        function searchTasks(query) {
+            if (!query) {
+                renderBoard();
+                return;
+            }
+            
+            query = query.toLowerCase();
+            
+            // Clone the buckets
+            const filteredBuckets = appData.buckets.map(bucket => {
+                return {
+                    ...bucket,
+                    tasks: bucket.tasks.filter(task => 
+                        task.title.toLowerCase().includes(query) ||
+                        task.description.toLowerCase().includes(query) ||
+                        task.subtasks.some(subtask => subtask.text.toLowerCase().includes(query))
+                    )
+                };
+            });
+            
+            // Replace the buckets temporarily for rendering
+            const originalBuckets = appData.buckets;
+            appData.buckets = filteredBuckets;
+            
+            renderBoard();
+            
+            // Restore original data
+            appData.buckets = originalBuckets;
+        }
+
+        // Filter tasks
+        function filterTasks(filterType) {
+            if (filterType === 'all') {
+                renderBoard();
+                return;
+            }
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Clone the buckets
+            const filteredBuckets = appData.buckets.map(bucket => {
+                return {
+                    ...bucket,
+                    tasks: bucket.tasks.filter(task => {
+                        if (filterType === 'overdue') {
+                            if (!task.dueDate) return false;
+                            const dueDate = new Date(task.dueDate);
+                            return dueDate < today;
+                        } else {
+                            return task.priority === filterType;
+                        }
+                    })
+                };
+            });
+            
+            // Replace the buckets temporarily for rendering
+            const originalBuckets = appData.buckets;
+            appData.buckets = filteredBuckets;
+            
+            renderBoard();
+            
+            // Restore original data
+            appData.buckets = originalBuckets;
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            
+            // Update the toggle button icon
+            if (document.body.classList.contains('dark-mode')) {
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+
+        // Check for saved dark mode preference
+        function checkDarkModePreference() {
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        }
+
+        // Open the task modal for adding/editing
+        function openTaskModal(bucketId, taskId = null) {
+            const modalTitle = document.querySelector('#task-modal .modal-title');
+            const taskIdInput = document.getElementById('task-id');
+            const bucketIdInput = document.getElementById('bucket-id');
+            const taskTitleInput = document.getElementById('task-title');
+            const taskDescriptionInput = document.getElementById('task-description');
+            const taskDueDateInput = document.getElementById('task-due-date');
+            const taskPriorityInput = document.getElementById('task-priority');
+            const subtasksContainer = document.getElementById('subtasks-container');
+            
+            // Clear previous data
+            taskForm.reset();
+            subtasksContainer.innerHTML = '';
+            
+            if (taskId) {
+                // Edit existing task
+                const result = findTask(taskId);
+                if (result) {
+                    const { task } = result;
+                    
+                    modalTitle.textContent = 'Edit Task';
+                    taskIdInput.value = task.id;
+                    bucketIdInput.value = bucketId;
+                    taskTitleInput.value = task.title;
+                    taskDescriptionInput.value = task.description;
+                    taskDueDateInput.value = task.dueDate;
+                    taskPriorityInput.value = task.priority;
+                    
+                    // Add subtasks
+                    task.subtasks.forEach((subtask, index) => {
+                        addSubtaskToForm(subtask.text, subtask.completed, index);
+                    });
+                }
+            } else {
+                // Add new task
+                modalTitle.textContent = 'Add New Task';
+                taskIdInput.value = '';
+                bucketIdInput.value = bucketId;
+                
+                // Set default date to tomorrow
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                taskDueDateInput.value = tomorrow.toISOString().split('T')[0];
+            }
+            
+            taskModal.style.display = 'flex';
+        }
+
+        // Open the bucket modal for adding/editing
+        function openBucketModal(bucketId = null) {
+            const modalTitle = document.querySelector('#bucket-modal .modal-title');
+            const bucketNameInput = document.getElementById('bucket-name');
+            const editBucketIdInput = document.getElementById('edit-bucket-id');
+            
+            // Clear previous data
+            bucketForm.reset();
+            
+            if (bucketId) {
+                // Edit existing bucket
+                const bucket = appData.buckets.find(b => b.id === bucketId);
+                if (bucket) {
+                    modalTitle.textContent = 'Edit Bucket';
+                    bucketNameInput.value = bucket.name;
+                    editBucketIdInput.value = bucketId;
+                }
+            } else {
+                // Add new bucket
+                modalTitle.textContent = 'Add New Bucket';
+                editBucketIdInput.value = '';
+            }
+            
+            bucketModal.style.display = 'flex';
+        }
+
+        // Open task view modal
+        function openViewTaskModal(task) {
+            const titleElement = document.getElementById('view-task-title');
+            const descriptionElement = document.getElementById('view-task-description');
+            const dueDateElement = document.getElementById('view-task-due-date');
+            const priorityElement = document.getElementById('view-task-priority');
+            const subtasksList = document.getElementById('view-subtasks-list');
+            const progressBar = document.getElementById('view-task-progress');
+            const editBtn = document.getElementById('edit-task-btn');
+            const deleteBtn = document.getElementById('delete-task-btn');
+            
+            // Set task details
+            titleElement.textContent = task.title;
+            descriptionElement.textContent = task.description || 'No description provided';
+            
+            // Format due date
+            if (task.dueDate) {
+                const dueDate = new Date(task.dueDate);
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dueDateElement.textContent = `Due: ${dueDate.toLocaleDateString('en-US', options)}`;
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (dueDate < today) {
+                    dueDateElement.style.color = 'var(--high-priority)';
+                    dueDateElement.textContent += ' (Overdue)';
+                } else {
+                    dueDateElement.style.color = '';
+                }
+            } else {
+                dueDateElement.textContent = 'No due date';
+                dueDateElement.style.color = '';
+            }
+            
+            // Set priority
+            priorityElement.textContent = `Priority: ${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}`;
+            priorityElement.className = task.priority;
+            
+            // Add subtasks
+            subtasksList.innerHTML = '';
+            if (task.subtasks && task.subtasks.length > 0) {
+                task.subtasks.forEach(subtask => {
+                    const li = document.createElement('li');
+                    li.className = 'subtask-item';
+                    li.innerHTML = `
+                        <input type="checkbox" class="subtask-checkbox" data-task-id="${task.id}" 
+                               data-subtask-index="${task.subtasks.indexOf(subtask)}" 
+                               ${subtask.completed ? 'checked' : ''}>
+                        <span style="${subtask.completed ? 'text-decoration: line-through' : ''}">${subtask.text}</span>
+                    `;
+                    subtasksList.appendChild(li);
+                });
+                
+                // We'll keep the progress calculation for subtasks in the detail view
+                if (progressBar) {
+                    const completedSubtasks = task.subtasks.filter(subtask => subtask.completed).length;
+                    const progress = Math.round((completedSubtasks / task.subtasks.length) * 100);
+                    progressBar.style.width = `${progress}%`;
+                }
+            } else {
+                subtasksList.innerHTML = '<li>No subtasks</li>';
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+            }
+            
+            // Add completed toggle button
+            const actionButtons = document.querySelector('#view-task-modal .action-buttons');
+            let toggleBtn = document.getElementById('toggle-complete-btn');
+            
+            if (!toggleBtn) {
+                toggleBtn = document.createElement('button');
+                toggleBtn.type = 'button';
+                toggleBtn.id = 'toggle-complete-btn';
+                toggleBtn.className = task.completed ? 'cancel-btn' : 'save-btn';
+                actionButtons.insertBefore(toggleBtn, editBtn);
+            } else {
+                toggleBtn.className = task.completed ? 'cancel-btn' : 'save-btn';
+            }
+            
+            toggleBtn.textContent = task.completed ? 'Mark Incomplete' : 'Mark Complete';
+            toggleBtn.dataset.taskId = task.id;
+            toggleBtn.dataset.completed = task.completed;
+            
+            // Set up edit and delete buttons
+            editBtn.dataset.taskId = task.id;
+            deleteBtn.dataset.taskId = task.id;
+            
+            viewTaskModal.style.display = 'flex';
+        }
+
+        // Add a subtask to the form
+        function addSubtaskToForm(text = '', completed = false, index = null) {
+            const subtasksContainer = document.getElementById('subtasks-container');
+            const subtaskItem = document.createElement('div');
+            subtaskItem.className = 'subtask-item';
+            
+            const id = index !== null ? index : subtasksContainer.children.length;
+            
+            subtaskItem.innerHTML = `
+                <input type="checkbox" class="subtask-checkbox" id="subtask-${id}" 
+                       name="subtask-${id}-completed" ${completed ? 'checked' : ''}>
+                <input type="text" name="subtask-${id}-text" value="${text}" placeholder="Subtask">
+                <div class="subtask-actions">
+                    <button type="button" class="delete-subtask"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            
+            // Add delete event listener
+            subtaskItem.querySelector('.delete-subtask').addEventListener('click', function() {
+                subtaskItem.remove();
+            });
+            
+            subtasksContainer.appendChild(subtaskItem);
+        }
+
+        // Close all modals
+        function closeModals() {
+            taskModal.style.display = 'none';
+            bucketModal.style.display = 'none';
+            viewTaskModal.style.display = 'none';
+        }
+
+        // Get data from task form
+        function getTaskFormData() {
+            const taskId = document.getElementById('task-id').value;
+            const bucketId = document.getElementById('bucket-id').value;
+            const title = document.getElementById('task-title').value;
+            const description = document.getElementById('task-description').value;
+            const dueDate = document.getElementById('task-due-date').value;
+            const priority = document.getElementById('task-priority').value;
+            
+            // Collect subtasks
+            const subtasks = [];
+            const subtaskItems = document.querySelectorAll('.subtask-item');
+            
+            subtaskItems.forEach(item => {
+                const textInput = item.querySelector('input[type="text"]');
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                
+                if (textInput && textInput.value.trim()) {
+                    subtasks.push({
+                        text: textInput.value.trim(),
+                        completed: checkbox ? checkbox.checked : false
+                    });
+                }
+            });
+            
+            return {
+                taskId,
+                bucketId,
+                taskData: {
+                    title,
+                    description,
+                    dueDate,
+                    priority,
+                    subtasks
+                }
+            };
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Add task buttons
+            document.addEventListener('click', e => {
+                if (e.target.closest('.add-task')) {
+                    const bucketId = e.target.closest('.add-task').dataset.bucket;
+                    openTaskModal(bucketId);
+                }
+            });
+            
+            // Toggle task completion button
+            document.addEventListener('click', e => {
+                if (e.target.id === 'toggle-complete-btn') {
+                    const taskId = e.target.dataset.taskId;
+                    const currentlyCompleted = e.target.dataset.completed === 'true';
+                    
+                    // Find the task and its bucket
+                    const result = findTask(taskId);
+                    if (result) {
+                        result.task.completed = !currentlyCompleted;
+                        
+                        // Show notification
+                        if (result.task.completed) {
+                            showNotification('Task marked as completed');
+                        } else {
+                            showNotification('Task marked as incomplete');
+                        }
+                        
+                        saveData();
+                        renderBoard();
+                        closeModals();
+                    }
+                }
+            });
+            
+            // Close modal buttons
+            document.querySelectorAll('.close-modal, .cancel-btn').forEach(button => {
+                button.addEventListener('click', closeModals);
+            });
+            
+            // Add bucket button
+            addBucketBtn.addEventListener('click', () => openBucketModal());
+            
+            // Theme toggle
+            themeToggle.addEventListener('click', toggleDarkMode);
+            
+            // Search input
+            searchInput.addEventListener('input', e => {
+                searchTasks(e.target.value.trim());
+            });
+            
+            // Undo button
+            undoBtn.addEventListener('click', undoLastAction);
+            
+            // Filter dropdown
+            filterBtn.addEventListener('click', () => {
+                filterDropdown.classList.toggle('active');
+            });
+            
+            // Filter options
+            document.querySelectorAll('.filter-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    filterTasks(option.dataset.filter);
+                    filterDropdown.classList.remove('active');
+                });
+            });
+            
+            // Close filter dropdown when clicking outside
+            document.addEventListener('click', e => {
+                if (!e.target.closest('.filter-dropdown')) {
+                    filterDropdown.classList.remove('active');
+                }
+            });
+            
+            // Add subtask button
+            addSubtaskBtn.addEventListener('click', () => {
+                const newSubtaskText = newSubtaskInput.value.trim();
+                if (newSubtaskText) {
+                    addSubtaskToForm(newSubtaskText);
+                    newSubtaskInput.value = '';
+                }
+            });
+            
+            // Enter key for adding subtasks
+            newSubtaskInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addSubtaskBtn.click();
+                }
+            });
+            
+            // Subtask checkbox in view modal
+            document.addEventListener('change', e => {
+                if (e.target.classList.contains('subtask-checkbox') && e.target.dataset.taskId) {
+                    const taskId = e.target.dataset.taskId;
+                    const subtaskIndex = e.target.dataset.subtaskIndex;
+                    
+                    // Update the task
+                    const result = findTask(taskId);
+                    if (result) {
+                        const { task } = result;
+                        task.subtasks[subtaskIndex].completed = e.target.checked;
+                        
+                        // Update the UI
+                        const span = e.target.nextElementSibling;
+                        if (e.target.checked) {
+                            span.style.textDecoration = 'line-through';
+                        } else {
+                            span.style.textDecoration = 'none';
+                        }
+                        
+                        // Update progress bar
+                        const completedSubtasks = task.subtasks.filter(subtask => subtask.completed).length;
+                        const progress = Math.round((completedSubtasks / task.subtasks.length) * 100);
+                        document.getElementById('view-task-progress').style.width = `${progress}%`;
+                        
+                        updateTask(taskId, task);
+                    }
+                }
+            });
+            
+            // Edit task button
+            document.getElementById('edit-task-btn').addEventListener('click', () => {
+                const taskId = document.getElementById('edit-task-btn').dataset.taskId;
+                const result = findTask(taskId);
+                if (result) {
+                    closeModals();
+                    openTaskModal(result.bucketId, taskId);
+                }
+            });
+            
+            // Delete task button
+            document.getElementById('delete-task-btn').addEventListener('click', () => {
+                const taskId = document.getElementById('delete-task-btn').dataset.taskId;
+                if (confirm('Are you sure you want to delete this task?')) {
+                    deleteTask(taskId);
+                    closeModals();
+                }
+            });
+            
+            // Task form submit
+            taskForm.addEventListener('submit', e => {
+                e.preventDefault();
+                
+                const { taskId, bucketId, taskData } = getTaskFormData();
+                
+                if (taskId) {
+                    // Update existing task
+                    updateTask(taskId, taskData);
+                } else {
+                    // Add new task
+                    addTask(bucketId, taskData);
+                }
+                
+                closeModals();
+            });
+            
+            // Bucket form submit
+            bucketForm.addEventListener('submit', e => {
+                e.preventDefault();
+                
+                const bucketName = document.getElementById('bucket-name').value;
+                const bucketId = document.getElementById('edit-bucket-id').value;
+                
+                if (bucketId) {
+                    // Update existing bucket
+                    updateBucket(bucketId, bucketName);
+                } else {
+                    // Add new bucket
+                    addBucket(bucketName);
+                }
+                
+                closeModals();
+            });
+        }
+
+        // Initialize app
+        function init() {
+            loadData();
+            setupEventListeners();
+            checkDarkModePreference();
+            
+            // Focus on the appropriate quick add task input when the page loads
+            setTimeout(() => {
+                if (appData.lastFocusedBucketId) {
+                    const bucketInput = document.querySelector(`.quick-add-task input[data-bucket-id="${appData.lastFocusedBucketId}"]`);
+                    if (bucketInput) {
+                        bucketInput.focus();
+                    } else {
+                        // Fallback to first input
+                        const firstQuickAddInput = document.querySelector('.quick-add-task input');
+                        if (firstQuickAddInput) {
+                            firstQuickAddInput.focus();
+                            // Update the last focused bucket
+                            if (firstQuickAddInput.dataset.bucketId) {
+                                appData.lastFocusedBucketId = firstQuickAddInput.dataset.bucketId;
+                                saveData();
+                            }
+                        }
+                    }
+                }
+            }, 500);
+        }
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

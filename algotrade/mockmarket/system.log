@@ -1278,3 +1278,35 @@
     "BANKNIFTY"
   ]
 }
+2025-03-30T07:42:46.372Z: Client connected
+2025-03-30T07:42:46.378Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "SBIN"
+  ]
+}
+2025-03-30T07:42:46.378Z: Created new symbol SBIN with initial price 943.5159320987442
+2025-03-30T07:42:46.379Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "NIFTY"
+  ]
+}
+2025-03-30T07:42:46.379Z: Created new symbol NIFTY with initial price 434.3442931363401
+2025-03-30T07:43:20.054Z: Client disconnected
+2025-03-30T07:44:43.107Z: Client connected
+2025-03-30T07:44:43.113Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "SBIN"
+  ]
+}
+2025-03-30T07:44:43.114Z: Created new symbol SBIN with initial price 465.5494290126367
+2025-03-30T07:44:43.114Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "NIFTY"
+  ]
+}
+2025-03-30T07:44:43.114Z: Created new symbol NIFTY with initial price 896.6203825632908
+2025-03-30T07:44:57.129Z: Client disconnected

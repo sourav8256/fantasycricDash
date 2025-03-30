@@ -29,6 +29,15 @@ else
     echo "Mockmarket server not running in PM2."
 fi
 
+# Stop the live feeder using PM2
+if pm2 describe "live_feeder" > /dev/null 2>&1; then
+    echo "Stopping live feeder..."
+    pm2 stop live_feeder
+    echo "Live feeder stopped."
+else
+    echo "Live feeder not running in PM2."
+fi
+
 # Stop the frontend using PM2
 if pm2 describe "frontend" > /dev/null 2>&1; then
     echo "Stopping frontend..."

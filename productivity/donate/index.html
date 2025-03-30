@@ -326,7 +326,26 @@
                 
                 if (amountToAdd > 0) {
                     state.balance += amountToAdd;
-                    addToHistory(`Added ₹${amountToAdd.toFixed(2)} for missed time (${Math.round(secondsElapsed)}s)`);
+                    
+                    // Format elapsed time in a more readable way
+                    let timeDisplay;
+                    if (secondsElapsed < 60) {
+                        timeDisplay = `${Math.round(secondsElapsed)}s`;
+                    } else if (secondsElapsed < 3600) {
+                        const minutes = Math.floor(secondsElapsed / 60);
+                        const seconds = Math.round(secondsElapsed % 60);
+                        timeDisplay = `${minutes}m ${seconds}s`;
+                    } else {
+                        const hours = Math.floor(secondsElapsed / 3600);
+                        const minutes = Math.floor((secondsElapsed % 3600) / 60);
+                        const seconds = Math.round(secondsElapsed % 60);
+                        timeDisplay = `${hours}h ${minutes}m ${seconds}s`;
+                    }
+                    
+                    // Calculate hourly rate for reference
+                    const hourlyRate = (state.monthlyRate / 30 / 24).toFixed(2);
+                    
+                    addToHistory(`Added ₹${amountToAdd.toFixed(2)} for missed time (${timeDisplay}) at ₹${hourlyRate}/hour`);
                     updateDisplay();
                     saveState();
                 }

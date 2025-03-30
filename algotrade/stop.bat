@@ -16,6 +16,11 @@ echo Stopping mockmarket server...
 pm2 stop mockmarket
 echo Mockmarket server stopped.
 
+:: Stop the live feeder using PM2
+echo Stopping live feeder...
+pm2 stop live_feeder
+echo Live feeder stopped.
+
 :: Stop the frontend using PM2
 echo Stopping frontend...
 pm2 stop frontend

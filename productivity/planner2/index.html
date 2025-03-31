@@ -141,6 +141,9 @@
         .bucket-name {
             font-weight: 600;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .bucket-name-edit {
@@ -752,6 +755,40 @@
                 max-height: calc(100vh - 250px);
             }
         }
+
+        /* Update the bucket edit icon styles */
+        .bucket-edit-icon {
+            display: none; /* Hidden by default on desktop */
+            color: white; /* Change from rgba(255, 255, 255, 0.7) to solid white */
+            cursor: pointer;
+            padding: 0.3rem;
+            font-size: 1rem;
+            margin-left: 0.5rem;
+        }
+
+        .bucket-edit-icon:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            .bucket-name {
+                font-size: 1rem;
+                display: flex;
+                align-items: center;
+            }
+
+            .bucket-edit-icon {
+                display: inline-block; /* Show on mobile */
+                color: var(--primary-color); /* Match the app's primary color */
+            }
+
+            /* Update bucket header for better visibility */
+            .bucket-header {
+                padding: 0.8rem;
+                background-color: var(--card-bg);
+                border-bottom: 2px solid var(--border-color);
+            }
+        }
     </style>
 </head>
 <body>
@@ -1061,11 +1098,15 @@
             // Create bucket name element that can be edited on double click
             const bucketNameElement = document.createElement('div');
             bucketNameElement.className = 'bucket-name';
-            bucketNameElement.textContent = bucket.name;
-            bucketNameElement.title = 'Double-click to edit';
+            bucketNameElement.innerHTML = `
+                <span>${bucket.name}</span>
+                <i class="fas fa-edit bucket-edit-icon"></i>
+            `;
             
-            // Add double click event to make bucket name editable
-            bucketNameElement.addEventListener('dblclick', () => {
+            // Add click handler for the edit icon
+            const editIcon = bucketNameElement.querySelector('.bucket-edit-icon');
+            editIcon.addEventListener('click', (e) => {
+                e.stopPropagation();
                 // Create input element to edit the bucket name
                 const inputElement = document.createElement('input');
                 inputElement.type = 'text';
@@ -1106,6 +1147,11 @@
                         bucketHeader.replaceChild(bucketNameElement, inputElement);
                     }
                 }
+            });
+            
+            // Keep the double-click handler for desktop
+            bucketNameElement.addEventListener('dblclick', () => {
+                editIcon.click(); // Reuse the edit icon click handler
             });
             
             const addTaskButton = document.createElement('button');

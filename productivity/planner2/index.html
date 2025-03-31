@@ -603,6 +603,9 @@
                 </div>
             </div>
             <button id="add-bucket-btn"><i class="fas fa-plus"></i> Add Bucket</button>
+            <button id="export-btn"><i class="fas fa-download"></i> Export</button>
+            <button id="import-btn"><i class="fas fa-upload"></i> Import</button>
+            <input type="file" id="import-file" accept=".json" style="display: none;">
             <button class="theme-switch" id="theme-toggle"><i class="fas fa-moon"></i></button>
         </div>
     </header>
@@ -2308,6 +2311,16 @@
                 
                 closeModals();
             });
+            
+            // Export button
+            document.getElementById('export-btn').addEventListener('click', exportData);
+            
+            // Import button and file input
+            document.getElementById('import-btn').addEventListener('click', () => {
+                document.getElementById('import-file').click();
+            });
+            
+            document.getElementById('import-file').addEventListener('change', importData);
         }
 
         // Initialize app
@@ -2610,6 +2623,113 @@
             
             // Remove any placeholder elements
             document.querySelectorAll('.drag-placeholder').forEach(el => el.remove());
+        }
+        
+        // Export app data to JSON file
+        function exportData() {
+            const dataStr = JSON.stringify(appData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileName = `task-planner-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileName);
+            linkElement.style.display = 'none';
+            
+            document.body.appendChild(linkElement);
+            linkElement.click();
+            document.body.removeChild(linkElement);
+            
+            showNotification('Data exported successfully');
+        }
+        
+        // Import app data from JSON file
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+                    
+                    // Validate that the imported data has the required structure
+                    if (!importedData || !Array.isArray(importedData.buckets)) {
+                        throw new Error('Invalid data format');
+                    }
+                    
+                    // Create a backup of the current data
+                    const currentData = JSON.stringify(appData);
+                    localStorage.setItem('plannerAppDataBackup', currentData);
+                    
+                    // Import the new data
+                    appData = importedData;
+                    
+                    // Ensure sequence numbers are valid
+                    appData.buckets.forEach(bucket => {
+                        // Process active and completed tasks separately
+                        const activeTasks = bucket.tasks.filter(task => !task.completed);
+                        const completedTasks = bucket.tasks.filter(task => task.completed);
+                        
+                        // Reset sequence numbers for active tasks
+                        activeTasks.forEach((task, index) => {
+                            if (task.completed === undefined) {
+                                task.completed = false;
+                            }
+                            // Ensure sequence is a number
+                            task.sequence = Number(task.sequence || (index + 1));
+                        });
+                        
+                        // Reset sequence numbers for completed tasks
+                        completedTasks.forEach((task, index) => {
+                            if (task.completed === undefined) {
+                                task.completed = true;
+                            }
+                            // Ensure sequence is a number
+                            task.sequence = Number(task.sequence || (index + 1));
+                        });
+                    });
+                    
+                    // Initialize lastFocusedBucketId if needed
+                    if (!appData.lastFocusedBucketId && appData.buckets.length > 0) {
+                        appData.lastFocusedBucketId = appData.buckets[0].id;
+                    }
+                    
+                    // Save and render the imported data
+                    saveData();
+                    renderBoard();
+                    
+                    showNotification('Data imported successfully');
+                } catch (error) {
+                    console.error('Import error:', error);
+                    showNotification('Error importing data: ' + error.message);
+                    
+                    // Restore from backup if there was an error
+                    const backup = localStorage.getItem('plannerAppDataBackup');
+                    if (backup) {
+                        try {
+                            appData = JSON.parse(backup);
+                            saveData();
+                            renderBoard();
+                        } catch (e) {
+                            console.error('Error restoring backup:', e);
+                        }
+                    }
+                }
+                
+                // Reset the file input
+                e.target.value = '';
+            };
+            
+            reader.onerror = function() {
+                showNotification('Error reading file');
+                // Reset the file input
+                e.target.value = '';
+            };
+            
+            reader.readAsText(file);
         }
     </script>
 </body>

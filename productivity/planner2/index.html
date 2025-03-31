@@ -1511,7 +1511,7 @@
                             priority: 'medium'
                         });
                         
-                        // Clear the input
+                        // Clear the input without triggering a blur
                         e.target.value = '';
                         
                         // Show notification
@@ -1521,9 +1521,19 @@
                         appData.lastFocusedBucketId = bucket.id;
                         saveData();
                         
-                        // Keep focus on the input for adding the next task
-                        // This won't immediately work because renderBoard() will be called
-                        // The focus will be handled in renderBoard based on lastFocusedBucketId
+                        // Prevent the default enter behavior
+                        e.preventDefault();
+                        
+                        // Render the board but skip the focus handling
+                        renderBoard(true);
+                        
+                        // Force focus back to the input after a short delay
+                        setTimeout(() => {
+                            const input = document.querySelector(`.quick-add-task input[data-bucket-id="${bucket.id}"]`);
+                            if (input) {
+                                input.focus();
+                            }
+                        }, 10);
                     }
                 }
             });

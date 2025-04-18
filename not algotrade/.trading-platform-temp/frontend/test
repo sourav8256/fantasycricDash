@@ -1,0 +1,25 @@
+/*
+To access the current local host using another device on the same network, follow these steps:
+
+1. Find the local IP address of the host machine:
+   - On Windows:
+     - Open Command Prompt and type `ipconfig`.
+     - Look for the "IPv4 Address" under the active network connection.
+   - On macOS/Linux:
+     - Open Terminal and type `ifconfig` or `ip a`.
+     - Look for the "inet" address under the active network connection.
+
+2. Ensure that the host machine's firewall allows incoming connections on the desired port (e.g., port 80 for HTTP).
+
+3. On the host machine, start the server (e.g., a web server) and ensure it is listening on all network interfaces (0.0.0.0) or the specific local IP address.
+
+4. On the other device, open a web browser and enter the local IP address of the host machine followed by the port number (if not using the default port 80). For example:
+   ```
+   http://192.168.1.100:8080
+   ```
+
+5. You should now be able to access the local host from the other device on the same network.
+*/
+
+
+192.168.0.109:5500

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Market Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .price-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .price-up {
+            background-color: #e6ffe6;
+        }
+        .price-down {
+            background-color: #ffe6e6;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        #symbolInput {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 5px 10px;
+            margin-right: 5px;
+        }
+        #status {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #e6ffe6;
+        }
+        .disconnected {
+            background-color: #ffe6e6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mock Market Tester</h1>
+    
+    <div id="status" class="disconnected">Status: Disconnected</div>
+
+    <div class="controls">
+        <input type="text" id="symbolInput" placeholder="Enter any symbol (e.g., AAPL, SBIN, RELIANCE)">
+        <button onclick="subscribe()">Subscribe</button>
+        <button onclick="unsubscribe()">Unsubscribe</button>
+        <button onclick="clearData()">Clear Data</button>
+    </div>
+
+    <div id="priceContainer"></div>
+
+    <script>
+        let ws;
+        let priceHistory = {};
+        
+        function connect() {
+            ws = new WebSocket('ws://localhost:5555');
+            
+            ws.onopen = () => {
+                document.getElementById('status').textContent = 'Status: Connected';
+                document.getElementById('status').className = 'connected';
+            };
+            
+            ws.onclose = () => {
+                document.getElementById('status').textContent = 'Status: Disconnected';
+                document.getElementById('status').className = 'disconnected';
+                // Attempt to reconnect after 5 seconds
+                setTimeout(connect, 5000);
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.event === 'price_update') {
+                    updatePrice(data);
+                } else {
+                    console.log('Received:', data);
+                }
+            };
+        }
+
+        function updatePrice(data) {
+            const symbol = data.symbol;
+            const price = data.data.price;
+            const volume = data.data.volume;
+            
+            let priceCard = document.getElementById(`price-${symbol}`);
+            const oldPrice = priceHistory[symbol]?.price;
+            
+            if (!priceCard) {
+                priceCard = document.createElement('div');
+                priceCard.id = `price-${symbol}`;
+                priceCard.className = 'price-card';
+                document.getElementById('priceContainer').appendChild(priceCard);
+            }
+            
+            // Determine price movement
+            let priceClass = '';
+            if (oldPrice) {
+                priceClass = price > oldPrice ? 'price-up' : price < oldPrice ? 'price-down' : '';
+            }
+            
+            priceCard.className = `price-card ${priceClass}`;
+            priceCard.innerHTML = `
+                <h3>${symbol}</h3>
+                <p>Price: $${price}</p>
+                <p>Volume: ${volume.toLocaleString()}</p>
+                <p>Time: ${new Date().toLocaleTimeString()}</p>
+            `;
+            
+            // Store current price for future comparison
+            priceHistory[symbol] = { price, volume };
+        }
+
+        function subscribe() {
+            const symbol = document.getElementById('symbolInput').value.toUpperCase();
+            if (!symbol) return;
+            
+            const message = {
+                action: 'subscribe',
+                symbols: [symbol]  // Make sure it's an array
+            };
+            
+            console.log('Sending subscription message:', message);
+            ws.send(JSON.stringify(message));
+        }
+
+        function unsubscribe() {
+            const symbol = document.getElementById('symbolInput').value.toUpperCase();
+            if (!symbol) return;
+            
+            ws.send(JSON.stringify({
+                action: 'unsubscribe',
+                symbols: [symbol]
+            }));
+            
+            // Remove price card
+            const priceCard = document.getElementById(`price-${symbol}`);
+            if (priceCard) {
+                priceCard.remove();
+            }
+            delete priceHistory[symbol];
+        }
+
+        function clearData() {
+            document.getElementById('priceContainer').innerHTML = '';
+            priceHistory = {};
+        }
+
+        // Initial connection
+        connect();
+    </script>
+</body>
+</html> 

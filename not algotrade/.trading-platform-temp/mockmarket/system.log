@@ -1,0 +1,1312 @@
+2025-02-18T20:28:18.928Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "TIME"
+  ]
+}
+2025-02-18T20:28:18.929Z: Created new symbol TIME with initial price 720.285782665118
+2025-02-18T20:30:48.753Z: Client connected
+2025-02-18T20:30:50.007Z: Client connected
+2025-02-18T20:59:06.778Z: Client disconnected
+2025-02-18T20:59:11.987Z: Client connected
+2025-02-18T23:23:38.476Z: Client connected
+2025-02-18T23:24:09.471Z: Client connected
+2025-02-18T23:24:13.845Z: Client connected
+2025-02-18T23:30:42.465Z: Client connected
+2025-02-18T23:30:46.036Z: Client connected
+2025-02-18T23:31:34.471Z: Client connected
+2025-02-18T23:31:37.754Z: Client connected
+2025-02-18T23:32:17.464Z: Client connected
+2025-02-18T23:32:21.339Z: Client connected
+2025-02-18T23:33:49.462Z: Client connected
+2025-02-18T23:33:53.366Z: Client connected
+2025-02-18T23:34:28.460Z: Client connected
+2025-02-18T23:34:32.777Z: Client connected
+2025-02-18T23:34:52.459Z: Client connected
+2025-02-18T23:34:57.030Z: Client connected
+2025-02-18T23:36:26.458Z: Client connected
+2025-02-18T23:36:30.557Z: Client connected
+2025-02-18T23:38:26.457Z: Client connected
+2025-02-18T23:38:30.577Z: Client connected
+2025-02-18T23:38:30.586Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:38:30.587Z: Created new symbol BANKNIFTY with initial price 477.3946802254649
+2025-02-18T23:39:51.462Z: Client connected
+2025-02-18T23:39:55.326Z: Client connected
+2025-02-18T23:39:55.329Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:39:55.330Z: Created new symbol BANKNIFTY with initial price 885.5782282502801
+2025-02-18T23:40:25.453Z: Client connected
+2025-02-18T23:40:29.580Z: Client connected
+2025-02-18T23:40:29.583Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:40:29.583Z: Created new symbol BANKNIFTY with initial price 695.5369212497008
+2025-02-18T23:41:03.455Z: Client connected
+2025-02-18T23:41:06.739Z: Client connected
+2025-02-18T23:41:06.743Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:41:06.743Z: Created new symbol BANKNIFTY with initial price 700.8811565023179
+2025-02-18T23:41:57.453Z: Client connected
+2025-02-18T23:42:01.677Z: Client connected
+2025-02-18T23:42:01.681Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:42:01.682Z: Created new symbol BANKNIFTY with initial price 420.76536533319575
+2025-02-18T23:42:41.454Z: Client connected
+2025-02-18T23:42:42.227Z: Client connected
+2025-02-18T23:42:42.231Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:42:42.231Z: Created new symbol BANKNIFTY with initial price 405.14138191125903
+2025-02-18T23:43:44.451Z: Client connected
+2025-02-18T23:43:48.129Z: Client connected
+2025-02-18T23:43:48.133Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:43:48.133Z: Created new symbol BANKNIFTY with initial price 791.7465696035792
+2025-02-18T23:46:38.162Z: Client connected
+2025-02-18T23:46:38.168Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:46:38.169Z: Created new symbol BANKNIFTY with initial price 853.709417515917
+2025-02-18T23:46:39.446Z: Client connected
+2025-02-18T23:48:27.900Z: Client connected
+2025-02-18T23:48:27.905Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:48:27.905Z: Created new symbol BANKNIFTY with initial price 800.2930779175286
+2025-02-18T23:48:29.445Z: Client connected
+2025-02-18T23:49:44.696Z: Client connected
+2025-02-18T23:49:44.711Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:49:44.711Z: Created new symbol BANKNIFTY with initial price 195.9516269862906
+2025-02-18T23:49:46.445Z: Client connected
+2025-02-18T23:50:36.128Z: Client connected
+2025-02-18T23:50:36.132Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:50:36.132Z: Created new symbol BANKNIFTY with initial price 553.0174995560897
+2025-02-18T23:50:37.442Z: Client connected
+2025-02-18T23:52:44.447Z: Client connected
+2025-02-18T23:52:47.907Z: Client connected
+2025-02-18T23:52:47.910Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-18T23:52:47.910Z: Created new symbol BANKNIFTY with initial price 757.9971426172066
+2025-02-21T17:00:13.106Z: Client connected
+2025-02-21T17:00:13.113Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:00:13.113Z: Created new symbol BANKNIFTY with initial price 100.95751978262841
+2025-02-21T17:00:13.788Z: Client connected
+2025-02-21T17:13:57.799Z: Client connected
+2025-02-21T17:14:01.231Z: Client connected
+2025-02-21T17:14:01.233Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:14:01.233Z: Created new symbol BANKNIFTY with initial price 572.4786567244203
+2025-02-21T17:15:15.285Z: Client connected
+2025-02-21T17:15:15.292Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:15:15.292Z: Created new symbol BANKNIFTY with initial price 946.327260399831
+2025-02-21T17:15:16.823Z: Client connected
+2025-02-21T17:16:37.929Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:25:39.295Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "TEST"
+  ]
+}
+2025-02-21T17:25:39.297Z: Created new symbol TEST with initial price 930.8878329318262
+2025-02-21T17:25:50.201Z: Received message: {
+  "type": "unsubscribe",
+  "symbol": "TEST"
+}
+2025-02-21T17:25:50.201Z: Unknown action: undefined
+2025-02-21T17:25:50.202Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "TEST2"
+  ]
+}
+2025-02-21T17:25:50.203Z: Created new symbol TEST2 with initial price 603.73714975906
+2025-02-21T17:30:52.244Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:34:26.415Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:36:06.401Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:36:13.834Z: Client connected
+2025-02-21T17:36:19.627Z: Client connected
+2025-02-21T17:36:19.631Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:36:19.631Z: Created new symbol BANKNIFTY with initial price 305.140507395789
+2025-02-21T17:36:25.307Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:38:05.116Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:39:16.794Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:40:29.339Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:47:36.845Z: Client connected
+2025-02-21T17:47:40.560Z: Client connected
+2025-02-21T17:47:40.564Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:47:40.565Z: Created new symbol BANKNIFTY with initial price 674.2481696008944
+2025-02-21T17:47:57.511Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:49:17.847Z: Client connected
+2025-02-21T17:49:21.724Z: Client connected
+2025-02-21T17:49:21.726Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T17:49:21.726Z: Created new symbol BANKNIFTY with initial price 247.02370016455748
+2025-02-21T17:49:27.909Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T18:26:56.700Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T18:27:38.618Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-21T20:05:04.806Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "TEST2"
+  ]
+}
+2025-02-21T20:05:04.811Z: Created new symbol TEST2 with initial price 713.0096730862462
+2025-02-22T07:29:52.979Z: Client disconnected
+2025-02-22T07:29:58.411Z: Client connected
+2025-02-23T14:15:47.424Z: Client connected
+2025-02-23T14:15:47.433Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:15:47.433Z: Created new symbol BANKNIFTY with initial price 857.4821447966805
+2025-02-23T14:23:24.238Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:30:08.266Z: Client connected
+2025-02-23T14:30:08.270Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:30:08.270Z: Created new symbol BANKNIFTY with initial price 550.5247929593396
+2025-02-23T14:37:04.717Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:45:52.583Z: Client connected
+2025-02-23T14:45:52.586Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:45:52.586Z: Created new symbol BANKNIFTY with initial price 584.1740708389295
+2025-02-23T14:47:34.078Z: Client connected
+2025-02-23T14:47:34.081Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:47:34.081Z: Created new symbol BANKNIFTY with initial price 532.7949383563493
+2025-02-23T14:48:18.480Z: Client connected
+2025-02-23T14:48:18.484Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:48:18.484Z: Created new symbol BANKNIFTY with initial price 320.4511995147899
+2025-02-23T14:49:10.700Z: Client connected
+2025-02-23T14:49:10.703Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:49:10.703Z: Created new symbol BANKNIFTY with initial price 628.1373109446998
+2025-02-23T14:51:26.167Z: Client connected
+2025-02-23T14:51:26.170Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:51:26.170Z: Created new symbol BANKNIFTY with initial price 888.1418090319477
+2025-02-23T14:52:15.233Z: Client connected
+2025-02-23T14:52:15.236Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:52:15.237Z: Created new symbol BANKNIFTY with initial price 806.8370196384761
+2025-02-23T14:53:57.080Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:55:57.549Z: Client connected
+2025-02-23T14:55:57.552Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:55:57.552Z: Created new symbol BANKNIFTY with initial price 183.91293742176057
+2025-02-23T14:55:59.721Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:56:45.068Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:57:09.996Z: Client connected
+2025-02-23T14:57:10.000Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:57:10.001Z: Created new symbol BANKNIFTY with initial price 370.4181978517789
+2025-02-23T14:57:11.988Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:57:55.492Z: Client connected
+2025-02-23T14:57:55.494Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:57:55.495Z: Created new symbol BANKNIFTY with initial price 186.68226472870808
+2025-02-23T14:58:02.657Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T14:58:26.519Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T15:01:48.055Z: Client connected
+2025-02-23T15:01:48.059Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T15:01:48.059Z: Created new symbol BANKNIFTY with initial price 578.5612094582918
+2025-02-23T15:01:50.517Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T15:04:55.660Z: Client connected
+2025-02-23T15:04:55.664Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T15:04:55.665Z: Created new symbol BANKNIFTY with initial price 780.657568989994
+2025-02-23T15:04:57.240Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T15:06:03.486Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:12:58.397Z: Client connected
+2025-02-23T16:12:58.401Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:12:58.402Z: Created new symbol BANKNIFTY with initial price 338.5235147753776
+2025-02-23T16:13:09.394Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:17:17.072Z: Client connected
+2025-02-23T16:17:17.075Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:17:17.076Z: Created new symbol BANKNIFTY with initial price 936.2041800572676
+2025-02-23T16:17:37.805Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:21:18.599Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:21:33.982Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:21:47.197Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:21:54.110Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:22:18.408Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:22:40.786Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:38:13.863Z: Client connected
+2025-02-23T16:38:24.853Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:38:24.855Z: Created new symbol BANKNIFTY with initial price 382.00338191854036
+2025-02-23T16:38:50.002Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:39:25.491Z: Client connected
+2025-02-23T16:39:25.494Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:39:25.494Z: Created new symbol BANKNIFTY with initial price 755.903532665395
+2025-02-23T16:39:36.223Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:44:15.692Z: Client connected
+2025-02-23T16:44:15.695Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:44:15.695Z: Created new symbol BANKNIFTY with initial price 109.22572196509998
+2025-02-23T16:44:58.548Z: Client connected
+2025-02-23T16:44:58.552Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:44:58.552Z: Created new symbol BANKNIFTY with initial price 663.4221721817901
+2025-02-23T16:45:14.829Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:45:21.404Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:45:25.295Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:45:33.493Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:45:47.474Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:46:04.322Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:46:07.662Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:46:09.879Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:46:12.442Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:46:30.108Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:46:33.339Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:46:58.516Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:47:10.888Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T16:50:56.354Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T17:00:06.671Z: Client connected
+2025-02-23T17:00:06.673Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T17:00:06.674Z: Created new symbol BANKNIFTY with initial price 324.0771659935161
+2025-02-23T19:21:13.811Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T19:21:20.133Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T19:33:46.404Z: Client connected
+2025-02-23T19:33:46.408Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T19:33:46.408Z: Created new symbol BANKNIFTY with initial price 475.27951747740104
+2025-02-23T20:17:15.148Z: Client connected
+2025-02-23T20:17:15.151Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-23T20:17:15.151Z: Created new symbol BANKNIFTY with initial price 383.6858680856705
+2025-02-23T20:18:48.828Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:28:36.512Z: Client connected
+2025-02-27T06:28:36.515Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:28:36.516Z: Created new symbol BANKNIFTY with initial price 588.954564168668
+2025-02-27T06:32:25.114Z: Client connected
+2025-02-27T06:32:25.117Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:32:25.117Z: Created new symbol BANKNIFTY with initial price 120.99053770386786
+2025-02-27T06:35:39.734Z: Client connected
+2025-02-27T06:35:39.737Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:35:39.737Z: Created new symbol BANKNIFTY with initial price 998.2626635668197
+2025-02-27T06:36:04.797Z: Client disconnected
+2025-02-27T06:36:09.336Z: Client connected
+2025-02-27T06:36:09.340Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:36:09.340Z: Created new symbol BANKNIFTY with initial price 945.0846215195257
+2025-02-27T06:36:13.871Z: Client disconnected
+2025-02-27T06:36:19.027Z: Client connected
+2025-02-27T06:36:19.030Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:36:19.030Z: Created new symbol BANKNIFTY with initial price 893.6495081237044
+2025-02-27T06:36:28.758Z: Client connected
+2025-02-27T06:36:28.761Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:36:28.761Z: Created new symbol BANKNIFTY with initial price 174.78236124475342
+2025-02-27T06:36:48.932Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:50:47.540Z: Client disconnected
+2025-02-27T06:50:52.425Z: Client connected
+2025-02-27T06:50:52.428Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:50:52.428Z: Created new symbol BANKNIFTY with initial price 303.0433090673523
+2025-02-27T06:51:57.243Z: Client disconnected
+2025-02-27T06:52:02.716Z: Client connected
+2025-02-27T06:52:02.719Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:52:02.719Z: Created new symbol BANKNIFTY with initial price 646.2100674282432
+2025-02-27T06:58:18.600Z: Client disconnected
+2025-02-27T06:58:23.534Z: Client connected
+2025-02-27T06:58:23.538Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T06:58:23.538Z: Created new symbol BANKNIFTY with initial price 236.7364001121657
+2025-02-27T07:09:58.132Z: Client disconnected
+2025-02-27T07:10:03.797Z: Client connected
+2025-02-27T07:10:03.801Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T07:10:03.802Z: Created new symbol BANKNIFTY with initial price 847.8113891995881
+2025-02-27T07:18:03.079Z: Client disconnected
+2025-02-27T07:18:08.403Z: Client connected
+2025-02-27T07:18:08.405Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T07:18:08.406Z: Created new symbol BANKNIFTY with initial price 411.3600578249143
+2025-02-27T07:20:11.905Z: Client disconnected
+2025-02-27T07:20:17.703Z: Client connected
+2025-02-27T07:20:17.707Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-27T07:20:17.707Z: Created new symbol BANKNIFTY with initial price 436.45402668496257
+2025-02-27T07:20:28.141Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T19:37:31.723Z: Client disconnected
+2025-02-28T19:37:38.174Z: Client connected
+2025-02-28T19:37:39.051Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T19:37:39.120Z: Created new symbol BANKNIFTY with initial price 628.2047464190771
+2025-02-28T19:38:00.972Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T19:42:40.834Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T19:47:45.355Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T19:48:21.823Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T19:52:54.209Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T19:54:30.636Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T19:55:22.074Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T19:57:43.109Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:03:27.840Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:10:40.431Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:11:05.374Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:12:27.870Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:12:56.126Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:16:40.483Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:17:38.967Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:22:14.177Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:24:36.963Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:26:10.629Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:27:20.800Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:30:51.217Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:32:10.619Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-02-28T20:34:36.456Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:44:17.065Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:47:06.318Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:48:43.863Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:49:02.111Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:50:22.856Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:51:16.189Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:51:23.972Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:52:50.117Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:56:13.019Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:57:27.934Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:57:42.921Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:57:57.512Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T06:59:56.211Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:00:49.144Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:02:07.939Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:03:55.375Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:04:31.607Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:04:47.014Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:10:26.678Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:12:24.219Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:12:42.889Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:13:45.802Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:14:43.646Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:23:15.941Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:24:55.153Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:26:19.469Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:27:07.267Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:30:56.877Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T07:32:08.443Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T16:38:32.240Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T16:39:57.557Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T16:40:04.500Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T16:42:01.416Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-01T16:43:44.889Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-08T19:25:36.604Z: Client connected
+2025-03-08T19:25:36.608Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-08T19:25:36.608Z: Created new symbol BANKNIFTY with initial price 570.600148018086
+2025-03-08T19:25:42.383Z: Client disconnected
+2025-03-08T19:25:47.384Z: Client connected
+2025-03-08T19:25:47.391Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-08T19:25:47.392Z: Created new symbol BANKNIFTY with initial price 340.9013087678313
+2025-03-08T19:32:17.782Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-08T20:47:02.344Z: Client disconnected
+2025-03-09T12:49:39.342Z: Client connected
+2025-03-09T12:49:39.440Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T12:49:39.440Z: Created new symbol BANKNIFTY with initial price 708.9382867267266
+2025-03-09T12:49:45.412Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T12:53:39.860Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T12:55:55.647Z: Client disconnected
+2025-03-09T12:56:03.617Z: Client connected
+2025-03-09T12:56:03.622Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T12:56:03.623Z: Created new symbol BANKNIFTY with initial price 546.761623749173
+2025-03-09T12:56:11.086Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T12:56:43.472Z: Client disconnected
+2025-03-09T12:56:49.999Z: Client connected
+2025-03-09T12:56:50.003Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T12:56:50.005Z: Created new symbol BANKNIFTY with initial price 869.5045672276501
+2025-03-09T12:56:54.196Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T12:59:55.289Z: Client disconnected
+2025-03-09T13:00:01.395Z: Client connected
+2025-03-09T13:00:01.400Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T13:00:01.401Z: Created new symbol BANKNIFTY with initial price 768.2743937181843
+2025-03-09T13:00:07.702Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T13:08:22.840Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T18:15:44.003Z: Client disconnected
+2025-03-09T18:15:52.524Z: Client connected
+2025-03-09T18:15:52.533Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-09T18:15:52.533Z: Created new symbol BANKNIFTY with initial price 577.7051656239997
+2025-03-09T18:16:08.828Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-11T05:04:20.853Z: Client disconnected
+2025-03-11T05:04:25.581Z: Client connected
+2025-03-11T05:04:25.583Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-11T05:04:25.583Z: Created new symbol BANKNIFTY with initial price 913.2411949367475
+2025-03-11T05:04:37.675Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "BANKNIFTY"
+  ]
+}
+2025-03-30T07:42:46.372Z: Client connected
+2025-03-30T07:42:46.378Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "SBIN"
+  ]
+}
+2025-03-30T07:42:46.378Z: Created new symbol SBIN with initial price 943.5159320987442
+2025-03-30T07:42:46.379Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "NIFTY"
+  ]
+}
+2025-03-30T07:42:46.379Z: Created new symbol NIFTY with initial price 434.3442931363401
+2025-03-30T07:43:20.054Z: Client disconnected
+2025-03-30T07:44:43.107Z: Client connected
+2025-03-30T07:44:43.113Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "SBIN"
+  ]
+}
+2025-03-30T07:44:43.114Z: Created new symbol SBIN with initial price 465.5494290126367
+2025-03-30T07:44:43.114Z: Received message: {
+  "action": "subscribe",
+  "symbols": [
+    "NIFTY"
+  ]
+}
+2025-03-30T07:44:43.114Z: Created new symbol NIFTY with initial price 896.6203825632908
+2025-03-30T07:44:57.129Z: Client disconnected

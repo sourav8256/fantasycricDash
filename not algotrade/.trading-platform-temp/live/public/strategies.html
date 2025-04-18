@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .strategy-form {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .strategy-list {
+            margin-top: 20px;
+        }
+        .strategy-item {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        textarea, input {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Strategy Management</h1>
+
+    <div class="strategy-form">
+        <h2>Add New Strategy</h2>
+        <form id="strategyForm">
+            <input type="text" id="name" placeholder="Strategy Name" required>
+            <input type="text" id="symbol" placeholder="Symbol" required>
+            <textarea id="code" rows="10" placeholder="Strategy Code" required></textarea>
+            <button type="submit">Add Strategy</button>
+        </form>
+    </div>
+
+    <div class="strategy-list" id="strategyList">
+        <!-- Strategies will be listed here -->
+    </div>
+
+    <script>
+        // Load strategies
+        async function loadStrategies() {
+            try {
+                const response = await fetch('/api/deployed-strategies');
+                const strategies = await response.json();
+                const listElement = document.getElementById('strategyList');
+                
+                if (strategies.length === 0) {
+                    listElement.innerHTML = '<div class="strategy-item">No deployed strategies found.</div>';
+                    return;
+                }
+
+                listElement.innerHTML = strategies.map(strategy => `
+                    <div class="strategy-item">
+                        <h3>${strategy.name}</h3>
+                        <p>Instrument: ${strategy.instrument}</p>
+                        <p>Mode: ${strategy.mode}</p>
+                        <p>Status: ${strategy.status}</p>
+                        <p>Deployed At: ${new Date(strategy.deployedAt).toLocaleString()}</p>
+                        <button class="btn-danger" onclick="deleteDeployedStrategy('${strategy._id}')">Delete</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading strategies:', error);
+                document.getElementById('strategyList').innerHTML = 
+                    '<div class="strategy-item error">Error loading strategies. Please try again.</div>';
+            }
+        }
+
+        // Add new strategy
+        document.getElementById('strategyForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const strategy = {
+                name: document.getElementById('name').value,
+                symbol: document.getElementById('symbol').value,
+                code: document.getElementById('code').value,
+                isActive: true
+            };
+
+            await fetch('/api/strategies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(strategy)
+            });
+
+            loadStrategies();
+            e.target.reset();
+        };
+
+        // Delete strategy
+        async function deleteDeployedStrategy(id) {
+            try {
+                const response = await fetch(`/api/deployed-strategies/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to delete strategy: ${response.statusText}`);
+                }
+
+                // Refresh the strategies list after successful deletion
+                loadStrategies();
+            } catch (error) {
+                console.error('Error deleting strategy:', error);
+                alert('Failed to delete strategy: ' + error.message);
+            }
+        }
+
+        // Initial load
+        loadStrategies();
+    </script>
+</body>
+</html> 

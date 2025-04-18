@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Strategies</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="../css/common.css" rel="stylesheet">
+    <script src="/env.js"></script>
+    <script src="/config.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fb;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+        }
+        .strategy-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .strategy-card:hover {
+            transform: translateY(-2px);
+            border-color: #1a237e;
+        }
+        .strategy-card.selected {
+            background: #f8f9fa;
+            border-color: #1a237e;
+        }
+        .test-form {
+            display: none;
+        }
+        .test-form.visible {
+            display: block;
+        }
+        .results {
+            margin-top: 2rem;
+        }
+        .metric-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .trades-table {
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .trades-table th {
+            background: #f8f9fa;
+            padding: 0.75rem;
+        }
+        .trades-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        .positive { color: #00c853; }
+        .negative { color: #ff1744; }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Test Strategies</h1>
+        
+        <div class="card">
+            <div class="strategies-list" id="strategiesList">
+                <p>Loading strategies...</p>
+            </div>
+        </div>
+
+        <div class="card test-form" id="testForm">
+            <h3>Test Strategy: <span id="strategyName"></span></h3>
+            <form onsubmit="testStrategyPrice(event)">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Current Market Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="currentPrice" 
+                                   step="0.05"
+                                   required
+                                   placeholder="Enter current market price">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Position Size</label>
+                        <div class="input-group">
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="positionSize" 
+                                   value="1"
+                                   min="1"
+                                   required>
+                            <span class="input-group-text">lots</span>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-calculator"></i> Calculate Decision
+                </button>
+            </form>
+
+            <div id="decisionResult" class="mt-4" style="display: none;">
+                <div class="alert" role="alert">
+                    <div class="d-flex align-items-center">
+                        <div class="decision-icon me-3">
+                            <i class="fas fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 class="alert-heading mb-1">Strategy Decision</h4>
+                            <p class="mb-0" id="decisionText"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="metric-card">
+                            <h6>Unrealized P&L</h6>
+                            <span id="pnlValue" class="h4"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-card">
+                            <h6>Risk Level</h6>
+                            <span id="riskLevel" class="h4"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-card">
+                            <h6>Next Target</h6>
+                            <span id="nextTarget" class="h4"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card results" id="results" style="display: none;">
+            <h3>Test Results</h3>
+            <div id="metrics"></div>
+            <div id="equity-chart"></div>
+            <div id="trades"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedStrategy = null;
+
+        async function loadStrategies() {
+            try {
+                const response = await fetch(`${ENV.API_BASE_URL}/api/strategies/available`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem(ENV.AUTH_TOKEN_KEY)}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                }
+                
+                const strategies = await response.json();
+                
+                const strategiesList = document.getElementById('strategiesList');
+                if (strategies.length === 0) {
+                    strategiesList.innerHTML = '<p>No strategies available</p>';
+                    return;
+                }
+                
+                strategiesList.innerHTML = strategies.map(strategy => `
+                    <div class="strategy-card p-3 mb-2" onclick="selectStrategy('${strategy._id}', '${strategy.name}', '${strategy.type}')">
+                        <h4>${strategy.name}</h4>
+                        <div class="text-muted">
+                            <small>Type: ${strategy.type}</small>
+                            <br>
+                            <small>Instrument: ${strategy.instrument}</small>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading strategies:', error);
+                document.getElementById('strategiesList').innerHTML = `
+                    <div style="color: red; background: #ffebee; padding: 15px; border-radius: 4px;">
+                        <h3>Error Loading Strategies</h3>
+                        <p><strong>Endpoint:</strong> ${ENV.API_BASE_URL}/api/strategies/available</p>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Details:</strong></p>
+                        <pre style="background: #fff; padding: 10px; overflow: auto;">${JSON.stringify(error, null, 2)}</pre>
+                        <p>Please check the console for more details.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function selectStrategy(id, name, type) {
+            selectedStrategy = {
+                id: id,
+                name: name,
+                type: type
+            };
+            
+            // Update UI to show selection
+            document.querySelectorAll('.strategy-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Show test form
+            const testForm = document.getElementById('testForm');
+            testForm.classList.add('visible');
+            document.getElementById('strategyName').textContent = name;
+            
+            // Reset results
+            document.getElementById('results').style.display = 'none';
+        }
+
+        async function testStrategyPrice(event) {
+            event.preventDefault();
+            
+            if (!selectedStrategy) {
+                alert('Please select a strategy first');
+                return;
+            }
+
+            const currentPrice = Number(document.getElementById('currentPrice').value);
+            const positionSize = Number(document.getElementById('positionSize').value);
+
+            const requestData = {
+                currentPrice,
+                positionSize,
+                strategyName: selectedStrategy.name,
+                strategyType: selectedStrategy.type
+            };
+
+            try {
+                const response = await fetch(`${ENV.API_BASE_URL}/api/strategies/${selectedStrategy.id}/test-strategy`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem(ENV.AUTH_TOKEN_KEY)}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayDecision(data, currentPrice, positionSize);
+            } catch (error) {
+                console.error('Error testing strategy:', error);
+                document.getElementById('decisionResult').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4 class="alert-heading">Error Testing Strategy</h4>
+                        <p>${error.message}</p>
+                        <hr>
+                        <pre class="mb-0">${JSON.stringify(requestData, null, 2)}</pre>
+                    </div>
+                `;
+                document.getElementById('decisionResult').style.display = 'block';
+            }
+        }
+
+        function displayDecision(data, currentPrice, positionSize) {
+            const decisionResult = document.getElementById('decisionResult');
+            const alert = decisionResult.querySelector('.alert');
+            const icon = decisionResult.querySelector('.decision-icon i');
+            const decisionText = document.getElementById('decisionText');
+            
+            // Update decision display
+            alert.className = 'alert'; // Reset classes
+            icon.className = 'fas fa-2x'; // Reset icon
+            
+            // Add decision styling
+            switch(data.decision.toLowerCase()) {
+                case 'buy':
+                    alert.classList.add('alert-success');
+                    icon.classList.add('fa-arrow-up');
+                    break;
+                case 'sell':
+                    alert.classList.add('alert-danger');
+                    icon.classList.add('fa-arrow-down');
+                    break;
+                case 'hold':
+                    alert.classList.add('alert-warning');
+                    icon.classList.add('fa-grip-lines');
+                    break;
+            }
+            
+            // Show decision prominently
+            decisionText.innerHTML = `
+                <strong style="font-size: 1.2em; display: block; margin-bottom: 0.5rem;">
+                    Decision: ${data.decision.toUpperCase()}
+                </strong>
+                ${data.message}
+            `;
+            
+            // Update metrics
+            document.getElementById('riskLevel').textContent = data.riskLevel || 'N/A';
+            document.getElementById('nextTarget').textContent = data.nextTarget ? `₹${data.nextTarget}` : 'N/A';
+            
+            decisionResult.style.display = 'block';
+        }
+
+        // Load strategies when page loads
+        loadStrategies();
+    </script>
+</body>
+</html> 

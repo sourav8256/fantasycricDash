@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broker Settings - AlgoTrade</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="../css/common.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            color: #2c3e50;
+        }
+
+        .card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card h5 {
+            color: #1a237e;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #283593 0%, #1a237e 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,35,126,0.2);
+        }
+
+        .btn-outline-primary {
+            border: 1.5px solid #1a237e;
+            color: #1a237e;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+        }
+
+        .btn-outline-primary:hover {
+            background: #1a237e;
+        }
+
+        .broker-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .broker-card:hover {
+            border-color: #1a237e;
+            transform: translateY(-2px);
+        }
+
+        .broker-card.active {
+            border-color: #1a237e;
+            background: rgba(26, 35, 126, 0.02);
+        }
+
+        .broker-logo {
+            width: 120px;
+            height: 40px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+        }
+
+        .broker-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .status-connected {
+            background: rgba(0, 200, 83, 0.1);
+            color: #00c853;
+        }
+
+        .status-disconnected {
+            background: rgba(255, 23, 68, 0.1);
+            color: #ff1744;
+        }
+
+        .broker-details {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .broker-details label {
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+
+        .broker-details p {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .api-key-field {
+            position: relative;
+        }
+
+        .api-key-field .toggle-visibility {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .api-key-field .toggle-visibility:hover {
+            color: #1a237e;
+        }
+
+        .connection-log {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .log-entry:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: #666;
+            margin-right: 0.5rem;
+        }
+
+        .log-success {
+            color: #00c853;
+        }
+
+        .log-error {
+            color: #ff1744;
+        }
+
+        .log-info {
+            color: #1a237e;
+        }
+
+        @media (max-width: 576px) {
+            .card {
+                padding: 1rem;
+            }
+            .broker-card {
+                padding: 1rem;
+            }
+            .btn-group {
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+            .input-group > * {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <h5>Available Brokers</h5>
+                <!-- Zerodha Card -->
+                <div class="broker-card">
+                    <img src="https://zerodha.com/static/images/logo.svg" alt="Zerodha" class="broker-logo">
+                    <div class="broker-status status-disconnected">
+                        <i class="fas fa-times-circle"></i> Disconnected
+                    </div>
+                    <div class="broker-details">
+                        <p>Connect your Zerodha account to start trading.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary btn-sm" onclick="connectZerodha()">
+                            <i class="fas fa-plug"></i> Connect Zerodha
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Angel Broking Card -->
+                <div class="broker-card">
+                    <img src="https://www.angelone.in/assets/images/angel-one-logo.svg" alt="Angel One" class="broker-logo">
+                    <div class="broker-status status-disconnected">
+                        <i class="fas fa-times-circle"></i> Disconnected
+                    </div>
+                    <div class="broker-details">
+                        <p>Connect your Angel One account to start trading.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary btn-sm" onclick="connectAngel()">
+                            <i class="fas fa-plug"></i> Connect Angel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <h5>Connection Log</h5>
+                <div class="connection-log">
+                    <div class="log-entry">
+                        <span class="log-time">09:15:00</span>
+                        <span class="log-success">Connected to Zerodha</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">09:14:58</span>
+                        <span class="log-info">Authenticating...</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">09:14:55</span>
+                        <span class="log-info">Initializing connection...</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">09:00:00</span>
+                        <span class="log-error">Session expired</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <h5>Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-key"></i> Update API Keys
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-cog"></i> Broker Settings
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-question-circle"></i> Connection Help
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Configuration Modal -->
+    <div class="modal fade" id="apiKeyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configure API Keys</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="zerodhaApiForm" style="display: none;">
+                        <h6 class="mb-3">Zerodha API Configuration</h6>
+                        <div class="mb-3">
+                            <label class="form-label">API Key</label>
+                            <input type="text" class="form-control" id="zerodhaApiKey" placeholder="Enter Zerodha API Key">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">API Secret</label>
+                            <input type="password" class="form-control" id="zerodhaApiSecret" placeholder="Enter Zerodha API Secret">
+                        </div>
+                    </div>
+                    <div id="angelApiForm" style="display: none;">
+                        <h6 class="mb-3">Angel One API Configuration</h6>
+                        <div class="mb-3">
+                            <label class="form-label">API Key</label>
+                            <input type="text" class="form-control" id="angelApiKey" placeholder="Enter Angel API Key">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">API Secret</label>
+                            <input type="password" class="form-control" id="angelApiSecret" placeholder="Enter Angel API Secret">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveApiKeys()">Save & Connect</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuration for broker authentication
+        const config = {
+            zerodha: {
+                clientId: localStorage.getItem('zerodhaApiKey') || '',
+                apiSecret: localStorage.getItem('zerodhaApiSecret') || '',
+                redirectUri: window.location.origin + '/algotrade/frontend/pages/callback.html',
+                authUrl: 'https://kite.zerodha.com/connect/login'
+            },
+            angel: {
+                clientId: localStorage.getItem('angelApiKey') || '',
+                apiSecret: localStorage.getItem('angelApiSecret') || '',
+                redirectUri: window.location.origin + '/algotrade/frontend/pages/callback.html',
+                authUrl: 'https://smartapi.angelbroking.com/oauth/authorize'
+            }
+        };
+
+        let currentBroker = '';
+        const apiKeyModal = new bootstrap.Modal(document.getElementById('apiKeyModal'));
+
+        // Function to show API key modal
+        function showApiKeyModal(broker) {
+            currentBroker = broker;
+            document.getElementById('zerodhaApiForm').style.display = broker === 'zerodha' ? 'block' : 'none';
+            document.getElementById('angelApiForm').style.display = broker === 'angel' ? 'block' : 'none';
+            
+            // Pre-fill existing values if any
+            if (broker === 'zerodha') {
+                document.getElementById('zerodhaApiKey').value = config.zerodha.clientId;
+                document.getElementById('zerodhaApiSecret').value = config.zerodha.apiSecret;
+            } else {
+                document.getElementById('angelApiKey').value = config.angel.clientId;
+                document.getElementById('angelApiSecret').value = config.angel.apiSecret;
+            }
+            
+            apiKeyModal.show();
+        }
+
+        // Function to save API keys
+        function saveApiKeys() {
+            if (currentBroker === 'zerodha') {
+                const apiKey = document.getElementById('zerodhaApiKey').value.trim();
+                const apiSecret = document.getElementById('zerodhaApiSecret').value.trim();
+                
+                if (!apiKey || !apiSecret) {
+                    alert('Please enter both API Key and Secret');
+                    return;
+                }
+                
+                localStorage.setItem('zerodhaApiKey', apiKey);
+                localStorage.setItem('zerodhaApiSecret', apiSecret);
+                config.zerodha.clientId = apiKey;
+                config.zerodha.apiSecret = apiSecret;
+                
+                apiKeyModal.hide();
+                connectZerodha();
+            } else if (currentBroker === 'angel') {
+                const apiKey = document.getElementById('angelApiKey').value.trim();
+                const apiSecret = document.getElementById('angelApiSecret').value.trim();
+                
+                if (!apiKey || !apiSecret) {
+                    alert('Please enter both API Key and Secret');
+                    return;
+                }
+                
+                localStorage.setItem('angelApiKey', apiKey);
+                localStorage.setItem('angelApiSecret', apiSecret);
+                config.angel.clientId = apiKey;
+                config.angel.apiSecret = apiSecret;
+                
+                apiKeyModal.hide();
+                connectAngel();
+            }
+        }
+
+        // Function to connect Zerodha
+        function connectZerodha() {
+            if (!config.zerodha.clientId || !config.zerodha.apiSecret) {
+                showApiKeyModal('zerodha');
+                return;
+            }
+
+            const params = new URLSearchParams({
+                api_key: config.zerodha.clientId,
+                redirect_uri: config.zerodha.redirectUri,
+                response_type: 'code',
+                v: '3'
+            });
+            
+            const authUrl = `${config.zerodha.authUrl}?${params.toString()}`;
+            window.open(authUrl, '_blank', 'width=800,height=600');
+        }
+
+        // Function to connect Angel
+        function connectAngel() {
+            if (!config.angel.clientId || !config.angel.apiSecret) {
+                showApiKeyModal('angel');
+                return;
+            }
+
+            const params = new URLSearchParams({
+                client_id: config.angel.clientId,
+                redirect_uri: config.angel.redirectUri,
+                response_type: 'code',
+                state: 'angel'
+            });
+            
+            const authUrl = `${config.angel.authUrl}?${params.toString()}`;
+            window.open(authUrl, '_blank', 'width=800,height=600');
+        }
+
+        // Function to handle successful authentication
+        window.addEventListener('message', function(event) {
+            // Verify origin for security
+            if (event.origin !== window.location.origin) return;
+
+            const { broker, code } = event.data;
+            if (code) {
+                // Get the API secret from config
+                const apiSecret = broker === 'zerodha' ? config.zerodha.apiSecret : config.angel.apiSecret;
+
+                // Send the authorization code and API secret to your backend
+                fetch('/api/auth/broker', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        broker, 
+                        code,
+                        apiKey: broker === 'zerodha' ? config.zerodha.clientId : config.angel.clientId,
+                        apiSecret 
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update UI to show connected state
+                        updateBrokerStatus(broker, true);
+                        // Add to connection log
+                        addConnectionLog('success', `Connected to ${broker}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Authentication error:', error);
+                    alert('Failed to authenticate with broker. Please try again.');
+                    addConnectionLog('error', `Failed to connect to ${broker}`);
+                });
+            }
+        });
+
+        // Function to add entry to connection log
+        function addConnectionLog(type, message) {
+            const logContainer = document.querySelector('.connection-log');
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-${type}">${message}</span>
+            `;
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+        }
+
+        // Function to update broker status in UI
+        function updateBrokerStatus(broker, isConnected) {
+            const brokerCard = document.querySelector(`[data-broker="${broker}"]`);
+            if (!brokerCard) return;
+
+            const statusDiv = brokerCard.querySelector('.broker-status');
+            const connectButton = brokerCard.querySelector('button');
+
+            if (isConnected) {
+                statusDiv.className = 'broker-status status-connected';
+                statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                connectButton.textContent = 'Reconnect';
+            } else {
+                statusDiv.className = 'broker-status status-disconnected';
+                statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> Disconnected';
+                connectButton.textContent = `Connect ${broker}`;
+            }
+        }
+    </script>
+</body>
+</html> 

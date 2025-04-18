@@ -1,0 +1,443 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Results</title>
+    <style>
+        /* Screen styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        .test-case {
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            page-break-inside: avoid;
+        }
+        .test-header {
+            padding: 10px 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .test-content {
+            padding: 15px;
+        }
+        .url {
+            color: #0066cc;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+        .request, .response {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-size: 13px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        .status {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .error-details {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                margin: 0;
+                padding: 0;
+                font-size: 12px;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+            }
+            h1 {
+                font-size: 24px;
+                margin: 20px 0;
+            }
+            .test-case {
+                border: 1px solid #999;
+                margin: 10px 0;
+                break-inside: avoid;
+            }
+            .test-header {
+                background-color: #eee !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .request, .response {
+                border: 1px solid #ddd;
+                background-color: #fff !important;
+            }
+            pre {
+                font-size: 11px;
+            }
+            .pass {
+                background-color: #eee !important;
+                border: 1px solid #155724;
+                color: #155724 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .fail {
+                background-color: #eee !important;
+                border: 1px solid #721c24;
+                color: #721c24 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .error-details {
+                border: 1px solid #721c24;
+                background-color: #fff !important;
+            }
+            .url {
+                color: #333 !important;
+                text-decoration: underline;
+            }
+            @page {
+                margin: 2cm;
+                size: A4;
+            }
+            /* Add page numbers */
+            @page {
+                @bottom-right {
+                    content: counter(page);
+                }
+            }
+            /* Ensure headers are repeated on each page */
+            .test-header {
+                position: relative;
+            }
+            /* Improve readability of JSON */
+            pre {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Test Results</h1>
+        <div id="test-results"></div>
+    
+        <div class="test-case">
+            <div class="test-header">
+                <span class="test-name">Register User</span>
+                <span class="status pass">PASS</span>
+                <span class="timestamp">2025-01-05T05:29:31.026Z</span>
+            </div>
+            <div class="test-content">
+                <div class="url">
+                    <strong>URL:</strong> http://localhost:3000/api/auth/register
+                </div>
+                <div class="request">
+                    <strong>Request:</strong>
+                    <pre>{
+  "username": "testuser_1736054970384",
+  "email": "test1736054970384@example.com",
+  "password": "password123"
+}</pre>
+                </div>
+                <div class="response">
+                         <strong>Response:</strong>
+                         <pre>{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2ExOGJhMWY0N2M4MWRmMDM3ZTBlNSIsImlhdCI6MTczNjA1NDk3MSwiZXhwIjoxNzM2MTQxMzcxfQ.6KFw9MUxgw4yjeHo5L5qXB17XMtd_BKjLxXEWjwNwyM",
+  "user": {
+    "id": "677a18ba1f47c81df037e0e5",
+    "username": "testuser_1736054970384",
+    "email": "test1736054970384@example.com"
+  }
+}</pre>
+                       </div>
+            </div>
+        </div>
+    
+        <div class="test-case">
+            <div class="test-header">
+                <span class="test-name">Login User</span>
+                <span class="status pass">PASS</span>
+                <span class="timestamp">2025-01-05T05:29:31.389Z</span>
+            </div>
+            <div class="test-content">
+                <div class="url">
+                    <strong>URL:</strong> http://localhost:3000/api/auth/login
+                </div>
+                <div class="request">
+                    <strong>Request:</strong>
+                    <pre>{
+  "email": "test1736054970384@example.com",
+  "password": "password123"
+}</pre>
+                </div>
+                <div class="response">
+                         <strong>Response:</strong>
+                         <pre>{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3N2ExOGJhMWY0N2M4MWRmMDM3ZTBlNSIsImlhdCI6MTczNjA1NDk3MSwiZXhwIjoxNzM2MTQxMzcxfQ.6KFw9MUxgw4yjeHo5L5qXB17XMtd_BKjLxXEWjwNwyM",
+  "user": {
+    "id": "677a18ba1f47c81df037e0e5",
+    "username": "testuser_1736054970384",
+    "email": "test1736054970384@example.com"
+  }
+}</pre>
+                       </div>
+            </div>
+        </div>
+    
+        <div class="test-case">
+            <div class="test-header">
+                <span class="test-name">Create Strategy</span>
+                <span class="status pass">PASS</span>
+                <span class="timestamp">2025-01-05T05:29:31.651Z</span>
+            </div>
+            <div class="test-content">
+                <div class="url">
+                    <strong>URL:</strong> http://localhost:3000/api/strategies
+                </div>
+                <div class="request">
+                    <strong>Request:</strong>
+                    <pre>{
+  "name": "Test Strategy",
+  "description": "A test trading strategy",
+  "rules": [
+    "Buy when price crosses above MA",
+    "Sell when price crosses below MA"
+  ],
+  "timeframe": "1h",
+  "market": "BTCUSDT",
+  "headers": {
+    "Authorization": "Bearer [TOKEN]"
+  }
+}</pre>
+                </div>
+                <div class="response">
+                         <strong>Response:</strong>
+                         <pre>{
+  "name": "Test Strategy",
+  "description": "A test trading strategy",
+  "rules": [
+    "Buy when price crosses above MA",
+    "Sell when price crosses below MA"
+  ],
+  "timeframe": "1h",
+  "market": "BTCUSDT",
+  "userId": "677a18ba1f47c81df037e0e5",
+  "_id": "677a18bb1f47c81df037e0e8",
+  "createdAt": "2025-01-05T05:29:31.391Z",
+  "lastModified": "2025-01-05T05:29:31.391Z",
+  "__v": 0
+}</pre>
+                       </div>
+            </div>
+        </div>
+    
+        <div class="test-case">
+            <div class="test-header">
+                <span class="test-name">Get All Strategies</span>
+                <span class="status pass">PASS</span>
+                <span class="timestamp">2025-01-05T05:29:31.899Z</span>
+            </div>
+            <div class="test-content">
+                <div class="url">
+                    <strong>URL:</strong> http://localhost:3000/api/strategies
+                </div>
+                <div class="request">
+                    <strong>Request:</strong>
+                    <pre>{
+  "headers": {
+    "Authorization": "Bearer [TOKEN]"
+  }
+}</pre>
+                </div>
+                <div class="response">
+                         <strong>Response:</strong>
+                         <pre>[
+  {
+    "_id": "677a18bb1f47c81df037e0e8",
+    "name": "Test Strategy",
+    "description": "A test trading strategy",
+    "rules": [
+      "Buy when price crosses above MA",
+      "Sell when price crosses below MA"
+    ],
+    "timeframe": "1h",
+    "market": "BTCUSDT",
+    "userId": "677a18ba1f47c81df037e0e5",
+    "createdAt": "2025-01-05T05:29:31.391Z",
+    "lastModified": "2025-01-05T05:29:31.391Z",
+    "__v": 0
+  }
+]</pre>
+                       </div>
+            </div>
+        </div>
+    
+        <div class="test-case">
+            <div class="test-header">
+                <span class="test-name">Get Strategy by ID</span>
+                <span class="status pass">PASS</span>
+                <span class="timestamp">2025-01-05T05:29:32.143Z</span>
+            </div>
+            <div class="test-content">
+                <div class="url">
+                    <strong>URL:</strong> http://localhost:3000/api/strategies/677a18bb1f47c81df037e0e8
+                </div>
+                <div class="request">
+                    <strong>Request:</strong>
+                    <pre>{
+  "headers": {
+    "Authorization": "Bearer [TOKEN]"
+  }
+}</pre>
+                </div>
+                <div class="response">
+                         <strong>Response:</strong>
+                         <pre>{
+  "_id": "677a18bb1f47c81df037e0e8",
+  "name": "Test Strategy",
+  "description": "A test trading strategy",
+  "rules": [
+    "Buy when price crosses above MA",
+    "Sell when price crosses below MA"
+  ],
+  "timeframe": "1h",
+  "market": "BTCUSDT",
+  "userId": "677a18ba1f47c81df037e0e5",
+  "createdAt": "2025-01-05T05:29:31.391Z",
+  "lastModified": "2025-01-05T05:29:31.391Z",
+  "__v": 0
+}</pre>
+                       </div>
+            </div>
+        </div>
+    
+        <div class="test-case">
+            <div class="test-header">
+                <span class="test-name">Update Strategy</span>
+                <span class="status pass">PASS</span>
+                <span class="timestamp">2025-01-05T05:29:32.636Z</span>
+            </div>
+            <div class="test-content">
+                <div class="url">
+                    <strong>URL:</strong> http://localhost:3000/api/strategies/677a18bb1f47c81df037e0e8
+                </div>
+                <div class="request">
+                    <strong>Request:</strong>
+                    <pre>{
+  "name": "Updated Strategy Name",
+  "description": "Updated strategy description",
+  "rules": [
+    "Updated rule 1",
+    "Updated rule 2"
+  ],
+  "timeframe": "4h",
+  "market": "ETHUSDT",
+  "headers": {
+    "Authorization": "Bearer [TOKEN]"
+  }
+}</pre>
+                </div>
+                <div class="response">
+                         <strong>Response:</strong>
+                         <pre>{
+  "_id": "677a18bb1f47c81df037e0e8",
+  "name": "Updated Strategy Name",
+  "description": "Updated strategy description",
+  "rules": [
+    "Updated rule 1",
+    "Updated rule 2"
+  ],
+  "timeframe": "4h",
+  "market": "ETHUSDT",
+  "userId": "677a18ba1f47c81df037e0e5",
+  "createdAt": "2025-01-05T05:29:31.391Z",
+  "lastModified": "2025-01-05T05:29:32.387Z",
+  "__v": 1
+}</pre>
+                       </div>
+            </div>
+        </div>
+    
+        <div class="test-case">
+            <div class="test-header">
+                <span class="test-name">Delete Strategy</span>
+                <span class="status pass">PASS</span>
+                <span class="timestamp">2025-01-05T05:29:32.886Z</span>
+            </div>
+            <div class="test-content">
+                <div class="url">
+                    <strong>URL:</strong> http://localhost:3000/api/strategies/677a18bb1f47c81df037e0e8
+                </div>
+                <div class="request">
+                    <strong>Request:</strong>
+                    <pre>{
+  "headers": {
+    "Authorization": "Bearer [TOKEN]"
+  }
+}</pre>
+                </div>
+                <div class="response">
+                         <strong>Response:</strong>
+                         <pre>{
+  "message": "Strategy deleted"
+}</pre>
+                       </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

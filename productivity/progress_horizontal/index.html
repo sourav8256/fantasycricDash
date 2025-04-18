@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizontal Progress Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="tracker-container">
+        <div class="section">
+            <div class="section-header" contenteditable="true">Section 1</div>
+            <div class="section-rows">
+                <div class="tracker-row">
+                    <div class="row-id">1</div>
+                    <div class="arrow-block" contenteditable="true"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="command-palette">
+        <input type="text" class="command-input" placeholder="Type 'delete section [name]' to delete a section...">
+        <div class="command-feedback"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

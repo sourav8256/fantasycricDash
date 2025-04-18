@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoTrade</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="/config.js"></script>
+    <script src="/env.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        // Check for authentication token immediately
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem(ENV.AUTH_TOKEN_KEY);
+            console.log('ENV.AUTH_TOKEN_KEY:', ENV.AUTH_TOKEN_KEY);
+            console.log('token:', token);
+            // alert(`Current token value: ${token || 'No token found'}`);
+            if (!token) {
+                // No token found, redirect to auth page
+                window.location.href = 'auth.html';
+            }
+
+            // Update user greeting
+            try {
+                const user = JSON.parse(localStorage.getItem(ENV.USER_DATA_KEY));
+                if (user && user.username) {
+                    document.getElementById('userGreeting').textContent = `Hello, ${user.username}`;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        });
+    </script>
+    <style>
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            color: #2c3e50;
+        }
+        .container-fluid {
+            padding: 0;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            padding: 1.2rem;
+            margin-bottom: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        .header h1 {
+            font-weight: 600;
+            font-size: 1.8rem;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .card h5 {
+            color: #1a237e;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            font-size: 1.1rem;
+        }
+        .form-control {
+            border: 1.5px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            border-color: #1a237e;
+            box-shadow: 0 0 0 0.2rem rgba(26,35,126,0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #283593 0%, #1a237e 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,35,126,0.2);
+        }
+        .btn-outline-primary {
+            border: 1.5px solid #1a237e;
+            color: #1a237e;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+        }
+        .btn-outline-primary:hover {
+            background: #1a237e;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 0.7rem;
+        }
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+        .input-group-text {
+            background: #f8f9fa;
+            border: 1.5px solid #e0e6ed;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .nav-pills {
+            background: white;
+            padding: 0.8rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+        .nav-pills .nav-link {
+            color: #1a237e;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            margin-right: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(26,35,126,0.2);
+        }
+        .main-content {
+            padding: 5px;
+            margin-left: 250px;
+            margin-top: 130px;
+            overflow: hidden;
+            max-width: calc(100vw - 250px);
+            box-sizing: border-box;
+            position: relative;
+            height: calc(100vh - 130px);
+        }
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 998;
+            top: 110px;
+            left: 0;
+            background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+            padding-top: 20px;
+            box-sizing: border-box;
+            bottom: 0;
+            overflow-y: auto;
+        }
+        .sidebar a {
+            padding: 1rem 1.5rem;
+            text-decoration: none;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.8);
+            display: block;
+            transition: all 0.3s;
+            border-radius: 0 25px 25px 0;
+            margin: 0.3rem 0;
+            margin-right: 1rem;
+            font-weight: 500;
+        }
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        .sidebar a.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .form-select {
+            border: 1.5px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+        }
+        .form-select:focus {
+            border-color: #1a237e;
+            box-shadow: 0 0 0 0.2rem rgba(26,35,126,0.1);
+        }
+        .btn-group {
+            gap: 0.5rem;
+        }
+        @media (max-width: 576px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .sidebar {
+                top: 160px;
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding-top: 0;
+            }
+            .sidebar a {
+                display: inline-block;
+                margin: 0.3rem 0.2rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .main-content {
+                margin-left: 0;
+                margin-top: 160px;
+                max-width: 100vw;
+                padding: 15px;
+            }
+            .nav-pills {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .nav-pills .nav-link {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+                padding: 0.5rem 1rem;
+            }
+            .btn-group {
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+            .input-group > * {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+        .market-indices {
+            position: fixed;
+            top: 64px;
+            left: 0;
+            width: 100%;
+            background: white;
+            z-index: 999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .index-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .index-name {
+            font-weight: 600;
+            color: #1a237e;
+        }
+        .index-value {
+            font-weight: 500;
+        }
+        .index-change {
+            color: #666;
+        }
+        .index-change.positive {
+            color: #00c853;
+        }
+        .strategy-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            height: 100%;
+        }
+        .strategy-card h6 {
+            color: #1a237e;
+            margin-bottom: 1rem;
+        }
+        .strategy-stats {
+            display: flex;
+            justify-content: space-between;
+        }
+        .strategy-stats small {
+            display: block;
+            color: #666;
+            font-size: 0.8rem;
+        }
+        .strategy-stats span {
+            font-weight: 500;
+        }
+        .card canvas {
+            padding: 1rem;
+            max-height: 300px;
+        }
+        .mb-4 {
+            margin-bottom: 1.5rem !important;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .metric-item small {
+            color: #666;
+            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+        }
+        .metric-item span {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .text-success {
+            color: #00c853 !important;
+        }
+        .text-danger {
+            color: #ff1744 !important;
+        }
+        .tab-content {
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        .row {
+            margin-right: 0;
+            margin-left: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .content-section {
+            width: 100%;
+            min-height: calc(100vh - 180px);
+            position: relative;
+            display: none;
+            margin: 0;
+            padding: 0;
+            overflow: auto;
+        }
+        .content-section iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            min-height: calc(100vh - 180px);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-item i {
+            width: 1.2rem;
+            text-align: center;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background-color: #fff5f5;
+        }
+        
+        .alert {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: none;
+        }
+        
+        .btn-outline-light:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .header .dropdown-menu {
+            margin-top: 0.5rem;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .header .btn-outline-light {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header .btn-outline-light:hover,
+        .header .btn-outline-light:focus {
+            background-color: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .header .dropdown-item {
+            padding: 0.7rem 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .dropdown-item i {
+            width: 1.2rem;
+        }
+
+        .header .dropdown-divider {
+            margin: 0.5rem 0;
+            opacity: 0.1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <h1 class="ms-3">AlgoTrade</h1>
+            <div class="d-flex align-items-center me-3">
+                <span class="me-3" id="userGreeting">Hello, Guest</span>
+                <!-- Simple logout button -->
+                <button class="btn btn-outline-light btn-sm" onclick="handleLogout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="market-indices py-3 bg-white border-bottom">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="index-card">
+                        <span class="index-name">NIFTY</span>
+                        <span class="index-value">24457.15</span>
+                        <span class="index-change positive">(0.75%)</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="index-card">
+                        <span class="index-name">BANKNIFTY</span>
+                        <span class="index-value">52695.75</span>
+                        <span class="index-change">(0.00%)</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="index-card">
+                        <span class="index-name">FINNIFTY</span>
+                        <span class="index-value">24296.55</span>
+                        <span class="index-change positive">(0.93%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid" style="padding-left: 0;">
+        <div class="sidebar">
+            <a href="#home" id="nav-home" class="active">Home</a>
+            <a href="#broker" id="nav-broker">Broker</a>
+            <a href="#strategies" id="nav-strategies">Strategies</a>
+            <a href="#backtest" id="nav-backtest">Backtest</a>
+            <a href="#reports" id="nav-reports">Reports</a>
+        </div>
+
+        <div class="main-content">
+            <div id="home" class="content-section">
+                <!-- Home content will be loaded here -->
+            </div>
+
+            <div id="broker" class="content-section" style="display: none;">
+                <!-- Broker content will be loaded here -->
+            </div>
+
+            <div id="strategies" class="content-section" style="display: none;">
+                <!-- Strategies content will be loaded here -->
+            </div>
+
+            <div id="backtest" class="content-section" style="display: none;">
+                <!-- Backtest content will be loaded here -->
+            </div>
+
+            <div id="reports" class="content-section" style="display: none;">
+                <!-- Reports content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadContent(sectionId) {
+            console.log('Loading section:', sectionId);
+            const contentDiv = document.getElementById(sectionId);
+            if (!contentDiv) {
+                console.error('Content div not found:', sectionId);
+                return;
+            }
+
+            try {
+                // Create iframe if it doesn't exist
+                let iframe = contentDiv.querySelector('iframe');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    iframe.style.display = 'block';
+                    
+                    contentDiv.innerHTML = ''; // Clear existing content
+                    contentDiv.appendChild(iframe);
+                }
+
+                // Set iframe source
+                const pagePath = `pages/${sectionId}.html`;
+                console.log('Loading page:', pagePath);
+               
+                // Add load event listener to check if iframe loaded successfully
+                iframe.onload = () => {
+                    console.log('iframe loaded successfully');
+                };
+               
+                iframe.onerror = (error) => {
+                    console.error('iframe load error:', error);
+                };
+                
+                iframe.src = pagePath;
+
+                // Update URL without reloading the page
+                history.pushState({section: sectionId}, '', `#${sectionId}`);
+
+            } catch (error) {
+                console.error('Error details:', error);
+                contentDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Error loading content</h5>
+                        <p>${error.message}</p>
+                        <p>Please make sure you're running a local server to serve the files.</p>
+                    </div>`;
+            }
+        }
+
+        function showSection(sectionId) {
+            console.log('Showing section:', sectionId);
+            
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show selected section
+            const selectedSection = document.getElementById(sectionId);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+                // Load content for the section
+                loadContent(sectionId);
+            }
+
+            // Update navigation
+            const navLinks = document.querySelectorAll('.sidebar a');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            const activeLink = document.querySelector(`#nav-${sectionId}`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+
+        // Add event listeners for navigation
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handle navigation clicks
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const sectionId = link.getAttribute('href').substring(1); // Remove the #
+                    showSection(sectionId);
+                });
+            });
+
+            // Check for hash in URL on page load
+            const hash = window.location.hash.substring(1);
+            showSection(hash || 'home');
+        });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (event) => {
+            const section = event.state?.section || 'home';
+            showSection(section);
+        });
+
+        function handleLogout() {
+            console.log('Logging out...');
+            // Clear authentication data
+            localStorage.removeItem(ENV.AUTH_TOKEN_KEY);
+            localStorage.removeItem(ENV.USER_DATA_KEY);
+            
+            // Show logout notification
+            const notification = document.createElement('div');
+            notification.className = 'position-fixed top-0 start-50 translate-middle-x p-3';
+            notification.style.zIndex = '9999';
+            notification.innerHTML = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Successfully logged out
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // Redirect to login page after a brief delay
+            setTimeout(() => {
+                // window.location.href = 'auth.html';
+            }, 1000);
+        }
+
+        function showHelpDesk() {
+            // Implement help desk functionality
+            alert('Help desk functionality coming soon!');
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>

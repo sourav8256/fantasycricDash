@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Callback - AlgoTrade</title>
+</head>
+<body>
+    <div id="status">Processing authentication...</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the authorization code from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state'); // 'angel' for Angel Broking
+
+            if (code) {
+                // Determine which broker based on state parameter or URL
+                const broker = state === 'angel' ? 'angel' : 'zerodha';
+
+                // Send the code back to the parent window
+                window.opener.postMessage({ broker, code }, window.location.origin);
+                
+                // Update status and close window
+                document.getElementById('status').textContent = 'Authentication successful! You can close this window.';
+                setTimeout(() => window.close(), 2000);
+            } else {
+                document.getElementById('status').textContent = 'Authentication failed! Please try again.';
+                setTimeout(() => window.close(), 2000);
+            }
+        });
+    </script>
+</body>
+</html> 

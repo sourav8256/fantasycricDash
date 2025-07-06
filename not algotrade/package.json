@@ -1,0 +1,43 @@
+{
+  "name": "trading-platform-launcher",
+  "version": "1.0.0",
+  "description": "Launcher for trading platform components",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "build": "pkg .",
+    "create-exe": "pkg . --compress GZip"
+  },
+  "bin": "app.js",
+  "pkg": {
+    "targets": [
+      "node18-linux-x64",
+      "node18-macos-x64",
+      "node18-win-x64"
+    ],
+    "outputPath": "dist",
+    "assets": [
+      "frontend/**/*",
+      "backend/**/*",
+      "live/**/*",
+      "mockmarket/**/*"
+    ]
+  },
+  "devDependencies": {
+    "open": "^8.4.2",
+    "pkg": "^5.8.1"
+  },
+  "dependencies": {
+    "axios": "^1.8.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "fyers-api-v3": "^1.3.4",
+    "node-ssh": "^13.2.0",
+    "pm2": "^5.4.3",
+    "puppeteer": "^24.5.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "random-useragent": "^0.5.0",
+    "winston": "^3.17.0"
+  }
+}

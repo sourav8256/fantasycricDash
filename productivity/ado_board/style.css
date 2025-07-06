@@ -1,0 +1,36 @@
+.column {
+    flex: 1;
+    margin: 0 10px;
+    background: var(--column-bg);
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.task-list {
+    flex: 1;
+    min-height: 100px;
+    padding: 10px;
+    background: var(--task-list-bg);
+    border-radius: 4px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task-card {
+    background: var(--task-bg);
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: move;
+    user-select: none;
+}
+
+.drag-over {
+    background: var(--drag-over-bg);
+    border: 2px dashed var(--drag-over-border);
+} 

@@ -1,0 +1,12 @@
+{
+  "name": "youtube-trending",
+  "version": "1.0.0",
+  "description": "A script to fetch and display trending videos from YouTube",
+  "main": "youtubeTrending.js",
+  "scripts": {
+    "start": "node youtubeTrending.js"
+  },
+  "dependencies": {
+    "axios": "^1.8.4"
+  }
+}

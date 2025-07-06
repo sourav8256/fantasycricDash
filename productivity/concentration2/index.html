@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concentration Tracker</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2196F3;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stopwatch-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .timer-circle {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 30px;
+        }
+
+        .timer-progress {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .timer-progress circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .timer-progress .background {
+            stroke: #e0e0e0;
+        }
+
+        .timer-progress .progress {
+            stroke: var(--primary-color);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+
+        .timer-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.stop {
+            background: #f44336;
+        }
+
+        button.reset {
+            background: #9e9e9e;
+        }
+
+        .stats-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .heatmap-container {
+            margin-top: 30px;
+        }
+
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(24, 1fr);
+            grid-template-rows: 1fr;
+            gap: 2px;
+            height: 100px;
+            width: 100%;
+        }
+
+        .heatmap-cell {
+            background: #e0e0e0;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            height: 100%;
+        }
+
+        .heatmap-cell.active {
+            background: var(--primary-color);
+        }
+
+        .heatmap-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .session-list {
+            margin-top: 30px;
+        }
+
+        .session-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .session-item:last-child {
+            border-bottom: none;
+        }
+
+        .lap-times {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .lap-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+
+        .lap-item:last-child {
+            border-bottom: none;
+        }
+
+        .lap-preview {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #666;
+            font-style: italic;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .lap-preview .lap-time {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-style: normal;
+        }
+
+        .lap-preview .lap-label {
+            color: #666;
+        }
+
+        .lap-preview .total-time {
+            color: #666;
+        }
+
+        button.lap {
+            background: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Concentration Tracker</h1>
+        </div>
+
+        <div class="main-content">
+            <div class="stopwatch-container">
+                <div class="timer-circle">
+                    <svg class="timer-progress" viewBox="0 0 100 100">
+                        <circle class="background" cx="50" cy="50" r="45" />
+                        <circle class="progress" cx="50" cy="50" r="45" />
+                    </svg>
+                    <div class="timer-display">00:00:00</div>
+                </div>
+                <div class="controls">
+                    <button id="startBtn">Start</button>
+                    <button id="stopBtn" class="stop">Stop</button>
+                    <button id="resetBtn" class="reset">Reset</button>
+                    <button id="lapBtn" class="lap">Lap</button>
+                </div>
+                <div class="lap-times" id="lapTimes"></div>
+            </div>
+
+            <div class="stats-container">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalTime">0h</div>
+                        <div class="stat-label">Total Focus Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="sessionCount">0</div>
+                        <div class="stat-label">Sessions Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgSession">0m</div>
+                        <div class="stat-label">Avg Session</div>
+                    </div>
+                </div>
+
+                <div class="heatmap-container">
+                    <h3>10-Day Focus Heatmap</h3>
+                    <div class="heatmap" id="heatmap"></div>
+                </div>
+
+                <div class="session-list">
+                    <h3>Today's Sessions</h3>
+                    <div id="sessionList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ConcentrationTracker {
+            constructor() {
+                // Clean up any invalid localStorage data
+                this.cleanupLocalStorage();
+
+                // Load saved state from localStorage with error handling
+                let savedState;
+                try {
+                    const savedStateStr = localStorage.getItem('timerState');
+                    savedState = savedStateStr ? JSON.parse(savedStateStr) : null;
+                } catch (e) {
+                    console.warn('Error loading saved state:', e);
+                    savedState = null;
+                }
+
+                // Default state if no valid saved state exists
+                const defaultState = {
+                    startTime: null,
+                    elapsedTime: 0,
+                    isRunning: false,
+                    lapTimes: [],
+                    lastLapTime: 0
+                };
+
+                // Validate and merge saved state with defaults
+                this.startTime = savedState?.startTime ?? defaultState.startTime;
+                this.elapsedTime = savedState?.elapsedTime ?? defaultState.elapsedTime;
+                this.timerInterval = null;
+                this.isRunning = savedState?.isRunning ?? defaultState.isRunning;
+                this.lapTimes = Array.isArray(savedState?.lapTimes) ? savedState.lapTimes : defaultState.lapTimes;
+                this.lastLapTime = savedState?.lastLapTime ?? defaultState.lastLapTime;
+
+                // Load sessions with error handling
+                try {
+                    const savedSessions = localStorage.getItem('sessions');
+                    this.sessions = savedSessions ? JSON.parse(savedSessions) : [];
+                } catch (e) {
+                    console.warn('Error loading sessions:', e);
+                    this.sessions = [];
+                }
+
+                this.today = new Date().toDateString();
+
+                this.initializeElements();
+                this.initializeEventListeners();
+                this.updateStats();
+                this.renderHeatmap();
+                this.renderSessions();
+                this.renderLapTimes();
+
+                // If timer was running when page was closed, restart it
+                if (this.isRunning && this.startTime) {
+                    this.start();
+                } else {
+                    // Update display with saved elapsed time
+                    this.timerDisplay.textContent = this.formatTime(this.elapsedTime);
+                    this.updateProgressCircle();
+                }
+            }
+
+            cleanupLocalStorage() {
+                try {
+                    // Check and clean timerState
+                    const timerState = localStorage.getItem('timerState');
+                    if (timerState) {
+                        try {
+                            JSON.parse(timerState);
+                        } catch (e) {
+                            console.warn('Cleaning up invalid timerState');
+                            localStorage.removeItem('timerState');
+                        }
+                    }
+
+                    // Check and clean sessions
+                    const sessions = localStorage.getItem('sessions');
+                    if (sessions) {
+                        try {
+                            JSON.parse(sessions);
+                        } catch (e) {
+                            console.warn('Cleaning up invalid sessions');
+                            localStorage.removeItem('sessions');
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Error during localStorage cleanup:', e);
+                    // If there's an error accessing localStorage, try to clear everything
+                    try {
+                        localStorage.clear();
+                    } catch (clearError) {
+                        console.error('Failed to clear localStorage:', clearError);
+                    }
+                }
+            }
+
+            initializeElements() {
+                this.startBtn = document.getElementById('startBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.lapBtn = document.getElementById('lapBtn');
+                this.timerDisplay = document.querySelector('.timer-display');
+                this.progressCircle = document.querySelector('.progress');
+                this.heatmap = document.getElementById('heatmap');
+                this.sessionList = document.getElementById('sessionList');
+                this.lapTimesContainer = document.getElementById('lapTimes');
+            }
+
+            initializeEventListeners() {
+                this.startBtn.addEventListener('click', () => this.start());
+                this.stopBtn.addEventListener('click', () => this.stop());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                this.lapBtn.addEventListener('click', () => this.recordLap());
+            }
+
+            recordLap() {
+                if (!this.isRunning) return;
+                
+                const currentTime = this.elapsedTime;
+                const lapTime = currentTime - this.lastLapTime;
+                this.lastLapTime = currentTime;
+                
+                // Save the lap as a session
+                const session = {
+                    startTime: new Date(Date.now() - lapTime),
+                    endTime: new Date(),
+                    duration: lapTime
+                };
+                
+                this.sessions.push(session);
+                localStorage.setItem('sessions', JSON.stringify(this.sessions));
+                
+                // Add to lap times display
+                this.lapTimes.push({
+                    lapNumber: this.lapTimes.length + 1,
+                    totalTime: currentTime,
+                    lapTime: lapTime
+                });
+                
+                this.renderLapTimes();
+                this.updateStats();
+                this.renderHeatmap();
+                this.saveState();
+            }
+
+            renderLapTimes() {
+                this.lapTimesContainer.innerHTML = '';
+                
+                // Add lap preview at the top
+                if (this.isRunning) {
+                    this.updateLapPreview();
+                }
+                
+                this.lapTimes.forEach(lap => {
+                    const lapEl = document.createElement('div');
+                    lapEl.className = 'lap-item';
+                    lapEl.innerHTML = `
+                        <span>Lap ${lap.lapNumber}</span>
+                        <span>${this.formatTime(lap.lapTime)}</span>
+                        <span>Total: ${this.formatTime(lap.totalTime)}</span>
+                    `;
+                    this.lapTimesContainer.appendChild(lapEl);
+                });
+            }
+
+            reset() {
+                this.stop();
+                this.elapsedTime = 0;
+                this.startTime = null;
+                this.lastLapTime = 0;
+                this.lapTimes = [];
+                this.timerDisplay.textContent = "00:00:00";
+                this.lapTimesContainer.innerHTML = '';
+                // Reset progress circle
+                const circumference = 2 * Math.PI * 45;
+                this.progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+                this.progressCircle.style.strokeDashoffset = circumference;
+                this.saveState();
+            }
+
+            start() {
+                if (!this.isRunning) {
+                    this.isRunning = true;
+                    this.startTime = Date.now() - this.elapsedTime;
+                    this.timerInterval = setInterval(() => this.updateTimer(), 10);
+                    this.playSound('start');
+                    this.saveState();
+                }
+            }
+
+            stop() {
+                if (this.isRunning) {
+                    this.isRunning = false;
+                    clearInterval(this.timerInterval);
+                    this.playSound('stop');
+                    
+                    // Only save the final session if there are no laps
+                    if (this.lapTimes.length === 0) {
+                        this.saveSession();
+                    }
+                    
+                    this.saveState();
+                }
+            }
+
+            updateTimer() {
+                if (!this.isRunning) return;
+                this.elapsedTime = Date.now() - this.startTime;
+                const time = this.formatTime(this.elapsedTime);
+                this.timerDisplay.textContent = time;
+                this.updateProgressCircle();
+                this.updateLapPreview();
+                this.saveState();
+            }
+
+            formatTime(ms) {
+                const hours = Math.floor(ms / 3600000);
+                const minutes = Math.floor((ms % 3600000) / 60000);
+                const seconds = Math.floor((ms % 60000) / 1000);
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            saveSession() {
+                const session = {
+                    startTime: new Date(this.startTime),
+                    endTime: new Date(),
+                    duration: this.elapsedTime
+                };
+
+                // Only save sessions from today
+                if (new Date(session.startTime).toDateString() === this.today) {
+                    this.sessions.push(session);
+                    localStorage.setItem('sessions', JSON.stringify(this.sessions));
+                    this.updateStats();
+                    this.renderHeatmap();
+                }
+            }
+
+            updateStats() {
+                const todaySessions = this.sessions.filter(s => 
+                    new Date(s.startTime).toDateString() === this.today
+                );
+
+                const totalTime = todaySessions.reduce((sum, session) => sum + session.duration, 0);
+                const sessionCount = todaySessions.length;
+                const avgSession = sessionCount ? totalTime / sessionCount : 0;
+
+                document.getElementById('totalTime').textContent = this.formatDuration(totalTime);
+                document.getElementById('sessionCount').textContent = sessionCount;
+                document.getElementById('avgSession').textContent = this.formatDuration(avgSession);
+            }
+
+            formatDuration(ms) {
+                const hours = Math.floor(ms / 3600000);
+                const minutes = Math.floor((ms % 3600000) / 60000);
+                return hours > 0 ? `${hours}h` : `${minutes}m`;
+            }
+
+            renderHeatmap() {
+                this.heatmap.innerHTML = '';
+                const hourlyDurations = new Array(24).fill(0);
+                const MAX_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
+                // Get the last 10 days of sessions
+                const last10Days = new Set();
+                const today = new Date();
+                for (let i = 0; i < 10; i++) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
+                    last10Days.add(date.toDateString());
+                }
+
+                // Group sessions by date
+                const sessionsByDate = {};
+                this.sessions.forEach(session => {
+                    const date = new Date(session.startTime).toDateString();
+                    if (last10Days.has(date)) {
+                        if (!sessionsByDate[date]) {
+                            sessionsByDate[date] = [];
+                        }
+                        sessionsByDate[date].push(session);
+                    }
+                });
+
+                // Calculate total duration for each hour across the last 10 days
+                Object.values(sessionsByDate).forEach(daySessions => {
+                    const dayHourlyDurations = new Array(24).fill(0);
+
+                    daySessions.forEach(session => {
+                        const startTime = new Date(session.startTime);
+                        const endTime = new Date(session.endTime);
+                        const startHour = startTime.getHours();
+                        const endHour = endTime.getHours();
+
+                        // Calculate duration for each hour
+                        for (let hour = startHour; hour <= endHour; hour++) {
+                            let hourStart = new Date(startTime);
+                            let hourEnd = new Date(endTime);
+
+                            // Adjust start and end times to hour boundaries
+                            if (hour === startHour) {
+                                hourStart = new Date(startTime);
+                            } else {
+                                hourStart = new Date(startTime);
+                                hourStart.setHours(hour, 0, 0, 0);
+                            }
+
+                            if (hour === endHour) {
+                                hourEnd = new Date(endTime);
+                            } else {
+                                hourEnd = new Date(startTime);
+                                hourEnd.setHours(hour + 1, 0, 0, 0);
+                            }
+
+                            // Calculate duration in milliseconds for this hour
+                            const duration = hourEnd - hourStart;
+                            dayHourlyDurations[hour] += duration;
+                        }
+                    });
+
+                    // Add this day's durations to the total
+                    dayHourlyDurations.forEach((duration, hour) => {
+                        hourlyDurations[hour] += duration;
+                    });
+                });
+
+                // Calculate average duration for each hour
+                const numberOfDays = Object.keys(sessionsByDate).length || 1; // Avoid division by zero
+                const averageDurations = hourlyDurations.map(duration => duration / numberOfDays);
+
+                // Create heatmap cells
+                averageDurations.forEach((duration, hour) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'heatmap-cell';
+                    if (duration > 0) {
+                        cell.classList.add('active');
+                        const intensity = Math.min(duration / MAX_DURATION, 1);
+                        cell.style.opacity = 0.3 + (intensity * 0.7);
+                        
+                        // Add tooltip with duration information
+                        const minutes = Math.floor(duration / 60000);
+                        const hours = Math.floor(minutes / 60);
+                        const remainingMinutes = minutes % 60;
+                        const timeStr = hours > 0 
+                            ? `${hours}h ${remainingMinutes}m` 
+                            : `${remainingMinutes}m`;
+                        cell.title = `${hour}:00 - ${hour + 1}:00\nAverage: ${timeStr} of focus (last ${numberOfDays} days)`;
+                    }
+                    this.heatmap.appendChild(cell);
+                });
+            }
+
+            renderSessions() {
+                this.sessionList.innerHTML = '';
+                const todaySessions = this.sessions
+                    .filter(s => new Date(s.startTime).toDateString() === this.today)
+                    .sort((a, b) => b.startTime - a.startTime);
+
+                todaySessions.forEach(session => {
+                    const sessionEl = document.createElement('div');
+                    sessionEl.className = 'session-item';
+                    sessionEl.innerHTML = `
+                        <span>${new Date(session.startTime).toLocaleTimeString()} - ${new Date(session.endTime).toLocaleTimeString()}</span>
+                        <span>${this.formatDuration(session.duration)}</span>
+                    `;
+                    this.sessionList.appendChild(sessionEl);
+                });
+            }
+
+            playSound(type) {
+                const audio = new Audio();
+                audio.src = type === 'start' ? 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU' : 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU';
+                audio.play().catch(() => {});
+            }
+
+            saveState() {
+                try {
+                    const state = {
+                        startTime: this.startTime,
+                        elapsedTime: this.elapsedTime,
+                        isRunning: this.isRunning,
+                        lapTimes: this.lapTimes,
+                        lastLapTime: this.lastLapTime
+                    };
+                    localStorage.setItem('timerState', JSON.stringify(state));
+                } catch (e) {
+                    console.warn('Error saving state:', e);
+                    // If there's an error saving, try to clear the state first
+                    try {
+                        localStorage.removeItem('timerState');
+                        localStorage.setItem('timerState', JSON.stringify(state));
+                    } catch (retryError) {
+                        console.error('Failed to save state after cleanup:', retryError);
+                    }
+                }
+            }
+
+            updateProgressCircle() {
+                const circumference = 2 * Math.PI * 45;
+                const progress = (this.elapsedTime % 3600000) / 3600000;
+                const offset = circumference * (1 - progress);
+                this.progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+                this.progressCircle.style.strokeDashoffset = offset;
+            }
+
+            updateLapPreview() {
+                if (!this.isRunning) return;
+                
+                const currentTime = this.elapsedTime;
+                const lapTime = currentTime - this.lastLapTime;
+                
+                // Update or create lap preview
+                let previewEl = document.querySelector('.lap-preview');
+                if (!previewEl) {
+                    previewEl = document.createElement('div');
+                    previewEl.className = 'lap-preview';
+                    this.lapTimesContainer.insertBefore(previewEl, this.lapTimesContainer.firstChild);
+                }
+                
+                previewEl.innerHTML = `
+                    <span class="lap-label">Next Lap</span>
+                    <span class="lap-time">${this.formatTime(lapTime)}</span>
+                    <span class="total-time">Total: ${this.formatTime(currentTime)}</span>
+                `;
+            }
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            new ConcentrationTracker();
+        });
+    </script>
+</body>
+</html>

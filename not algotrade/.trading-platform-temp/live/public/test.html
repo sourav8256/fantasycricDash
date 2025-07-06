@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Price Feed Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 8px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #priceUpdates {
+            margin-top: 20px;
+        }
+        .price-card {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .connection-status {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .disconnected {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Price Feed Test</h1>
+    
+    <div id="connectionStatus" class="connection-status disconnected">
+        Disconnected
+    </div>
+
+    <div class="container">
+        <div class="input-group">
+            <input type="text" id="symbolInput" placeholder="Enter symbol (e.g., NIFTY)">
+            <button onclick="subscribeToSymbol()">Subscribe</button>
+            <button onclick="unsubscribeFromSymbol()" style="background-color: #f44336;">Unsubscribe</button>
+        </div>
+
+        <div id="priceUpdates"></div>
+    </div>
+
+    <script>
+        let ws;
+        let currentSymbol = null;
+
+        function connect() {
+            const wsUrl = `ws://localhost:4302`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').classList.remove('disconnected');
+                document.getElementById('connectionStatus').classList.add('connected');
+            };
+
+            ws.onclose = () => {
+                document.getElementById('connectionStatus').textContent = 'Disconnected - Reconnecting...';
+                document.getElementById('connectionStatus').classList.remove('connected');
+                document.getElementById('connectionStatus').classList.add('disconnected');
+                setTimeout(connect, 1000);
+            };
+
+            ws.onmessage = (event) => {
+                console.log('Received message:', event.data);
+                const data = JSON.parse(event.data);
+                console.log('Parsed data:', data);
+                
+                switch (data.event) {
+                    case 'price_update':
+                        console.log('Processing price update:', data);
+                        updatePrice(data);
+                        break;
+                    case 'heartbeat':
+                        console.log('Received heartbeat at:', data.timestamp);
+                        // Update connection status to show last heartbeat and subscribed symbols
+                        const statusEl = document.getElementById('connectionStatus');
+                        const symbolsList = data.subscribedSymbols.length > 0 
+                            ? ` - Subscribed to: ${data.subscribedSymbols.join(', ')}` 
+                            : ' - No active subscriptions';
+                        statusEl.textContent = `Connected - Last Heartbeat: ${new Date(data.timestamp).toLocaleTimeString()}${symbolsList}`;
+                        statusEl.classList.remove('disconnected');
+                        statusEl.classList.add('connected');
+                        break;
+                    case 'connected':
+                        console.log('Connection acknowledged:', data.message);
+                        break;
+                    default:
+                        console.log('Unhandled message type:', data.event);
+                }
+            };
+        }
+
+        function subscribeToSymbol() {
+            const symbol = document.getElementById('symbolInput').value.trim().toUpperCase();
+            if (!symbol) return;
+
+            if (currentSymbol) {
+                unsubscribeFromSymbol();
+            }
+
+            currentSymbol = symbol;
+            ws.send(JSON.stringify({
+                type: 'subscribe',
+                symbol: symbol
+            }));
+
+            // Clear previous updates
+            document.getElementById('priceUpdates').innerHTML = '';
+        }
+
+        function unsubscribeFromSymbol() {
+            if (currentSymbol && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'unsubscribe',
+                    symbol: currentSymbol
+                }));
+                currentSymbol = null;
+                document.getElementById('priceUpdates').innerHTML = '';
+            }
+        }
+
+        function updatePrice(data) {
+            const priceUpdates = document.getElementById('priceUpdates');
+            const priceCard = document.createElement('div');
+            priceCard.className = 'price-card';
+            priceCard.innerHTML = `
+                <strong>${data.symbol}</strong>
+                <br>
+                Price: ₹${data.data.price.toFixed(2)}
+                <br>
+                Time: ${new Date(data.data.timestamp).toLocaleTimeString()}
+            `;
+
+            priceUpdates.insertBefore(priceCard, priceUpdates.firstChild);
+
+            // Keep only last 10 updates
+            while (priceUpdates.children.length > 10) {
+                priceUpdates.removeChild(priceUpdates.lastChild);
+            }
+        }
+
+        // Connect when page loads
+        connect();
+
+        // Cleanup on page unload
+        window.onbeforeunload = () => {
+            if (currentSymbol) {
+                unsubscribeFromSymbol();
+            }
+            ws.close();
+        };
+    </script>
+</body>
+</html> 

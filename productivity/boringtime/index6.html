@@ -409,6 +409,7 @@
                     minutes
                     <button onclick="setDailyLimit(document.getElementById('dailyLimit').value)">Set Limit</button>
                 </label>
+                <button id="resetDailyUsageBtn" style="margin-left: 10px; padding: 4px 10px; font-size: 12px; background-color: #dc3545; color: #fff; border-radius: 4px; border: none; cursor: pointer; vertical-align: middle;">Reset Today</button>
             </div>
             <div id="dailyLimitInfo" class="limit-info">
                 Today's usage: <span id="todayUsage">0</span> / <span id="dailyLimitDisplay">480</span> minutes
@@ -502,6 +503,18 @@
             startRealTimePendingUpdates();
             addFinalCalculationStyle();
             updateResultantTime();
+
+            // Add event listener for daily reset button
+            const resetBtn = document.getElementById('resetDailyUsageBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to reset today\'s usage?')) {
+                        todayUsage = 0;
+                        localStorage.setItem('todayUsage', todayUsage);
+                        updateDailyLimitDisplay();
+                    }
+                });
+            }
         });
 
         // Save notes when they change

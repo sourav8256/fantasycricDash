@@ -1,10 +1,16 @@
-const CACHE_NAME = 'task-timeline-cache-v1';
+const CACHE_NAME = 'task-timeline-cache-v2';
 const urlsToCache = [
     'index.html',
     'styles.css',
     'script.js',
     'manifest.json'
 ];
+
+self.addEventListener('message', event => {
+    if (event.data && event.data.action === 'skipWaiting') {
+        self.skipWaiting();
+    }
+});
 
 self.addEventListener('install', event => {
     event.waitUntil(

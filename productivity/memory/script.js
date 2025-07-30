@@ -203,6 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     addTimelineBtn.addEventListener('click', addTimeline);
 
+    updateAppBtn.addEventListener('click', () => {
+        if (newWorker) {
+            newWorker.postMessage({ action: 'skipWaiting' });
+        }
+    });
+
     timelinesContainer.addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-timeline-btn')) {
             const timelineEl = e.target.closest('.timeline');
@@ -226,9 +232,25 @@ document.addEventListener('DOMContentLoaded', () => {
             navigator.serviceWorker.register('service-worker.js')
                 .then(registration => {
                     console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New update available
+                                updateAppBtn.style.display = 'inline-block';
+                            }
+                        });
+                    });
                 }, err => {
                     console.log('ServiceWorker registration failed: ', err);
                 });
+                
+            // Listen for controlling service worker changes
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                window.location.reload();
+            });
         });
     }
 }); 

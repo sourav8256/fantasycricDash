@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const timelinesContainer = document.getElementById('timelines-container');
     const addTimelineBtn = document.getElementById('add-timeline-btn');
+    const updateAppBtn = document.getElementById('update-app-btn');
 
     let timelines = JSON.parse(localStorage.getItem('timelines')) || [];
+    let newWorker;
 
     const saveTimelines = () => {
         localStorage.setItem('timelines', JSON.stringify(timelines));

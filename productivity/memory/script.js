@@ -5,6 +5,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let timelines = JSON.parse(localStorage.getItem('timelines')) || [];
     let newWorker;
+    let taskIdCounter = Date.now(); // Use a counter for unique IDs
+
+    // Check for update parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const updateParam = urlParams.get('t');
+    
+    const forceUpdate = () => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(registration => {
+                    registration.update().then(() => {
+                        console.log('Service worker update triggered');
+                        // Clear the URL parameter after triggering update
+                        const newUrl = window.location.pathname;
+                        window.history.replaceState({}, document.title, newUrl);
+                    });
+                });
+            });
+        } else {
+            // Fallback: hard reload if service worker not supported
+            window.location.reload(true);
+        }
+    };
+
+    // Trigger update if URL parameter is present
+    if (updateParam) {
+        forceUpdate();
+    }
 
     const saveTimelines = () => {
         localStorage.setItem('timelines', JSON.stringify(timelines));
@@ -143,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const addTimeline = () => {
         const newTimeline = {
-            id: Date.now(),
+            id: taskIdCounter++, // Use counter for timeline ID too
             tasks: [],
             nextTaskTime: Date.now() + getRandomInterval()
         };
@@ -162,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const task = timeline.tasks.find(t => t.id === taskId);
             if (task && task.status === 'active') {
                 task.status = 'completed';
+                task.completedTime = Date.now(); // Store completion time
                 saveAndRender();
             }
         }
@@ -179,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timelines.forEach(timeline => {
             if (Date.now() >= timeline.nextTaskTime) {
                 const newTask = {
-                    id: Date.now(),
+                    id: taskIdCounter++, // Use the counter for a unique ID
                     startTime: Date.now(),
                     status: 'active'
                 };
@@ -191,6 +220,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (task.status === 'active' && Date.now() - task.startTime > 300000) {
                     task.status = 'missed';
                 }
+            });
+
+            // Auto-remove completed and missed tasks after a delay
+            timeline.tasks = timeline.tasks.filter(task => {
+                if (task.status === 'completed' || task.status === 'missed') {
+                    // Remove completed tasks after 30 seconds, missed tasks after 10 seconds
+                    const removalDelay = task.status === 'completed' ? 30000 : 10000;
+                    const timeSinceStatusChange = Date.now() - (task.completedTime || task.startTime + 300000);
+                    return timeSinceStatusChange < removalDelay;
+                }
+                return true; // Keep active and upcoming tasks
             });
         });
         saveAndRender();

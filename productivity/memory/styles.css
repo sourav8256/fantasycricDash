@@ -117,6 +117,13 @@ h1 {
     color: white;
 }
 
+.task .remove-task-btn {
+    background-color: #6c757d;
+    color: white;
+    font-size: 0.9rem;
+    padding: 0.3rem 0.6rem;
+}
+
 .task .missed-btn {
     background-color: #6c757d;
     color: white;

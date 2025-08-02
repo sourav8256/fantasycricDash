@@ -1,4 +1,4 @@
-const CACHE_NAME = 'task-timeline-cache-v2';
+const CACHE_NAME = 'task-timeline-cache-v3';
 const urlsToCache = [
     'index.html',
     'styles.css',

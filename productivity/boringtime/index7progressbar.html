@@ -1292,10 +1292,22 @@
         }
 
         function addLogEntry(type, minutes, timestamp = new Date(), customMessage = null) {
+            // Ensure timestamp is a Date object
+            let timestampMs;
+            if (timestamp instanceof Date) {
+                timestampMs = timestamp.getTime();
+            } else if (typeof timestamp === 'number') {
+                timestampMs = timestamp;
+            } else if (typeof timestamp === 'string') {
+                timestampMs = new Date(timestamp).getTime();
+            } else {
+                timestampMs = new Date().getTime();
+            }
+            
             const entry = {
                 type,
                 minutes,
-                timestamp: timestamp.getTime(),
+                timestamp: timestampMs,
                 pendingTime: Math.floor(pendingBoringTime),
                 customMessage: customMessage
             };

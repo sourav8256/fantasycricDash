@@ -1121,6 +1121,7 @@
                 updateTimer(0);
                 updateProgress(0);
                 updateBreakTimeInfo();
+                updateResultantTime();
                 document.getElementById('cancelButton').style.display = 'none';
                 document.getElementById('breakButton').style.display = 'none';
                 addLogEntry('cancelled', totalDuration / 60);
@@ -1643,9 +1644,21 @@
             const currentPendingEl = document.getElementById('currentPendingTime');
             const pendingProgressBar = document.getElementById('pendingProgressBar');
             const pendingProgressText = document.getElementById('pendingProgressText');
+            const resultantTimeEl = document.getElementById('resultantTime');
 
-            if (currentPendingEl && pendingProgressBar && pendingProgressText) {
-                const currentPending = pendingBoringTime;
+            if (currentPendingEl && pendingProgressBar && pendingProgressText && resultantTimeEl) {
+                // Use the already calculated resultant time
+                const resultantText = resultantTimeEl.textContent;
+                let currentPending;
+                
+                // Parse the resultant time (could be "15" or "15:30" format)
+                if (resultantText.includes(':')) {
+                    const parts = resultantText.split(':');
+                    currentPending = parseInt(parts[0]) + parseInt(parts[1]) / 60;
+                } else {
+                    currentPending = parseFloat(resultantText) || 0;
+                }
+                
                 const targetPending = targetPendingTime;
                 
                 // Update current pending display

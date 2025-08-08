@@ -63,6 +63,13 @@
             overflow: hidden;
             margin: 10px 0;
         }
+        .session-start-info {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+            display: none;
+        }
         .progress {
             width: 0%;
             height: 100%;
@@ -632,6 +639,7 @@
         </div>
 
         <div class="timer" id="timer">00:00:00</div>
+        <div class="session-start-info" id="sessionStartInfo"></div>
         <div class="progress-bar">
             <div class="progress" id="progress"></div>
         </div>
@@ -973,6 +981,12 @@
                 } else {
                     document.getElementById('cancelButton').style.display = 'block';
                     document.getElementById('breakButton').style.display = 'block';
+                    // Restore start info display on reload
+                    const startInfo = document.getElementById('sessionStartInfo');
+                    if (startInfo && startTime) {
+                        startInfo.style.display = 'block';
+                        startInfo.textContent = `Start: ${startTime.toLocaleTimeString()}`;
+                    }
                     startTimer();
                     updateButtons(true);
                 }
@@ -1127,6 +1141,12 @@
             
             updateTimer(currentSession);
             updateProgress(100);
+            // Show start time for current session
+            const startInfo = document.getElementById('sessionStartInfo');
+            if (startInfo && startTime) {
+                startInfo.style.display = 'block';
+                startInfo.textContent = `Start: ${startTime.toLocaleTimeString()}`;
+            }
             updateButtons(true);
             updateBreakTimeInfo();
             document.getElementById('cancelButton').style.display = 'block';
@@ -1180,8 +1200,9 @@
             const completedSession = {
                 id: Date.now(),
                 duration: currentSession,
-                startTime: startTime,
-                endTime: new Date(),
+                // Store timestamps as numbers to ensure reliable parsing/display across browsers
+                startTime: startTime ? startTime.getTime() : (Date.now() - (currentSession * 1000)),
+                endTime: Date.now(),
                 minutes: currentSession / 60
             };
             
@@ -1204,6 +1225,12 @@
                 document.getElementById('breakButton').style.display = 'none';
                 updateButtons(true);
                 saveTimerState();
+                // Hide start info when no session is running anymore
+                const startInfo = document.getElementById('sessionStartInfo');
+                if (startInfo) {
+                    startInfo.style.display = 'none';
+                    startInfo.textContent = '';
+                }
             }
             // If queued session started, buttons remain enabled for the running session
             
@@ -1289,6 +1316,11 @@
             totalDuration = 0;
             document.getElementById('timer').textContent = '00:00:00';
             document.getElementById('progress').style.width = '0%';
+            const startInfo = document.getElementById('sessionStartInfo');
+            if (startInfo) {
+                startInfo.style.display = 'none';
+                startInfo.textContent = '';
+            }
             document.getElementById('cancelButton').style.display = 'none';
             document.getElementById('breakButton').style.display = 'none';
             updateButtons(false);
@@ -1324,7 +1356,7 @@
             updateDailyStreak();
         }
 
-        function addLogEntry(type, minutes, timestamp = new Date(), customMessage = null) {
+        function addLogEntry(type, minutes, timestamp = new Date(), customMessage = null, metadata = null) {
             // Ensure timestamp is a Date object
             let timestampMs;
             if (timestamp instanceof Date) {
@@ -1336,6 +1368,30 @@
             } else {
                 timestampMs = new Date().getTime();
             }
+
+            // Optional metadata for richer logs (e.g., start/end times)
+            let startTimeMs = null;
+            let endTimeMs = null;
+            if (metadata) {
+                if (Object.prototype.hasOwnProperty.call(metadata, 'startTime') && metadata.startTime != null) {
+                    if (metadata.startTime instanceof Date) {
+                        startTimeMs = metadata.startTime.getTime();
+                    } else if (typeof metadata.startTime === 'number') {
+                        startTimeMs = metadata.startTime;
+                    } else if (typeof metadata.startTime === 'string') {
+                        startTimeMs = new Date(metadata.startTime).getTime();
+                    }
+                }
+                if (Object.prototype.hasOwnProperty.call(metadata, 'endTime') && metadata.endTime != null) {
+                    if (metadata.endTime instanceof Date) {
+                        endTimeMs = metadata.endTime.getTime();
+                    } else if (typeof metadata.endTime === 'number') {
+                        endTimeMs = metadata.endTime;
+                    } else if (typeof metadata.endTime === 'string') {
+                        endTimeMs = new Date(metadata.endTime).getTime();
+                    }
+                }
+            }
             
             const entry = {
                 type,
@@ -1344,6 +1400,9 @@
                 pendingTime: Math.floor(pendingBoringTime),
                 customMessage: customMessage
             };
+            if (startTimeMs !== null) entry.startTime = startTimeMs;
+            if (endTimeMs !== null) entry.endTime = endTimeMs;
+
             activityLog.unshift(entry);
             if (activityLog.length > 100) {
                 activityLog.pop();
@@ -1374,7 +1433,8 @@
                 }
                 
                 syncPendingTime(newPendingTime);
-                addLogEntry('session', session.minutes, session.endTime);
+                // Log with start and end times metadata
+                addLogEntry('session', session.minutes, session.endTime, null, { startTime: session.startTime, endTime: session.endTime });
                 
                 // Remove from pending sessions
                 pendingSessions = pendingSessions.filter(s => s.id != sessionId);
@@ -1407,10 +1467,17 @@
             // Generate pending sessions HTML
             const pendingSessionsHTML = pendingSessions.map(session => {
                 const endTime = new Date(session.endTime);
+                const startTime = new Date(session.startTime);
                 const timeStr = endTime.toLocaleString();
+                const startStr = isNaN(startTime.getTime()) ? '' : startTime.toLocaleTimeString();
+                const endStr = isNaN(endTime.getTime()) ? '' : endTime.toLocaleTimeString();
+                const rangeHtml = (startStr && endStr)
+                    ? `<div style="color:#666; font-size:12px; margin-top:4px;">Start: ${startStr} → End: ${endStr}</div>`
+                    : '';
                 return `<div class="log-entry pending-session-log">
                     <div><strong>⏳ Pending Approval</strong></div>
                     <div>${timeStr} - Completed session: ${formatTimeForDisplay(session.minutes)}</div>
+                    ${rangeHtml}
                     <div class="session-actions">
                         <button class="approve-btn" onclick="approveSession('${session.id}')">Approve</button>
                         <button class="reject-btn" onclick="rejectSession('${session.id}')">Reject</button>
@@ -1448,6 +1515,15 @@
                         return `<div class="log-entry ${cssClass}">
                             ${timeStr} - ${action}
                         </div>`;
+                }
+                // For completed sessions, show start and end when available
+                if (entry.type === 'session' && entry.startTime && entry.endTime) {
+                    const startStr = new Date(entry.startTime).toLocaleTimeString();
+                    const endStr = new Date(entry.endTime).toLocaleTimeString();
+                    return `<div class="log-entry ${cssClass}">
+                        ${timeStr} - ${action}: ${formatTimeForDisplay(entry.minutes)} (Pending Time: ${Math.floor(entry.pendingTime)} minutes)<br/>
+                        <span style="color:#666; font-size:12px;">Start: ${startStr} → End: ${endStr}</span>
+                    </div>`;
                 }
                 return `<div class="log-entry ${cssClass}">
                     ${timeStr} - ${action}: ${formatTimeForDisplay(entry.minutes)} (Pending Time: ${Math.floor(entry.pendingTime)} minutes)
@@ -1613,6 +1689,12 @@
                 // Make sure cancel and break buttons are visible when session resumes
                 document.getElementById('cancelButton').style.display = 'block';
                 document.getElementById('breakButton').style.display = 'block';
+                // Update start info on resume
+                const startInfo = document.getElementById('sessionStartInfo');
+                if (startInfo && startTime) {
+                    startInfo.style.display = 'block';
+                    startInfo.textContent = `Start: ${startTime.toLocaleTimeString()}`;
+                }
             }
             
             // Clear break state
@@ -1648,6 +1730,12 @@
                 // Make sure cancel and break buttons are visible when session resumes
                 document.getElementById('cancelButton').style.display = 'block';
                 document.getElementById('breakButton').style.display = 'block';
+                // Update start info on resume
+                const startInfo = document.getElementById('sessionStartInfo');
+                if (startInfo && startTime) {
+                    startInfo.style.display = 'block';
+                    startInfo.textContent = `Start: ${startTime.toLocaleTimeString()}`;
+                }
             }
             
             // Clear break state

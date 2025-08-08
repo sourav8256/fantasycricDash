@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Function Call Graph Visualizer</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="stylesheet" href="https://unpkg.com/vis-network/styles/vis-network.min.css">
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #161922;
+      --text: #e6e6e6;
+      --muted: #a5adba;
+      --accent: #7aa2f7;
+      --good: #9ece6a;
+      --warn: #e0af68;
+      --bad: #f7768e;
+      --border: #2a2f3a;
+      --code: #0b0d12;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px 1fr 420px;
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas:
+        "left top right"
+        "left graph right"
+        "left footer right";
+      gap: 10px;
+      height: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+    .left { grid-area: left; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+    .top { grid-area: top; padding: 10px 12px; display: flex; align-items: center; gap: 12px; }
+    .graph { grid-area: graph; position: relative; min-height: 360px; }
+    .right { grid-area: right; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .footer { grid-area: footer; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; color: var(--muted); }
+
+    .dropzone {
+      display: grid; place-items: center; text-align: center; padding: 18px; border: 1px dashed var(--border);
+      border-radius: 8px; color: var(--muted); background: rgba(255,255,255,0.02);
+    }
+    .dropzone.dragover { border-color: var(--accent); color: var(--accent); background: rgba(122,162,247,0.06); }
+
+    input[type="file"] { display: none; }
+    .btn {
+      background: #1b2030; color: var(--text); border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 12px; cursor: pointer; transition: 120ms ease background, 120ms ease transform; user-select: none;
+    }
+    .btn:hover { background: #22283b; }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: #24304f; border-color: #2e3b64; }
+    .btn.primary:hover { background: #2b3961; }
+
+    .small { font-size: 12px; color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .muted { color: var(--muted); }
+
+    .kv { display: grid; grid-template-columns: 100px 1fr; gap: 6px 10px; align-items: baseline; }
+    .kv .k { color: var(--muted); }
+
+    .field { display: flex; gap: 8px; align-items: center; }
+    .field input[type="text"] { flex: 1; background: #121520; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+    .field label { color: var(--muted); }
+
+    #graph { position: absolute; inset: 0; }
+
+    .section-title { font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 12px; }
+    .hr { height: 1px; background: var(--border); margin: 4px 0 8px; }
+
+    .list { max-height: 200px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+    .list-item { padding: 6px 8px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .list-item:hover { background: rgba(255,255,255,0.04); }
+    .list-item:last-child { border-bottom: none; }
+
+    .codebox { background: var(--code); border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-height: 40vh; }
+    pre { margin: 0; padding: 12px; }
+    code { color: #c0caf5; }
+    mark { background: rgba(122,162,247,0.25); padding: 0 2px; border-radius: 3px; }
+
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px; background: #1b2030; border: 1px solid var(--border); }
+    .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+    .pill.good .dot { background: var(--good); }
+    .pill.warn .dot { background: var(--warn); }
+    .pill.bad .dot { background: var(--bad); }
+
+    .inline { display: inline-flex; gap: 8px; align-items: center; }
+    .spacer { flex: 1; }
+
+    @media (max-width: 1200px) {
+      .layout { grid-template-columns: 1fr; grid-template-areas: "top" "left" "graph" "right" "footer"; height: auto; }
+      .graph { height: 60vh; min-height: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="panel left">
+      <div class="section-title">Load Files</div>
+      <div class="hr"></div>
+      <div id="dropzone" class="dropzone">
+        <div>
+          <div style="font-weight:600; margin-bottom:6px;">Drag & drop .html or .js files here</div>
+          <div class="small">or</div>
+          <div style="margin-top:8px; display:flex; gap:8px; justify-content:center; flex-wrap: wrap;">
+            <button id="selectBtn" type="button" class="btn">Select files…</button>
+            <button id="selectFolderBtn" type="button" class="btn">Select folder…</button>
+            <input id="fileInput" type="file" accept=".html,.htm,.js" multiple>
+            <input id="folderInput" type="file" multiple webkitdirectory directory>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:10px;">Options</div>
+      <div class="hr"></div>
+      <div class="field"><input type="text" id="filterInput" placeholder="Filter functions by name…" /></div>
+      <div class="field"><label><input type="checkbox" id="includeExternal" checked> Include unresolved calls as external</label></div>
+      <div class="field"><label><input type="checkbox" id="groupByFile"> Color nodes by file</label></div>
+      <div class="field"><label><input type="checkbox" id="preferSameFile" checked> Prefer resolving calls within same file</label></div>
+      <div class="inline">
+        <button id="buildGraphBtn" class="btn primary">Build Graph</button>
+        <button id="resetBtn" class="btn">Reset</button>
+      </div>
+
+      <div class="section-title" style="margin-top:10px;">Loaded</div>
+      <div class="hr"></div>
+      <div id="loadedList" class="list small"></div>
+    </div>
+
+    <div class="panel top">
+      <div class="inline">
+        <span class="pill"><span class="dot"></span><span id="statsFunctions">0</span>&nbsp;functions</span>
+        <span class="pill"><span class="dot good"></span><span id="statsEdges">0</span>&nbsp;edges</span>
+        <span class="pill"><span class="dot warn"></span><span id="statsExternal">0</span>&nbsp;external</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="inline small muted">
+        <span>Click node to view details</span>
+      </div>
+    </div>
+
+    <div class="panel graph">
+      <div id="graph"></div>
+    </div>
+
+    <div class="panel right">
+      <div class="section-title">Details</div>
+      <div class="hr"></div>
+      <div class="kv small" style="margin-bottom: 4px;">
+        <div class="k">Function</div>
+        <div id="detailName" class="mono">—</div>
+        <div class="k">File</div>
+        <div id="detailFile" class="mono">—</div>
+        <div class="k">Location</div>
+        <div id="detailLoc" class="mono">—</div>
+      </div>
+      <div class="inline small">
+        <span class="pill warn"><span class="dot"></span><span id="detailOutbound">0</span>&nbsp;calls</span>
+        <span class="pill good"><span class="dot"></span><span id="detailInbound">0</span>&nbsp;incoming</span>
+      </div>
+      <div class="section-title" style="margin-top:10px;">Source</div>
+      <div class="hr"></div>
+      <div class="codebox"><pre><code id="codeView" class="mono"></code></pre></div>
+
+      <div class="section-title" style="margin-top:10px;">Neighbors</div>
+      <div class="hr"></div>
+      <div class="inline small" style="gap:6px; flex-wrap: wrap;" id="neighbors"></div>
+    </div>
+
+    <div class="panel footer small">
+      <div>Function Call Graph Visualizer</div>
+      <div class="muted">Powered by Acorn + vis-network</div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/acorn@8.11.3/dist/acorn.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/acorn-walk@8.3.4/dist/walk.min.js"></script>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+  <script>
+    // State
+    const state = {
+      files: new Map(), // key: fileDisplayName, value: { name, type, content }
+      scripts: [], // { id, fromFile, label, content }
+      functions: new Map(), // key: funcId, value: FunctionInfo
+      functionsByName: new Map(), // baseName -> Set(funcId)
+      network: null,
+      graphData: { nodes: null, edges: null },
+      selection: null,
+    };
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const folderInput = document.getElementById('folderInput');
+    const loadedList = document.getElementById('loadedList');
+    const buildGraphBtn = document.getElementById('buildGraphBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const filterInput = document.getElementById('filterInput');
+    const includeExternal = document.getElementById('includeExternal');
+    const groupByFile = document.getElementById('groupByFile');
+    const preferSameFile = document.getElementById('preferSameFile');
+
+    const statsFunctions = document.getElementById('statsFunctions');
+    const statsEdges = document.getElementById('statsEdges');
+    const statsExternal = document.getElementById('statsExternal');
+
+    const detailName = document.getElementById('detailName');
+    const detailFile = document.getElementById('detailFile');
+    const detailLoc = document.getElementById('detailLoc');
+    const codeView = document.getElementById('codeView');
+    const neighbors = document.getElementById('neighbors');
+
+    function clearAll() {
+      state.files.clear();
+      state.scripts = [];
+      state.functions.clear();
+      state.functionsByName.clear();
+      if (state.network) { state.network.destroy(); state.network = null; }
+      document.getElementById('graph').innerHTML = '';
+      loadedList.innerHTML = '';
+      statsFunctions.textContent = '0';
+      statsEdges.textContent = '0';
+      statsExternal.textContent = '0';
+      setDetails(null);
+    }
+
+    function addFiles(fileList) {
+      const files = Array.from(fileList);
+      console.log(`[Upload] Received ${files.length} file(s)`);
+      const readers = files.map(file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.webkitRelativePath || file.name, content: reader.result, type: guessType(file.name) });
+        reader.onerror = reject;
+        reader.readAsText(file);
+      }));
+      Promise.all(readers).then(results => {
+        for (const f of results) {
+          try {
+            console.groupCollapsed(`[Upload] ${f.name} (${f.type})`);
+            console.log('Characters:', f.content?.length ?? 0);
+            console.log('Content:\n', f.content);
+            console.groupEnd();
+          } catch (e) { /* no-op */ }
+          state.files.set(f.name, f);
+        }
+        renderLoadedList();
+      }).catch(err => {
+        console.error(err);
+        alert('Error reading files');
+      });
+    }
+
+    function guessType(name) {
+      const lower = name.toLowerCase();
+      if (lower.endsWith('.js')) return 'js';
+      if (lower.endsWith('.html') || lower.endsWith('.htm')) return 'html';
+      return 'unknown';
+    }
+
+    function renderLoadedList() {
+      loadedList.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      const entries = Array.from(state.files.values()).sort((a,b) => a.name.localeCompare(b.name));
+      for (const f of entries) {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.textContent = `${f.name} (${f.type})`;
+        frag.appendChild(div);
+      }
+      loadedList.appendChild(frag);
+    }
+
+    function extractScripts() {
+      state.scripts = [];
+      let scriptId = 1;
+      for (const { name, type, content } of state.files.values()) {
+        if (type === 'js') {
+          state.scripts.push({ id: `S${scriptId++}`, fromFile: name, label: name, content });
+          continue;
+        }
+        if (type === 'html') {
+          try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(content, 'text/html');
+            const scriptNodes = Array.from(doc.querySelectorAll('script'));
+            let inlineCount = 0;
+            for (const s of scriptNodes) {
+              const sType = (s.getAttribute('type') || '').trim();
+              if (s.src) {
+                // Try to resolve against provided files
+                const src = s.getAttribute('src');
+                const key = resolveLikelyPath(src);
+                const found = key && state.files.get(key);
+                if (found && found.type === 'js') {
+                  state.scripts.push({ id: `S${scriptId++}`, fromFile: name, label: `${name} <script src="${src}">`, content: found.content });
+                } else {
+                  // Skip remote or unavailable src
+                }
+              } else {
+                if (!sType || sType === 'text/javascript' || sType === 'module') {
+                  const code = s.textContent || '';
+                  if (code.trim().length) {
+                    inlineCount += 1;
+                    state.scripts.push({ id: `S${scriptId++}`, fromFile: name, label: `${name} <inline #${inlineCount}>`, content: code });
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to parse HTML', name, e);
+          }
+        }
+      }
+    }
+
+    function resolveLikelyPath(src) {
+      // Try exact match first
+      if (state.files.has(src)) return src;
+      // Try basename match
+      const base = src.split(/[\\/]/).pop();
+      for (const key of state.files.keys()) {
+        if (key.endsWith('/' + base) || key === base) return key;
+      }
+      return null;
+    }
+
+    function buildFunctionRegistry() {
+      state.functions.clear();
+      state.functionsByName.clear();
+      for (const script of state.scripts) {
+        const results = parseJavaScript(script.content, script.label);
+        for (const fn of results) {
+          state.functions.set(fn.id, fn);
+          if (!state.functionsByName.has(fn.baseName)) state.functionsByName.set(fn.baseName, new Set());
+          state.functionsByName.get(fn.baseName).add(fn.id);
+        }
+      }
+    }
+
+    function parseJavaScript(code, fileLabel) {
+      const ac = window.acorn;
+      const walk = window.acornWalk;
+      const parsed = [];
+      let ast;
+      try {
+        ast = ac.parse(code, { ecmaVersion: 'latest', sourceType: 'script', locations: true, ranges: true, allowHashBang: true });
+      } catch (e) {
+        try {
+          // try module mode if script
+          ast = ac.parse(code, { ecmaVersion: 'latest', sourceType: 'module', locations: true, ranges: true, allowHashBang: true });
+        } catch (e2) {
+          console.warn('Parse error in', fileLabel, e2.message);
+          return parsed;
+        }
+      }
+
+      const functionStack = [];
+      const localFunctions = new Map(); // start: FunctionInfo
+
+      function makeId(name, start) { return `${fileLabel}::${name}::${start}`; }
+      function addFunction(node, name, kind) {
+        const start = node.start, end = node.end;
+        const id = makeId(name, start);
+        const info = {
+          id,
+          baseName: name,
+          displayName: name,
+          file: fileLabel,
+          loc: `${node.loc.start.line}:${node.loc.start.column}–${node.loc.end.line}:${node.loc.end.column}`,
+          start, end,
+          code: code.slice(start, end),
+          calls: new Set(),
+          kind,
+        };
+        parsed.push(info);
+        localFunctions.set(start, info);
+      }
+
+      function nameFromVariableDeclarator(node) {
+        if (node.id && node.id.type === 'Identifier') return node.id.name;
+        return null;
+      }
+
+      function nameFromMethod(node, className) {
+        if (!node.key) return null;
+        const key = node.key.type === 'Identifier' ? node.key.name
+                  : node.key.type === 'Literal' ? String(node.key.value)
+                  : null;
+        if (!key) return null;
+        return className ? `${className}#${key}` : key;
+      }
+
+      function nameFromObjectProperty(prop, objectName) {
+        if (!prop.key) return null;
+        const key = prop.key.type === 'Identifier' ? prop.key.name
+                  : prop.key.type === 'Literal' ? String(prop.key.value)
+                  : null;
+        if (!key) return null;
+        return objectName ? `${objectName}.${key}` : key;
+      }
+
+      function calleeName(node) {
+        if (!node) return null;
+        if (node.type === 'Identifier') return node.name;
+        if (node.type === 'MemberExpression') {
+          if (!node.computed && node.property && node.property.type === 'Identifier') return node.property.name;
+          if (node.computed && node.property && node.property.type === 'Literal') return String(node.property.value);
+        }
+        if (node.type === 'OptionalMemberExpression') {
+          if (!node.computed && node.property && node.property.type === 'Identifier') return node.property.name;
+          if (node.computed && node.property && node.property.type === 'Literal') return String(node.property.value);
+        }
+        if (node.type === 'CallExpression' || node.type === 'NewExpression') return calleeName(node.callee);
+        return null;
+      }
+
+      // First pass: collect function-like definitions
+      walk.simple(ast, {
+        FunctionDeclaration(node) {
+          if (node.id && node.id.name) addFunction(node, node.id.name, 'function');
+        },
+        VariableDeclarator(node) {
+          const name = nameFromVariableDeclarator(node);
+          if (!name) return;
+          if (node.init && (node.init.type === 'FunctionExpression' || node.init.type === 'ArrowFunctionExpression')) {
+            addFunction(node.init, name, node.init.type === 'ArrowFunctionExpression' ? 'arrow' : 'function');
+          }
+          // Object literal with methods: const obj = { a() {}, b: function() {} }
+          if (node.init && node.init.type === 'ObjectExpression') {
+            for (const prop of node.init.properties || []) {
+              if (prop.type === 'Property') {
+                const child = prop.value;
+                if (child && (child.type === 'FunctionExpression' || child.type === 'ArrowFunctionExpression')) {
+                  const full = nameFromObjectProperty(prop, name);
+                  if (full) addFunction(child, full, child.type === 'ArrowFunctionExpression' ? 'arrow' : 'method');
+                }
+              } else if (prop.type === 'MethodDefinition' || prop.type === 'PropertyDefinition') {
+                const full = nameFromObjectProperty(prop, name);
+                if (full && prop.value) addFunction(prop.value, full, 'method');
+              }
+            }
+          }
+        },
+        ClassDeclaration(node) {
+          const className = node.id && node.id.name ? node.id.name : '(anonymous class)';
+          for (const bodyEl of node.body.body || []) {
+            if (bodyEl.kind === 'constructor' || !bodyEl.value) continue;
+            const full = nameFromMethod(bodyEl, className);
+            if (full) addFunction(bodyEl.value, full, 'method');
+          }
+        },
+        ClassExpression(node) {
+          const className = '(class expr)';
+          for (const bodyEl of node.body.body || []) {
+            if (bodyEl.kind === 'constructor' || !bodyEl.value) continue;
+            const full = nameFromMethod(bodyEl, className);
+            if (full) addFunction(bodyEl.value, full, 'method');
+          }
+        },
+      });
+
+      // Second pass: collect calls within functions and at top-level (pseudo function)
+      const TOP_ID = `${fileLabel}::<top-level>::0`;
+      const topInfo = { id: TOP_ID, baseName: '<top-level>', displayName: '<top-level>', file: fileLabel, loc: '0:0', start: 0, end: 0, code: '', calls: new Set(), kind: 'top' };
+      parsed.push(topInfo);
+      localFunctions.set(0, topInfo);
+
+      walk.ancestor(ast, {
+        Function(node, ancestors) {
+          // enter
+          const info = localFunctions.get(node.start);
+          functionStack.push(info || topInfo);
+        },
+        CallExpression(node, ancestors) {
+          const current = functionStack.length ? functionStack[functionStack.length - 1] : topInfo;
+          const name = calleeName(node.callee);
+          if (name) current.calls.add(name);
+        },
+        NewExpression(node, ancestors) {
+          const current = functionStack.length ? functionStack[functionStack.length - 1] : topInfo;
+          const name = calleeName(node.callee);
+          if (name) current.calls.add(name);
+        }
+      }, walk.base, (node, st, c) => {
+        // leave hooks
+        if (node && (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression')) {
+          functionStack.pop();
+        }
+      });
+
+      return parsed;
+    }
+
+    function buildGraph() {
+      const includeExt = includeExternal.checked;
+      const preferLocal = preferSameFile.checked;
+      const colorByFile = groupByFile.checked;
+
+      const nodes = [];
+      const edges = [];
+      const idToIndex = new Map();
+      const nameToIdsByFile = new Map(); // file -> baseName -> Set(ids)
+      const baseToIds = new Map(); // baseName -> Set(ids)
+
+      // Prepare lookups
+      for (const fn of state.functions.values()) {
+        if (!nameToIdsByFile.has(fn.file)) nameToIdsByFile.set(fn.file, new Map());
+        const m = nameToIdsByFile.get(fn.file);
+        if (!m.has(fn.baseName)) m.set(fn.baseName, new Set());
+        m.get(fn.baseName).add(fn.id);
+
+        if (!baseToIds.has(fn.baseName)) baseToIds.set(fn.baseName, new Set());
+        baseToIds.get(fn.baseName).add(fn.id);
+      }
+
+      // Create nodes
+      const fileToColor = paletteByKey(Array.from(new Set(Array.from(state.functions.values()).map(f => f.file))));
+      for (const fn of state.functions.values()) {
+        const idx = nodes.length;
+        idToIndex.set(fn.id, idx);
+        const color = colorByFile ? fileToColor[fn.file] : '#2b3350';
+        const isTop = fn.baseName === '<top-level>';
+        nodes.push({ id: fn.id, label: `${fn.displayName}`, title: `${fn.file}`, shape: 'dot', size: Math.max(8, Math.min(24, 8 + (fn.calls.size || 0))), color: { background: isTop ? '#444c67' : color, border: '#8aa1ff', highlight: { background: color, border: '#ffffff' } } });
+      }
+
+      let externalCount = 0;
+      function resolveCall(caller, callName) {
+        // 1) same file exact name
+        if (preferLocal && nameToIdsByFile.get(caller.file)?.get(callName)?.size) {
+          return Array.from(nameToIdsByFile.get(caller.file).get(callName));
+        }
+        // 2) unique across all files
+        const set = baseToIds.get(callName);
+        if (set && set.size === 1) return Array.from(set);
+        // 3) fallback: all matches across files
+        if (set && set.size > 1) return Array.from(set);
+        return null;
+      }
+
+      const externalNodeIds = new Map(); // callName -> nodeId
+      function getExternalNodeId(name) {
+        if (externalNodeIds.has(name)) return externalNodeIds.get(name);
+        const id = `__external__::${name}`;
+        externalNodeIds.set(name, id);
+        const color = '#583848';
+        nodes.push({ id, label: name, shape: 'diamond', size: 12, color: { background: color, border: '#f1c0d3', highlight: { background: color, border: '#ffffff' } } });
+        return id;
+      }
+
+      for (const fn of state.functions.values()) {
+        for (const call of fn.calls) {
+          const targets = resolveCall(fn, call);
+          if (targets && targets.length) {
+            for (const t of targets) {
+              if (t === fn.id) continue; // skip self-loop
+              edges.push({ from: fn.id, to: t, arrows: 'to', color: { color: '#9ece6a' }, width: 1 });
+            }
+          } else if (includeExt) {
+            const extId = getExternalNodeId(call);
+            edges.push({ from: fn.id, to: extId, arrows: 'to', color: { color: '#e0af68' }, dashes: true, width: 1 });
+            externalCount += 1;
+          }
+        }
+      }
+
+      statsFunctions.textContent = String(nodes.length);
+      statsEdges.textContent = String(edges.length);
+      statsExternal.textContent = String(externalCount);
+
+      // Build network
+      const container = document.getElementById('graph');
+      container.innerHTML = '';
+      const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+      const options = {
+        layout: { improvedLayout: true },
+        physics: { stabilization: false, barnesHut: { gravitationalConstant: -3000, springLength: 120, springConstant: 0.03 } },
+        interaction: { hover: true, tooltipDelay: 120, multiselect: true, zoomView: true },
+        nodes: { font: { color: '#e6e6e6' }, borderWidth: 1 },
+        edges: { smooth: { type: 'dynamic' } }
+      };
+      const network = new vis.Network(container, data, options);
+      state.network = network;
+      state.graphData = data;
+
+      network.on('selectNode', params => {
+        const id = params.nodes[0];
+        const fn = state.functions.get(id) || null;
+        setDetails(fn);
+        if (fn) highlightNeighbors(id);
+      });
+      network.on('deselectNode', () => { setDetails(null); clearHighlight(); });
+
+      // Filter
+      applyFilter(filterInput.value);
+    }
+
+    function paletteByKey(keys) {
+      const colors = [
+        '#2b3350','#364e6b','#245c69','#2f6f5d','#4d6a3f','#6a5e3f','#6a3f3f','#6a3f5d','#5a3f6a',
+        '#3f466a','#3f5a6a','#3f6a5a','#466a3f','#5a6a3f','#6a463f','#6a3f46'
+      ];
+      const map = {};
+      keys.forEach((k, i) => { map[k] = colors[i % colors.length]; });
+      return map;
+    }
+
+    function setDetails(fn) {
+      if (!fn) {
+        detailName.textContent = '—';
+        detailFile.textContent = '—';
+        detailLoc.textContent = '—';
+        codeView.textContent = '';
+        neighbors.innerHTML = '';
+        state.selection = null;
+        return;
+      }
+      detailName.textContent = fn.displayName;
+      detailFile.textContent = fn.file;
+      detailLoc.textContent = fn.loc;
+      codeView.innerHTML = '';
+      const pre = document.createElement('div');
+      pre.className = 'mono';
+      const highlighted = escapeHtml(fn.code);
+      pre.innerHTML = `<pre><code>${highlighted}</code></pre>`;
+      const mark = document.createElement('mark');
+      codeView.appendChild(pre);
+      state.selection = fn.id;
+      renderNeighbors(fn.id);
+    }
+
+    function renderNeighbors(id) {
+      neighbors.innerHTML = '';
+      const outgoing = state.graphData.edges.get({ filter: e => e.from === id });
+      const incoming = state.graphData.edges.get({ filter: e => e.to === id });
+      const frag = document.createDocumentFragment();
+      const label = (nid) => state.functions.get(nid)?.displayName || (String(nid).startsWith('__external__::') ? `${nid.split('::').pop()} (external)` : nid);
+      const makeChip = (nid, kind) => {
+        const span = document.createElement('span');
+        span.className = 'pill ' + (kind === 'out' ? 'warn' : 'good');
+        span.style.cursor = 'pointer';
+        span.innerHTML = `<span class="dot"></span><span class="mono">${escapeHtml(label(nid))}</span>`;
+        span.onclick = () => focusNode(nid);
+        return span;
+      };
+      const titleOut = document.createElement('div');
+      titleOut.className = 'small muted';
+      titleOut.textContent = 'Calls →';
+      frag.appendChild(titleOut);
+      for (const e of outgoing) frag.appendChild(makeChip(e.to, 'out'));
+      const titleIn = document.createElement('div');
+      titleIn.className = 'small muted';
+      titleIn.style.marginTop = '8px';
+      titleIn.textContent = '← Incoming';
+      frag.appendChild(titleIn);
+      for (const e of incoming) frag.appendChild(makeChip(e.from, 'in'));
+      neighbors.appendChild(frag);
+
+      document.getElementById('detailOutbound').textContent = String(outgoing.length);
+      document.getElementById('detailInbound').textContent = String(incoming.length);
+    }
+
+    function focusNode(id) {
+      if (!state.network) return;
+      state.network.selectNodes([id]);
+      state.network.focus(id, { scale: 1.1, animation: { duration: 300, easingFunction: 'easeInOutQuad' } });
+      const fn = state.functions.get(id) || null;
+      setDetails(fn);
+      highlightNeighbors(id);
+    }
+
+    function clearHighlight() {
+      if (!state.network) return;
+      state.network.unselectAll();
+      state.graphData.edges.update(state.graphData.edges.get().map(e => ({ id: e.id, color: { color: e.dashes ? '#e0af68' : '#9ece6a' }, width: 1 })));
+    }
+
+    function highlightNeighbors(id) {
+      if (!state.network) return;
+      const connectedEdges = state.network.getConnectedEdges(id);
+      state.graphData.edges.update(state.graphData.edges.get().map(e => ({ id: e.id, color: { color: e.dashes ? '#e0af68' : '#9ece6a' }, width: 1 })));
+      for (const eid of connectedEdges) {
+        state.graphData.edges.update([{ id: eid, color: { color: '#ffffff' }, width: 2 }]);
+      }
+    }
+
+    function applyFilter(text) {
+      if (!state.network) return;
+      const q = (text || '').trim().toLowerCase();
+      const allNodes = state.graphData.nodes.get();
+      const update = [];
+      for (const n of allNodes) {
+        const match = !q || n.label.toLowerCase().includes(q);
+        update.push({ id: n.id, hidden: !match });
+      }
+      state.graphData.nodes.update(update);
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s]));
+    }
+
+    // Events
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', e => { dropzone.classList.remove('dragover'); });
+    dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.classList.remove('dragover'); addFiles(e.dataTransfer.files); });
+    // Make the whole dropzone clickable to open the file picker
+    const selectBtn = document.getElementById('selectBtn');
+    const selectFolderBtn = document.getElementById('selectFolderBtn');
+    dropzone.addEventListener('click', () => fileInput.click());
+    selectBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => addFiles(e.target.files));
+    selectFolderBtn.addEventListener('click', () => folderInput.click());
+    folderInput.addEventListener('change', e => addFiles(e.target.files));
+    buildGraphBtn.addEventListener('click', () => {
+      extractScripts();
+      buildFunctionRegistry();
+      buildGraph();
+    });
+    resetBtn.addEventListener('click', () => clearAll());
+    filterInput.addEventListener('input', e => applyFilter(e.target.value));
+
+    // Initial
+    setDetails(null);
+  </script>
+</body>
+</html>
+
+

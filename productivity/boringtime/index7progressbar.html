@@ -763,6 +763,8 @@
                     updateTestingMode(); // This will now toggle the buttons
                 });
             }
+
+            // No auto-approve toggle required
         });
 
         // Save notes when they change
@@ -1206,6 +1208,7 @@
                 minutes: currentSession / 60
             };
             
+            // Manual approval flow only; no auto-approve
             pendingSessions.unshift(completedSession);
             // Keep only last 5 sessions
             if (pendingSessions.length > 5) {
@@ -1307,6 +1310,26 @@
 
 
 
+
+        // Ensure no duplicate pending sessions (e.g., due to reload/restore)
+        function dedupePendingSessions() {
+            if (!Array.isArray(pendingSessions)) {
+                pendingSessions = [];
+            }
+            const seen = new Set();
+            pendingSessions = pendingSessions.filter(s => {
+                const startKey = s && typeof s.startTime !== 'undefined' ? s.startTime : 'x';
+                const endKey = s && typeof s.endTime !== 'undefined' ? s.endTime : 'y';
+                const durKey = s && typeof s.duration !== 'undefined' ? s.duration : 'z';
+                const key = `${startKey}-${endKey}-${durKey}`;
+                if (seen.has(key)) {
+                    return false;
+                }
+                seen.add(key);
+                return true;
+            });
+            localStorage.setItem('pendingSessions', JSON.stringify(pendingSessions));
+        }
 
         function resetTimer() {
             clearInterval(timer);
@@ -1436,8 +1459,10 @@
                 // Log with start and end times metadata
                 addLogEntry('session', session.minutes, session.endTime, null, { startTime: session.startTime, endTime: session.endTime });
                 
-                // Remove from pending sessions
+                // Remove from pending sessions (by id) and also cleanup any accidental duplicates by identity keys
                 pendingSessions = pendingSessions.filter(s => s.id != sessionId);
+                const identityKey = `${session.startTime}-${session.endTime}-${session.duration}`;
+                pendingSessions = pendingSessions.filter(s => `${s.startTime}-${s.endTime}-${s.duration}` !== identityKey);
                 localStorage.setItem('pendingSessions', JSON.stringify(pendingSessions));
                 
                 updateStats();
@@ -1826,6 +1851,7 @@
         checkDailyReset();
         checkHourlyAddition();
         updateTimer(0);
+        dedupePendingSessions();
         restoreTimerState();
         updateStats();
         updateLogDisplay();

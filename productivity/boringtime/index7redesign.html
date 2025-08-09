@@ -1,0 +1,2519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boring Time Tracker</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .timer {
+            text-align: center;
+            font-size: 48px;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #333;
+        }
+        .stats {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 1s linear;
+        }
+        .session-time-info {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .daily-goal {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .daily-goal input {
+            padding: 8px;
+            width: 80px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .daily-goal button {
+            padding: 8px 15px;
+        }
+        .pending-progress-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 5px solid #17a2b8;
+        }
+        .pending-progress-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #0c5460;
+        }
+        .pending-progress-bar {
+            width: 100%;
+            height: 25px;
+            background-color: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+        .pending-progress-marker {
+            position: absolute;
+            left: 20%;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background-color: #333;
+            z-index: 10;
+            opacity: 0.7;
+        }
+        .pending-progress-marker::before {
+            content: "20%";
+            position: absolute;
+            top: -20px;
+            left: -10px;
+            font-size: 10px;
+            color: #666;
+            font-weight: bold;
+        }
+        .pending-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #ffc107 50%, #dc3545 100%);
+            transition: width 0.5s ease;
+            border-radius: 12px;
+        }
+        .pending-progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+        .pending-progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .pending-progress-info .target-input {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .pending-progress-info input {
+            width: 60px;
+            padding: 4px 6px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .pending-progress-info button {
+            padding: 4px 8px;
+            font-size: 12px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .pending-progress-info button:hover {
+            background-color: #138496;
+        }
+        .daily-limit-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 5px;
+            border-left: 5px solid #ffc107;
+        }
+        .daily-limit-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #856404;
+        }
+        .daily-limit-section input {
+            padding: 8px;
+            width: 80px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .daily-limit-section button {
+            padding: 8px 15px;
+            background-color: #ffc107;
+            color: #000;
+        }
+        .daily-limit-section button:hover {
+            background-color: #e0a800;
+        }
+        .daily-limit-section .limit-warning {
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .daily-limit-section .limit-info {
+            color: #28a745;
+            margin-top: 5px;
+        }
+        .cancel-button {
+            background-color: #dc3545;
+            margin-top: 10px;
+            display: none;
+        }
+        .cancel-button:hover {
+            background-color: #c82333;
+        }
+        .log-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .session-object-panel {
+            display: none;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+        .session-object-panel.show { display: block; }
+        .session-object-panel .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .session-log {
+            color: #28a745;
+        }
+        .addition-log {
+            color: #007bff;
+        }
+        .cancelled-log {
+            color: #dc3545;
+        }
+        .break-log {
+            color: #ffc107;
+        }
+        .version {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+        .reset-log {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .pending-session-log {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            color: #856404;
+        }
+        .pending-session-log .session-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 10px;
+        }
+        .pending-session-log .approve-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .pending-session-log .approve-btn:hover {
+            background-color: #218838;
+        }
+        .pending-session-log .reject-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .pending-session-log .reject-btn:hover {
+            background-color: #c82333;
+        }
+        .update-message {
+            color: #28a745;
+            font-size: 12px;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .update-message.show {
+            opacity: 1;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            margin-left: 8px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .testing-mode-toggle {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1;
+        }
+        .testing-mode-toggle label {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+        }
+        .pause-button {
+            background-color: #ffc107;
+            margin-top: 10px;
+            display: none;
+        }
+        .pause-button:hover {
+            background-color: #e0a800;
+        }
+        .pause-button.paused {
+            background-color: #28a745;
+        }
+        .pause-button.paused:hover {
+            background-color: #218838;
+        }
+        .break-button {
+            background-color: #ffc107;
+            margin-top: 10px;
+            display: none;
+        }
+        .break-button:hover {
+            background-color: #e0a800;
+        }
+        .break-timer {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        .break-timer.show {
+            display: block;
+        }
+        .break-timer h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        .break-timer .timer {
+            font-size: 36px;
+            color: #856404;
+            margin: 15px 0;
+        }
+        .resume-button {
+            background-color: #28a745;
+            margin-top: 10px;
+        }
+        .resume-button:hover {
+            background-color: #218838;
+        }
+        .end-break-button {
+            background-color: #dc3545;
+            margin-left: 10px;
+        }
+        .end-break-button:hover {
+            background-color: #c82333;
+        }
+        .notes-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .notes-section textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .notes-section textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76,175,80,0.1);
+        }
+        .notes-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .edit-pending-time {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .edit-pending-time input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .edit-pending-time button {
+            padding: 5px 10px;
+            font-size: 12px;
+            background-color: #6c757d;
+            margin: 0;
+        }
+        .edit-pending-time.editing .pending-time-display {
+            display: none;
+        }
+        .edit-pending-time.editing input {
+            display: inline-block;
+        }
+        .real-time-pending {
+            font-weight: bold;
+            color: #28a745;
+            transition: color 0.3s;
+        }
+        .real-time-pending.increasing {
+            color: #dc3545;
+        }
+        .total-pending-time {
+            font-weight: bold;
+            color: #007bff;
+            margin-left: 10px;
+        }
+        .final-calculation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #d4edda;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            color: #155724;
+            border-left: 5px solid #28a745;
+            animation: fadeIn 0.5s ease;
+            z-index: 1000;
+            position: relative;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .queue-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+            border-left: 5px solid #2196f3;
+            display: none;
+        }
+        .queue-section.show {
+            display: block;
+        }
+        .queue-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #1565c0;
+        }
+        .queue-section .queue-info {
+            color: #1976d2;
+            font-weight: bold;
+        }
+        .queue-cancel-btn {
+            background-color: #f44336;
+            color: white;
+            padding: 8px 15px;
+            margin-left: 10px;
+        }
+        .queue-cancel-btn:hover {
+            background-color: #d32f2f;
+        }
+        .buttons button.queue-mode {
+            background-color: #2196f3;
+            position: relative;
+        }
+        .buttons button.queue-mode:hover {
+            background-color: #1976d2;
+        }
+        .buttons button.queue-mode::after {
+            content: " (Queue)";
+            font-size: 12px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Boring Time Tracker</h1>
+        
+        <div class="testing-mode-toggle">
+            <label for="testingModeSwitch">Testing Mode</label>
+            <label class="switch">
+                <input type="checkbox" id="testingModeSwitch" onchange="toggleTestingMode()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="daily-goal">
+            <p style="margin-top: 10px; font-weight: bold;">
+                Total Pending Boring Time: 
+                <span class="edit-pending-time">
+                    <span class="pending-time-display" id="pendingTime">0</span>
+                    <input type="number" id="pendingTimeInput">
+                    <button onclick="togglePendingTimeEdit()" id="editPendingTimeBtn">Edit</button>
+                </span>
+                minutes
+                <span id="realTimePending" class="real-time-pending"></span>
+                <span id="totalPendingTime" class="total-pending-time"></span>
+            </p>
+            <p id="breakTimeInfo" style="margin-top: 5px; color: #666; display: none;">
+                If breaking now: <span id="breakTimePending">0</span> minutes pending
+            </p>
+            <div style="margin-top: 10px;">
+                <label>Minutes to add per hour: 
+                    <input type="number" id="hourlyAddition" min="0" value="15" style="width: 60px; padding: 5px;" 
+                           onblur="setHourlyAddition(this.value)"> 
+                    <span class="update-message" id="updateMessage">✓ Updated</span>
+                </label>
+            </div>
+            <div style="margin-top: 10px; font-weight: bold; color: #28a745;">
+                Resultant time: <span id="resultantTime">15</span> minutes
+            </div>
+        </div>
+
+        <div class="pending-progress-section">
+            <h3>Pending Time Status</h3>
+            <div class="pending-progress-bar">
+                <div class="pending-progress" id="pendingProgressBar">
+                    <span class="pending-progress-text" id="pendingProgressText">0%</span>
+                </div>
+                <div class="pending-progress-marker"></div>
+            </div>
+            <div class="pending-progress-info">
+                <span>Current Pending: <span id="currentPendingTime">0</span> minutes (Lower is better!)</span>
+                <div class="target-input">
+                    <label>Target Max: </label>
+                    <input type="number" id="targetPendingTimeInput" value="100">
+                    <button onclick="setTargetPendingTime()">Set</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="daily-limit-section">
+            <h3>Daily Time Limit</h3>
+            <div>
+                <label>Daily session limit: 
+                    <input type="number" id="dailyLimit" min="0" value="480" style="width: 80px; padding: 8px;" 
+                           onblur="setDailyLimit(this.value)"> 
+                    minutes
+                    <button onclick="setDailyLimit(document.getElementById('dailyLimit').value)">Set Limit</button>
+                </label>
+                <button id="resetDailyUsageBtn" style="margin-left: 10px; padding: 4px 10px; font-size: 12px; background-color: #dc3545; color: #fff; border-radius: 4px; border: none; cursor: pointer; vertical-align: middle;">Reset Today</button>
+            </div>
+            <div id="dailyLimitInfo" class="limit-info">
+                Today's usage: <span id="todayUsage">0</span> / <span id="dailyLimitDisplay">480</span> minutes
+            </div>
+            <div id="dailyLimitWarning" class="limit-warning" style="display: none;">
+                Daily limit reached! No more sessions allowed today.
+            </div>
+            <div style="margin-top: 10px;">
+                <button onclick="forceDailyReset()" style="padding: 6px 12px; font-size: 12px; background-color: #6c757d; color: #fff; border-radius: 4px; border: none; cursor: pointer;">Manual Daily Reset</button>
+                <span style="font-size: 12px; color: #666; margin-left: 10px;">Resets all daily counters including breaks</span>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="testButton1" onclick="handleSessionClick(0.0167)" style="background-color: #6c757d; display: none;">1 Second</button>
+            <button id="testButton10" onclick="handleSessionClick(0.1667)" style="background-color: #6c757d; display: none;">10 Seconds</button>
+            <button onclick="handleSessionClick(30)">30 Minutes</button>
+            <button onclick="handleSessionClick(60)">60 Minutes</button>
+            <button onclick="handleSessionClick(120)">2 Hours</button>
+            <button onclick="handleSessionClick(180)">3 Hours</button>
+            <button onclick="handleSessionClick(360)">6 Hours</button>
+            <button onclick="handleSessionClick(720)">12 Hours</button>
+            <button onclick="handleSessionClick(1440)">24 Hours</button>
+        </div>
+
+        <div class="timer" id="timer">00:00:00</div>
+        <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+            <div class="session-time-info" id="sessionTimeInfo"></div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div class="notes-section">
+            <h3>Notes for After Session</h3>
+            <textarea id="sessionNotes" placeholder="Write things to remember for after your session..."></textarea>
+        </div>
+
+        <button class="cancel-button" id="cancelButton" onclick="cancelSession()">Cancel Session</button>
+        <button class="break-button" id="breakButton" onclick="startBreak()">Take 30min Break</button>
+
+        <div id="breakTimer" class="break-timer">
+            <h3>Break Time! 🍵</h3>
+            <p>Your session is paused. Enjoy your break!</p>
+            <div class="timer" id="breakTimerDisplay">30:00</div>
+            <div class="progress-bar">
+                <div class="progress" id="breakProgress"></div>
+            </div>
+            <button class="resume-button" onclick="endBreak()">End Break & Resume</button>
+            <button class="end-break-button" onclick="cancelBreak()">Cancel Break</button>
+        </div>
+
+        <div id="queueSection" class="queue-section">
+            <h3>Queued Session</h3>
+            <p class="queue-info">Next session: <span id="queuedSessionText">None</span></p>
+            <button class="queue-cancel-btn" onclick="cancelQueuedSession()">Cancel Queue</button>
+        </div>
+
+
+
+        <div class="stats">
+            <h2>Statistics</h2>
+            <p>Total Boring Time: <span id="totalTime">0</span> minutes</p>
+            <p>Sessions Completed: <span id="sessionsCompleted">0</span></p>
+            <p>Breaks Taken: <span id="breaksTaken">0</span> <span id="breakResetIndicator" style="font-size: 11px; color: #28a745; opacity: 0;">✓ Reset today</span></p>
+            <p>Completion Rate: <span id="completionRate">0</span>%</p>
+            <p>Daily Streak (< 100min): <span id="dailyStreak">0</span> days</p>
+            <p style="font-size: 12px; color: #666; margin-top: 15px;">Last reset: <span id="lastResetTime">Today</span></p>
+        </div>
+
+        <div class="log-section">
+            <div class="log-header">
+                <h2>Activity Log</h2>
+                <button style="padding:6px 10px; font-size:12px; background:#6c757d;" onclick="showActiveSession()">View Active Session</button>
+            </div>
+            <div id="logEntries"></div>
+        </div>
+
+        <div id="sessionObjectPanel" class="session-object-panel">
+            <div class="panel-header">
+                <strong>Active Session Object</strong>
+                <div style="display:flex; gap:8px;">
+                    <button style="padding:4px 8px; font-size:12px; background:#dc3545;" onclick="clearSessions()">Clear Sessions</button>
+                    <button style="padding:4px 8px; font-size:12px; background:#6c757d;" onclick="closeSessionPanel()">Close</button>
+                </div>
+            </div>
+            <div id="sessionObjectSummary" style="font-size:13px; line-height:1.4; margin-bottom:8px;"></div>
+            <pre id="sessionObjectView" style="white-space:pre-wrap; margin:0;"></pre>
+        </div>
+
+        <div class="version">Version 1.0.8</div>
+    </div>
+
+    <script>
+        let timer = null;
+        let currentSession = null;
+        let startTime = null;
+        let totalDuration = 0;
+        let sessionsStarted = parseInt(localStorage.getItem('sessionsStarted')) || 0;
+        let sessionsCompleted = parseInt(localStorage.getItem('sessionsCompleted')) || 0;
+        let totalTimeCompleted = parseInt(localStorage.getItem('totalTimeCompleted')) || 0;
+        let dailyProgress = 0;
+        let pendingBoringTime = parseInt(localStorage.getItem('pendingBoringTime')) || 15;
+        let lastTimeCheck = parseInt(localStorage.getItem('lastTimeCheck')) || Date.now();
+        let hourlyAddition = parseInt(localStorage.getItem('hourlyAddition')) || 15;
+        let activityLog = JSON.parse(localStorage.getItem('activityLog')) || [];
+        let lastStatsReset = localStorage.getItem('lastStatsReset') || new Date().toDateString();
+        let isTestingMode = localStorage.getItem('isTestingMode') === 'true';
+        let sessionNotes = localStorage.getItem('sessionNotes') || '';
+        let lastPendingTimeUpdate = Date.now();
+        let realTimePendingInterval = null;
+        let dailyStreak = parseInt(localStorage.getItem('dailyStreak')) || 0;
+        let lastStreakCheck = localStorage.getItem('lastStreakCheck') || new Date().toDateString();
+        let dailyLimit = parseInt(localStorage.getItem('dailyLimit')) || 480;
+        let todayUsage = parseInt(localStorage.getItem('todayUsage')) || 0;
+        let lastUsageReset = localStorage.getItem('lastUsageReset') || new Date().toDateString();
+        let targetPendingTime = parseInt(localStorage.getItem('targetPendingTime')) || 100;
+
+        // Break-related variables
+        let breakTimer = null;
+        let breakStartTime = null;
+        let breakDuration = 30 * 60; // 30 minutes in seconds
+        let isOnBreak = localStorage.getItem('isOnBreak') === 'true';
+        let pausedSessionTime = parseInt(localStorage.getItem('pausedSessionTime')) || 0;
+        let breaksTaken = parseInt(localStorage.getItem('breaksTaken')) || 0;
+
+        // Queue-related variables
+        let sessionQueue = JSON.parse(localStorage.getItem('sessionQueue')) || [];
+        let isQueueMode = localStorage.getItem('isQueueMode') === 'true';
+        
+        // Sessions store (single array for all sessions; items may be pending or approved)
+        let sessions = JSON.parse(localStorage.getItem('sessions')) || [];
+
+        // Helper: find the currently active pending session using sessions records
+        /**
+         * Determine the active pending session from `sessions` based on current time.
+         * Returns the most recent pending session whose [startTime, endTime) contains now, or null.
+         */
+        function getActivePendingSession() {
+            try {
+                const nowMs = Date.now();
+                if (!Array.isArray(sessions) || sessions.length === 0) return null;
+                let active = null;
+                for (const s of sessions) {
+                    if (!s || s.completed === true || s.cancelled === true) continue;
+                    if (typeof s.startTime !== 'number' || typeof s.endTime !== 'number') continue;
+                    if (s.startTime <= nowMs && s.endTime > nowMs) {
+                        if (!active || s.startTime > active.startTime) {
+                            active = s;
+                        }
+                    }
+                }
+                return active;
+            } catch (_) {
+                return null;
+            }
+        }
+
+        // Initialize notes from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedNotes = localStorage.getItem('sessionNotes');
+            if (savedNotes) {
+                document.getElementById('sessionNotes').value = savedNotes;
+            }
+            
+            // Migrate any legacy queue entries to the new object format
+            migrateSessionQueueFormatIfNeeded();
+            // Migrate legacy pendingSessions into unified sessions array
+            migratePendingSessionsToSessions();
+
+            // Start real-time pending time updates
+            startRealTimePendingUpdates();
+            addFinalCalculationStyle();
+            updateResultantTime();
+            updatePendingProgress();
+
+            // Add event listener for daily reset button
+            const resetBtn = document.getElementById('resetDailyUsageBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to reset today\'s usage?')) {
+                        todayUsage = 0;
+                        localStorage.setItem('todayUsage', todayUsage);
+                        updateDailyLimitDisplay();
+                    }
+                });
+            }
+
+            // Add event listener for queue mode toggle
+            const queueModeSwitch = document.getElementById('testingModeSwitch');
+            if (queueModeSwitch) {
+                queueModeSwitch.addEventListener('change', function() {
+                    isQueueMode = this.checked;
+                    localStorage.setItem('isQueueMode', isQueueMode);
+                    updateTestingMode(); // This will now toggle the buttons
+                });
+            }
+
+            // No auto-approve toggle required
+            // no toggle for active session UI
+        });
+
+        // Save notes when they change
+        document.getElementById('sessionNotes').addEventListener('input', function() {
+            localStorage.setItem('sessionNotes', this.value);
+        });
+
+        /**
+         * Start interval that periodically updates the real-time pending time preview when idle.
+         */
+        function startRealTimePendingUpdates() {
+            if (realTimePendingInterval) {
+                clearInterval(realTimePendingInterval);
+            }
+            
+            lastPendingTimeUpdate = Date.now();
+            
+            realTimePendingInterval = setInterval(() => {
+                updateRealTimePending();
+            }, 1000);
+        }
+
+        /**
+         * Compute and display real-time accumulation of pending time while no session/break runs.
+         * Triggers `checkHourlyAddition` when a full minute accrues.
+         */
+        function updateRealTimePending() {
+            // Don't update real-time pending if a timer is running or on break
+            if (timer || isOnBreak) {
+                const realTimePendingEl = document.getElementById('realTimePending');
+                realTimePendingEl.textContent = '';
+                realTimePendingEl.classList.remove('increasing');
+                document.getElementById('totalPendingTime').textContent = '';
+                return;
+            }
+            
+            const now = Date.now();
+            const elapsedMs = now - lastPendingTimeUpdate;
+            const elapsedHours = elapsedMs / (1000 * 60 * 60);
+            
+            // Calculate how much pending time has accumulated since last update
+            const additionalMinutes = Math.floor(hourlyAddition * elapsedHours);
+            
+            if (additionalMinutes > 0) {
+                const realTimePendingEl = document.getElementById('realTimePending');
+                realTimePendingEl.textContent = ` (+${additionalMinutes})`;
+                realTimePendingEl.classList.add('increasing');
+                
+                // Calculate and display total pending time
+                const totalPending = pendingBoringTime + additionalMinutes;
+                document.getElementById('totalPendingTime').textContent = `Total: ${totalPending} minutes`;
+                
+                // Temporarily update progress bar to show projected total
+                const currentPendingEl = document.getElementById('currentPendingTime');
+                if (currentPendingEl) {
+                    currentPendingEl.textContent = Math.floor(totalPending);
+                }
+            }
+            
+            // If we've accumulated a full minute, update the actual pending time
+            if (additionalMinutes >= 1) {
+                checkHourlyAddition();
+                lastPendingTimeUpdate = now;
+                
+                // Reset the real-time indicator
+                setTimeout(() => {
+                    const realTimePendingEl = document.getElementById('realTimePending');
+                    realTimePendingEl.textContent = '';
+                    realTimePendingEl.classList.remove('increasing');
+                    document.getElementById('totalPendingTime').textContent = '';
+                }, 500);
+            }
+        }
+
+        /**
+         * Toggle testing mode flag and apply UI updates.
+         */
+        function toggleTestingMode() {
+            isTestingMode = document.getElementById('testingModeSwitch').checked;
+            localStorage.setItem('isTestingMode', isTestingMode);
+            updateTestingMode();
+        }
+
+        /**
+         * Apply testing/queue mode visibility to UI controls and sync switch state.
+         */
+        function updateTestingMode() {
+            const testButton1 = document.getElementById('testButton1');
+            const testButton10 = document.getElementById('testButton10');
+            const switchEl = document.getElementById('testingModeSwitch');
+            
+            if (testButton1) {
+                testButton1.style.display = isTestingMode ? 'block' : 'none';
+            }
+            if (testButton10) {
+                testButton10.style.display = isTestingMode ? 'block' : 'none';
+            }
+            if (switchEl) {
+                switchEl.checked = isTestingMode;
+            }
+
+            // Update buttons based on queue mode
+            const buttons = document.querySelectorAll('.buttons button');
+            buttons.forEach(button => {
+                if (button.classList.contains('queue-mode')) {
+                    button.style.display = isQueueMode ? 'block' : 'none';
+                }
+            });
+        }
+
+        // Removed hide/show active session toggle
+
+        /**
+         * Persist the per-hour pending time increment and show a brief confirmation.
+         */
+        function setHourlyAddition(value) {
+            const newValue = parseInt(value);
+            if (newValue >= 0) {
+                hourlyAddition = newValue;
+                localStorage.setItem('hourlyAddition', hourlyAddition);
+                localStorage.setItem('hourlyAdditionSetTime', Date.now());
+                
+                // Show update message
+                const message = document.getElementById('updateMessage');
+                message.classList.add('show');
+                setTimeout(() => {
+                    message.classList.remove('show');
+                }, 1000);
+                
+                // Reset real-time counter
+                lastPendingTimeUpdate = Date.now();
+                document.getElementById('realTimePending').textContent = '';
+                document.getElementById('totalPendingTime').textContent = '';
+            }
+        }
+
+        /**
+         * Persist minimal timer state (duration, remaining, status, notes) or clear when idle.
+         */
+        function saveTimerState() {
+            if (currentSession && startTime) {
+                localStorage.setItem('timerDuration', totalDuration);
+                localStorage.setItem('currentSession', currentSession);
+                localStorage.setItem('timerState', timer ? 'running' : 'completed');
+                localStorage.setItem('sessionNotes', document.getElementById('sessionNotes').value);
+            } else {
+                localStorage.removeItem('timerDuration');
+                localStorage.removeItem('currentSession');
+                localStorage.removeItem('timerState');
+                localStorage.removeItem('sessionNotes');
+            }
+        }
+
+        /**
+         * Restore notes and rehydrate running/break state from storage and session records.
+         * Handles sessions that finished while offline and queued session hand-off.
+         */
+        function restoreTimerState() {
+            const savedDuration = localStorage.getItem('timerDuration');
+            const savedSession = localStorage.getItem('currentSession');
+            const savedState = localStorage.getItem('timerState');
+            const savedNotes = localStorage.getItem('sessionNotes');
+            // No expected end time persisted; rely on sessions records
+
+            if (savedNotes) {
+                document.getElementById('sessionNotes').value = savedNotes;
+            }
+
+            // Check if we were on a break
+            if (isOnBreak) {
+                const savedBreakStartTime = localStorage.getItem('breakStartTime');
+                if (savedBreakStartTime && pausedSessionTime > 0) {
+                    breakStartTime = new Date(parseInt(savedBreakStartTime));
+                    
+                    // Check if break is still ongoing
+                    const now = new Date().getTime();
+                    const elapsedBreakSeconds = Math.floor((now - breakStartTime.getTime()) / 1000);
+                    const remainingBreakTime = breakDuration - elapsedBreakSeconds;
+                    
+                    if (remainingBreakTime > 0) {
+                        // Break is still ongoing, restore break timer
+                        document.getElementById('breakTimer').classList.add('show');
+                        updateButtons(true);
+                        startBreakTimer();
+                        return;
+                    } else {
+                        // Break time is over, automatically end break
+                        endBreak();
+                        return;
+                    }
+                }
+            }
+
+            // Prefer restoring from the active pending session record
+            const active = getActivePendingSession();
+            if (active) {
+                totalDuration = typeof active.duration === 'number' ? active.duration : 0;
+                currentSession = totalDuration;
+                startTime = new Date(active.startTime);
+                const now = new Date().getTime();
+                const elapsed = Math.floor((now - active.startTime) / 1000);
+                const remaining = currentSession - elapsed;
+
+                if (savedState === 'completed') {
+                    updateButtons(true);
+                } else if (remaining <= 0) {
+                    // The previous session finished while the page was closed. Check if a queued session
+                    // should already be in progress and back-calculate its remaining time accordingly.
+                    const timeSinceCompletion = Math.abs(remaining); // seconds since the session ended
+                    if (sessionQueue.length > 0) {
+                        const firstQueued = sessionQueue[0];
+                        const queuedMinutes = typeof firstQueued === 'number' ? firstQueued : (firstQueued && firstQueued.minutes) || 0;
+                        const queuedDuration = Math.round(queuedMinutes * 60); // total seconds for queued session
+
+                    if (timeSinceCompletion < queuedDuration) {
+                            // Queued session is currently in progress – start it with the correct remaining time
+                            sessionQueue.shift();
+                            localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
+                            updateQueueDisplay();
+
+                        currentSession = queuedDuration;
+                        totalDuration = queuedDuration;
+                        // Set startTime to account for already elapsed time
+                        startTime = new Date(Date.now() - (queuedDuration - timeSinceCompletion) * 1000);
+
+                            document.getElementById('cancelButton').style.display = 'block';
+                            document.getElementById('breakButton').style.display = 'block';
+                            startTimer();
+                            updateButtons(true);
+                            saveTimerState();
+                            return; // queued session handling complete
+                        } else {
+                            // Queued session also finished while offline – clear it and proceed
+                            sessionQueue.shift();
+                            localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
+                            updateQueueDisplay();
+                        }
+                    }
+                    // Either no queue or queue already finished – process completion normally
+                    sessionComplete();
+                } else {
+                    document.getElementById('cancelButton').style.display = 'block';
+                    document.getElementById('breakButton').style.display = 'block';
+                    startTimer();
+                    updateButtons(true);
+                }
+            } else if (savedState === 'running') {
+                // No active session record, but state says running → treat as completed while offline
+                sessionComplete();
+            }
+        }
+
+        /**
+         * Update break hint and projected pending time if a break is taken now.
+         */
+        function updateBreakTimeInfo() {
+            const breakTimeInfo = document.getElementById('breakTimeInfo');
+            const breakTimePending = document.getElementById('breakTimePending');
+            
+            const active = getActivePendingSession();
+            if (active) {
+                const now = Date.now();
+                const elapsedSeconds = Math.floor((now - active.startTime) / 1000);
+                const elapsedMinutes = elapsedSeconds / 60;
+                const roundedMinutes = Math.floor(elapsedMinutes / 30) * 30;
+                
+                if (roundedMinutes < 30) {
+                    breakTimeInfo.style.display = 'block';
+                    breakTimePending.textContent = pendingBoringTime;
+                    breakTimePending.style.color = '#666';
+                } else {
+                    const newPendingTime = pendingBoringTime - roundedMinutes;
+                    breakTimeInfo.style.display = 'block';
+                    breakTimePending.textContent = newPendingTime;
+                    breakTimePending.style.color = '#28a745';
+                }
+            } else {
+                breakTimeInfo.style.display = 'none';
+            }
+        }
+
+        /**
+         * Format a duration in minutes into human-readable minutes or seconds.
+         */
+        function formatTimeForDisplay(minutes) {
+            // For very small durations (< 1 minute), show in seconds
+            if (minutes < 1) {
+                const seconds = Math.round(minutes * 60);
+                return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+            }
+            // For normal durations, show in minutes
+            return `${Math.floor(minutes)} minute${Math.floor(minutes) !== 1 ? 's' : ''}`;
+        }
+
+        /**
+         * Start the core countdown interval for the current session and refresh UI every tick.
+         */
+        function startTimer() {
+            timer = setInterval(() => {
+                const now = new Date().getTime();
+                const elapsedSeconds = startTime ? Math.floor((now - startTime.getTime()) / 1000) : 0;
+                const remainingSeconds = currentSession - elapsedSeconds;
+
+                if (remainingSeconds <= 0) {
+                    sessionComplete();
+                } else {
+                    updateTimer(remainingSeconds);
+                    const progressPercent = (remainingSeconds / totalDuration) * 100;
+                    updateProgress(progressPercent);
+                    updateBreakTimeInfo();
+                    updateResultantTime();
+                    updateSessionTimeInfo();
+                }
+            }, 100);
+        }
+
+        /**
+         * On session button click: queue if one is running, otherwise start immediately.
+         */
+        function handleSessionClick(minutes) {
+            if (getActivePendingSession()) {
+                // Session is running, queue this session
+                queueSession(minutes);
+            } else {
+                // No session running, start immediately
+                startSession(minutes);
+            }
+        }
+
+        // Compute projected end time (ms) for the currently running session
+        /**
+         * Compute the projected end time (ms) for the currently running session.
+         */
+        function getCurrentSessionProjectedEndMs() {
+            const active = getActivePendingSession();
+            return active && typeof active.endTime === 'number' ? active.endTime : Date.now();
+        }
+
+        // Build a queued session object with calculated start/end times
+        /**
+         * Build a queued session record (no start/end persisted); stores only id, minutes, duration.
+         */
+        function buildQueuedSession(minutes) {
+            const durationSeconds = Math.round(minutes * 60);
+            return {
+                id: Date.now(),
+                minutes: minutes,
+                duration: durationSeconds
+            };
+        }
+
+        // One-time migration if sessionQueue contains legacy numeric minutes
+        /**
+         * One-time migration from legacy numeric queue entries to object form.
+         */
+        function migrateSessionQueueFormatIfNeeded() {
+            if (!Array.isArray(sessionQueue) || sessionQueue.length === 0) return;
+            const first = sessionQueue[0];
+            if (typeof first === 'number') {
+                const queued = buildQueuedSession(first);
+                sessionQueue = [queued];
+                localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
+            }
+        }
+
+        /**
+         * Replace any existing queued session and show projected start/end without persisting them.
+         */
+        function queueSession(minutes) {
+            // Replace any existing queued session with full structure including start/end times
+            const queued = buildQueuedSession(minutes);
+            sessionQueue = [queued];
+            localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
+            updateQueueDisplay();
+            // Display projected start time without storing it in the queue object
+            const projectedStart = new Date(getCurrentSessionProjectedEndMs()).toLocaleTimeString();
+            const projectedEnd = new Date(getCurrentSessionProjectedEndMs() + (queued.duration * 1000)).toLocaleTimeString();
+            showFinalCalculation(`Session queued: ${formatTimeForDisplay(minutes)} (Start ${projectedStart} → End ${projectedEnd})`);
+        }
+
+        /**
+         * Update UI for the queued session including computed projected start/end when applicable.
+         */
+        function updateQueueDisplay() {
+            const queueSection = document.getElementById('queueSection');
+            const queuedSessionText = document.getElementById('queuedSessionText');
+            
+            if (sessionQueue.length > 0) {
+                const q = sessionQueue[0];
+                const queuedMinutes = typeof q === 'number' ? q : q.minutes;
+                // For small durations, show in seconds
+                let timeText;
+                if (queuedMinutes < 1) {
+                    const seconds = Math.round(queuedMinutes * 60);
+                    timeText = `${seconds}s`;
+                } else {
+                    // For normal durations, show in hours/minutes
+                    const hours = Math.floor(queuedMinutes / 60);
+                    const minutes = Math.floor(queuedMinutes % 60);
+                    if (hours > 0) {
+                        timeText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+                    } else {
+                        timeText = `${minutes}m`;
+                    }
+                }
+                // Compute planned times for display without storing on the queue object
+                if (timer && startTime) {
+                    const plannedStartMs = getCurrentSessionProjectedEndMs();
+                    const plannedEndMs = plannedStartMs + (Math.round(queuedMinutes * 60) * 1000);
+                    const startStr = new Date(plannedStartMs).toLocaleTimeString();
+                    const endStr = new Date(plannedEndMs).toLocaleTimeString();
+                    queuedSessionText.textContent = `${timeText} (Start ${startStr} → End ${endStr})`;
+                } else {
+                    queuedSessionText.textContent = timeText;
+                }
+                queueSection.classList.add('show');
+            } else {
+                queuedSessionText.textContent = 'None';
+                queueSection.classList.remove('show');
+            }
+        }
+
+        /**
+         * Cancel and clear the queued session.
+         */
+        function cancelQueuedSession() {
+            sessionQueue = [];
+            localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
+            updateQueueDisplay();
+            showFinalCalculation('Queued session cancelled');
+        }
+
+        /**
+         * Start and remove the queued session if present.
+         * Returns true if a queued session started; otherwise false.
+         */
+        function startQueuedSession() {
+            if (sessionQueue.length > 0) {
+                const queued = sessionQueue.shift();
+                localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
+                updateQueueDisplay();
+                const minutes = typeof queued === 'number' ? queued : queued.minutes;
+                // Start the queued session immediately
+                startSession(minutes);
+                showFinalCalculation(`Queued session started: ${formatTimeForDisplay(minutes)}`);
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Start a new session (minutes) after enforcing daily limit; create a pending session record,
+         * reset UI/state, and begin countdown.
+         */
+        function startSession(minutes) {
+            // Check daily limit
+            if (!canStartSession(minutes)) {
+                alert(`Cannot start session: Daily limit would be exceeded. Current usage: ${todayUsage}/${dailyLimit} minutes.`);
+                return;
+            }
+
+            if (timer) {
+                clearInterval(timer);
+            }
+
+            // Clear notes when starting new session
+            document.getElementById('sessionNotes').value = '';
+            localStorage.removeItem('sessionNotes');
+
+            sessionsStarted++;
+            localStorage.setItem('sessionsStarted', sessionsStarted);
+            totalDuration = minutes * 60;
+            currentSession = totalDuration;
+            startTime = new Date();
+
+            // Upsert session record at creation
+            try {
+                const sessionStartMs = startTime.getTime();
+                const record = {
+                    id: sessionStartMs,
+                    minutes: minutes,
+                    duration: totalDuration,
+                    startTime: sessionStartMs,
+                    endTime: sessionStartMs + (totalDuration * 1000),
+                    approvalComplete: false,
+                    completed: false,
+                    cancelled: false
+                };
+                const exists = sessions.some(s => s && s.startTime === record.startTime);
+                if (!exists) {
+                    sessions.unshift(record);
+                    localStorage.setItem('sessions', JSON.stringify(sessions));
+                }
+            } catch (_) { /* no-op */ }
+            
+            updateTimer(currentSession);
+            updateProgress(100);
+            updateButtons(true);
+            updateBreakTimeInfo();
+            updateSessionTimeInfo();
+            document.getElementById('cancelButton').style.display = 'block';
+            document.getElementById('breakButton').style.display = 'block';
+
+            // Clear real-time pending indicator when starting a session
+            const realTimePendingEl = document.getElementById('realTimePending');
+            realTimePendingEl.textContent = '';
+            realTimePendingEl.classList.remove('increasing');
+            document.getElementById('totalPendingTime').textContent = '';
+
+            startTimer();
+            saveTimerState();
+            updateStats();
+        }
+
+        /**
+         * Cancel the running session: stop timer, reset UI/state, log cancellation,
+         * and either start queued session or fully reset.
+         */
+        function cancelSession() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+                currentSession = null;
+                // Clear any legacy expected end time key if present
+                localStorage.removeItem('expectedEndTime');
+                // Mark the active session as cancelled in the session store
+                try {
+                    const active = getActivePendingSession();
+                    if (active) {
+                        for (let i = 0; i < sessions.length; i++) {
+                            if (sessions[i] && sessions[i].id === active.id) {
+                                sessions[i].cancelled = true;
+                                // Prevent it from appearing in pending approvals
+                                sessions[i].approvalComplete = true;
+                                // End at cancel time
+                                sessions[i].endTime = Date.now();
+                                break;
+                            }
+                        }
+                        localStorage.setItem('sessions', JSON.stringify(sessions));
+                    }
+                } catch (_) { /* no-op */ }
+                updateButtons(false);
+                updateTimer(0);
+                updateProgress(0);
+                updateBreakTimeInfo();
+                updateResultantTime();
+                document.getElementById('cancelButton').style.display = 'none';
+                document.getElementById('breakButton').style.display = 'none';
+                addLogEntry('cancelled', totalDuration / 60);
+                // After cancelling, remove gaps by readjusting consecutive sessions
+                readjustSessionGaps();
+                saveTimerState();
+                
+                // Reset real-time pending counter when cancelling
+                lastPendingTimeUpdate = Date.now();
+                document.getElementById('totalPendingTime').textContent = '';
+                
+                // Check for queued sessions when cancelling current session
+                const hasQueuedSession = startQueuedSession();
+                if (!hasQueuedSession) {
+                    // No queued session, fully reset
+                    resetTimer();
+                    updateSessionTimeInfo();
+                }
+            }
+        }
+
+        /**
+         * Handle natural completion: stop timer, ensure pending session record exists,
+         * attempt to start queued session, and refresh logs/UI.
+         */
+        function sessionComplete() {
+            clearInterval(timer);
+            timer = null;
+            
+            // Clear any legacy expected end time key after completion
+            localStorage.removeItem('expectedEndTime');
+            
+            // Ensure the session record exists (if page reloaded mid-session, it may already be present).
+            try {
+                const startedAt = startTime ? startTime.getTime() : null;
+                if (startedAt) {
+                    const idx = sessions.findIndex(s => s && s.startTime === startedAt);
+                    if (idx >= 0) {
+                        // keep existing record as pending; endTime already set at creation
+                    } else {
+                        // reconstruct minimal record
+                        const minutes = (currentSession || 0) / 60;
+                        const duration = currentSession || 0;
+                        const endMs = startedAt + duration * 1000;
+                        sessions.unshift({ id: startedAt, minutes, duration, startTime: startedAt, endTime: endMs, approvalComplete: false, completed: false, cancelled: false });
+                        localStorage.setItem('sessions', JSON.stringify(sessions));
+                    }
+                }
+            } catch (_) { /* no-op */ }
+            
+            // Reset real-time pending counter when session completes
+            lastPendingTimeUpdate = Date.now();
+            document.getElementById('totalPendingTime').textContent = '';
+            
+            // Check for queued sessions and start immediately
+            const hasQueuedSession = startQueuedSession();
+            
+            if (!hasQueuedSession) {
+                // No queued session, reset everything
+                document.getElementById('breakButton').style.display = 'none';
+                updateButtons(true);
+                saveTimerState();
+                updateSessionTimeInfo();
+            }
+            // If queued session started, buttons remain enabled for the running session
+            
+            // Update log display to show pending sessions
+            updateLogDisplay();
+        }
+
+        /**
+         * Set and persist pending boring time, refreshing all dependent UI and stats.
+         */
+        function syncPendingTime(newValue) {
+            pendingBoringTime = newValue;
+            localStorage.setItem('pendingBoringTime', pendingBoringTime);
+            document.getElementById('pendingTime').textContent = pendingBoringTime;
+            updateResultantTime();
+            updateDailyStreak();
+            updatePendingProgress();
+            // Reset real-time counter
+            lastPendingTimeUpdate = Date.now();
+            document.getElementById('realTimePending').textContent = '';
+            document.getElementById('realTimePending').classList.remove('increasing');
+            document.getElementById('totalPendingTime').textContent = '';
+            // Force update any UI elements that depend on this value
+            updateStats();
+            updateLogDisplay();
+        }
+
+        /**
+         * Toggle edit mode for pending time and save when exiting edit.
+         */
+        function togglePendingTimeEdit() {
+            const container = document.querySelector('.edit-pending-time');
+            const input = document.getElementById('pendingTimeInput');
+            const button = document.getElementById('editPendingTimeBtn');
+            
+            if (container.classList.contains('editing')) {
+                // Save the new value
+                const newValue = parseInt(input.value);
+                if (!isNaN(newValue)) {
+                    syncPendingTime(newValue);
+                }
+                container.classList.remove('editing');
+                button.textContent = 'Edit';
+            } else {
+                // Show the input
+                input.value = pendingBoringTime;
+                container.classList.add('editing');
+                input.focus();
+                button.textContent = 'Save';
+            }
+        }
+
+        /**
+         * Show a transient notification card with the provided message below the progress bar.
+         */
+        function showFinalCalculation(message) {
+            // Remove any existing final calculation display
+            const existingDisplay = document.querySelector('.final-calculation');
+            if (existingDisplay) {
+                existingDisplay.parentNode.removeChild(existingDisplay);
+            }
+
+            // Create new display
+            const finalTimeDisplay = document.createElement('div');
+            finalTimeDisplay.className = 'final-calculation';
+            finalTimeDisplay.innerHTML = `<p>${message}</p>`;
+            
+            // Insert after the progress bar
+            const progressBar = document.querySelector('.progress-bar');
+            progressBar.parentNode.insertBefore(finalTimeDisplay, progressBar.nextSibling);
+            
+            // Make sure the element is visible
+            finalTimeDisplay.style.display = 'block';
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (finalTimeDisplay && finalTimeDisplay.parentNode) {
+                    finalTimeDisplay.parentNode.removeChild(finalTimeDisplay);
+                }
+            }, 5000);
+        }
+
+
+
+
+
+        // Migrate legacy pendingSessions store into unified sessions list
+        /**
+         * Migrate legacy `pendingSessions` into unified `sessions` store and clear old key.
+         */
+        function migratePendingSessionsToSessions() {
+            try {
+                const legacy = JSON.parse(localStorage.getItem('pendingSessions') || '[]');
+                if (Array.isArray(legacy) && legacy.length) {
+                    const byKey = new Set(sessions.map(s => `${s.startTime}-${s.endTime}-${s.duration}`));
+                    for (const s of legacy) {
+                        const key = `${s.startTime}-${s.endTime}-${s.duration}`;
+                        if (!byKey.has(key)) {
+                            sessions.unshift({
+                                id: s.id || (s.startTime || Date.now()),
+                                minutes: s.minutes,
+                                duration: s.duration,
+                                startTime: s.startTime,
+                                endTime: s.endTime,
+                                pending: true
+                            });
+                            byKey.add(key);
+                        }
+                    }
+                    localStorage.setItem('sessions', JSON.stringify(sessions));
+                    localStorage.removeItem('pendingSessions');
+                }
+            } catch (_) { /* no-op */ }
+        }
+
+        /**
+         * Hard reset timer-related state and controls without affecting counters.
+         */
+        function resetTimer() {
+            clearInterval(timer);
+            timer = null;
+            
+            currentSession = null;
+            totalDuration = 0;
+            document.getElementById('timer').textContent = '00:00:00';
+            document.getElementById('progress').style.width = '0%';
+            document.getElementById('cancelButton').style.display = 'none';
+            document.getElementById('breakButton').style.display = 'none';
+            updateButtons(false);
+            saveTimerState();
+            updateSessionTimeInfo();
+        }
+
+        /**
+         * Update the main HH:MM:SS timer display.
+         */
+        function updateTimer(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        /**
+         * Update the session progress bar based on remaining percentage.
+         */
+        function updateProgress(percentage) {
+            const width = `${Math.max(0, Math.min(100 - percentage, 100))}%`;
+            document.getElementById('progress').style.width = width;
+        }
+
+        /**
+         * Apply button enabled/disabled state. Buttons remain enabled to allow queuing.
+         */
+        function updateButtons(disabled) {
+            const buttons = document.querySelectorAll('.buttons button');
+            // Don't disable buttons when session is running - allow queuing
+            buttons.forEach(button => {
+                button.disabled = false;
+            });
+        }
+
+        /**
+         * Refresh statistics counters and dependent streak UI.
+         */
+        function updateStats() {
+            document.getElementById('totalTime').textContent = Math.floor(totalTimeCompleted);
+            document.getElementById('sessionsCompleted').textContent = sessionsCompleted;
+            document.getElementById('breaksTaken').textContent = breaksTaken;
+            const rate = sessionsStarted === 0 ? 100 : Math.round((sessionsCompleted / sessionsStarted) * 100);
+            document.getElementById('completionRate').textContent = rate;
+            updateDailyStreak();
+        }
+
+        /**
+         * Append an entry to the activity log with optional end time metadata; persist and render.
+         */
+        function addLogEntry(type, minutes, timestamp = new Date(), customMessage = null, metadata = null) {
+            // Ensure timestamp is a Date object
+            let timestampMs;
+            if (timestamp instanceof Date) {
+                timestampMs = timestamp.getTime();
+            } else if (typeof timestamp === 'number') {
+                timestampMs = timestamp;
+            } else if (typeof timestamp === 'string') {
+                timestampMs = new Date(timestamp).getTime();
+            } else {
+                timestampMs = new Date().getTime();
+            }
+
+            // Optional metadata retains only end time; start time is recorded solely in session objects
+            let endTimeMs = null;
+            if (metadata && Object.prototype.hasOwnProperty.call(metadata, 'endTime') && metadata.endTime != null) {
+                if (metadata.endTime instanceof Date) {
+                    endTimeMs = metadata.endTime.getTime();
+                } else if (typeof metadata.endTime === 'number') {
+                    endTimeMs = metadata.endTime;
+                } else if (typeof metadata.endTime === 'string') {
+                    endTimeMs = new Date(metadata.endTime).getTime();
+                }
+            }
+            
+            const entry = {
+                type,
+                minutes,
+                timestamp: timestampMs,
+                pendingTime: Math.floor(pendingBoringTime),
+                customMessage: customMessage
+            };
+            if (endTimeMs !== null) entry.endTime = endTimeMs;
+
+            activityLog.unshift(entry);
+            if (activityLog.length > 100) {
+                activityLog.pop();
+            }
+            localStorage.setItem('activityLog', JSON.stringify(activityLog));
+            updateLogDisplay();
+        }
+
+        /**
+         * Approve a completed session from `sessions`: update totals, reduce pending, log, and persist.
+         */
+        function approveSession(sessionId) {
+            const session = sessions.find(s => s.id == sessionId && !s.approvalComplete);
+            if (session) {
+                // Process the approved session
+                sessionsCompleted++;
+                totalTimeCompleted += session.minutes;
+                const newPendingTime = Math.floor(pendingBoringTime - session.minutes);
+                
+                // Add to daily usage
+                addToDailyUsage(session.minutes);
+                
+                localStorage.setItem('sessionsCompleted', sessionsCompleted);
+                localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
+                
+                // Show appropriate message for session approval
+                if (session.minutes < 1) {
+                    showFinalCalculation(`${formatTimeForDisplay(session.minutes)} approved! Pending time: ${Math.floor(pendingBoringTime)} → ${newPendingTime} minutes`);
+                } else {
+                    showFinalCalculation(`Session approved! Pending time reduced: ${Math.floor(pendingBoringTime)} → ${newPendingTime} minutes`);
+                }
+                
+                syncPendingTime(newPendingTime);
+                // Log with start and end times metadata
+                addLogEntry('session', session.minutes, session.endTime, null, { startTime: session.startTime, endTime: session.endTime });
+                
+                // Mark as approved in sessions list
+                for (let i = 0; i < sessions.length; i++) {
+                    if (sessions[i].id == sessionId) {
+                        sessions[i].approvalComplete = true;
+                        break;
+                    }
+                }
+                localStorage.setItem('sessions', JSON.stringify(sessions));
+                
+                updateStats();
+                updateLogDisplay();
+            }
+        }
+
+        /**
+         * Reject a completed session from `sessions`: log cancellation and mark as not pending.
+         */
+        function rejectSession(sessionId) {
+            const session = sessions.find(s => s.id == sessionId && !s.approvalComplete);
+            if (session) {
+                // Log the rejection
+                addLogEntry('cancelled', session.minutes, session.endTime);
+                showFinalCalculation(`Session rejected: ${formatTimeForDisplay(session.minutes)}`);
+                
+                // Mark as not pending (rejected) in unified sessions
+                for (let i = 0; i < sessions.length; i++) {
+                    if (sessions[i].id == sessionId) {
+                        sessions[i].approvalComplete = true;
+                        break;
+                    }
+                }
+                localStorage.setItem('sessions', JSON.stringify(sessions));
+                
+                updateStats();
+                updateLogDisplay();
+            }
+        }
+
+        /**
+         * Render pending approvals (from `sessions`) and the activity log into the log panel.
+         */
+        function updateLogDisplay() {
+            const logContainer = document.getElementById('logEntries');
+            
+            // Generate pending approvals from unified sessions array, only if endTime has passed
+            const nowMs = Date.now();
+            const pendingSessionsHTML = (sessions || [])
+                .filter(s => s && !s.approvalComplete && typeof s.endTime === 'number' && nowMs >= s.endTime)
+                .map(session => {
+                    const endTime = new Date(session.endTime);
+                    const startTimeObj = new Date(session.startTime);
+                    const timeStr = endTime.toLocaleString();
+                    const startStr = isNaN(startTimeObj.getTime()) ? '' : startTimeObj.toLocaleTimeString();
+                    const endStr = isNaN(endTime.getTime()) ? '' : endTime.toLocaleTimeString();
+                    const rangeHtml = (startStr && endStr)
+                        ? `<div style="color:#666; font-size:12px; margin-top:4px;">Start: ${startStr} → End: ${endStr}</div>`
+                        : '';
+                    return `<div class="log-entry pending-session-log">
+                        <div><strong>⏳ Pending Approval</strong></div>
+                        <div>${timeStr} - Completed session: ${formatTimeForDisplay(session.minutes)}</div>
+                        ${rangeHtml}
+                        <div class="session-actions">
+                            <button class="approve-btn" onclick="approveSession('${session.id}')">Approve</button>
+                            <button class="reject-btn" onclick="rejectSession('${session.id}')">Reject</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            
+            // Generate regular activity log HTML
+            const activityLogHTML = activityLog.map(entry => {
+                const date = new Date(entry.timestamp);
+                const timeStr = date.toLocaleString();
+                let cssClass, action;
+                switch(entry.type) {
+                    case 'session':
+                        cssClass = 'session-log';
+                        action = 'Completed session';
+                        break;
+                    case 'addition':
+                        cssClass = 'addition-log';
+                        action = 'Added time';
+                        break;
+                    case 'cancelled':
+                        cssClass = 'cancelled-log';
+                        action = 'Cancelled session';
+                        break;
+                    case 'break':
+                        cssClass = 'break-log';
+                        action = 'Took break';
+                        return `<div class="log-entry ${cssClass}">
+                            ${timeStr} - ${action}
+                        </div>`;
+                    case 'reset':
+                        cssClass = 'reset-log';
+                        action = entry.customMessage || 'Daily statistics reset';
+                        return `<div class="log-entry ${cssClass}">
+                            ${timeStr} - ${action}
+                        </div>`;
+                }
+                // For completed sessions, show start and end when available
+                if (entry.type === 'session' && entry.startTime && entry.endTime) {
+                    const startStr = new Date(entry.startTime).toLocaleTimeString();
+                    const endStr = new Date(entry.endTime).toLocaleTimeString();
+                    return `<div class="log-entry ${cssClass}">
+                        ${timeStr} - ${action}: ${formatTimeForDisplay(entry.minutes)} (Pending Time: ${Math.floor(entry.pendingTime)} minutes)<br/>
+                        <span style="color:#666; font-size:12px;">Start: ${startStr} → End: ${endStr}</span>
+                    </div>`;
+                }
+                return `<div class="log-entry ${cssClass}">
+                    ${timeStr} - ${action}: ${formatTimeForDisplay(entry.minutes)} (Pending Time: ${Math.floor(entry.pendingTime)} minutes)
+                </div>`;
+            }).join('');
+            
+            // Combine pending sessions and activity log
+            logContainer.innerHTML = pendingSessionsHTML + activityLogHTML;
+        }
+
+        /**
+         * Show the currently active session object (from sessions[]) in a panel.
+         */
+        function showActiveSession() {
+            try {
+                const panel = document.getElementById('sessionObjectPanel');
+                const view = document.getElementById('sessionObjectView');
+                const summary = document.getElementById('sessionObjectSummary');
+                const active = getActivePendingSession();
+                const now = Date.now();
+                // Format helper
+                const fmt = (s) => {
+                    const o = { ...s };
+                    if (typeof s.startTime === 'number') o.startTimeHuman = new Date(s.startTime).toLocaleString();
+                    if (typeof s.endTime === 'number') o.endTimeHuman = new Date(s.endTime).toLocaleString();
+                    return o;
+                };
+                const payload = {};
+                if (active) payload.active = fmt(active);
+                // Include queued session (compute projected start/end)
+                if (Array.isArray(sessionQueue) && sessionQueue.length > 0) {
+                    const q = sessionQueue[0];
+                    const qMinutes = typeof q === 'number' ? q : (q && q.minutes) || 0;
+                    const qDurationSec = Math.round(qMinutes * 60);
+                    const plannedStartMs = getCurrentSessionProjectedEndMs();
+                    const plannedEndMs = plannedStartMs + (qDurationSec * 1000);
+                    payload.queued = {
+                        minutes: qMinutes,
+                        duration: qDurationSec,
+                        startTime: plannedStartMs,
+                        endTime: plannedEndMs,
+                        startTimeHuman: new Date(plannedStartMs).toLocaleString(),
+                        endTimeHuman: new Date(plannedEndMs).toLocaleString()
+                    };
+                }
+                if (Array.isArray(sessions) && sessions.length) {
+                    const sorted = [...sessions].filter(Boolean).sort((a,b) => (a.startTime||0) - (b.startTime||0));
+                    const future = sorted.filter(s => typeof s.startTime === 'number' && s.startTime > now).map(fmt);
+                    const past = sorted.filter(s => typeof s.endTime === 'number' && s.endTime <= now).reverse().map(fmt);
+                    if (future.length) payload.future = future;
+                    if (past.length) payload.past = past;
+                }
+                if (!payload.active && !payload.future && !payload.past && !payload.queued) {
+                    summary.textContent = 'No sessions to display';
+                    view.textContent = '';
+                } else {
+                    // Build compact human-readable summary list
+                    const mkLine = (label, s) => {
+                        if (!s) return '';
+                        const st = typeof s.startTime === 'number' ? new Date(s.startTime).toLocaleString() : '-';
+                        const et = typeof s.endTime === 'number' ? new Date(s.endTime).toLocaleString() : '-';
+                        const durSec = typeof s.duration === 'number' ? s.duration : (typeof s.startTime === 'number' && typeof s.endTime === 'number' ? Math.max(0, Math.round((s.endTime - s.startTime)/1000)) : 0);
+                        const dur = humanizeDuration(durSec);
+                        return `${label}: ${st} → ${et} (${dur})`;
+                    };
+                    const lines = [];
+                    if (payload.queued) lines.push(mkLine('Queued', payload.queued));
+                    if (payload.active) lines.push(mkLine('Active', payload.active));
+                    if (payload.future?.length) {
+                        lines.push('Future:');
+                        payload.future.forEach((s, i) => lines.push(`  ${i+1}. ${mkLine('', s)}`));
+                    }
+                    if (payload.past?.length) {
+                        lines.push('Past:');
+                        payload.past.forEach((s, i) => lines.push(`  ${i+1}. ${mkLine('', s)}`));
+                    }
+                    summary.textContent = lines.join('\n');
+                    view.textContent = JSON.stringify(payload, null, 2);
+                }
+                panel.classList.add('show');
+                // Scroll into view for convenience
+                panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (_) {
+                alert('Unable to display sessions');
+            }
+        }
+
+        function humanizeDuration(totalSeconds) {
+            const sec = Math.max(0, Math.floor(totalSeconds));
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            const parts = [];
+            if (h) parts.push(`${h}h`);
+            if (m || h) parts.push(`${m}m`);
+            parts.push(`${s}s`);
+            return parts.join(' ');
+        }
+
+        function closeSessionPanel() {
+            const panel = document.getElementById('sessionObjectPanel');
+            if (panel) panel.classList.remove('show');
+        }
+
+        /**
+         * Clear all sessions from storage and memory, and refresh related UI.
+         */
+        function clearSessions() {
+            if (!confirm('Clear all session records? This cannot be undone.')) return;
+            sessions = [];
+            localStorage.setItem('sessions', JSON.stringify(sessions));
+            // Reset any active-session-derived UI
+            updateLogDisplay();
+            updateTimer(0);
+            updateProgress(100);
+            updateSessionTimeInfo();
+            showFinalCalculation('All sessions cleared');
+            closeSessionPanel();
+        }
+
+        /**
+         * Readjust consecutive sessions to be back-to-back by removing gaps between them.
+         * Sorts sessions by startTime ascending and reassigns each startTime = prev.endTime.
+         * Skips sessions that are cancelled.
+         */
+        function readjustSessionGaps() {
+            if (!Array.isArray(sessions) || sessions.length === 0) return;
+            // Work on a copy sorted by startTime ascending
+            const sorted = [...sessions].sort((a,b) => (a.startTime||0) - (b.startTime||0));
+            let previousEnd = null;
+            for (const s of sorted) {
+                if (!s || typeof s.duration !== 'number') continue;
+                if (s.cancelled) { previousEnd = s.endTime || previousEnd; continue; }
+                if (previousEnd != null) {
+                    // Snap start to previous end, recompute end by duration
+                    s.startTime = previousEnd;
+                    s.endTime = s.startTime + (s.duration * 1000);
+                } else {
+                    // Ensure end matches duration for the first session if inconsistent
+                    if (typeof s.startTime === 'number') {
+                        s.endTime = s.startTime + (s.duration * 1000);
+                    }
+                }
+                previousEnd = s.endTime;
+            }
+            // Persist modifications back in original order by matching ids
+            const byId = new Map(sorted.map(s => [s.id, s]));
+            for (let i = 0; i < sessions.length; i++) {
+                const upd = byId.get(sessions[i]?.id);
+                if (upd) sessions[i] = upd;
+            }
+            localStorage.setItem('sessions', JSON.stringify(sessions));
+            updateLogDisplay();
+            showFinalCalculation('Session times readjusted to remove gaps');
+        }
+
+        /**
+         * On the hour, accumulate pending time based on the configured hourly addition and log it.
+         */
+        function checkHourlyAddition() {
+            const now = Date.now();
+            const currentHour = now - (now % (60 * 60 * 1000));
+            const lastCheckHour = lastTimeCheck - (lastTimeCheck % (60 * 60 * 1000));
+            const hoursSinceLastCheck = Math.floor((currentHour - lastCheckHour) / (1000 * 60 * 60));
+            
+            if (hoursSinceLastCheck > 0) {
+                const valueSetTime = parseInt(localStorage.getItem('hourlyAdditionSetTime')) || lastTimeCheck;
+                const oldValue = parseInt(localStorage.getItem('hourlyAddition')) || 15;
+                
+                for (let i = 0; i < hoursSinceLastCheck; i++) {
+                    const hourTime = lastCheckHour + ((i + 1) * 60 * 60 * 1000);
+                    const entryTime = new Date(hourTime);
+                    
+                    const valueToAdd = hourTime <= valueSetTime ? oldValue : hourlyAddition;
+                    addLogEntry('addition', valueToAdd, entryTime);
+                    syncPendingTime(pendingBoringTime + valueToAdd);
+                }
+                
+                lastTimeCheck = currentHour;
+                localStorage.setItem('lastTimeCheck', lastTimeCheck);
+            }
+        }
+
+        /**
+         * Daily rollover: reset per-day counters and log the reset (with break info if any).
+         */
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            if (lastStatsReset !== today) {
+                // Store previous values for logging
+                const prevBreaksTaken = breaksTaken;
+                
+                // Reset daily counters
+                sessionsStarted = 0;
+                sessionsCompleted = 0;
+                totalTimeCompleted = 0;
+                breaksTaken = 0;
+                
+                // Save to localStorage
+                localStorage.setItem('sessionsStarted', sessionsStarted);
+                localStorage.setItem('sessionsCompleted', sessionsCompleted);
+                localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
+                localStorage.setItem('breaksTaken', breaksTaken);
+                
+                // Update reset timestamp
+                lastStatsReset = today;
+                localStorage.setItem('lastStatsReset', lastStatsReset);
+                
+                // Log the reset with break counter info
+                if (prevBreaksTaken > 0) {
+                    addLogEntry('reset', 0, new Date(), `Daily reset - ${prevBreaksTaken} breaks yesterday`);
+                } else {
+                    addLogEntry('reset', 0);
+                }
+                
+                // Force immediate UI update
+                updateStats();
+                updateLastResetDisplay();
+                
+                // Show reset indicator briefly
+                showBreakResetIndicator();
+                
+                console.log(`Daily reset completed - Break counter reset from ${prevBreaksTaken} to 0`);
+            }
+        }
+
+        /**
+         * Pause the session and start a timed break; persist break state and update UI.
+         */
+        function startBreak() {
+            if (!timer) return; // Can only take break during active session
+            
+            // Pause the current session
+            clearInterval(timer);
+            timer = null;
+            
+            // Calculate how much time was already elapsed in the current session
+            const now = new Date().getTime();
+            const elapsedSeconds = startTime ? Math.floor((now - startTime.getTime()) / 1000) : 0;
+            pausedSessionTime = currentSession - elapsedSeconds;
+            
+            // Start break timer
+            breakStartTime = new Date();
+            isOnBreak = true;
+            
+            // Save break state
+            localStorage.setItem('isOnBreak', 'true');
+            localStorage.setItem('pausedSessionTime', pausedSessionTime);
+            localStorage.setItem('breakStartTime', breakStartTime.getTime());
+            
+            // Increment breaks taken counter
+            breaksTaken++;
+            localStorage.setItem('breaksTaken', breaksTaken);
+            addLogEntry('break', 0); // Log the break
+            updateStats(); // Update the display
+            
+            // Update UI
+            document.getElementById('breakTimer').classList.add('show');
+            document.getElementById('breakButton').style.display = 'none';
+            updateButtons(true);
+            
+            // Start break countdown
+            startBreakTimer();
+        }
+
+        /**
+         * Start or resume the break countdown based on `breakStartTime`.
+         */
+        function startBreakTimer() {
+            // Calculate remaining time based on when break started
+            const now = new Date().getTime();
+            const elapsedSeconds = Math.floor((now - breakStartTime.getTime()) / 1000);
+            const remainingSeconds = Math.max(0, breakDuration - elapsedSeconds);
+            
+            // Update initial display with correct remaining time
+            updateBreakTimer(remainingSeconds);
+            const progressPercent = (remainingSeconds / breakDuration) * 100;
+            updateBreakProgress(progressPercent);
+            
+            // If break is already over, end it immediately
+            if (remainingSeconds <= 0) {
+                endBreak();
+                return;
+            }
+            
+            breakTimer = setInterval(() => {
+                const now = new Date().getTime();
+                const elapsedSeconds = Math.floor((now - breakStartTime.getTime()) / 1000);
+                const remainingSeconds = breakDuration - elapsedSeconds;
+
+                if (remainingSeconds <= 0) {
+                    // Break time is over, automatically end break
+                    endBreak();
+                } else {
+                    updateBreakTimer(remainingSeconds);
+                    const progressPercent = (remainingSeconds / breakDuration) * 100;
+                    updateBreakProgress(progressPercent);
+                }
+            }, 1000);
+        }
+
+        /**
+         * End break and resume the original session from `pausedSessionTime`; clear break state.
+         */
+        function endBreak() {
+            // Clear break timer
+            if (breakTimer) {
+                clearInterval(breakTimer);
+                breakTimer = null;
+            }
+            
+            // Hide break UI
+            document.getElementById('breakTimer').classList.remove('show');
+            document.getElementById('breakButton').style.display = 'block';
+            
+            // Resume the original session
+            if (pausedSessionTime > 0) {
+                currentSession = pausedSessionTime;
+                totalDuration = pausedSessionTime; // Update total duration for progress calculation
+                startTime = new Date();
+                
+                startTimer();
+                updateButtons(true);
+                // Make sure cancel and break buttons are visible when session resumes
+                document.getElementById('cancelButton').style.display = 'block';
+                document.getElementById('breakButton').style.display = 'block';
+                updateSessionTimeInfo();
+            }
+            
+            // Clear break state
+            isOnBreak = false;
+            pausedSessionTime = 0;
+            breakStartTime = null;
+            localStorage.removeItem('isOnBreak');
+            localStorage.removeItem('pausedSessionTime');
+            localStorage.removeItem('breakStartTime');
+            
+            saveTimerState();
+        }
+
+        /**
+         * Cancel break early and resume the original session; clear break state.
+         */
+        function cancelBreak() {
+            // Clear break timer
+            if (breakTimer) {
+                clearInterval(breakTimer);
+                breakTimer = null;
+            }
+            
+            // Hide break UI
+            document.getElementById('breakTimer').classList.remove('show');
+            document.getElementById('breakButton').style.display = 'block';
+            
+            // Resume the original session with the paused time
+            if (pausedSessionTime > 0) {
+                currentSession = pausedSessionTime;
+                totalDuration = pausedSessionTime; // Update total duration for progress calculation
+                startTime = new Date();
+                
+                startTimer();
+                updateButtons(true);
+                // Make sure cancel and break buttons are visible when session resumes
+                document.getElementById('cancelButton').style.display = 'block';
+                document.getElementById('breakButton').style.display = 'block';
+                updateSessionTimeInfo();
+            }
+            
+            // Clear break state
+            isOnBreak = false;
+            pausedSessionTime = 0;
+            breakStartTime = null;
+            localStorage.removeItem('isOnBreak');
+            localStorage.removeItem('pausedSessionTime');
+            localStorage.removeItem('breakStartTime');
+            
+            saveTimerState();
+        }
+
+        /**
+         * Update the MM:SS break timer display.
+         */
+        function updateBreakTimer(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            document.getElementById('breakTimerDisplay').textContent = 
+                `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        /**
+         * Update the break progress bar based on remaining percentage.
+         */
+        function updateBreakProgress(percentage) {
+            document.getElementById('breakProgress').style.width = `${Math.max(0, Math.min(100 - percentage, 100))}%`;
+        }
+
+        /**
+         * Update the pending-time progress indicator and color coding against the target.
+         */
+        function updatePendingProgress() {
+            const currentPendingEl = document.getElementById('currentPendingTime');
+            const pendingProgressBar = document.getElementById('pendingProgressBar');
+            const pendingProgressText = document.getElementById('pendingProgressText');
+            const resultantTimeEl = document.getElementById('resultantTime');
+
+            if (currentPendingEl && pendingProgressBar && pendingProgressText && resultantTimeEl) {
+                // Use the already calculated resultant time
+                const resultantText = resultantTimeEl.textContent;
+                let currentPending;
+                
+                // Parse the resultant time (could be "15" or "15:30" format)
+                if (resultantText.includes(':')) {
+                    const parts = resultantText.split(':');
+                    currentPending = parseInt(parts[0]) + parseInt(parts[1]) / 60;
+                } else {
+                    currentPending = parseFloat(resultantText) || 0;
+                }
+                
+                const targetPending = targetPendingTime;
+                
+                // Update current pending display
+                currentPendingEl.textContent = Math.floor(currentPending);
+                
+                // Calculate progress: 100% = at target (bad), 0% = no pending time left (good)
+                const percentage = Math.max(0, Math.min(100, (currentPending / targetPending) * 100));
+
+                pendingProgressBar.style.width = `${percentage}%`;
+                pendingProgressText.textContent = `${Math.round(percentage)}%`;
+
+                // Inverted color coding: less pending time = better (green background)
+                if (percentage <= 10) {
+                    pendingProgressBar.style.background = '#28a745'; // Green for 0-10% (very little pending)
+                } else if (percentage <= 50) {
+                    pendingProgressBar.style.background = '#ffc107'; // Yellow for 11-50% (moderate pending)
+                } else {
+                    pendingProgressBar.style.background = '#dc3545'; // Red for >50% (lots of pending)
+                }
+            }
+        }
+
+        /**
+         * Set and persist the target maximum pending time; update display and notify.
+         */
+        function setTargetPendingTime() {
+            const targetInput = document.getElementById('targetPendingTimeInput');
+            const targetPending = parseInt(targetInput.value);
+            if (!isNaN(targetPending) && targetPending >= 0) {
+                targetPendingTime = targetPending;
+                localStorage.setItem('targetPendingTime', targetPendingTime);
+                updatePendingProgress();
+                showFinalCalculation(`Maximum pending time target set to ${targetPendingTime} minutes`);
+            } else {
+                alert('Please enter a valid positive number for maximum pending time.');
+            }
+        }
+
+        // Handle enter key on pending time input
+        document.getElementById('pendingTimeInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                togglePendingTimeEdit();
+            }
+        });
+
+        setInterval(checkHourlyAddition, 60000);
+
+        checkDailyReset();
+        checkHourlyAddition();
+        updateTimer(0);
+        // No-op: legacy dedupe removed; sessions are maintained on insert
+        restoreTimerState();
+        updateStats();
+        updateLogDisplay();
+        document.getElementById('hourlyAddition').value = hourlyAddition;
+        document.getElementById('pendingTime').textContent = pendingBoringTime;
+        updateTestingMode();
+        checkDailyUsageReset();
+        updateDailyLimitDisplay();
+        updateLastResetDisplay();
+        updateQueueDisplay();
+        updatePendingProgress();
+        document.getElementById('targetPendingTimeInput').value = targetPendingTime;
+
+        setInterval(() => {
+            checkDailyReset();
+            checkHourlyAddition();
+            checkDailyUsageReset();
+            updatePendingProgress();
+        }, 60000);
+
+        // Update the CSS for the final-calculation class
+        /**
+         * Inject CSS used by the transient final-calculation notification component.
+         */
+        function addFinalCalculationStyle() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .final-calculation {
+                    margin: 20px 0;
+                    padding: 15px;
+                    background-color: #d4edda;
+                    border-radius: 5px;
+                    text-align: center;
+                    font-weight: bold;
+                    color: #155724;
+                    border-left: 5px solid #28a745;
+                    animation: fadeIn 0.5s ease;
+                    z-index: 1000;
+                    position: relative;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Test function to verify the notification system
+        /**
+         * Developer helper: display a sample notification to verify styling/positioning.
+         */
+        function testNotification() {
+            showFinalCalculation('Test notification message');
+        }
+
+        /**
+         * Show the effective pending time while a session is running by subtracting elapsed time.
+         */
+        function updateResultantTime() {
+            const resultantTime = document.getElementById('resultantTime');
+            const active = getActivePendingSession();
+            if (active) {
+                const now = Date.now();
+                const elapsedSeconds = Math.floor((now - active.startTime) / 1000);
+                const elapsedMinutes = elapsedSeconds / 60;
+                const newTime = pendingBoringTime - elapsedMinutes;
+                
+                // For very small reductions, just show the floor value
+                if (elapsedMinutes < 1) {
+                    resultantTime.textContent = `${Math.floor(pendingBoringTime)}`;
+                } else {
+                    const minutes = Math.floor(Math.max(0, newTime));
+                    const seconds = Math.floor((Math.max(0, newTime) % 1) * 60);
+                    resultantTime.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+                }
+            } else {
+                resultantTime.textContent = `${Math.floor(pendingBoringTime)}`;
+            }
+        }
+
+        /**
+         * Display the current session's start and projected end times under the timer.
+         */
+        function updateSessionTimeInfo() {
+            const infoEl = document.getElementById('sessionTimeInfo');
+            if (!infoEl) return;
+            const activeSession = getActivePendingSession();
+            if (activeSession && typeof activeSession.startTime === 'number' && typeof activeSession.endTime === 'number') {
+                const startStr = new Date(activeSession.startTime).toLocaleTimeString();
+                const endStr = new Date(activeSession.endTime).toLocaleTimeString();
+                infoEl.textContent = `Start: ${startStr} → End: ${endStr}`;
+            } else {
+                infoEl.textContent = '';
+            }
+        }
+
+        /**
+         * Maintain the daily streak counter based on pending-time threshold and day boundaries.
+         */
+        function updateDailyStreak() {
+            const today = new Date().toDateString();
+            const yesterday = new Date(Date.now() - 86400000).toDateString(); // 24 hours ago
+            
+            if (lastStreakCheck !== today) {
+                // If we missed a day and pending time was over 100, reset streak
+                if (lastStreakCheck !== yesterday && pendingBoringTime >= 100) {
+                    dailyStreak = 0;
+                }
+                // If pending time is under 100, increment streak
+                else if (pendingBoringTime < 100) {
+                    dailyStreak++;
+                }
+                // If pending time is over 100, reset streak
+                else {
+                    dailyStreak = 0;
+                }
+                
+                lastStreakCheck = today;
+                localStorage.setItem('lastStreakCheck', lastStreakCheck);
+                localStorage.setItem('dailyStreak', dailyStreak);
+            }
+            
+            document.getElementById('dailyStreak').textContent = dailyStreak;
+        }
+
+        /**
+         * Set and persist the daily session time limit and show a brief confirmation.
+         */
+        function setDailyLimit(value) {
+            const newValue = parseInt(value);
+            if (newValue >= 0) {
+                dailyLimit = newValue;
+                localStorage.setItem('dailyLimit', dailyLimit);
+                updateDailyLimitDisplay();
+                
+                // Show update message
+                const message = document.getElementById('updateMessage');
+                message.classList.add('show');
+                setTimeout(() => {
+                    message.classList.remove('show');
+                }, 1000);
+            }
+        }
+
+        /**
+         * Refresh daily limit, usage, and limit warning display.
+         */
+        function updateDailyLimitDisplay() {
+            document.getElementById('dailyLimit').value = dailyLimit;
+            document.getElementById('dailyLimitDisplay').textContent = dailyLimit;
+            document.getElementById('todayUsage').textContent = Math.floor(todayUsage);
+            
+            // Show warning if limit is reached
+            const warning = document.getElementById('dailyLimitWarning');
+            if (todayUsage >= dailyLimit) {
+                warning.style.display = 'block';
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+
+        /**
+         * At day change, reset today's usage and refresh the display.
+         */
+        function checkDailyUsageReset() {
+            const today = new Date().toDateString();
+            if (lastUsageReset !== today) {
+                todayUsage = 0;
+                localStorage.setItem('todayUsage', todayUsage);
+                lastUsageReset = today;
+                localStorage.setItem('lastUsageReset', lastUsageReset);
+                updateDailyLimitDisplay();
+            }
+        }
+
+        /**
+         * Increment today's usage counter and refresh the display.
+         */
+        function addToDailyUsage(minutes) {
+            todayUsage += minutes;
+            localStorage.setItem('todayUsage', todayUsage);
+            updateDailyLimitDisplay();
+        }
+
+        /**
+         * Return whether a session of `minutes` would stay within today's usage limit.
+         */
+        function canStartSession(minutes) {
+            return (todayUsage + minutes) <= dailyLimit;
+        }
+
+        /**
+         * Manually trigger a daily reset of counters and display a confirmation message.
+         */
+        function forceDailyReset() {
+            if (confirm('Are you sure you want to reset all daily statistics? This will reset sessions, breaks, and usage counters to 0.')) {
+                // Store current values for logging
+                const prevBreaksTaken = breaksTaken;
+                const prevSessionsCompleted = sessionsCompleted;
+                const prevTotalTime = totalTimeCompleted;
+                
+                // Force reset by updating the reset date
+                lastStatsReset = new Date(Date.now() - 86400000).toDateString(); // Yesterday
+                
+                // Trigger the reset
+                checkDailyReset();
+                
+                // Show confirmation
+                showFinalCalculation(`Manual reset completed - Breaks: ${prevBreaksTaken}→0, Sessions: ${prevSessionsCompleted}→0, Time: ${Math.floor(prevTotalTime)}→0`);
+                
+                console.log(`Manual daily reset triggered - Break counter: ${prevBreaksTaken}→0`);
+            }
+        }
+
+        /**
+         * Show a friendly label for when the last daily reset occurred (Today/Yesterday/date).
+         */
+        function updateLastResetDisplay() {
+            const resetDate = new Date(lastStatsReset);
+            const today = new Date().toDateString();
+            const yesterday = new Date(Date.now() - 86400000).toDateString();
+            
+            let displayText;
+            if (lastStatsReset === today) {
+                displayText = 'Today';
+            } else if (lastStatsReset === yesterday) {
+                displayText = 'Yesterday';
+            } else {
+                displayText = resetDate.toLocaleDateString();
+            }
+            
+            document.getElementById('lastResetTime').textContent = displayText;
+        }
+
+        /**
+         * Briefly show a visual indicator that the break counter has been reset.
+         */
+        function showBreakResetIndicator() {
+            const indicator = document.getElementById('breakResetIndicator');
+            indicator.style.opacity = '1';
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

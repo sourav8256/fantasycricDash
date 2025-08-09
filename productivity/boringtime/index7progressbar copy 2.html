@@ -63,18 +63,18 @@
             overflow: hidden;
             margin: 10px 0;
         }
-        
+        .session-start-info {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+            display: none;
+        }
         .progress {
             width: 0%;
             height: 100%;
             background-color: #4CAF50;
             transition: width 1s linear;
-        }
-        .session-time-info {
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
         }
         .daily-goal {
             margin: 20px 0;
@@ -639,8 +639,7 @@
         </div>
 
         <div class="timer" id="timer">00:00:00</div>
-        <div class="session-time-info" id="sessionTimeInfo"></div>
-        
+        <div class="session-start-info" id="sessionStartInfo"></div>
         <div class="progress-bar">
             <div class="progress" id="progress"></div>
         </div>
@@ -727,29 +726,8 @@
         let sessionQueue = JSON.parse(localStorage.getItem('sessionQueue')) || [];
         let isQueueMode = localStorage.getItem('isQueueMode') === 'true';
         
-        // Sessions store (single array for all sessions; items may be pending or approved)
-        let sessions = JSON.parse(localStorage.getItem('sessions')) || [];
-
-        // Helper: find the currently active pending session using sessions records
-        function getActivePendingSession() {
-            try {
-                const nowMs = Date.now();
-                if (!Array.isArray(sessions) || sessions.length === 0) return null;
-                let active = null;
-                for (const s of sessions) {
-                    if (!s || !s.pending) continue;
-                    if (typeof s.startTime !== 'number' || typeof s.endTime !== 'number') continue;
-                    if (s.startTime <= nowMs && s.endTime > nowMs) {
-                        if (!active || s.startTime > active.startTime) {
-                            active = s;
-                        }
-                    }
-                }
-                return active;
-            } catch (_) {
-                return null;
-            }
-        }
+        // Pending session approvals
+        let pendingSessions = JSON.parse(localStorage.getItem('pendingSessions')) || [];
 
         // Initialize notes from localStorage
         document.addEventListener('DOMContentLoaded', function() {
@@ -758,11 +736,6 @@
                 document.getElementById('sessionNotes').value = savedNotes;
             }
             
-            // Migrate any legacy queue entries to the new object format
-            migrateSessionQueueFormatIfNeeded();
-            // Migrate legacy pendingSessions into unified sessions array
-            migratePendingSessionsToSessions();
-
             // Start real-time pending time updates
             startRealTimePendingUpdates();
             addFinalCalculationStyle();
@@ -911,12 +884,14 @@
         }
 
         function saveTimerState() {
-            if (currentSession && startTime) {
+            if (startTime && currentSession) {
+                localStorage.setItem('timerStartTime', startTime.getTime());
                 localStorage.setItem('timerDuration', totalDuration);
                 localStorage.setItem('currentSession', currentSession);
                 localStorage.setItem('timerState', timer ? 'running' : 'completed');
                 localStorage.setItem('sessionNotes', document.getElementById('sessionNotes').value);
             } else {
+                localStorage.removeItem('timerStartTime');
                 localStorage.removeItem('timerDuration');
                 localStorage.removeItem('currentSession');
                 localStorage.removeItem('timerState');
@@ -925,11 +900,11 @@
         }
 
         function restoreTimerState() {
+            const savedStartTime = localStorage.getItem('timerStartTime');
             const savedDuration = localStorage.getItem('timerDuration');
             const savedSession = localStorage.getItem('currentSession');
             const savedState = localStorage.getItem('timerState');
             const savedNotes = localStorage.getItem('sessionNotes');
-            // No expected end time persisted; rely on sessions records
 
             if (savedNotes) {
                 document.getElementById('sessionNotes').value = savedNotes;
@@ -960,14 +935,13 @@
                 }
             }
 
-            // Prefer restoring from the active pending session record
-            const active = getActivePendingSession();
-            if (active) {
-                totalDuration = typeof active.duration === 'number' ? active.duration : 0;
-                currentSession = totalDuration;
-                startTime = new Date(active.startTime);
+            if (savedStartTime && savedDuration && savedSession) {
+                startTime = new Date(parseInt(savedStartTime));
+                totalDuration = parseInt(savedDuration);
+                currentSession = parseInt(savedSession);
+                
                 const now = new Date().getTime();
-                const elapsed = Math.floor((now - active.startTime) / 1000);
+                const elapsed = Math.floor((now - startTime.getTime()) / 1000);
                 const remaining = currentSession - elapsed;
 
                 if (savedState === 'completed') {
@@ -977,20 +951,19 @@
                     // should already be in progress and back-calculate its remaining time accordingly.
                     const timeSinceCompletion = Math.abs(remaining); // seconds since the session ended
                     if (sessionQueue.length > 0) {
-                        const firstQueued = sessionQueue[0];
-                        const queuedMinutes = typeof firstQueued === 'number' ? firstQueued : (firstQueued && firstQueued.minutes) || 0;
-                        const queuedDuration = Math.round(queuedMinutes * 60); // total seconds for queued session
+                        const queuedMinutes = sessionQueue[0];
+                        const queuedDuration = queuedMinutes * 60; // total seconds for queued session
 
-                    if (timeSinceCompletion < queuedDuration) {
+                        if (timeSinceCompletion < queuedDuration) {
                             // Queued session is currently in progress – start it with the correct remaining time
                             sessionQueue.shift();
                             localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
                             updateQueueDisplay();
 
-                        currentSession = queuedDuration;
-                        totalDuration = queuedDuration;
-                        // Set startTime to account for already elapsed time
-                        startTime = new Date(Date.now() - (queuedDuration - timeSinceCompletion) * 1000);
+                            currentSession = queuedDuration;
+                            totalDuration = queuedDuration;
+                            // Set startTime so that elapsed time is accounted for
+                            startTime = new Date(Date.now() - timeSinceCompletion * 1000);
 
                             document.getElementById('cancelButton').style.display = 'block';
                             document.getElementById('breakButton').style.display = 'block';
@@ -1010,12 +983,15 @@
                 } else {
                     document.getElementById('cancelButton').style.display = 'block';
                     document.getElementById('breakButton').style.display = 'block';
+                    // Restore start info display on reload
+                    const startInfo = document.getElementById('sessionStartInfo');
+                    if (startInfo && startTime) {
+                        startInfo.style.display = 'block';
+                        startInfo.textContent = `Start: ${startTime.toLocaleTimeString()}`;
+                    }
                     startTimer();
                     updateButtons(true);
                 }
-            } else if (savedState === 'running') {
-                // No active session record, but state says running → treat as completed while offline
-                sessionComplete();
             }
         }
 
@@ -1057,7 +1033,7 @@
         function startTimer() {
             timer = setInterval(() => {
                 const now = new Date().getTime();
-                const elapsedSeconds = startTime ? Math.floor((now - startTime.getTime()) / 1000) : 0;
+                const elapsedSeconds = Math.floor((now - startTime.getTime()) / 1000);
                 const remainingSeconds = currentSession - elapsedSeconds;
 
                 if (remainingSeconds <= 0) {
@@ -1068,7 +1044,6 @@
                     updateProgress(progressPercent);
                     updateBreakTimeInfo();
                     updateResultantTime();
-                    updateSessionTimeInfo();
                 }
             }, 100);
         }
@@ -1083,48 +1058,12 @@
             }
         }
 
-        // Compute projected end time (ms) for the currently running session
-        function getCurrentSessionProjectedEndMs() {
-            if (timer && startTime && typeof totalDuration === 'number' && totalDuration > 0) {
-                return startTime.getTime() + (totalDuration * 1000);
-            }
-            return Date.now();
-        }
-
-        // Build a queued session object with calculated start/end times
-        function buildQueuedSession(minutes) {
-            const plannedStartMs = getCurrentSessionProjectedEndMs();
-            const durationSeconds = Math.round(minutes * 60);
-            const plannedEndMs = plannedStartMs + (durationSeconds * 1000);
-            return {
-                id: Date.now(),
-                minutes: minutes,
-                duration: durationSeconds,
-                startTime: plannedStartMs,
-                endTime: plannedEndMs,
-                pending: false
-            };
-        }
-
-        // One-time migration if sessionQueue contains legacy numeric minutes
-        function migrateSessionQueueFormatIfNeeded() {
-            if (!Array.isArray(sessionQueue) || sessionQueue.length === 0) return;
-            const first = sessionQueue[0];
-            if (typeof first === 'number') {
-                const queued = buildQueuedSession(first);
-                sessionQueue = [queued];
-                localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
-            }
-        }
-
         function queueSession(minutes) {
-            // Replace any existing queued session with full structure including start/end times
-            const queued = buildQueuedSession(minutes);
-            sessionQueue = [queued];
+            // Replace any existing queued session
+            sessionQueue = [minutes];
             localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
             updateQueueDisplay();
-            const startTimeStr = new Date(queued.startTime).toLocaleTimeString();
-            showFinalCalculation(`Session queued: ${formatTimeForDisplay(minutes)} starting at ${startTimeStr}`);
+            showFinalCalculation(`Session queued: ${formatTimeForDisplay(minutes)} will start after current session`);
         }
 
         function updateQueueDisplay() {
@@ -1132,31 +1071,26 @@
             const queuedSessionText = document.getElementById('queuedSessionText');
             
             if (sessionQueue.length > 0) {
-                const q = sessionQueue[0];
-                const queuedMinutes = typeof q === 'number' ? q : q.minutes;
+                const queuedMinutes = sessionQueue[0];
+                
                 // For small durations, show in seconds
-                let timeText;
                 if (queuedMinutes < 1) {
                     const seconds = Math.round(queuedMinutes * 60);
-                    timeText = `${seconds}s`;
+                    queuedSessionText.textContent = `${seconds}s`;
                 } else {
                     // For normal durations, show in hours/minutes
                     const hours = Math.floor(queuedMinutes / 60);
                     const minutes = Math.floor(queuedMinutes % 60);
+                    let timeText;
+                    
                     if (hours > 0) {
                         timeText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
                     } else {
                         timeText = `${minutes}m`;
                     }
-                }
-                // Append planned start time if available
-                if (q && typeof q === 'object' && q.startTime) {
-                    const startStr = new Date(q.startTime).toLocaleTimeString();
-                    const endStr = new Date(q.endTime).toLocaleTimeString();
-                    queuedSessionText.textContent = `${timeText} (Start ${startStr} → End ${endStr})`;
-                } else {
                     queuedSessionText.textContent = timeText;
                 }
+                
                 queueSection.classList.add('show');
             } else {
                 queuedSessionText.textContent = 'None';
@@ -1173,13 +1107,14 @@
 
         function startQueuedSession() {
             if (sessionQueue.length > 0) {
-                const queued = sessionQueue.shift();
+                const queuedMinutes = sessionQueue.shift();
                 localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
                 updateQueueDisplay();
-                const minutes = typeof queued === 'number' ? queued : queued.minutes;
+                
                 // Start the queued session immediately with isQueuedSession flag
-                startSession(minutes, true);
-                showFinalCalculation(`Queued session started: ${formatTimeForDisplay(minutes)}`);
+                startSession(queuedMinutes, true);
+                showFinalCalculation(`Queued session started: ${formatTimeForDisplay(queuedMinutes)}`);
+                
                 return true;
             }
             return false;
@@ -1202,33 +1137,20 @@
 
             sessionsStarted++;
             localStorage.setItem('sessionsStarted', sessionsStarted);
-            totalDuration = minutes * 60;
-            currentSession = totalDuration;
+            currentSession = minutes * 60;
             startTime = new Date();
-
-            // Upsert session record (pending) at creation
-            try {
-                const sessionStartMs = startTime.getTime();
-                const record = {
-                    id: sessionStartMs,
-                    minutes: minutes,
-                    duration: totalDuration,
-                    startTime: sessionStartMs,
-                    endTime: sessionStartMs + (totalDuration * 1000),
-                    pending: true
-                };
-                const exists = sessions.some(s => s && s.startTime === record.startTime);
-                if (!exists) {
-                    sessions.unshift(record);
-                    localStorage.setItem('sessions', JSON.stringify(sessions));
-                }
-            } catch (_) { /* no-op */ }
+            totalDuration = minutes * 60;
             
             updateTimer(currentSession);
             updateProgress(100);
+            // Show start time for current session
+            const startInfo = document.getElementById('sessionStartInfo');
+            if (startInfo && startTime) {
+                startInfo.style.display = 'block';
+                startInfo.textContent = `Start: ${startTime.toLocaleTimeString()}`;
+            }
             updateButtons(true);
             updateBreakTimeInfo();
-            updateSessionTimeInfo();
             document.getElementById('cancelButton').style.display = 'block';
             document.getElementById('breakButton').style.display = 'block';
 
@@ -1248,8 +1170,7 @@
                 clearInterval(timer);
                 timer = null;
                 currentSession = null;
-                // Clear any legacy expected end time key if present
-                localStorage.removeItem('expectedEndTime');
+                startTime = null;
                 updateButtons(false);
                 updateTimer(0);
                 updateProgress(0);
@@ -1269,7 +1190,6 @@
                 if (!hasQueuedSession) {
                     // No queued session, fully reset
                     resetTimer();
-                    updateSessionTimeInfo();
                 }
             }
         }
@@ -1278,26 +1198,23 @@
             clearInterval(timer);
             timer = null;
             
-            // Clear any legacy expected end time key after completion
-            localStorage.removeItem('expectedEndTime');
+            // Add completed session to pending approvals
+            const completedSession = {
+                id: Date.now(),
+                duration: currentSession,
+                // Store timestamps as numbers to ensure reliable parsing/display across browsers
+                startTime: startTime ? startTime.getTime() : (Date.now() - (currentSession * 1000)),
+                endTime: Date.now(),
+                minutes: currentSession / 60
+            };
             
-            // Ensure the session record exists (if page reloaded mid-session, it may already be present).
-            try {
-                const startedAt = startTime ? startTime.getTime() : null;
-                if (startedAt) {
-                    const idx = sessions.findIndex(s => s && s.startTime === startedAt);
-                    if (idx >= 0) {
-                        // keep existing record as pending; endTime already set at creation
-                    } else {
-                        // reconstruct minimal record
-                        const minutes = (currentSession || 0) / 60;
-                        const duration = currentSession || 0;
-                        const endMs = startedAt + duration * 1000;
-                        sessions.unshift({ id: startedAt, minutes, duration, startTime: startedAt, endTime: endMs, pending: true });
-                        localStorage.setItem('sessions', JSON.stringify(sessions));
-                    }
-                }
-            } catch (_) { /* no-op */ }
+            // Manual approval flow only; no auto-approve
+            pendingSessions.unshift(completedSession);
+            // Keep only last 5 sessions
+            if (pendingSessions.length > 5) {
+                pendingSessions = pendingSessions.slice(0, 5);
+            }
+            localStorage.setItem('pendingSessions', JSON.stringify(pendingSessions));
             
             // Reset real-time pending counter when session completes
             lastPendingTimeUpdate = Date.now();
@@ -1311,7 +1228,12 @@
                 document.getElementById('breakButton').style.display = 'none';
                 updateButtons(true);
                 saveTimerState();
-                updateSessionTimeInfo();
+                // Hide start info when no session is running anymore
+                const startInfo = document.getElementById('sessionStartInfo');
+                if (startInfo) {
+                    startInfo.style.display = 'none';
+                    startInfo.textContent = '';
+                }
             }
             // If queued session started, buttons remain enabled for the running session
             
@@ -1389,45 +1311,43 @@
 
 
 
-        // Migrate legacy pendingSessions store into unified sessions list
-        function migratePendingSessionsToSessions() {
-            try {
-                const legacy = JSON.parse(localStorage.getItem('pendingSessions') || '[]');
-                if (Array.isArray(legacy) && legacy.length) {
-                    const byKey = new Set(sessions.map(s => `${s.startTime}-${s.endTime}-${s.duration}`));
-                    for (const s of legacy) {
-                        const key = `${s.startTime}-${s.endTime}-${s.duration}`;
-                        if (!byKey.has(key)) {
-                            sessions.unshift({
-                                id: s.id || (s.startTime || Date.now()),
-                                minutes: s.minutes,
-                                duration: s.duration,
-                                startTime: s.startTime,
-                                endTime: s.endTime,
-                                pending: true
-                            });
-                            byKey.add(key);
-                        }
-                    }
-                    localStorage.setItem('sessions', JSON.stringify(sessions));
-                    localStorage.removeItem('pendingSessions');
+        // Ensure no duplicate pending sessions (e.g., due to reload/restore)
+        function dedupePendingSessions() {
+            if (!Array.isArray(pendingSessions)) {
+                pendingSessions = [];
+            }
+            const seen = new Set();
+            pendingSessions = pendingSessions.filter(s => {
+                const startKey = s && typeof s.startTime !== 'undefined' ? s.startTime : 'x';
+                const endKey = s && typeof s.endTime !== 'undefined' ? s.endTime : 'y';
+                const durKey = s && typeof s.duration !== 'undefined' ? s.duration : 'z';
+                const key = `${startKey}-${endKey}-${durKey}`;
+                if (seen.has(key)) {
+                    return false;
                 }
-            } catch (_) { /* no-op */ }
+                seen.add(key);
+                return true;
+            });
+            localStorage.setItem('pendingSessions', JSON.stringify(pendingSessions));
         }
 
         function resetTimer() {
             clearInterval(timer);
             timer = null;
-            
+            startTime = null;
             currentSession = null;
             totalDuration = 0;
             document.getElementById('timer').textContent = '00:00:00';
             document.getElementById('progress').style.width = '0%';
+            const startInfo = document.getElementById('sessionStartInfo');
+            if (startInfo) {
+                startInfo.style.display = 'none';
+                startInfo.textContent = '';
+            }
             document.getElementById('cancelButton').style.display = 'none';
             document.getElementById('breakButton').style.display = 'none';
             updateButtons(false);
             saveTimerState();
-            updateSessionTimeInfo();
         }
 
         function updateTimer(seconds) {
@@ -1515,7 +1435,7 @@
         }
 
         function approveSession(sessionId) {
-            const session = sessions.find(s => s.id == sessionId && s.pending);
+            const session = pendingSessions.find(s => s.id == sessionId);
             if (session) {
                 // Process the approved session
                 sessionsCompleted++;
@@ -1539,14 +1459,11 @@
                 // Log with start and end times metadata
                 addLogEntry('session', session.minutes, session.endTime, null, { startTime: session.startTime, endTime: session.endTime });
                 
-                // Mark as approved in sessions list
-                for (let i = 0; i < sessions.length; i++) {
-                    if (sessions[i].id == sessionId) {
-                        sessions[i].pending = false;
-                        break;
-                    }
-                }
-                localStorage.setItem('sessions', JSON.stringify(sessions));
+                // Remove from pending sessions (by id) and also cleanup any accidental duplicates by identity keys
+                pendingSessions = pendingSessions.filter(s => s.id != sessionId);
+                const identityKey = `${session.startTime}-${session.endTime}-${session.duration}`;
+                pendingSessions = pendingSessions.filter(s => `${s.startTime}-${s.endTime}-${s.duration}` !== identityKey);
+                localStorage.setItem('pendingSessions', JSON.stringify(pendingSessions));
                 
                 updateStats();
                 updateLogDisplay();
@@ -1554,20 +1471,15 @@
         }
 
         function rejectSession(sessionId) {
-            const session = sessions.find(s => s.id == sessionId && s.pending);
+            const session = pendingSessions.find(s => s.id == sessionId);
             if (session) {
                 // Log the rejection
                 addLogEntry('cancelled', session.minutes, session.endTime);
                 showFinalCalculation(`Session rejected: ${formatTimeForDisplay(session.minutes)}`);
                 
-                // Mark as not pending (rejected) in unified sessions
-                for (let i = 0; i < sessions.length; i++) {
-                    if (sessions[i].id == sessionId) {
-                        sessions[i].pending = false;
-                        break;
-                    }
-                }
-                localStorage.setItem('sessions', JSON.stringify(sessions));
+                // Remove from pending sessions
+                pendingSessions = pendingSessions.filter(s => s.id != sessionId);
+                localStorage.setItem('pendingSessions', JSON.stringify(pendingSessions));
                 
                 updateStats();
                 updateLogDisplay();
@@ -1577,29 +1489,26 @@
         function updateLogDisplay() {
             const logContainer = document.getElementById('logEntries');
             
-            // Generate pending approvals from unified sessions array, only if endTime has passed
-            const nowMs = Date.now();
-            const pendingSessionsHTML = (sessions || [])
-                .filter(s => s && s.pending && typeof s.endTime === 'number' && nowMs >= s.endTime)
-                .map(session => {
-                    const endTime = new Date(session.endTime);
-                    const startTimeObj = new Date(session.startTime);
-                    const timeStr = endTime.toLocaleString();
-                    const startStr = isNaN(startTimeObj.getTime()) ? '' : startTimeObj.toLocaleTimeString();
-                    const endStr = isNaN(endTime.getTime()) ? '' : endTime.toLocaleTimeString();
-                    const rangeHtml = (startStr && endStr)
-                        ? `<div style="color:#666; font-size:12px; margin-top:4px;">Start: ${startStr} → End: ${endStr}</div>`
-                        : '';
-                    return `<div class="log-entry pending-session-log">
-                        <div><strong>⏳ Pending Approval</strong></div>
-                        <div>${timeStr} - Completed session: ${formatTimeForDisplay(session.minutes)}</div>
-                        ${rangeHtml}
-                        <div class="session-actions">
-                            <button class="approve-btn" onclick="approveSession('${session.id}')">Approve</button>
-                            <button class="reject-btn" onclick="rejectSession('${session.id}')">Reject</button>
-                        </div>
-                    </div>`;
-                }).join('');
+            // Generate pending sessions HTML
+            const pendingSessionsHTML = pendingSessions.map(session => {
+                const endTime = new Date(session.endTime);
+                const startTime = new Date(session.startTime);
+                const timeStr = endTime.toLocaleString();
+                const startStr = isNaN(startTime.getTime()) ? '' : startTime.toLocaleTimeString();
+                const endStr = isNaN(endTime.getTime()) ? '' : endTime.toLocaleTimeString();
+                const rangeHtml = (startStr && endStr)
+                    ? `<div style="color:#666; font-size:12px; margin-top:4px;">Start: ${startStr} → End: ${endStr}</div>`
+                    : '';
+                return `<div class="log-entry pending-session-log">
+                    <div><strong>⏳ Pending Approval</strong></div>
+                    <div>${timeStr} - Completed session: ${formatTimeForDisplay(session.minutes)}</div>
+                    ${rangeHtml}
+                    <div class="session-actions">
+                        <button class="approve-btn" onclick="approveSession('${session.id}')">Approve</button>
+                        <button class="reject-btn" onclick="rejectSession('${session.id}')">Reject</button>
+                    </div>
+                </div>`;
+            }).join('');
             
             // Generate regular activity log HTML
             const activityLogHTML = activityLog.map(entry => {
@@ -1723,7 +1632,7 @@
             
             // Calculate how much time was already elapsed in the current session
             const now = new Date().getTime();
-            const elapsedSeconds = startTime ? Math.floor((now - startTime.getTime()) / 1000) : 0;
+            const elapsedSeconds = Math.floor((now - startTime.getTime()) / 1000);
             pausedSessionTime = currentSession - elapsedSeconds;
             
             // Start break timer
@@ -1805,7 +1714,12 @@
                 // Make sure cancel and break buttons are visible when session resumes
                 document.getElementById('cancelButton').style.display = 'block';
                 document.getElementById('breakButton').style.display = 'block';
-                updateSessionTimeInfo();
+                // Update start info on resume
+                const startInfo = document.getElementById('sessionStartInfo');
+                if (startInfo && startTime) {
+                    startInfo.style.display = 'block';
+                    startInfo.textContent = `Start: ${startTime.toLocaleTimeString()}`;
+                }
             }
             
             // Clear break state
@@ -1841,7 +1755,12 @@
                 // Make sure cancel and break buttons are visible when session resumes
                 document.getElementById('cancelButton').style.display = 'block';
                 document.getElementById('breakButton').style.display = 'block';
-                updateSessionTimeInfo();
+                // Update start info on resume
+                const startInfo = document.getElementById('sessionStartInfo');
+                if (startInfo && startTime) {
+                    startInfo.style.display = 'block';
+                    startInfo.textContent = `Start: ${startTime.toLocaleTimeString()}`;
+                }
             }
             
             // Clear break state
@@ -1932,7 +1851,7 @@
         checkDailyReset();
         checkHourlyAddition();
         updateTimer(0);
-        // No-op: legacy dedupe removed; sessions are maintained on insert
+        dedupePendingSessions();
         restoreTimerState();
         updateStats();
         updateLogDisplay();
@@ -2001,19 +1920,6 @@
                 }
             } else {
                 resultantTime.textContent = `${Math.floor(pendingBoringTime)}`;
-            }
-        }
-
-        function updateSessionTimeInfo() {
-            const infoEl = document.getElementById('sessionTimeInfo');
-            if (!infoEl) return;
-            if (timer && startTime && typeof totalDuration === 'number' && totalDuration > 0) {
-                const endMs = startTime.getTime() + (totalDuration * 1000);
-                const startStr = startTime.toLocaleTimeString();
-                const endStr = new Date(endMs).toLocaleTimeString();
-                infoEl.textContent = `Start: ${startStr} → End: ${endStr}`;
-            } else {
-                infoEl.textContent = '';
             }
         }
 

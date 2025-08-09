@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "sourceFile": "boringtime/index7progressbar.html",
+  "generatedAt": "${ISO_DATETIME}",
+  "localStorageKeys": [
+    { "key": "sessionsStarted", "type": "number", "unit": "count", "description": "Number of sessions started (today)." },
+    { "key": "sessionsCompleted", "type": "number", "unit": "count", "description": "Number of sessions approved/completed (today)." },
+    { "key": "totalTimeCompleted", "type": "number", "unit": "minutes", "description": "Total approved session minutes (today)." },
+    { "key": "pendingBoringTime", "type": "number", "unit": "minutes", "description": "Current pending/owed boring time." },
+    { "key": "lastTimeCheck", "type": "number", "unit": "msTimestamp", "description": "Last checkpoint for hourly accrual calculations." },
+    { "key": "hourlyAddition", "type": "number", "unit": "minutesPerHour", "description": "Accrual rate of pending time per hour." },
+    { "key": "hourlyAdditionSetTime", "type": "number", "unit": "msTimestamp", "description": "When hourlyAddition was last updated." },
+    { "key": "activityLog", "type": "array", "description": "Log of actions (sessions, additions, cancellations, breaks, resets)." },
+    { "key": "lastStatsReset", "type": "string", "unit": "dateString", "description": "Date string of last daily stats reset." },
+    { "key": "isTestingMode", "type": "boolean", "description": "Testing mode toggle for UI/testing buttons." },
+    { "key": "sessionNotes", "type": "string", "description": "Notes text for the current session (persisted during session)." },
+    
+    { "key": "timerDuration", "type": "number", "unit": "seconds", "description": "Original duration of the active session (for restore)." },
+    { "key": "currentSession", "type": "number", "unit": "seconds", "description": "Current session duration/remaining (for restore)." },
+    { "key": "timerState", "type": "string", "enum": ["running", "completed"], "description": "State of timer at last save for restore flow." },
+    { "key": "isOnBreak", "type": "boolean", "description": "Whether currently on a break (for restore)." },
+    { "key": "pausedSessionTime", "type": "number", "unit": "seconds", "description": "Remaining session seconds when break started (for resume)." },
+    { "key": "breakStartTime", "type": "number", "unit": "msTimestamp", "description": "When break started (for countdown restore)." },
+    { "key": "breaksTaken", "type": "number", "unit": "count", "description": "Number of breaks taken today." },
+    { "key": "sessionQueue", "type": "array", "items": "sessions object", "description": "Queue of upcoming sessions. Each item stores minutes, duration (seconds), startTime (ms), and endTime (ms). Head at index 0." },
+    { "key": "isQueueMode", "type": "boolean", "description": "Queue mode toggle (shares UI toggle with testing switch)." },
+    { "key": "sessions", "type": "array", "description": "Unified list of session records. Each item follows 'sessions' shape with a 'pending' flag." },
+    { "key": "dailyStreak", "type": "number", "unit": "days", "description": "Consecutive days with pending time < 100 minutes." },
+    { "key": "lastStreakCheck", "type": "string", "unit": "dateString", "description": "Last date the streak was evaluated." },
+    { "key": "dailyLimit", "type": "number", "unit": "minutes", "description": "Daily cap for allowed session minutes." },
+    { "key": "todayUsage", "type": "number", "unit": "minutes", "description": "Total session minutes counted against today’s limit." },
+    { "key": "lastUsageReset", "type": "string", "unit": "dateString", "description": "Last date the usage counter was reset." },
+    { "key": "targetPendingTime", "type": "number", "unit": "minutes", "description": "Target maximum pending time for progress bar computation." }
+  ],
+  "runtimeState": [
+    { "name": "timer", "type": "intervalHandle|null", "description": "Handle for active session countdown interval." },
+    { "name": "currentSession", "type": "number", "unit": "seconds", "description": "Current session remaining seconds during runtime." },
+    { "name": "startTime", "type": "Date|null", "deprecated": true, "description": "Deprecated. Start time is derived from expectedEndTime and duration; not persisted separately." },
+    
+    { "name": "totalDuration", "type": "number", "unit": "seconds", "description": "Initial duration for current session, used for progress %." },
+    { "name": "sessionsStarted", "type": "number", "description": "In-memory mirror of persisted count." },
+    { "name": "sessionsCompleted", "type": "number", "description": "In-memory mirror of persisted count." },
+    { "name": "totalTimeCompleted", "type": "number", "unit": "minutes", "description": "In-memory mirror of persisted total." },
+    { "name": "dailyProgress", "type": "number", "description": "Declared but not persisted; not actively used." },
+    { "name": "pendingBoringTime", "type": "number", "unit": "minutes", "description": "In-memory mirror of pending time." },
+    { "name": "lastTimeCheck", "type": "number", "unit": "msTimestamp", "description": "In-memory mirror for accrual checkpoint." },
+    { "name": "hourlyAddition", "type": "number", "unit": "minutesPerHour", "description": "In-memory mirror of accrual rate." },
+    { "name": "activityLog", "type": "array", "description": "In-memory mirror of activity log entries." },
+    { "name": "lastStatsReset", "type": "string", "unit": "dateString", "description": "In-memory mirror of last reset date." },
+    { "name": "isTestingMode", "type": "boolean", "description": "In-memory toggle for testing mode." },
+    { "name": "sessionNotes", "type": "string", "description": "In-memory notes content." },
+    { "name": "lastPendingTimeUpdate", "type": "number", "unit": "msTimestamp", "description": "Last tick used to compute real-time accrual preview." },
+    { "name": "realTimePendingInterval", "type": "intervalHandle|null", "description": "Handle for real-time pending accrual preview interval." },
+    { "name": "dailyStreak", "type": "number", "unit": "days", "description": "In-memory mirror of streak days." },
+    { "name": "lastStreakCheck", "type": "string", "unit": "dateString", "description": "In-memory mirror of last streak check date." },
+    { "name": "dailyLimit", "type": "number", "unit": "minutes", "description": "In-memory mirror of daily session limit." },
+    { "name": "todayUsage", "type": "number", "unit": "minutes", "description": "In-memory mirror of today’s usage." },
+    { "name": "lastUsageReset", "type": "string", "unit": "dateString", "description": "In-memory mirror of last usage reset date." },
+    { "name": "targetPendingTime", "type": "number", "unit": "minutes", "description": "In-memory mirror of progress target." },
+    { "name": "breakTimer", "type": "intervalHandle|null", "description": "Handle for break countdown interval." },
+    { "name": "breakStartTime", "type": "Date|null", "description": "When the current break started." },
+    { "name": "breakDuration", "type": "number", "unit": "seconds", "value": 1800, "description": "Fixed 30-minute break duration in seconds." },
+    { "name": "isOnBreak", "type": "boolean", "description": "Whether a break is active." },
+    { "name": "pausedSessionTime", "type": "number", "unit": "seconds", "description": "Remaining session time captured when break started." },
+    { "name": "breaksTaken", "type": "number", "unit": "count", "description": "Number of breaks taken today (in-memory mirror)." },
+    { "name": "sessions", "type": "array", "items": "sessions object", "description": "In-memory mirror of unified session records (matches persisted 'sessions')." },
+    { "name": "sessionQueue", "type": "array", "items": "sessions object", "description": "In-memory mirror of queued sessions with minutes, duration, startTime, endTime." },
+    { "name": "isQueueMode", "type": "boolean", "description": "In-memory queue mode toggle." }
+  ],
+  "structuredDataShapes": {
+    "activityLogEntry": {
+      "type": "object",
+      "fields": {
+        "type": { "type": "string", "enum": ["session", "addition", "cancelled", "break", "reset"] },
+        "minutes": { "type": "number", "unit": "minutes" },
+        "timestamp": { "type": "number", "unit": "msTimestamp" },
+        "pendingTime": { "type": "number", "unit": "minutes", "description": "Pending time at the moment of logging (floored)." },
+        "customMessage": { "type": "string", "optional": true },
+        "startTime": { "type": "number", "unit": "msTimestamp", "optional": true },
+        "endTime": { "type": "number", "unit": "msTimestamp", "optional": true }
+      }
+    },
+    "sessions": {
+      "type": "object",
+      "fields": {
+        "id": { "type": "number", "unit": "msTimestamp", "description": "Unique id generated via Date.now()." },
+        "duration": { "type": "number", "unit": "seconds" },
+        "startTime": { "type": "number", "unit": "msTimestamp" },
+        "endTime": { "type": "number", "unit": "msTimestamp" },
+        "minutes": { "type": "number", "unit": "minutes" },
+        "pending": { "type": "boolean", "description": "Whether the session is pending approval." }
+      }
+    }
+  }
+}
+

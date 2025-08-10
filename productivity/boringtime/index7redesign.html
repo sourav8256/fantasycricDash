@@ -722,7 +722,7 @@
                 </div>
             </div>
             <div id="sessionObjectSummary" style="font-size:13px; line-height:1.4; margin-bottom:8px;"></div>
-            <pre id="sessionObjectView" style="white-space:pre-wrap; margin:0;"></pre>
+            <textarea id="sessionObjectView" style="width:100%; min-height:200px; font-family:monospace; font-size:12px; margin:0; padding:8px; border:1px solid #ddd; border-radius:6px; resize:vertical;"></textarea>
         </div>
 
         <div class="version">Version 1.0.8</div>
@@ -733,7 +733,6 @@
         let currentSession = null;
         let startTime = null;
         let totalDuration = 0;
-        let sessionsStarted = parseInt(localStorage.getItem('sessionsStarted')) || 0;
         let sessionsCompleted = parseInt(localStorage.getItem('sessionsCompleted')) || 0;
         let totalTimeCompleted = parseInt(localStorage.getItem('totalTimeCompleted')) || 0;
         let dailyProgress = 0;
@@ -743,7 +742,7 @@
         let activityLog = JSON.parse(localStorage.getItem('activityLog')) || [];
         let lastStatsReset = localStorage.getItem('lastStatsReset') || new Date().toDateString();
         let isTestingMode = localStorage.getItem('isTestingMode') === 'true';
-        let sessionNotes = localStorage.getItem('sessionNotes') || '';
+        // Notes are stored on the active session record (sessions[i].notes)
         let lastPendingTimeUpdate = Date.now();
         let realTimePendingInterval = null;
         let dailyStreak = parseInt(localStorage.getItem('dailyStreak')) || 0;
@@ -761,8 +760,7 @@
         let pausedSessionTime = parseInt(localStorage.getItem('pausedSessionTime')) || 0;
         let breaksTaken = parseInt(localStorage.getItem('breaksTaken')) || 0;
 
-        // Queue-related variables
-        let sessionQueue = JSON.parse(localStorage.getItem('sessionQueue')) || [];
+        // Queue-related variables (legacy key migrated to sessions)
         let isQueueMode = localStorage.getItem('isQueueMode') === 'true';
         
         // Sessions store (single array for all sessions; items may be pending or approved)
@@ -796,8 +794,10 @@
         // Initialize notes from localStorage
         document.addEventListener('DOMContentLoaded', function() {
             const savedNotes = localStorage.getItem('sessionNotes');
-            if (savedNotes) {
-                document.getElementById('sessionNotes').value = savedNotes;
+            // Notes are stored per-session; hydrate textarea from active session if present
+            const activeForNotes = getActivePendingSession();
+            if (activeForNotes && activeForNotes.notes) {
+                document.getElementById('sessionNotes').value = activeForNotes.notes;
             }
             
             // Migrate any legacy queue entries to the new object format
@@ -839,7 +839,19 @@
 
         // Save notes when they change
         document.getElementById('sessionNotes').addEventListener('input', function() {
-            localStorage.setItem('sessionNotes', this.value);
+            // Store notes on the active session record
+            try {
+                const active = getActivePendingSession();
+                if (active) {
+                    for (let i = 0; i < sessions.length; i++) {
+                        if (sessions[i] && sessions[i].id === active.id) {
+                            sessions[i].notes = this.value;
+                            localStorage.setItem('sessions', JSON.stringify(sessions));
+                            break;
+                        }
+                    }
+                }
+            } catch (_) { /* no-op */ }
         });
 
         /**
@@ -976,6 +988,7 @@
          */
         function saveTimerState() {
             if (currentSession && startTime) {
+                // Persist only minimal runtime state; canonical timing comes from `sessions`
                 localStorage.setItem('timerDuration', totalDuration);
                 localStorage.setItem('currentSession', currentSession);
                 localStorage.setItem('timerState', timer ? 'running' : 'completed');
@@ -996,12 +1009,9 @@
             const savedDuration = localStorage.getItem('timerDuration');
             const savedSession = localStorage.getItem('currentSession');
             const savedState = localStorage.getItem('timerState');
-            const savedNotes = localStorage.getItem('sessionNotes');
             // No expected end time persisted; rely on sessions records
 
-            if (savedNotes) {
-                document.getElementById('sessionNotes').value = savedNotes;
-            }
+            // Notes textarea will be hydrated from active session later
 
             // Check if we were on a break
             if (isOnBreak) {
@@ -1028,7 +1038,7 @@
                 }
             }
 
-            // Prefer restoring from the active pending session record
+                // Prefer restoring from the active session record
             const active = getActivePendingSession();
             if (active) {
                 totalDuration = typeof active.duration === 'number' ? active.duration : 0;
@@ -1045,8 +1055,8 @@
                     // should already be in progress and back-calculate its remaining time accordingly.
                     const timeSinceCompletion = Math.abs(remaining); // seconds since the session ended
                     if (sessionQueue.length > 0) {
-                        const firstQueued = sessionQueue[0];
-                        const queuedMinutes = typeof firstQueued === 'number' ? firstQueued : (firstQueued && firstQueued.minutes) || 0;
+                    const firstQueued = sessionQueue[0];
+                        const queuedMinutes = typeof firstQueued === 'number' ? firstQueued : 0;
                         const queuedDuration = Math.round(queuedMinutes * 60); // total seconds for queued session
 
                     if (timeSinceCompletion < queuedDuration) {
@@ -1081,10 +1091,7 @@
                     startTimer();
                     updateButtons(true);
                 }
-            } else if (savedState === 'running') {
-                // No active session record, but state says running → treat as completed while offline
-                sessionComplete();
-            }
+                }
         }
 
         /**
@@ -1134,15 +1141,21 @@
          */
         function startTimer() {
             timer = setInterval(() => {
-                const now = new Date().getTime();
-                const elapsedSeconds = startTime ? Math.floor((now - startTime.getTime()) / 1000) : 0;
-                const remainingSeconds = currentSession - elapsedSeconds;
+                const active = getActivePendingSession();
+                if (!active || typeof active.startTime !== 'number' || typeof active.endTime !== 'number' || typeof active.duration !== 'number') {
+                    // No valid active session tracked → treat as completed/idle
+                    sessionComplete();
+                    return;
+                }
+
+                const now = Date.now();
+                const remainingSeconds = Math.max(0, Math.floor((active.endTime - now) / 1000));
 
                 if (remainingSeconds <= 0) {
                     sessionComplete();
                 } else {
                     updateTimer(remainingSeconds);
-                    const progressPercent = (remainingSeconds / totalDuration) * 100;
+                    const progressPercent = (remainingSeconds / active.duration) * 100;
                     updateProgress(progressPercent);
                     updateBreakTimeInfo();
                     updateResultantTime();
@@ -1169,8 +1182,11 @@
          * Compute the projected end time (ms) for the currently running session.
          */
         function getCurrentSessionProjectedEndMs() {
+            // Canonical source is the active session in `sessions`
             const active = getActivePendingSession();
-            return active && typeof active.endTime === 'number' ? active.endTime : Date.now();
+            if (active && typeof active.endTime === 'number') return active.endTime;
+            // If no active session, use now so queued display isn’t misleading
+            return Date.now();
         }
 
         // Build a queued session object with calculated start/end times
@@ -1179,10 +1195,14 @@
          */
         function buildQueuedSession(minutes) {
             const durationSeconds = Math.round(minutes * 60);
+            const plannedStartMs = getCurrentSessionProjectedEndMs();
+            const plannedEndMs = plannedStartMs + (durationSeconds * 1000);
             return {
                 id: Date.now(),
                 minutes: minutes,
-                duration: durationSeconds
+                duration: durationSeconds,
+                startTime: plannedStartMs,
+                endTime: plannedEndMs
             };
         }
 
@@ -1191,28 +1211,72 @@
          * One-time migration from legacy numeric queue entries to object form.
          */
         function migrateSessionQueueFormatIfNeeded() {
-            if (!Array.isArray(sessionQueue) || sessionQueue.length === 0) return;
-            const first = sessionQueue[0];
-            if (typeof first === 'number') {
-                const queued = buildQueuedSession(first);
-                sessionQueue = [queued];
-                localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
-            }
+            try {
+                const legacy = JSON.parse(localStorage.getItem('sessionQueue') || '[]');
+                if (Array.isArray(legacy) && legacy.length > 0) {
+                    const q = legacy[0];
+                    const minutes = typeof q === 'number' ? q : 0;
+                    if (minutes > 0) {
+                        // Create a future session record using planned times
+                        const plannedStartMs = getCurrentSessionProjectedEndMs();
+                        const durationSeconds = Math.round(minutes * 60);
+                        const record = {
+                            id: Date.now(),
+                            minutes: minutes,
+                            duration: durationSeconds,
+                            startTime: plannedStartMs,
+                            endTime: plannedStartMs + (durationSeconds * 1000),
+                            approvalComplete: false,
+                            completed: false,
+                            cancelled: false
+                        };
+                        sessions.unshift(record);
+                        localStorage.setItem('sessions', JSON.stringify(sessions));
+                    }
+                    // Remove legacy key
+                    localStorage.removeItem('sessionQueue');
+                }
+            } catch (_) { /* no-op */ }
         }
 
         /**
          * Replace any existing queued session and show projected start/end without persisting them.
          */
         function queueSession(minutes) {
-            // Replace any existing queued session with full structure including start/end times
-            const queued = buildQueuedSession(minutes);
-            sessionQueue = [queued];
-            localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
+            // Remove any existing future session (single-queued model)
+            try {
+                const now = Date.now();
+                const keep = [];
+                let removed = false;
+                for (const s of sessions) {
+                    if (s && !s.cancelled && !s.approvalComplete && typeof s.startTime === 'number' && s.startTime > now) {
+                        // Skip to remove existing queued
+                        removed = true;
+                        continue;
+                    }
+                    keep.push(s);
+                }
+                if (removed) sessions = keep;
+            } catch (_) { /* no-op */ }
+
+            // Create new future session in sessions
+            const durationSeconds = Math.round(minutes * 60);
+            const plannedStartMs = getCurrentSessionProjectedEndMs();
+            const record = {
+                id: Date.now(),
+                minutes,
+                duration: durationSeconds,
+                startTime: plannedStartMs,
+                endTime: plannedStartMs + (durationSeconds * 1000),
+                approvalComplete: false,
+                completed: false,
+                cancelled: false,
+                notes: ''
+            };
+            sessions.unshift(record);
+            localStorage.setItem('sessions', JSON.stringify(sessions));
             updateQueueDisplay();
-            // Display projected start time without storing it in the queue object
-            const projectedStart = new Date(getCurrentSessionProjectedEndMs()).toLocaleTimeString();
-            const projectedEnd = new Date(getCurrentSessionProjectedEndMs() + (queued.duration * 1000)).toLocaleTimeString();
-            showFinalCalculation(`Session queued: ${formatTimeForDisplay(minutes)} (Start ${projectedStart} → End ${projectedEnd})`);
+            showFinalCalculation(`Session queued: ${formatTimeForDisplay(minutes)} (Start ${new Date(record.startTime).toLocaleTimeString()} → End ${new Date(record.endTime).toLocaleTimeString()})`);
         }
 
         /**
@@ -1222,9 +1286,13 @@
             const queueSection = document.getElementById('queueSection');
             const queuedSessionText = document.getElementById('queuedSessionText');
             
-            if (sessionQueue.length > 0) {
-                const q = sessionQueue[0];
-                const queuedMinutes = typeof q === 'number' ? q : q.minutes;
+            // Identify the next future session from sessions
+            const now = Date.now();
+            const future = (sessions || [])
+                .filter(s => s && !s.cancelled && !s.approvalComplete && typeof s.startTime === 'number' && s.startTime > now)
+                .sort((a, b) => a.startTime - b.startTime)[0];
+            if (future) {
+                const queuedMinutes = Math.round((future.duration || 0) / 60);
                 // For small durations, show in seconds
                 let timeText;
                 if (queuedMinutes < 1) {
@@ -1240,16 +1308,9 @@
                         timeText = `${minutes}m`;
                     }
                 }
-                // Compute planned times for display without storing on the queue object
-                if (timer && startTime) {
-                    const plannedStartMs = getCurrentSessionProjectedEndMs();
-                    const plannedEndMs = plannedStartMs + (Math.round(queuedMinutes * 60) * 1000);
-                    const startStr = new Date(plannedStartMs).toLocaleTimeString();
-                    const endStr = new Date(plannedEndMs).toLocaleTimeString();
-                    queuedSessionText.textContent = `${timeText} (Start ${startStr} → End ${endStr})`;
-                } else {
-                    queuedSessionText.textContent = timeText;
-                }
+                const startStr = new Date(future.startTime).toLocaleTimeString();
+                const endStr = new Date(future.endTime).toLocaleTimeString();
+                queuedSessionText.textContent = `${timeText} (Start ${startStr} → End ${endStr})`;
                 queueSection.classList.add('show');
             } else {
                 queuedSessionText.textContent = 'None';
@@ -1261,26 +1322,40 @@
          * Cancel and clear the queued session.
          */
         function cancelQueuedSession() {
-            sessionQueue = [];
-            localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
-            updateQueueDisplay();
-            showFinalCalculation('Queued session cancelled');
+            // Remove the next future session from sessions
+            const now = Date.now();
+            let removedId = null;
+            const futureSorted = (sessions || [])
+                .filter(s => s && !s.cancelled && !s.approvalComplete && typeof s.startTime === 'number' && s.startTime > now)
+                .sort((a, b) => a.startTime - b.startTime);
+            if (futureSorted.length > 0) {
+                removedId = futureSorted[0].id;
+                sessions = sessions.filter(s => s && s.id !== removedId);
+                localStorage.setItem('sessions', JSON.stringify(sessions));
+                updateQueueDisplay();
+                showFinalCalculation('Queued session cancelled');
+            }
         }
 
         /**
          * Start and remove the queued session if present.
          * Returns true if a queued session started; otherwise false.
          */
-        function startQueuedSession() {
-            if (sessionQueue.length > 0) {
-                const queued = sessionQueue.shift();
-                localStorage.setItem('sessionQueue', JSON.stringify(sessionQueue));
-                updateQueueDisplay();
-                const minutes = typeof queued === 'number' ? queued : queued.minutes;
-                // Start the queued session immediately
-                startSession(minutes);
-                showFinalCalculation(`Queued session started: ${formatTimeForDisplay(minutes)}`);
-                return true;
+        function startActiveSessionIfAny() {
+            // If there is an active pending session per sessions[] and no timer, start it
+            if (timer) return false;
+            const active = getActivePendingSession();
+            if (active) {
+                const now = Date.now();
+                const remaining = Math.max(0, Math.floor((active.endTime - now) / 1000));
+                if (remaining > 0) {
+                    document.getElementById('cancelButton').style.display = 'block';
+                    document.getElementById('breakButton').style.display = 'block';
+                    startTimer();
+                    updateButtons(true);
+                    saveTimerState();
+                    return true;
+                }
             }
             return false;
         }
@@ -1302,36 +1377,33 @@
 
             // Clear notes when starting new session
             document.getElementById('sessionNotes').value = '';
-            localStorage.removeItem('sessionNotes');
 
-            sessionsStarted++;
-            localStorage.setItem('sessionsStarted', sessionsStarted);
-            totalDuration = minutes * 60;
-            currentSession = totalDuration;
-            startTime = new Date();
+            // sessionsStarted removed; no longer tracked in localStorage
+            // Do not store separate runtime copies; rely on the session record only
 
-            // Upsert session record at creation
+            // Upsert session record at creation (store notes on session)
             try {
-                const sessionStartMs = startTime.getTime();
+                const sessionStartMs = Date.now();
                 const record = {
                     id: sessionStartMs,
-                    minutes: minutes,
-                    duration: totalDuration,
+                    duration: minutes * 60,
                     startTime: sessionStartMs,
-                    endTime: sessionStartMs + (totalDuration * 1000),
+                    endTime: sessionStartMs + (minutes * 60 * 1000),
                     approvalComplete: false,
                     completed: false,
-                    cancelled: false
+                    cancelled: false,
+                    notes: document.getElementById('sessionNotes').value || ''
                 };
                 const exists = sessions.some(s => s && s.startTime === record.startTime);
                 if (!exists) {
                     sessions.unshift(record);
                     localStorage.setItem('sessions', JSON.stringify(sessions));
                 }
-            } catch (_) { /* no-op */ }
+            } catch (err) { 
+                console.error('Failed to upsert session record:', err); 
+            }
             
-            updateTimer(currentSession);
-            updateProgress(100);
+            // Initial paint derived from session record during the first tick
             updateButtons(true);
             updateBreakTimeInfo();
             updateSessionTimeInfo();
@@ -1393,9 +1465,9 @@
                 lastPendingTimeUpdate = Date.now();
                 document.getElementById('totalPendingTime').textContent = '';
                 
-                // Check for queued sessions when cancelling current session
-                const hasQueuedSession = startQueuedSession();
-                if (!hasQueuedSession) {
+            // Try to resume any active session in sessions[]
+            const hasResumed = startActiveSessionIfAny();
+            if (!hasResumed) {
                     // No queued session, fully reset
                     resetTimer();
                     updateSessionTimeInfo();
@@ -1416,17 +1488,20 @@
             
             // Ensure the session record exists (if page reloaded mid-session, it may already be present).
             try {
-                const startedAt = startTime ? startTime.getTime() : null;
+                const active = getActivePendingSession();
+                const startedAt = active ? active.startTime : null;
                 if (startedAt) {
                     const idx = sessions.findIndex(s => s && s.startTime === startedAt);
                     if (idx >= 0) {
                         // keep existing record as pending; endTime already set at creation
                     } else {
                         // reconstruct minimal record
-                        const minutes = (currentSession || 0) / 60;
-                        const duration = currentSession || 0;
+                        // As a fallback, derive duration from end-start if present
+                        const rec = sessions.find(s => s && s.startTime === startedAt);
+                        const duration = rec && typeof rec.duration === 'number' ? rec.duration : 0;
+                        const minutes = duration / 60;
                         const endMs = startedAt + duration * 1000;
-                        sessions.unshift({ id: startedAt, minutes, duration, startTime: startedAt, endTime: endMs, approvalComplete: false, completed: false, cancelled: false });
+                        sessions.unshift({ id: startedAt, minutes, duration, startTime: startedAt, endTime: endMs, approvalComplete: false, completed: false, cancelled: false, notes: document.getElementById('sessionNotes').value || '' });
                         localStorage.setItem('sessions', JSON.stringify(sessions));
                     }
                 }
@@ -1436,10 +1511,10 @@
             lastPendingTimeUpdate = Date.now();
             document.getElementById('totalPendingTime').textContent = '';
             
-            // Check for queued sessions and start immediately
-            const hasQueuedSession = startQueuedSession();
+            // Attempt to resume any active session tracked in sessions[]
+            const hasResumed = startActiveSessionIfAny();
             
-            if (!hasQueuedSession) {
+            if (!hasResumed) {
                 // No queued session, reset everything
                 document.getElementById('breakButton').style.display = 'none';
                 updateButtons(true);
@@ -1545,7 +1620,6 @@
                         if (!byKey.has(key)) {
                             sessions.unshift({
                                 id: s.id || (s.startTime || Date.now()),
-                                minutes: s.minutes,
                                 duration: s.duration,
                                 startTime: s.startTime,
                                 endTime: s.endTime,
@@ -1615,7 +1689,8 @@
             document.getElementById('totalTime').textContent = Math.floor(totalTimeCompleted);
             document.getElementById('sessionsCompleted').textContent = sessionsCompleted;
             document.getElementById('breaksTaken').textContent = breaksTaken;
-            const rate = sessionsStarted === 0 ? 100 : Math.round((sessionsCompleted / sessionsStarted) * 100);
+            const totalSessions = sessions.filter(s => s && !s.cancelled).length;
+            const rate = totalSessions === 0 ? 100 : Math.round((sessionsCompleted / totalSessions) * 100);
             document.getElementById('completionRate').textContent = rate;
             updateDailyStreak();
         }
@@ -1673,25 +1748,26 @@
             if (session) {
                 // Process the approved session
                 sessionsCompleted++;
-                totalTimeCompleted += session.minutes;
-                const newPendingTime = Math.floor(pendingBoringTime - session.minutes);
+                const minutesDone = Math.round((session.duration || 0) / 60);
+                totalTimeCompleted += minutesDone;
+                const newPendingTime = Math.floor(pendingBoringTime - minutesDone);
                 
                 // Add to daily usage
-                addToDailyUsage(session.minutes);
+                addToDailyUsage(minutesDone);
                 
                 localStorage.setItem('sessionsCompleted', sessionsCompleted);
                 localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
                 
                 // Show appropriate message for session approval
-                if (session.minutes < 1) {
-                    showFinalCalculation(`${formatTimeForDisplay(session.minutes)} approved! Pending time: ${Math.floor(pendingBoringTime)} → ${newPendingTime} minutes`);
+                if (minutesDone < 1) {
+                    showFinalCalculation(`${formatTimeForDisplay(minutesDone)} approved! Pending time: ${Math.floor(pendingBoringTime)} → ${newPendingTime} minutes`);
                 } else {
                     showFinalCalculation(`Session approved! Pending time reduced: ${Math.floor(pendingBoringTime)} → ${newPendingTime} minutes`);
                 }
                 
                 syncPendingTime(newPendingTime);
                 // Log with start and end times metadata
-                addLogEntry('session', session.minutes, session.endTime, null, { startTime: session.startTime, endTime: session.endTime });
+                addLogEntry('session', minutesDone, session.endTime, null, { startTime: session.startTime, endTime: session.endTime });
                 
                 // Mark as approved in sessions list
                 for (let i = 0; i < sessions.length; i++) {
@@ -1714,8 +1790,9 @@
             const session = sessions.find(s => s.id == sessionId && !s.approvalComplete);
             if (session) {
                 // Log the rejection
-                addLogEntry('cancelled', session.minutes, session.endTime);
-                showFinalCalculation(`Session rejected: ${formatTimeForDisplay(session.minutes)}`);
+                const minutesDone = Math.round((session.duration || 0) / 60);
+                addLogEntry('cancelled', minutesDone, session.endTime);
+                showFinalCalculation(`Session rejected: ${formatTimeForDisplay(minutesDone)}`);
                 
                 // Mark as not pending (rejected) in unified sessions
                 for (let i = 0; i < sessions.length; i++) {
@@ -1737,10 +1814,10 @@
         function updateLogDisplay() {
             const logContainer = document.getElementById('logEntries');
             
-            // Generate pending approvals from unified sessions array, only if endTime has passed
+            // Sessions needing approval are those past end time, not approved, not cancelled
             const nowMs = Date.now();
             const pendingSessionsHTML = (sessions || [])
-                .filter(s => s && !s.approvalComplete && typeof s.endTime === 'number' && nowMs >= s.endTime)
+                .filter(s => s && !s.approvalComplete && !s.cancelled && typeof s.endTime === 'number' && nowMs >= s.endTime)
                 .map(session => {
                     const endTime = new Date(session.endTime);
                     const startTimeObj = new Date(session.startTime);
@@ -1752,7 +1829,7 @@
                         : '';
                     return `<div class="log-entry pending-session-log">
                         <div><strong>⏳ Pending Approval</strong></div>
-                        <div>${timeStr} - Completed session: ${formatTimeForDisplay(session.minutes)}</div>
+                        <div>${timeStr} - Completed session: ${formatTimeForDisplay(Math.round((session.duration||0)/60))}</div>
                         ${rangeHtml}
                         <div class="session-actions">
                             <button class="approve-btn" onclick="approveSession('${session.id}')">Approve</button>
@@ -1818,72 +1895,42 @@
                 const panel = document.getElementById('sessionObjectPanel');
                 const view = document.getElementById('sessionObjectView');
                 const summary = document.getElementById('sessionObjectSummary');
-                const active = getActivePendingSession();
-                const now = Date.now();
-                // Format helper
-                const fmt = (s) => {
-                    const o = { ...s };
-                    if (typeof s.startTime === 'number') o.startTimeHuman = new Date(s.startTime).toLocaleString();
-                    if (typeof s.endTime === 'number') o.endTimeHuman = new Date(s.endTime).toLocaleString();
-                    return o;
-                };
-                const payload = {};
-                if (active) payload.active = fmt(active);
-                // Include queued session (compute projected start/end)
-                if (Array.isArray(sessionQueue) && sessionQueue.length > 0) {
-                    const q = sessionQueue[0];
-                    const qMinutes = typeof q === 'number' ? q : (q && q.minutes) || 0;
-                    const qDurationSec = Math.round(qMinutes * 60);
-                    const plannedStartMs = getCurrentSessionProjectedEndMs();
-                    const plannedEndMs = plannedStartMs + (qDurationSec * 1000);
-                    payload.queued = {
-                        minutes: qMinutes,
-                        duration: qDurationSec,
-                        startTime: plannedStartMs,
-                        endTime: plannedEndMs,
-                        startTimeHuman: new Date(plannedStartMs).toLocaleString(),
-                        endTimeHuman: new Date(plannedEndMs).toLocaleString()
-                    };
-                }
-                if (Array.isArray(sessions) && sessions.length) {
-                    const sorted = [...sessions].filter(Boolean).sort((a,b) => (a.startTime||0) - (b.startTime||0));
-                    const future = sorted.filter(s => typeof s.startTime === 'number' && s.startTime > now).map(fmt);
-                    const past = sorted.filter(s => typeof s.endTime === 'number' && s.endTime <= now).reverse().map(fmt);
-                    if (future.length) payload.future = future;
-                    if (past.length) payload.past = past;
-                }
-                if (!payload.active && !payload.future && !payload.past && !payload.queued) {
-                    summary.textContent = 'No sessions to display';
+
+                // Only show the JSON view, not the human summary
+                if (!Array.isArray(sessions) || sessions.length === 0) {
+                    summary.textContent = '';
                     view.textContent = '';
-                } else {
-                    // Build compact human-readable summary list
-                    const mkLine = (label, s) => {
-                        if (!s) return '';
-                        const st = typeof s.startTime === 'number' ? new Date(s.startTime).toLocaleString() : '-';
-                        const et = typeof s.endTime === 'number' ? new Date(s.endTime).toLocaleString() : '-';
-                        const durSec = typeof s.duration === 'number' ? s.duration : (typeof s.startTime === 'number' && typeof s.endTime === 'number' ? Math.max(0, Math.round((s.endTime - s.startTime)/1000)) : 0);
-                        const dur = humanizeDuration(durSec);
-                        return `${label}: ${st} → ${et} (${dur})`;
-                    };
-                    const lines = [];
-                    if (payload.queued) lines.push(mkLine('Queued', payload.queued));
-                    if (payload.active) lines.push(mkLine('Active', payload.active));
-                    if (payload.future?.length) {
-                        lines.push('Future:');
-                        payload.future.forEach((s, i) => lines.push(`  ${i+1}. ${mkLine('', s)}`));
-                    }
-                    if (payload.past?.length) {
-                        lines.push('Past:');
-                        payload.past.forEach((s, i) => lines.push(`  ${i+1}. ${mkLine('', s)}`));
-                    }
-                    summary.textContent = lines.join('\n');
-                    view.textContent = JSON.stringify(payload, null, 2);
+                    panel.classList.add('show');
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
                 }
+
+                // Sort all sessions by startTime ascending, filter out nulls
+                const sorted = [...sessions].filter(Boolean).sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+
+                summary.textContent = '';
+                view.value = JSON.stringify(sorted, null, 2);
+                // Enable editing and saving back
+                view.oninput = function() {
+                    try {
+                        const parsed = JSON.parse(view.value);
+                        if (Array.isArray(parsed)) {
+                            sessions = parsed;
+                            localStorage.setItem('sessions', JSON.stringify(sessions));
+                            updateQueueDisplay();
+                            updateLogDisplay();
+                            updateSessionTimeInfo();
+                            updateStats();
+                        }
+                    } catch (_) {
+                        // Ignore invalid JSON while typing
+                    }
+                };
+
                 panel.classList.add('show');
-                // Scroll into view for convenience
                 panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } catch (_) {
-                alert('Unable to display sessions');
+            } catch (err) {
+                alert('Unable to display sessions: ' + (err && err.message ? err.message : err));
             }
         }
 
@@ -1993,13 +2040,11 @@
                 const prevBreaksTaken = breaksTaken;
                 
                 // Reset daily counters
-                sessionsStarted = 0;
                 sessionsCompleted = 0;
                 totalTimeCompleted = 0;
                 breaksTaken = 0;
                 
                 // Save to localStorage
-                localStorage.setItem('sessionsStarted', sessionsStarted);
                 localStorage.setItem('sessionsCompleted', sessionsCompleted);
                 localStorage.setItem('totalTimeCompleted', totalTimeCompleted);
                 localStorage.setItem('breaksTaken', breaksTaken);

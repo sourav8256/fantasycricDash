@@ -568,6 +568,29 @@
     // Returns a taskId to use for a given interval index:
     //  - schedule assignment if present
     //  - otherwise, cyclic pick from available tasks by modulo index
+    function positiveModulo(a, n) {
+      const m = a % n;
+      return m < 0 ? m + n : m;
+    }
+
+    function getRawEffectiveTaskIdForIndex(index) {
+      const dayKey = getTodayKey();
+      const schedule = loadSchedule(dayKey);
+      const tagsMap = loadTags();
+      const selectedFilters = loadTagFilterSelection();
+      const tasks = loadTasks();
+      const scheduledId = schedule[index];
+      if (scheduledId) {
+        const t = tasks.find(x => x.id === scheduledId);
+        if (t && (t.enabled !== false) && isTaskAllowedByTags(t, tagsMap) && taskMatchesFilter(t, selectedFilters)) {
+          return scheduledId;
+        }
+      }
+      const avail = getAvailableTaskIdsForCycle();
+      if (avail.length === 0) return null;
+      return avail[positiveModulo(index, avail.length)];
+    }
+
     function getEffectiveTaskIdForIndex(index) {
       const dayKey = getTodayKey();
       const schedule = loadSchedule(dayKey);
@@ -583,7 +606,13 @@
       }
       const avail = getAvailableTaskIdsForCycle();
       if (avail.length === 0) return null;
-      return avail[index % avail.length];
+      const n = avail.length;
+      let candidate = avail[positiveModulo(index, n)];
+      const prev = getRawEffectiveTaskIdForIndex(index - 1);
+      if (n > 1 && prev && candidate === prev) {
+        candidate = avail[positiveModulo(index + 1, n)];
+      }
+      return candidate;
     }
 
     function getIntervalsPerDay() {
@@ -602,7 +631,13 @@
       const total = getIntervalsPerDay();
       for (let i = 0; i < total; i++) {
         if (!schedule[i]) {
-          schedule[i] = availableTaskIds[i % availableTaskIds.length];
+          const n = availableTaskIds.length;
+          let candidate = availableTaskIds[positiveModulo(i, n)];
+          const prevAssigned = schedule[i - 1] || null;
+          if (n > 1 && prevAssigned && candidate === prevAssigned) {
+            candidate = availableTaskIds[positiveModulo(i + 1, n)];
+          }
+          schedule[i] = candidate;
         }
       }
       saveSchedule(dayKey, schedule);

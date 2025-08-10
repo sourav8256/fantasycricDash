@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Task Intervals</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --primary: #3b82f6;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: linear-gradient(180deg, #0f172a 0%, #0b1222 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 16px 16px 8px 16px;
+    }
+    .title {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    .subtitle {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .content {
+      flex: 1;
+      padding: 12px 12px 72px 12px; /* bottom space for nav */
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .card {
+      background: radial-gradient(120% 140% at 10% 10%, #0b1222 0%, #0a0f1d 45%, #0a0e1b 100%);
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+    .card h3 {
+      margin: 0 0 10px 0;
+      font-size: 15px;
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .interval {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0b1221;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .interval.disabled { opacity: 0.55; filter: saturate(0.7); }
+    .interval .meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .interval .task {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .history-list { display: grid; gap: 8px; }
+
+    .muted { color: var(--muted); }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #0b1530;
+      border: 1px solid #1d2947;
+      font-size: 12px;
+      color: #9fb4ff;
+    }
+
+    input, select, button, textarea {
+      font: inherit;
+      color: var(--text);
+    }
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .field label { font-size: 13px; color: #cbd5e1; }
+    .input {
+      background: #0a1020;
+      border: 1px solid #1f2a44;
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border 0.15s ease;
+    }
+    .input:focus { border-color: #335ccf; }
+
+    .btn {
+      background: linear-gradient(180deg, #3b82f6 0%, #2b68c7 100%);
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(59,130,246,0.25);
+    }
+    .btn.secondary {
+      background: linear-gradient(180deg, #22c55e 0%, #19924a 100%);
+      box-shadow: 0 8px 20px rgba(34,197,94,0.22);
+    }
+    .btn.danger {
+      background: linear-gradient(180deg, #ef4444 0%, #c03434 100%);
+      box-shadow: 0 8px 20px rgba(239,68,68,0.22);
+    }
+
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    nav.bottom {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 56px;
+      backdrop-filter: blur(10px);
+      background: rgba(8, 12, 22, 0.7);
+      border-top: 1px solid #1f2937;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+    }
+    .tab-btn {
+      appearance: none;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      height: 100%;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      color: #ffffff;
+      position: relative;
+    }
+    .tab-btn.active::after {
+      content: "";
+      position: absolute;
+      left: 24px; right: 24px; bottom: 6px;
+      height: 3px; border-radius: 3px; background: #3b82f6;
+    }
+
+    .small { font-size: 12px; }
+
+    /* Action menu for tasks */
+    .menu-wrap { position: relative; margin-left: auto; }
+    .menu-trigger {
+      background: transparent;
+      border: 1px solid #1f2a44;
+      color: #cbd5e1;
+      border-radius: 8px;
+      padding: 6px 8px;
+      cursor: pointer;
+    }
+    .menu {
+      position: absolute;
+      right: 0;
+      top: 100%;
+      margin-top: 6px;
+      background: #0a1020;
+      border: 1px solid #1f2a44;
+      border-radius: 8px;
+      min-width: 140px;
+      display: none;
+      z-index: 20;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    }
+    .menu.open { display: block; }
+    .menu-item {
+      display: block;
+      width: 100%;
+      padding: 8px 10px;
+      background: transparent;
+      border: none;
+      color: #e5e7eb;
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu-item:hover { background: #0f1a36; }
+    .menu-item.danger { color: #fca5a5; }
+
+    /* Action menu for tasks */
+    .menu-wrap { position: relative; margin-left: auto; }
+    .menu-trigger {
+      background: transparent;
+      border: 1px solid #1f2a44;
+      color: #cbd5e1;
+      border-radius: 8px;
+      padding: 6px 8px;
+      cursor: pointer;
+    }
+    .menu {
+      position: absolute;
+      right: 0;
+      top: 100%;
+      margin-top: 6px;
+      background: #0a1020;
+      border: 1px solid #1f2a44;
+      border-radius: 8px;
+      min-width: 140px;
+      display: none;
+      z-index: 20;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    }
+    .menu.open { display: block; }
+    .menu-item {
+      display: block;
+      width: 100%;
+      padding: 8px 10px;
+      background: transparent;
+      border: none;
+      color: #e5e7eb;
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu-item:hover { background: #0f1a36; }
+    .menu-item.danger { color: #fca5a5; }
+
+    /* Progress Bar */
+    .progress {
+      margin-top: 10px;
+      display: grid;
+      gap: 6px;
+    }
+    .progress-track {
+      position: relative;
+      height: 10px;
+      background: #0a1020;
+      border: 1px solid #1f2a44;
+      border-radius: 999px;
+    }
+    .progress-complete {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0%;
+      background: #3b82f6;
+      opacity: 0.35;
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
+    .progress-marker {
+      position: absolute;
+      top: 0;
+      left: 0%;
+      height: 100%;
+      width: 2px;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.25), 0 0 8px rgba(59,130,246,0.4);
+      transform: translateX(-50%);
+      border-radius: 2px;
+    }
+    .progress-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="title">Task Intervals</h1>
+    <p class="subtitle">Overview, quick add, and settings for interval length</p>
+  </header>
+
+  <main class="content">
+    <!-- Overview Screen -->
+    <section id="screen-overview" class="screen active">
+      <div class="card">
+        <h3>Now</h3>
+        <div id="current-interval" class="interval">
+          <div>
+            <div class="meta" id="current-range">--:-- — --:--</div>
+            <div class="task" id="current-task">No task</div>
+          </div>
+          <span class="pill" id="current-index">#</span>
+        </div>
+        <div class="progress">
+          <div class="progress-track">
+            <div id="progress-complete" class="progress-complete"></div>
+            <div id="progress-marker" class="progress-marker"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="progress-percent">0%</span>
+            <span id="progress-remaining">--:-- remaining</span>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="card">
+          <h3>Previous</h3>
+          <div id="prev-interval" class="interval">
+            <div>
+              <div class="meta" id="prev-range">--:-- — --:--</div>
+              <div class="task" id="prev-task">No task</div>
+            </div>
+            <span class="pill" id="prev-index">#</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Next</h3>
+          <div id="next-interval" class="interval">
+            <div>
+              <div class="meta" id="next-range">--:-- — --:--</div>
+              <div class="task" id="next-task">No task</div>
+            </div>
+            <span class="pill" id="next-index">#</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Recent intervals</h3>
+        <div id="history" class="history-list"></div>
+      </div>
+    </section>
+
+    <!-- Add Task Screen -->
+    <section id="screen-add" class="screen">
+      <div class="card">
+        <h3>Add task</h3>
+        <div class="field">
+          <label for="task-title">Title</label>
+          <input id="task-title" class="input" type="text" placeholder="e.g., Write report" />
+        </div>
+        <div class="field">
+          <label for="task-intervals">Intervals needed</label>
+          <input id="task-intervals" class="input" type="number" min="1" step="1" value="1" />
+        </div>
+        <div class="field">
+          <label class="small"><input type="checkbox" id="start-next" checked /> Start from next interval (not current)</label>
+        </div>
+        <div class="actions">
+          <button id="add-btn" class="btn">Add and schedule</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Queued tasks</h3>
+        <div id="task-list" class="history-list"></div>
+      </div>
+    </section>
+
+    <!-- Settings Screen -->
+    <section id="screen-settings" class="screen">
+      <div class="card">
+        <h3>Interval settings</h3>
+        <div class="field">
+          <label for="interval-mins">Interval length (minutes)</label>
+          <input id="interval-mins" class="input" type="number" min="1" step="1" value="25" />
+        </div>
+        <div class="actions">
+          <button id="save-settings" class="btn secondary">Save</button>
+          <button id="reset-today" class="btn danger">Reset today's schedule</button>
+        </div>
+        <p class="small muted" style="margin-top:8px">Changing interval length resets today's schedule to match the new cadence.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="add">Add</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </nav>
+
+  <script>
+    // --- Storage Keys ---
+    const SETTINGS_KEY = "ti_settings_v1";
+    const TASKS_KEY = "ti_tasks_v1";
+    const SCHEDULE_PREFIX = "ti_schedule_"; // + YYYY-MM-DD
+
+    // --- Utilities ---
+    function startOfLocalDay(date = new Date()) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function getTodayKey(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function loadSettings() {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return { intervalMinutes: 25 };
+      try { return JSON.parse(raw); } catch { return { intervalMinutes: 25 }; }
+    }
+    function saveSettings(settings) {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    function loadTasks() {
+      const raw = localStorage.getItem(TASKS_KEY);
+      if (!raw) return [];
+      try { return JSON.parse(raw); } catch { return []; }
+    }
+    function saveTasks(tasks) {
+      localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+    }
+
+    function loadSchedule(dayKey) {
+      const raw = localStorage.getItem(SCHEDULE_PREFIX + dayKey);
+      if (!raw) return {}; // { [intervalIndex]: taskId }
+      try { return JSON.parse(raw); } catch { return {}; }
+    }
+    function saveSchedule(dayKey, schedule) {
+      localStorage.setItem(SCHEDULE_PREFIX + dayKey, JSON.stringify(schedule));
+    }
+
+    function getIntervalInfo(now = new Date()) {
+      const settings = loadSettings();
+      const intervalMs = Math.max(1, Number(settings.intervalMinutes || 25)) * 60 * 1000;
+      const sod = startOfLocalDay(now).getTime();
+      const diff = now.getTime() - sod;
+      const index = Math.max(0, Math.floor(diff / intervalMs));
+      const start = new Date(sod + index * intervalMs);
+      const end = new Date(start.getTime() + intervalMs);
+      return { index, start, end, intervalMs };
+    }
+
+    function ensureScheduleConsistency() {
+      // If settings changed drastically, we keep schedule per-day; nothing to do across days
+      // This function can be expanded to migrate data versions.
+      return true;
+    }
+
+    // --- Rendering ---
+    let lastRenderedIntervalIndex = null;
+
+    function renderOverview() {
+      const { index, start, end } = getIntervalInfo();
+      const dayKey = getTodayKey();
+      const schedule = loadSchedule(dayKey);
+      const tasks = loadTasks();
+
+      const currentTaskTitle = schedule[index] ? (tasks.find(t => t.id === schedule[index])?.title || 'Unknown task') : 'Free';
+      document.getElementById('current-range').textContent = `${formatTime(start)} — ${formatTime(end)}`;
+      document.getElementById('current-task').textContent = currentTaskTitle;
+      document.getElementById('current-index').textContent = `#${index}`;
+
+      // Prev
+      const prevIndex = Math.max(0, index - 1);
+      const prevStart = new Date(start.getTime() - (end.getTime() - start.getTime()));
+      const prevEnd = start;
+      const prevTaskTitle = schedule[prevIndex] ? (tasks.find(t => t.id === schedule[prevIndex])?.title || 'Unknown task') : 'Free';
+      document.getElementById('prev-range').textContent = `${formatTime(prevStart)} — ${formatTime(prevEnd)}`;
+      document.getElementById('prev-task').textContent = prevTaskTitle;
+      document.getElementById('prev-index').textContent = `#${prevIndex}`;
+
+      // Next
+      const nextIndex = index + 1;
+      const nextStart = end;
+      const nextEnd = new Date(end.getTime() + (end.getTime() - start.getTime()));
+      const nextTaskTitle = schedule[nextIndex] ? (tasks.find(t => t.id === schedule[nextIndex])?.title || 'Unknown task') : 'Free';
+      document.getElementById('next-range').textContent = `${formatTime(nextStart)} — ${formatTime(nextEnd)}`;
+      document.getElementById('next-task').textContent = nextTaskTitle;
+      document.getElementById('next-index').textContent = `#${nextIndex}`;
+
+      // History: show last 5 intervals before current
+      const historyRoot = document.getElementById('history');
+      historyRoot.innerHTML = '';
+      const historyCount = 5;
+      for (let i = Math.max(0, index - historyCount); i < index; i++) {
+        const item = document.createElement('div');
+        item.className = 'interval';
+        const intervalMs = end.getTime() - start.getTime();
+        const hStart = new Date(startOfLocalDay().getTime() + i * intervalMs);
+        const hEnd = new Date(hStart.getTime() + intervalMs);
+        const title = schedule[i] ? (tasks.find(t => t.id === schedule[i])?.title || 'Unknown task') : 'Free';
+        item.innerHTML = `
+          <div>
+            <div class="meta">${formatTime(hStart)} — ${formatTime(hEnd)}</div>
+            <div class="task">${title}</div>
+          </div>
+          <span class="pill">#${i}</span>
+        `;
+        historyRoot.appendChild(item);
+      }
+    }
+
+    function updateCurrentIntervalProgress() {
+      // Only update when Overview screen visible
+      if (!document.getElementById('screen-overview').classList.contains('active')) return;
+      const { index, start, end } = getIntervalInfo();
+
+      // If rolled into a new interval, re-render the overview
+      if (lastRenderedIntervalIndex === null || lastRenderedIntervalIndex !== index) {
+        lastRenderedIntervalIndex = index;
+        renderOverview();
+      }
+
+      const now = new Date();
+      const totalMs = Math.max(1, end.getTime() - start.getTime());
+      const elapsedMs = Math.min(totalMs, Math.max(0, now.getTime() - start.getTime()));
+      const ratio = Math.min(1, Math.max(0, elapsedMs / totalMs));
+      const percent = Math.round(ratio * 100);
+      const remainingMs = Math.max(0, end.getTime() - now.getTime());
+      const mm = Math.floor(remainingMs / 60000);
+      const ss = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0');
+
+      const marker = document.getElementById('progress-marker');
+      const complete = document.getElementById('progress-complete');
+      const pct = document.getElementById('progress-percent');
+      const rem = document.getElementById('progress-remaining');
+      if (marker) marker.style.left = `${percent}%`;
+      if (complete) complete.style.width = `${percent}%`;
+      if (pct) pct.textContent = `${percent}%`;
+      if (rem) rem.textContent = `${mm}:${ss} remaining`;
+    }
+
+    function renderTasksList() {
+      const tasks = loadTasks();
+      const root = document.getElementById('task-list');
+      root.innerHTML = '';
+      if (tasks.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'muted small';
+        empty.textContent = 'No tasks yet';
+        root.appendChild(empty);
+        return;
+      }
+      for (const t of tasks) {
+        const isEnabled = t.enabled !== false; // default enabled for legacy items
+        const row = document.createElement('div');
+        row.className = 'interval';
+        if (!isEnabled) row.classList.add('disabled');
+        row.innerHTML = `
+          <div>
+            <div class="task">${t.title}</div>
+            <div class="meta">${t.intervalsNeeded} interval(s) ${isEnabled ? '' : '<span class="pill" style="margin-left:6px;">Disabled</span>'}</div>
+          </div>
+          <div class="menu-wrap">
+            <button class="menu-trigger" aria-haspopup="true" aria-expanded="false" aria-label="Task actions">⋯</button>
+            <div class="menu" role="menu">
+              <button class="menu-item" data-action="toggle" data-id="${t.id}" role="menuitem">${isEnabled ? 'Disable' : 'Enable'}</button>
+              <button class="menu-item danger" data-action="delete" data-id="${t.id}" role="menuitem">Delete</button>
+            </div>
+          </div>
+        `;
+
+        const trigger = row.querySelector('.menu-trigger');
+        const menu = row.querySelector('.menu');
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Close other open menus
+          document.querySelectorAll('.menu.open').forEach(m => { if (m !== menu) m.classList.remove('open'); });
+          document.querySelectorAll('.menu-trigger[aria-expanded="true"]').forEach(b => { if (b !== trigger) b.setAttribute('aria-expanded', 'false'); });
+          const isOpen = menu.classList.toggle('open');
+          trigger.setAttribute('aria-expanded', String(isOpen));
+        });
+
+        menu.addEventListener('click', (e) => { e.stopPropagation(); });
+
+        const toggleBtn = row.querySelector('[data-action="toggle"]');
+        toggleBtn.addEventListener('click', () => {
+          const all = loadTasks();
+          const idx = all.findIndex(x => x.id === t.id);
+          if (idx !== -1) {
+            const nextEnabled = !(all[idx].enabled !== false);
+            all[idx].enabled = nextEnabled;
+            saveTasks(all);
+            // If disabling, remove from today's schedule
+            if (!nextEnabled) {
+              const dayKey = getTodayKey();
+              const schedule = loadSchedule(dayKey);
+              for (const k of Object.keys(schedule)) {
+                if (schedule[k] === t.id) delete schedule[k];
+              }
+              saveSchedule(dayKey, schedule);
+            }
+            menu.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+            renderTasksList();
+            renderOverview();
+          }
+        });
+
+        const deleteBtn = row.querySelector('[data-action="delete"]');
+        deleteBtn.addEventListener('click', () => {
+          const updated = tasks.filter(x => x.id !== t.id);
+          saveTasks(updated);
+          // Also remove from today's schedule
+          const dayKey = getTodayKey();
+          const schedule = loadSchedule(dayKey);
+          for (const k of Object.keys(schedule)) {
+            if (schedule[k] === t.id) delete schedule[k];
+          }
+          saveSchedule(dayKey, schedule);
+          // Close the menu and refresh
+          menu.classList.remove('open');
+          trigger.setAttribute('aria-expanded', 'false');
+          renderTasksList();
+          renderOverview();
+        });
+        root.appendChild(row);
+      }
+
+      // Global outside-click to close menus
+      if (!window.__tiMenuGlobalAttached) {
+        window.__tiMenuGlobalAttached = true;
+        document.addEventListener('click', () => {
+          document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open'));
+          document.querySelectorAll('.menu-trigger[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+        });
+      }
+    }
+
+    // --- Scheduling ---
+    function assignTaskToNextIntervals(taskId, intervalsCount, startIndex) {
+      const dayKey = getTodayKey();
+      const schedule = loadSchedule(dayKey);
+      let assigned = 0;
+      let i = Math.max(0, startIndex);
+      const hardCap = i + 500; // safety
+      while (assigned < intervalsCount && i < hardCap) {
+        if (!(i in schedule)) {
+          schedule[i] = taskId;
+          assigned += 1;
+        }
+        i += 1;
+      }
+      saveSchedule(dayKey, schedule);
+      return assigned;
+    }
+
+    // --- Event wiring ---
+    function hookTabs() {
+      const buttons = Array.from(document.querySelectorAll('.tab-btn'));
+      const screens = {
+        overview: document.getElementById('screen-overview'),
+        add: document.getElementById('screen-add'),
+        settings: document.getElementById('screen-settings'),
+      };
+      function activate(tab) {
+        buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        Object.entries(screens).forEach(([key, el]) => {
+          el.classList.toggle('active', key === tab);
+        });
+        if (tab === 'overview') renderOverview();
+        if (tab === 'add') renderTasksList();
+        if (tab === 'settings') {
+          const s = loadSettings();
+          document.getElementById('interval-mins').value = s.intervalMinutes;
+        }
+      }
+      buttons.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
+    }
+
+    function hookActions() {
+      document.getElementById('add-btn').addEventListener('click', () => {
+        const title = String(document.getElementById('task-title').value || '').trim();
+        const intervalsNeeded = Math.max(1, parseInt(document.getElementById('task-intervals').value || '1', 10));
+        const startNext = document.getElementById('start-next').checked;
+        if (!title) {
+          alert('Please enter a title');
+          return;
+        }
+        const tasks = loadTasks();
+        const task = {
+          id: 't_' + Date.now(),
+          title,
+          intervalsNeeded,
+          enabled: true,
+          createdAt: Date.now(),
+        };
+        tasks.push(task);
+        saveTasks(tasks);
+
+        const { index } = getIntervalInfo();
+        const startIndex = startNext ? index + 1 : index;
+        assignTaskToNextIntervals(task.id, intervalsNeeded, startIndex);
+
+        // Clear form and refresh
+        document.getElementById('task-title').value = '';
+        document.getElementById('task-intervals').value = '1';
+        renderTasksList();
+        renderOverview();
+      });
+
+      document.getElementById('save-settings').addEventListener('click', () => {
+        const mins = Math.max(1, parseInt(document.getElementById('interval-mins').value || '25', 10));
+        saveSettings({ intervalMinutes: mins });
+        // Reset today's schedule as cadence changed
+        const dayKey = getTodayKey();
+        localStorage.removeItem(SCHEDULE_PREFIX + dayKey);
+        renderOverview();
+        alert('Settings saved');
+      });
+
+      document.getElementById('reset-today').addEventListener('click', () => {
+        const dayKey = getTodayKey();
+        localStorage.removeItem(SCHEDULE_PREFIX + dayKey);
+        renderOverview();
+        alert("Today's schedule reset");
+      });
+
+      // Refresh overview every minute to update ranges and current index indicator
+      setInterval(() => {
+        if (document.getElementById('screen-overview').classList.contains('active')) {
+          renderOverview();
+        }
+      }, 30 * 1000);
+
+      // Progress bar tick
+      setInterval(updateCurrentIntervalProgress, 1000);
+    }
+
+    // --- Init ---
+    (function init() {
+      ensureScheduleConsistency();
+      hookTabs();
+      hookActions();
+      renderOverview();
+      updateCurrentIntervalProgress();
+    })();
+  </script>
+</body>
+</html>
+
+

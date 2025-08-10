@@ -574,36 +574,13 @@
     }
 
     function getRawEffectiveTaskIdForIndex(index) {
-      const dayKey = getTodayKey();
-      const schedule = loadSchedule(dayKey);
-      const tagsMap = loadTags();
-      const selectedFilters = loadTagFilterSelection();
-      const tasks = loadTasks();
-      const scheduledId = schedule[index];
-      if (scheduledId) {
-        const t = tasks.find(x => x.id === scheduledId);
-        if (t && (t.enabled !== false) && isTaskAllowedByTags(t, tagsMap) && taskMatchesFilter(t, selectedFilters)) {
-          return scheduledId;
-        }
-      }
       const avail = getAvailableTaskIdsForCycle();
       if (avail.length === 0) return null;
       return avail[positiveModulo(index, avail.length)];
     }
 
     function getEffectiveTaskIdForIndex(index) {
-      const dayKey = getTodayKey();
-      const schedule = loadSchedule(dayKey);
-      const tagsMap = loadTags();
-      const selectedFilters = loadTagFilterSelection();
       const tasks = loadTasks();
-      const scheduledId = schedule[index];
-      if (scheduledId) {
-        const t = tasks.find(x => x.id === scheduledId);
-        if (t && (t.enabled !== false) && isTaskAllowedByTags(t, tagsMap) && taskMatchesFilter(t, selectedFilters)) {
-          return scheduledId;
-        }
-      }
       const avail = getAvailableTaskIdsForCycle();
       if (avail.length === 0) return null;
       const n = avail.length;
@@ -623,25 +600,7 @@
     }
 
     // Fill all missing intervals of today by cycling through available tasks from 12:00 AM
-    function ensureCyclicScheduleForToday() {
-      const availableTaskIds = getAvailableTaskIdsForCycle();
-      if (availableTaskIds.length === 0) return;
-      const dayKey = getTodayKey();
-      const schedule = loadSchedule(dayKey);
-      const total = getIntervalsPerDay();
-      for (let i = 0; i < total; i++) {
-        if (!schedule[i]) {
-          const n = availableTaskIds.length;
-          let candidate = availableTaskIds[positiveModulo(i, n)];
-          const prevAssigned = schedule[i - 1] || null;
-          if (n > 1 && prevAssigned && candidate === prevAssigned) {
-            candidate = availableTaskIds[positiveModulo(i + 1, n)];
-          }
-          schedule[i] = candidate;
-        }
-      }
-      saveSchedule(dayKey, schedule);
-    }
+    // Scheduling is removed; intervals are derived purely from ordered tasks
 
     function renderOverview() {
       const { index, start, end } = getIntervalInfo();
@@ -851,6 +810,9 @@
         row.className = 'interval';
         if (!isEnabled) row.classList.add('disabled');
         row.innerHTML = `
+          <label class="small" style="margin-right:10px;" title="Enable/disable">
+            <input type="checkbox" class="task-enabled" ${t.enabled !== false ? 'checked' : ''} data-id="${t.id}">
+          </label>
           <div>
             <div class="task">${t.title}</div>
             <div class="meta">${t.intervalsNeeded} interval(s) ${isEnabled ? '' : '<span class=\"pill\" style=\"margin-left:6px;\">Disabled</span>'}</div>
@@ -868,6 +830,33 @@
             </div>
           </div>
         `;
+        // Checkbox enable/disable toggle
+        const enabledCheckbox = row.querySelector('.task-enabled');
+        if (enabledCheckbox) {
+          enabledCheckbox.addEventListener('change', () => {
+            const all = loadTasks();
+            const idx = all.findIndex(x => x.id === t.id);
+            if (idx !== -1) {
+              const nextEnabled = enabledCheckbox.checked;
+              all[idx].enabled = nextEnabled;
+              saveTasks(all);
+              if (!nextEnabled) {
+                const dayKey = getTodayKey();
+                const schedule = loadSchedule(dayKey);
+                const { index: currentIdx } = getIntervalInfo();
+                for (const k of Object.keys(schedule)) {
+                  const intervalIndex = parseInt(k, 10);
+                  if (!Number.isNaN(intervalIndex) && intervalIndex >= currentIdx + 1 && schedule[k] === t.id) {
+                    delete schedule[k];
+                  }
+                }
+                saveSchedule(dayKey, schedule);
+              }
+              renderTasksList();
+              renderOverview();
+            }
+          });
+        }
 
         const trigger = row.querySelector('.menu-trigger');
         const menu = row.querySelector('.menu');
@@ -1191,8 +1180,7 @@
       ensureScheduleConsistency();
       hookTabs();
       hookActions();
-      // Build a full-day schedule from 12:00 AM by cycling through available tasks
-      ensureCyclicScheduleForToday();
+      // Scheduling removed: tasks are mapped by order from 12:00 AM dynamically
       renderOverview();
       populateFilterOptions();
       renderTagSuggestions();

@@ -102,6 +102,28 @@
       font-size: 12px;
       color: #9fb4ff;
     }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #0e1a33;
+      border: 1px solid #21345d;
+      font-size: 11px;
+      color: #c7d2fe;
+      margin-right: 6px;
+      margin-top: 4px;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #0e1a33;
+      border: 1px solid #21345d;
+      font-size: 11px;
+      color: #c7d2fe;
+      margin-right: 6px;
+      margin-top: 4px;
+    }
 
     input, select, button, textarea {
       font: inherit;
@@ -133,6 +155,7 @@
       cursor: pointer;
       box-shadow: 0 8px 20px rgba(59,130,246,0.25);
     }
+    .btn.small { padding: 6px 10px; font-size: 12px; font-weight: 600; }
     .btn.secondary {
       background: linear-gradient(180deg, #22c55e 0%, #19924a 100%);
       box-shadow: 0 8px 20px rgba(34,197,94,0.22);
@@ -302,7 +325,15 @@
     <!-- Overview Screen -->
     <section id="screen-overview" class="screen active">
       <div class="card">
-        <h3>Now</h3>
+        <h3>Last task</h3>
+        <div id="last-interval" class="interval">
+          <div>
+            <div class="task" id="last-task-title">No task</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Current task</h3>
         <div id="current-interval" class="interval">
           <div>
             <div class="meta" id="current-range">--:-- — --:--</div>
@@ -321,32 +352,10 @@
           </div>
         </div>
       </div>
-      <div class="row">
-        <div class="card">
-          <h3>Previous</h3>
-          <div id="prev-interval" class="interval">
-            <div>
-              <div class="meta" id="prev-range">--:-- — --:--</div>
-              <div class="task" id="prev-task">No task</div>
-            </div>
-            <span class="pill" id="prev-index">#</span>
-          </div>
-        </div>
-        <div class="card">
-          <h3>Next</h3>
-          <div id="next-interval" class="interval">
-            <div>
-              <div class="meta" id="next-range">--:-- — --:--</div>
-              <div class="task" id="next-task">No task</div>
-            </div>
-            <span class="pill" id="next-index">#</span>
-          </div>
-        </div>
-      </div>
 
       <div class="card">
-        <h3>Recent intervals</h3>
-        <div id="history" class="history-list"></div>
+        <h3>Next 3 tasks</h3>
+        <div id="upcoming" class="history-list"></div>
       </div>
     </section>
 
@@ -357,6 +366,12 @@
         <div class="field">
           <label for="task-title">Title</label>
           <input id="task-title" class="input" type="text" placeholder="e.g., Write report" />
+        </div>
+        <div class="field">
+          <label for="task-tags">Tags (comma separated)</label>
+          <input id="task-tags" class="input" type="text" placeholder="e.g., home, work" list="tag-suggestions" />
+          <datalist id="tag-suggestions"></datalist>
+          <div class="small muted">New tags are created automatically when you add the task.</div>
         </div>
         <div class="field">
           <label for="task-intervals">Intervals needed</label>
@@ -372,6 +387,11 @@
 
       <div class="card">
         <h3>Queued tasks</h3>
+        <div class="field" style="margin-bottom: 8px;">
+          <label class="small">Filter by tags</label>
+          <div id="task-filter-group"></div>
+          <div class="small muted">Select none to show all.</div>
+        </div>
         <div id="task-list" class="history-list"></div>
       </div>
     </section>
@@ -390,6 +410,11 @@
         </div>
         <p class="small muted" style="margin-top:8px">Changing interval length resets today's schedule to match the new cadence.</p>
       </div>
+      <div class="card">
+        <h3>Tags</h3>
+        <div id="tag-list" class="history-list"></div>
+        <p class="small muted" style="margin-top:8px">Disable a tag to exclude those tasks from future intervals today. Untagged applies to tasks without any tags.</p>
+      </div>
     </section>
   </main>
 
@@ -404,6 +429,9 @@
     const SETTINGS_KEY = "ti_settings_v1";
     const TASKS_KEY = "ti_tasks_v1";
     const SCHEDULE_PREFIX = "ti_schedule_"; // + YYYY-MM-DD
+    const TAGS_KEY = "ti_tags_v1"; // { [tagName]: { enabled: boolean } }
+    const TAG_FILTER_KEY = "ti_tag_filter_v1"; // string[] of selected filter tags
+    
 
     // --- Utilities ---
     function startOfLocalDay(date = new Date()) {
@@ -446,8 +474,66 @@
       if (!raw) return {}; // { [intervalIndex]: taskId }
       try { return JSON.parse(raw); } catch { return {}; }
     }
+    function loadTags() {
+      const raw = localStorage.getItem(TAGS_KEY);
+      if (!raw) return {}; // default: no explicit tags yet
+      try { return JSON.parse(raw) || {}; } catch { return {}; }
+    }
+    function saveTags(tagsMap) {
+      localStorage.setItem(TAGS_KEY, JSON.stringify(tagsMap));
+    }
+    function normalizeTagName(tag) { return String(tag || '').trim(); }
+    function getTaskTags(task) { const tags = Array.isArray(task?.tags) ? task.tags : []; return tags.map(normalizeTagName).filter(Boolean); }
+    function isTagEnabled(tagName, tagsMap) { const t = normalizeTagName(tagName); if (!t) return true; const rec = tagsMap[t]; return rec ? rec.enabled !== false : true; }
+    function isTaskAllowedByTags(task, tagsMap) {
+      const tags = getTaskTags(task);
+      if (tags.length === 0) {
+        const rec = tagsMap['Untagged'];
+        return rec ? rec.enabled !== false : true;
+      }
+      for (const tag of tags) { if (!isTagEnabled(tag, tagsMap)) return false; }
+      return true;
+    }
+
+    // Filter helpers (Add screen selection influences Overview)
+    function taskMatchesFilter(task, selectedFilters) {
+      const tags = getTaskTags(task);
+      if (!selectedFilters || selectedFilters.length === 0) return true;
+      // A task matches if any selected filter matches its tags, or '__UNTAGGED__' when it has no tags
+      return selectedFilters.some(f => (f === '__UNTAGGED__' ? tags.length === 0 : tags.includes(f)));
+    }
     function saveSchedule(dayKey, schedule) {
       localStorage.setItem(SCHEDULE_PREFIX + dayKey, JSON.stringify(schedule));
+    }
+
+    // --- Tags helpers ---
+    function loadTags() {
+      const raw = localStorage.getItem(TAGS_KEY);
+      if (!raw) return {};
+      try { return JSON.parse(raw) || {}; } catch { return {}; }
+    }
+    function saveTags(tagsMap) {
+      localStorage.setItem(TAGS_KEY, JSON.stringify(tagsMap));
+    }
+    function normalizeTagName(tag) { return String(tag || '').trim(); }
+    function getTaskTags(task) {
+      const tags = Array.isArray(task?.tags) ? task.tags : [];
+      return tags.map(normalizeTagName).filter(Boolean);
+    }
+    function isTagEnabled(tagName, tagsMap) {
+      const t = normalizeTagName(tagName);
+      if (!t) return true;
+      const rec = tagsMap[t];
+      return rec ? rec.enabled !== false : true;
+    }
+    function isTaskAllowedByTags(task, tagsMap) {
+      const tags = getTaskTags(task);
+      if (tags.length === 0) {
+        const rec = tagsMap['Untagged'];
+        return rec ? rec.enabled !== false : true;
+      }
+      for (const tag of tags) { if (!isTagEnabled(tag, tagsMap)) return false; }
+      return true;
     }
 
     function getIntervalInfo(now = new Date()) {
@@ -470,54 +556,105 @@
     // --- Rendering ---
     let lastRenderedIntervalIndex = null;
 
+    // Build the list of task IDs used for cyclic fallback (no free slots)
+    function getAvailableTaskIdsForCycle() {
+      const tasks = loadTasks();
+      const tagsMap = loadTags();
+      const selectedFilters = loadTagFilterSelection();
+      return tasks
+        .filter(t => (t.enabled !== false) && isTaskAllowedByTags(t, tagsMap) && taskMatchesFilter(t, selectedFilters))
+        .map(t => t.id);
+    }
+    // Returns a taskId to use for a given interval index:
+    //  - schedule assignment if present
+    //  - otherwise, cyclic pick from available tasks by modulo index
+    function getEffectiveTaskIdForIndex(index) {
+      const dayKey = getTodayKey();
+      const schedule = loadSchedule(dayKey);
+      const tagsMap = loadTags();
+      const selectedFilters = loadTagFilterSelection();
+      const tasks = loadTasks();
+      const scheduledId = schedule[index];
+      if (scheduledId) {
+        const t = tasks.find(x => x.id === scheduledId);
+        if (t && (t.enabled !== false) && isTaskAllowedByTags(t, tagsMap) && taskMatchesFilter(t, selectedFilters)) {
+          return scheduledId;
+        }
+      }
+      const avail = getAvailableTaskIdsForCycle();
+      if (avail.length === 0) return null;
+      return avail[index % avail.length];
+    }
+
+    function getIntervalsPerDay() {
+      const settings = loadSettings();
+      const intervalMs = Math.max(1, Number(settings.intervalMinutes || 25)) * 60 * 1000;
+      const dayMs = 24 * 60 * 60 * 1000;
+      return Math.ceil(dayMs / intervalMs);
+    }
+
+    // Fill all missing intervals of today by cycling through available tasks from 12:00 AM
+    function ensureCyclicScheduleForToday() {
+      const availableTaskIds = getAvailableTaskIdsForCycle();
+      if (availableTaskIds.length === 0) return;
+      const dayKey = getTodayKey();
+      const schedule = loadSchedule(dayKey);
+      const total = getIntervalsPerDay();
+      for (let i = 0; i < total; i++) {
+        if (!schedule[i]) {
+          schedule[i] = availableTaskIds[i % availableTaskIds.length];
+        }
+      }
+      saveSchedule(dayKey, schedule);
+    }
+
     function renderOverview() {
       const { index, start, end } = getIntervalInfo();
       const dayKey = getTodayKey();
       const schedule = loadSchedule(dayKey);
       const tasks = loadTasks();
 
-      const currentTaskTitle = schedule[index] ? (tasks.find(t => t.id === schedule[index])?.title || 'Unknown task') : 'Free';
+      const currentTaskId = getEffectiveTaskIdForIndex(index);
+      const currentTaskTitle = currentTaskId ? (tasks.find(t => t.id === currentTaskId)?.title || 'Unknown task') : 'No tasks';
       document.getElementById('current-range').textContent = `${formatTime(start)} — ${formatTime(end)}`;
       document.getElementById('current-task').textContent = currentTaskTitle;
       document.getElementById('current-index').textContent = `#${index}`;
 
-      // Prev
-      const prevIndex = Math.max(0, index - 1);
-      const prevStart = new Date(start.getTime() - (end.getTime() - start.getTime()));
-      const prevEnd = start;
-      const prevTaskTitle = schedule[prevIndex] ? (tasks.find(t => t.id === schedule[prevIndex])?.title || 'Unknown task') : 'Free';
-      document.getElementById('prev-range').textContent = `${formatTime(prevStart)} — ${formatTime(prevEnd)}`;
-      document.getElementById('prev-task').textContent = prevTaskTitle;
-      document.getElementById('prev-index').textContent = `#${prevIndex}`;
+      // Last task title
+      const lastTitleNode = document.getElementById('last-task-title');
+      if (lastTitleNode) {
+        const prevIndex = Math.max(0, index - 1);
+        const prevTaskId = getEffectiveTaskIdForIndex(prevIndex);
+        const prevTaskTitle = prevTaskId ? (tasks.find(t => t.id === prevTaskId)?.title || 'Unknown task') : 'No tasks';
+        lastTitleNode.textContent = prevTaskTitle;
+      }
 
-      // Next
-      const nextIndex = index + 1;
-      const nextStart = end;
-      const nextEnd = new Date(end.getTime() + (end.getTime() - start.getTime()));
-      const nextTaskTitle = schedule[nextIndex] ? (tasks.find(t => t.id === schedule[nextIndex])?.title || 'Unknown task') : 'Free';
-      document.getElementById('next-range').textContent = `${formatTime(nextStart)} — ${formatTime(nextEnd)}`;
-      document.getElementById('next-task').textContent = nextTaskTitle;
-      document.getElementById('next-index').textContent = `#${nextIndex}`;
+      // Remove old prev/next detailed cards logic (handled by sections now)
 
-      // History: show last 5 intervals before current
-      const historyRoot = document.getElementById('history');
-      historyRoot.innerHTML = '';
-      const historyCount = 5;
-      for (let i = Math.max(0, index - historyCount); i < index; i++) {
-        const item = document.createElement('div');
-        item.className = 'interval';
+      // Removed detailed history list
+
+      // Upcoming: show next 3 intervals after current
+      const upcomingRoot = document.getElementById('upcoming');
+      if (upcomingRoot) {
+        upcomingRoot.innerHTML = '';
         const intervalMs = end.getTime() - start.getTime();
-        const hStart = new Date(startOfLocalDay().getTime() + i * intervalMs);
-        const hEnd = new Date(hStart.getTime() + intervalMs);
-        const title = schedule[i] ? (tasks.find(t => t.id === schedule[i])?.title || 'Unknown task') : 'Free';
-        item.innerHTML = `
-          <div>
-            <div class="meta">${formatTime(hStart)} — ${formatTime(hEnd)}</div>
-            <div class="task">${title}</div>
-          </div>
-          <span class="pill">#${i}</span>
-        `;
-        historyRoot.appendChild(item);
+        const upcomingCount = 3;
+        for (let offset = 1; offset <= upcomingCount; offset++) {
+          const i = index + offset;
+          const uStart = new Date(end.getTime() + (offset - 1) * intervalMs);
+          const uEnd = new Date(uStart.getTime() + intervalMs);
+          const effId = getEffectiveTaskIdForIndex(i);
+          const title = effId ? (tasks.find(t => t.id === effId)?.title || 'Unknown task') : 'No tasks';
+          const row = document.createElement('div');
+          row.className = 'interval';
+          row.innerHTML = `
+            <div>
+              <div class="meta">${formatTime(uStart)} — ${formatTime(uEnd)}</div>
+              <div class="task">${title}</div>
+            </div>
+          `;
+          upcomingRoot.appendChild(row);
+        }
       }
     }
 
@@ -551,9 +688,92 @@
       if (rem) rem.textContent = `${mm}:${ss} remaining`;
     }
 
+    // --- Skip to next task ---
+    function skipToNextTask() {
+      const { index } = getIntervalInfo();
+      const dayKey = getTodayKey();
+      const schedule = loadSchedule(dayKey);
+      console.log(schedule);
+
+      const currentTaskId = schedule[index] || null;
+      // Find the first next scheduled task (no eligibility checks)
+      let foundIndex = null;
+      let foundTaskId = null;
+      for (let i = index + 1; i < index + 1000; i++) {
+        if (schedule[i]) { foundIndex = i; foundTaskId = schedule[i]; break; }
+      }
+
+      if (!foundTaskId) {
+        // No next task; if current has a task, clear it (skip to free)
+        if (currentTaskId) {
+          delete schedule[index];
+          saveSchedule(dayKey, schedule);
+          renderOverview();
+        }
+        return;
+      }
+
+      // Move next task to now
+      schedule[index] = foundTaskId;
+      if (currentTaskId) {
+        // Swap: move current task to where the next one came from
+        schedule[foundIndex] = currentTaskId;
+      } else {
+        // Current was free; just pull forward
+        delete schedule[foundIndex];
+      }
+      saveSchedule(dayKey, schedule);
+      renderOverview();
+    }
+
+    function loadTagFilterSelection() {
+      const raw = localStorage.getItem(TAG_FILTER_KEY);
+      if (!raw) return [];
+      try { const v = JSON.parse(raw); return Array.isArray(v) ? v : []; } catch { return []; }
+    }
+    function saveTagFilterSelection(selected) {
+      localStorage.setItem(TAG_FILTER_KEY, JSON.stringify(selected || []));
+    }
+
+    function populateFilterOptions() {
+      const group = document.getElementById('task-filter-group');
+      if (!group) return;
+      const tagsMap = loadTags();
+      const tasks = loadTasks();
+      const set = new Set(Object.keys(tagsMap));
+      let hasUntagged = false;
+      for (const t of tasks) {
+        const tags = getTaskTags(t);
+        if (tags.length === 0) hasUntagged = true;
+        tags.forEach(tag => set.add(tag));
+      }
+      group.innerHTML = '';
+      const selected = new Set(loadTagFilterSelection());
+      const mk = (name, label) => {
+        const id = 'tf_' + name.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const wrap = document.createElement('label');
+        wrap.className = 'small';
+        wrap.style.marginRight = '10px';
+        const checkedAttr = selected.has(name) ? 'checked' : '';
+        wrap.innerHTML = `<input type="checkbox" value="${name}" id="${id}" ${checkedAttr}> ${label}`;
+        group.appendChild(wrap);
+      };
+      if (hasUntagged) mk('__UNTAGGED__', 'Untagged');
+      Array.from(set).sort((a,b)=>a.localeCompare(b)).forEach(tag => mk(tag, tag));
+      // Persist filter on change and re-render
+      group.addEventListener('change', () => {
+        const active = Array.from(group.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value);
+        saveTagFilterSelection(active);
+        renderTasksList();
+      });
+    }
+
     function renderTasksList() {
       const tasks = loadTasks();
+      const tagsMap = loadTags();
       const root = document.getElementById('task-list');
+      const group = document.getElementById('task-filter-group');
+      const activeFilters = group ? Array.from(group.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value) : [];
       root.innerHTML = '';
       if (tasks.length === 0) {
         const empty = document.createElement('div');
@@ -563,19 +783,52 @@
         return;
       }
       for (const t of tasks) {
-        const isEnabled = t.enabled !== false; // default enabled for legacy items
+        // Filter check
+        const tTags = getTaskTags(t);
+        const matchesFilter = activeFilters.length === 0 || activeFilters.some(f => (f === '__UNTAGGED__' ? tTags.length === 0 : tTags.includes(f)));
+        if (!matchesFilter) continue;
+        const hasEnabledFlag = t.enabled !== false; // default enabled for legacy items
+        const tagAllowed = isTaskAllowedByTags(t, tagsMap);
+        const isEnabled = hasEnabledFlag && tagAllowed;
+        // Build eligibility explanation for Next task
+        const { index: currentIdx } = getIntervalInfo();
+        const dayKey = getTodayKey();
+        const schedule = loadSchedule(dayKey);
+        let nextAt = null;
+        for (const k of Object.keys(schedule)) {
+          const ii = parseInt(k, 10);
+          if (!Number.isNaN(ii) && ii >= currentIdx + 1 && schedule[k] === t.id) {
+            if (nextAt === null || ii < nextAt) nextAt = ii;
+          }
+        }
+        const disabledTags = tTags.length === 0
+          ? ((tagsMap['Untagged'] && tagsMap['Untagged'].enabled === false) ? ['Untagged'] : [])
+          : tTags.filter(tag => !isTagEnabled(tag, tagsMap));
+        const reasons = [];
+        if (!hasEnabledFlag) reasons.push('Task disabled');
+        if (disabledTags.length > 0) reasons.push(`Tag(s) disabled: ${disabledTags.join(', ')}`);
+        if (nextAt === null) reasons.push('Not scheduled in upcoming intervals today');
+        const eligibilityNote = reasons.length === 0
+          ? `<div class="small muted">Eligible for Next task; next at #${nextAt}</div>`
+          : `<div class="small muted">Not eligible for Next task: ${reasons.join('; ')}</div>`;
+
         const row = document.createElement('div');
         row.className = 'interval';
         if (!isEnabled) row.classList.add('disabled');
         row.innerHTML = `
           <div>
             <div class="task">${t.title}</div>
-            <div class="meta">${t.intervalsNeeded} interval(s) ${isEnabled ? '' : '<span class="pill" style="margin-left:6px;">Disabled</span>'}</div>
+            <div class="meta">${t.intervalsNeeded} interval(s) ${isEnabled ? '' : '<span class=\"pill\" style=\"margin-left:6px;\">Disabled</span>'}</div>
+            <div class="tags">${(getTaskTags(t).length ? getTaskTags(t) : ['Untagged']).map(tag => `<span class=\"tag\">${tag}</span>`).join('')}</div>
+            ${eligibilityNote}
           </div>
           <div class="menu-wrap">
             <button class="menu-trigger" aria-haspopup="true" aria-expanded="false" aria-label="Task actions">⋯</button>
             <div class="menu" role="menu">
+              <button class="menu-item" data-action="move-up" data-id="${t.id}" role="menuitem">Move up</button>
+              <button class="menu-item" data-action="move-down" data-id="${t.id}" role="menuitem">Move down</button>
               <button class="menu-item" data-action="toggle" data-id="${t.id}" role="menuitem">${isEnabled ? 'Disable' : 'Enable'}</button>
+              <button class="menu-item" data-action="make-next" data-id="${t.id}" role="menuitem">Make next</button>
               <button class="menu-item danger" data-action="delete" data-id="${t.id}" role="menuitem">Delete</button>
             </div>
           </div>
@@ -618,6 +871,63 @@
           }
         });
 
+        const moveUpBtn = row.querySelector('[data-action="move-up"]');
+        if (moveUpBtn) {
+          moveUpBtn.addEventListener('click', () => {
+            const all = loadTasks();
+            const idx = all.findIndex(x => x.id === t.id);
+            if (idx > 0) {
+              const tmp = all[idx - 1];
+              all[idx - 1] = all[idx];
+              all[idx] = tmp;
+              saveTasks(all);
+            }
+            menu.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+            renderTasksList();
+          });
+        }
+
+        const moveDownBtn = row.querySelector('[data-action="move-down"]');
+        if (moveDownBtn) {
+          moveDownBtn.addEventListener('click', () => {
+            const all = loadTasks();
+            const idx = all.findIndex(x => x.id === t.id);
+            if (idx !== -1 && idx < all.length - 1) {
+              const tmp = all[idx + 1];
+              all[idx + 1] = all[idx];
+              all[idx] = tmp;
+              saveTasks(all);
+            }
+            menu.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+            renderTasksList();
+          });
+        }
+
+        const makeNextBtn = row.querySelector('[data-action="make-next"]');
+        if (makeNextBtn) {
+          makeNextBtn.addEventListener('click', () => {
+            // Ensure the task is enabled
+            const all = loadTasks();
+            const tIdx = all.findIndex(x => x.id === t.id);
+            if (tIdx !== -1) {
+              all[tIdx].enabled = true;
+              saveTasks(all);
+            }
+            // Assign to next interval
+            const { index: currentIdx } = getIntervalInfo();
+            const dayKey = getTodayKey();
+            const schedule = loadSchedule(dayKey);
+            schedule[currentIdx + 1] = t.id;
+            saveSchedule(dayKey, schedule);
+            menu.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+            renderTasksList();
+            renderOverview();
+          });
+        }
+
         const deleteBtn = row.querySelector('[data-action="delete"]');
         deleteBtn.addEventListener('click', () => {
           const updated = tasks.filter(x => x.id !== t.id);
@@ -646,6 +956,7 @@
           document.querySelectorAll('.menu-trigger[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
         });
       }
+      // nothing else; checkboxes are live-wired in populateFilterOptions
     }
 
     // --- Scheduling ---
@@ -665,6 +976,83 @@
       saveSchedule(dayKey, schedule);
       return assigned;
     }
+    function renderTagSuggestions() {
+      const list = document.getElementById('tag-suggestions');
+      if (!list) return;
+      const tagsMap = loadTags();
+      list.innerHTML = '';
+      Object.keys(tagsMap).sort().forEach(tag => {
+        const opt = document.createElement('option');
+        opt.value = tag;
+        list.appendChild(opt);
+      });
+    }
+    function renderTagsSettings() {
+      const container = document.getElementById('tag-list');
+      if (!container) return;
+      container.innerHTML = '';
+      const tagsMap = loadTags();
+      const tasks = loadTasks();
+      const set = new Set(Object.keys(tagsMap));
+      let hasUntagged = false;
+      for (const t of tasks) {
+        const tags = getTaskTags(t);
+        if (tags.length === 0) hasUntagged = true;
+        tags.forEach(tag => set.add(tag));
+      }
+      if (hasUntagged) set.add('Untagged');
+      if (set.size === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'muted small';
+        empty.textContent = 'No tags yet. Add tags when creating tasks.';
+        container.appendChild(empty);
+        return;
+      }
+      const sorted = Array.from(set).sort((a,b) => a.localeCompare(b));
+      for (const name of sorted) {
+        const enabled = name === 'Untagged' ? (tagsMap['Untagged'] ? tagsMap['Untagged'].enabled !== false : true) : isTagEnabled(name, tagsMap);
+        const row = document.createElement('div');
+        row.className = 'interval';
+        row.innerHTML = `
+          <div>
+            <div class="task">${name}</div>
+            <div class="meta">${enabled ? 'Enabled' : 'Disabled'}</div>
+          </div>
+          <label class="small"><input type="checkbox" ${enabled ? 'checked' : ''} data-tag-name="${name}"> Enable</label>
+        `;
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', () => {
+          const map = loadTags();
+          const tagName = checkbox.getAttribute('data-tag-name');
+          if (!map[tagName]) map[tagName] = { enabled: true };
+          map[tagName].enabled = checkbox.checked;
+          saveTags(map);
+          // If disabling, remove from next intervals only
+          if (!checkbox.checked) {
+            const { index: currentIdx } = getIntervalInfo();
+            const dayKey = getTodayKey();
+            const schedule = loadSchedule(dayKey);
+            const tasksAll = loadTasks();
+            const ids = tasksAll.filter(t => {
+              const tags = getTaskTags(t);
+              if (tagName === 'Untagged') return tags.length === 0;
+              return tags.includes(tagName);
+            }).map(t => t.id);
+            for (const k of Object.keys(schedule)) {
+              const intervalIndex = parseInt(k, 10);
+              if (!Number.isNaN(intervalIndex) && intervalIndex >= currentIdx + 1) {
+                if (ids.includes(schedule[k])) delete schedule[k];
+              }
+            }
+            saveSchedule(dayKey, schedule);
+          }
+          renderTagsSettings();
+          renderTasksList();
+          renderOverview();
+        });
+        container.appendChild(row);
+      }
+    }
 
     // --- Event wiring ---
     function hookTabs() {
@@ -680,10 +1068,11 @@
           el.classList.toggle('active', key === tab);
         });
         if (tab === 'overview') renderOverview();
-        if (tab === 'add') renderTasksList();
+        if (tab === 'add') { populateFilterOptions(); renderTasksList(); renderTagSuggestions(); }
         if (tab === 'settings') {
           const s = loadSettings();
           document.getElementById('interval-mins').value = s.intervalMinutes;
+          renderTagsSettings();
         }
       }
       buttons.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
@@ -692,6 +1081,8 @@
     function hookActions() {
       document.getElementById('add-btn').addEventListener('click', () => {
         const title = String(document.getElementById('task-title').value || '').trim();
+        const tagsInputRaw = String(document.getElementById('task-tags')?.value || '');
+        const tagCandidates = tagsInputRaw.split(',').map(s => normalizeTagName(s)).filter(Boolean);
         const intervalsNeeded = Math.max(1, parseInt(document.getElementById('task-intervals').value || '1', 10));
         const startNext = document.getElementById('start-next').checked;
         if (!title) {
@@ -699,11 +1090,18 @@
           return;
         }
         const tasks = loadTasks();
+        const tagsMap = loadTags();
+        // Auto-create new tags typed by user
+        for (const tName of tagCandidates) {
+          if (!tagsMap[tName]) tagsMap[tName] = { enabled: true };
+        }
+        saveTags(tagsMap);
         const task = {
           id: 't_' + Date.now(),
           title,
           intervalsNeeded,
           enabled: true,
+          tags: tagCandidates,
           createdAt: Date.now(),
         };
         tasks.push(task);
@@ -715,7 +1113,10 @@
 
         // Clear form and refresh
         document.getElementById('task-title').value = '';
+        if (document.getElementById('task-tags')) document.getElementById('task-tags').value = '';
         document.getElementById('task-intervals').value = '1';
+        populateFilterOptions();
+        renderTagSuggestions();
         renderTasksList();
         renderOverview();
       });
@@ -746,6 +1147,8 @@
 
       // Progress bar tick
       setInterval(updateCurrentIntervalProgress, 1000);
+
+      // Next task button removed per request
     }
 
     // --- Init ---
@@ -753,7 +1156,11 @@
       ensureScheduleConsistency();
       hookTabs();
       hookActions();
+      // Build a full-day schedule from 12:00 AM by cycling through available tasks
+      ensureCyclicScheduleForToday();
       renderOverview();
+      populateFilterOptions();
+      renderTagSuggestions();
       updateCurrentIntervalProgress();
     })();
   </script>

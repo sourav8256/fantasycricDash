@@ -124,7 +124,7 @@
             opacity: 0.7;
         }
         .pending-progress-marker::before {
-            content: "20%";
+            content: attr(data-label);
             position: absolute;
             top: -20px;
             left: -10px;
@@ -151,15 +151,18 @@
         .pending-progress-info {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             font-size: 14px;
             color: #6c757d;
             margin-top: 5px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .pending-progress-info .target-input {
             display: flex;
             align-items: center;
             gap: 5px;
+            flex: 0 0 auto;
         }
         .pending-progress-info input {
             width: 60px;
@@ -179,6 +182,53 @@
         }
         .pending-progress-info button:hover {
             background-color: #138496;
+        }
+        
+        /* Responsive design for pending progress info */
+        @media (max-width: 768px) {
+            .pending-progress-info {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .pending-progress-info .target-input {
+                justify-content: space-between;
+                width: 100%;
+            }
+            .pending-progress-info .target-input label {
+                flex: 1;
+                min-width: 0;
+            }
+            .pending-progress-info .target-input input {
+                width: 70px;
+                flex-shrink: 0;
+            }
+            .pending-progress-info .target-input button {
+                flex-shrink: 0;
+                min-width: 50px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .pending-progress-section {
+                padding: 10px;
+                margin: 15px 0;
+            }
+            .pending-progress-info {
+                font-size: 13px;
+            }
+            .pending-progress-info .target-input {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 4px;
+            }
+            .pending-progress-info .target-input input {
+                width: 100%;
+            }
+            .pending-progress-info .target-input button {
+                width: 100%;
+                padding: 6px 8px;
+            }
         }
         .daily-limit-section {
             margin: 20px 0;
@@ -612,7 +662,7 @@
                 <div class="pending-progress" id="pendingProgressBar">
                     <span class="pending-progress-text" id="pendingProgressText">0%</span>
                 </div>
-                <div class="pending-progress-marker"></div>
+                <div class="pending-progress-marker" data-label="20%"></div>
             </div>
             <div class="pending-progress-info">
                 <span>Current Pending: <span id="currentPendingTime">0</span> minutes (Lower is better!)</span>
@@ -620,6 +670,16 @@
                     <label>Target Max: </label>
                     <input type="number" id="targetPendingTimeInput" value="100">
                     <button onclick="setTargetPendingTime()">Set</button>
+                </div>
+                <div class="target-input">
+                    <label>Marker %: </label>
+                    <input type="number" id="pendingMarkerPercentInput" value="20" min="0" max="100">
+                    <button onclick="setPendingMarkerPercent()">Set</button>
+                </div>
+                <div class="target-input">
+                    <label>Marker Minutes: </label>
+                    <input type="number" id="pendingMarkerMinutesInput" value="20" min="0">
+                    <button onclick="setPendingMarkerMinutes()">Set</button>
                 </div>
             </div>
         </div>
@@ -751,6 +811,10 @@
         let todayUsage = parseInt(localStorage.getItem('todayUsage')) || 0;
         let lastUsageReset = localStorage.getItem('lastUsageReset') || new Date().toDateString();
         let targetPendingTime = parseInt(localStorage.getItem('targetPendingTime')) || 100;
+        let pendingMarkerPercent = parseInt(localStorage.getItem('pendingMarkerPercent'));
+        let pendingMarkerMinutes = parseFloat(localStorage.getItem('pendingMarkerMinutes'));
+        if (isNaN(pendingMarkerPercent)) pendingMarkerPercent = 20;
+        if (isNaN(pendingMarkerMinutes)) pendingMarkerMinutes = 0;
 
         // Break-related variables
         let breakTimer = null;
@@ -811,6 +875,20 @@
             updateResultantTime();
             updatePendingProgress();
 
+            // Initialize marker input
+            const markerInput = document.getElementById('pendingMarkerPercentInput');
+            if (markerInput) {
+                markerInput.value = Math.max(0, Math.min(100, pendingMarkerPercent));
+            }
+            const markerMinutesInput = document.getElementById('pendingMarkerMinutesInput');
+            if (markerMinutesInput && targetPendingTime > 0) {
+                if (!isNaN(pendingMarkerMinutes) && pendingMarkerMinutes > 0) {
+                    markerMinutesInput.value = Math.round(pendingMarkerMinutes);
+                } else {
+                    markerMinutesInput.value = Math.round((pendingMarkerPercent / 100) * targetPendingTime);
+                }
+            }
+
             // Add event listener for daily reset button
             const resetBtn = document.getElementById('resetDailyUsageBtn');
             if (resetBtn) {
@@ -836,6 +914,42 @@
             // No auto-approve toggle required
             // no toggle for active session UI
         });
+
+        function setPendingMarkerPercent() {
+            const input = document.getElementById('pendingMarkerPercentInput');
+            if (!input) return;
+            const val = parseInt(input.value);
+            if (isNaN(val) || val < 0 || val > 100) {
+                alert('Please enter a valid percentage between 0 and 100.');
+                return;
+            }
+            pendingMarkerPercent = val;
+            localStorage.setItem('pendingMarkerPercent', pendingMarkerPercent);
+            // Keep minutes in sync
+            if (targetPendingTime > 0) {
+                pendingMarkerMinutes = (pendingMarkerPercent / 100) * targetPendingTime;
+                localStorage.setItem('pendingMarkerMinutes', String(pendingMarkerMinutes));
+            }
+            updatePendingProgress();
+        }
+
+        function setPendingMarkerMinutes() {
+            const input = document.getElementById('pendingMarkerMinutesInput');
+            if (!input) return;
+            const val = parseFloat(input.value);
+            if (isNaN(val) || val < 0) {
+                alert('Please enter a valid non-negative number of minutes.');
+                return;
+            }
+            pendingMarkerMinutes = val;
+            localStorage.setItem('pendingMarkerMinutes', String(pendingMarkerMinutes));
+            // Keep percent in sync
+            if (targetPendingTime > 0) {
+                pendingMarkerPercent = Math.max(0, Math.min(100, (pendingMarkerMinutes / targetPendingTime) * 100));
+                localStorage.setItem('pendingMarkerPercent', Math.round(pendingMarkerPercent));
+            }
+            updatePendingProgress();
+        }
 
         // Save notes when they change
         document.getElementById('sessionNotes').addEventListener('input', function() {
@@ -2249,6 +2363,9 @@
             const pendingProgressBar = document.getElementById('pendingProgressBar');
             const pendingProgressText = document.getElementById('pendingProgressText');
             const resultantTimeEl = document.getElementById('resultantTime');
+            const markerEl = document.querySelector('.pending-progress-marker');
+            const markerPercentInput = document.getElementById('pendingMarkerPercentInput');
+            const markerMinutesInput = document.getElementById('pendingMarkerMinutesInput');
 
             if (currentPendingEl && pendingProgressBar && pendingProgressText && resultantTimeEl) {
                 // Use the already calculated resultant time
@@ -2282,6 +2399,22 @@
                 } else {
                     pendingProgressBar.style.background = '#dc3545'; // Red for >50% (lots of pending)
                 }
+
+                // Update marker position and label
+                if (markerEl) {
+                    let clampedPercent = Math.max(0, Math.min(100, pendingMarkerPercent));
+                    // If minutes specified, derive percent from targetPendingTime
+                    if (!isNaN(pendingMarkerMinutes) && pendingMarkerMinutes > 0 && targetPendingTime > 0) {
+                        clampedPercent = Math.max(0, Math.min(100, (pendingMarkerMinutes / targetPendingTime) * 100));
+                    }
+                    markerEl.style.left = `${clampedPercent}%`;
+                    markerEl.setAttribute('data-label', `${Math.round(clampedPercent)}%`);
+                    if (markerPercentInput) markerPercentInput.value = Math.round(clampedPercent);
+                    if (markerMinutesInput && targetPendingTime > 0) {
+                        const derivedMinutes = Math.round((clampedPercent / 100) * targetPendingTime);
+                        markerMinutesInput.value = derivedMinutes;
+                    }
+                }
             }
         }
 
@@ -2294,6 +2427,11 @@
             if (!isNaN(targetPending) && targetPending >= 0) {
                 targetPendingTime = targetPending;
                 localStorage.setItem('targetPendingTime', targetPendingTime);
+                // Re-sync marker minutes based on new target if percent is set
+                if (!isNaN(pendingMarkerPercent)) {
+                    pendingMarkerMinutes = (pendingMarkerPercent / 100) * targetPendingTime;
+                    localStorage.setItem('pendingMarkerMinutes', String(pendingMarkerMinutes));
+                }
                 updatePendingProgress();
                 showFinalCalculation(`Maximum pending time target set to ${targetPendingTime} minutes`);
             } else {

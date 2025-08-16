@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Focus Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 20px; }
+    h1 { text-align: center; }
+    .field { margin-bottom: 10px; }
+    label { font-weight: bold; }
+    input[type="time"] { margin-left: 5px; }
+    .section { border-bottom: 1px solid #ccc; padding: 10px 0; }
+    .buttons button { margin-right: 10px; padding: 5px 10px; }
+    .status { font-weight: bold; }
+    .progress-container { background: #eee; border-radius: 5px; overflow: hidden; position: relative; height: 20px; margin: 10px 0; }
+    .progress-bar { background: #76c7c0; height: 100%; width: 0%; transition: width 0.3s; }
+    .marker { position: absolute; left: 100%; top: 0; bottom: 0; width: 2px; background: #ff0000; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h1>Daily Focus Tracker</h1>
+  <div class="section">
+    <div class="field">
+      <label for="requiredTime">Required Daily Focus (minutes):</label>
+      <input type="number" id="requiredTime" min="0" step="1">
+    </div>
+    <div class="field">
+      <span>🕒 Today: <span id="todayDate"></span></span>
+    </div>
+    <div class="field">
+      <span>Current Session:</span> <span id="sessionTime">00h 00m</span> (<span id="sessionStatus">stopped</span>)
+    </div>
+    <div class="field">
+      <span>Total Focused:</span> <span id="totalTime">00h 00m</span> / <span id="requiredDisplay">00h 00m</span>
+    </div>
+    <div class="field">
+      <span>Status:</span> <span id="statusDisplay">❌ Missed</span>
+    </div>
+    <div class="progress-container">
+      <div class="marker"></div>
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="buttons">
+      <button id="startBtn">Start</button>
+      <button id="stopBtn" disabled>Stop</button>
+      <button id="resetBtn">Reset Today</button>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Past Days</h2>
+    <table>
+      <thead><tr><th>Date</th><th>Focused</th><th>Status</th></tr></thead>
+      <tbody id="pastDays"></tbody>
+    </table>
+  </div>
+  <script>
+    (function(){
+      const requiredInput = document.getElementById('requiredTime');
+      const todayDateEl = document.getElementById('todayDate');
+      const sessionTimeEl = document.getElementById('sessionTime');
+      const sessionStatusEl = document.getElementById('sessionStatus');
+      const totalTimeEl = document.getElementById('totalTime');
+      const requiredDisplayEl = document.getElementById('requiredDisplay');
+      const statusDisplayEl = document.getElementById('statusDisplay');
+      const progressBarEl = document.getElementById('progressBar');
+      const markerEl = document.querySelector('.marker');
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const pastDaysTbody = document.getElementById('pastDays');
+
+      const STORAGE_REQUIRED = 'requiredTime';
+      const STORAGE_DAILY = 'dailyData';
+      const STORAGE_SESSION = 'sessionStart';
+      const STORAGE_SCALE = 'dailyMaxScale';
+
+      let dailyData = JSON.parse(localStorage.getItem(STORAGE_DAILY) || '{}');
+      let dailyMaxScale = JSON.parse(localStorage.getItem(STORAGE_SCALE) || '{}'); // { [date]: number (power of 2) }
+      let sessionStart = localStorage.getItem(STORAGE_SESSION) ? parseInt(localStorage.getItem(STORAGE_SESSION), 10) : null;
+      let intervalId = null;
+
+      const todayKey = new Date().toISOString().slice(0,10);
+
+      function formatDuration(minutes){
+        const h = Math.floor(minutes/60);
+        const m = minutes%60;
+        return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;
+      }
+
+      function formatDurationSec(seconds){
+        const h = Math.floor(seconds/3600);
+        const m = Math.floor((seconds%3600)/60);
+        const s = seconds % 60;
+        return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+      }
+
+      function parseInputTime(val){
+        const minutes = parseInt(val, 10);
+        return isNaN(minutes) ? 0 : minutes;
+      }
+
+      function saveDaily(){
+        localStorage.setItem(STORAGE_DAILY, JSON.stringify(dailyData));
+      }
+      function saveScale(){
+        localStorage.setItem(STORAGE_SCALE, JSON.stringify(dailyMaxScale));
+      }
+
+      function updateDisplay(){
+        const now = Date.now();
+        let sessionElapsed = 0;
+        let sessionElapsedSeconds = 0;
+        if (sessionStart){
+          sessionElapsedSeconds = Math.floor((now - sessionStart)/1000);
+          sessionElapsed = Math.floor(sessionElapsedSeconds/60);
+          sessionTimeEl.textContent = formatDurationSec(sessionElapsedSeconds);
+          sessionStatusEl.textContent = 'running';
+        } else {
+          sessionTimeEl.textContent = '00h 00m 00s';
+          sessionStatusEl.textContent = 'stopped';
+        }
+        const savedTotalMinutes = dailyData[todayKey] || 0;
+        const requiredMinutesRaw = parseInputTime(requiredInput.value || '300');
+        const requiredMinutes = Math.max(requiredMinutesRaw, 1);
+        const totalSeconds = savedTotalMinutes * 60 + sessionElapsedSeconds;
+        const totalMinutesDisplay = Math.floor(totalSeconds / 60);
+        totalTimeEl.textContent = formatDuration(totalMinutesDisplay);
+        requiredDisplayEl.textContent = formatDuration(requiredMinutes);
+        let statusText = '';
+        const diffMinutes = totalMinutesDisplay - requiredMinutes;
+        if (diffMinutes > 0){
+          statusText = `✅ Surpassed (+${formatDuration(diffMinutes)})`;
+        } else if (diffMinutes === 0){
+          statusText = '✅ Met';
+        } else {
+          statusText = `❌ Missed (-${formatDuration(-diffMinutes)})`;
+        }
+        statusDisplayEl.textContent = statusText;
+
+        // Determine dynamic scale: double whenever we hit the current scaled target (1x -> 2x -> 4x -> ...)
+        const baseSeconds = requiredMinutes * 60;
+        let effectiveScale = dailyMaxScale[todayKey] || 1;
+        if (baseSeconds > 0){
+          while (totalSeconds >= baseSeconds * effectiveScale) {
+            effectiveScale *= 2;
+          }
+        }
+        if (effectiveScale !== (dailyMaxScale[todayKey] || 1)){
+          dailyMaxScale[todayKey] = effectiveScale;
+          saveScale();
+        }
+        const denominatorSeconds = Math.max(baseSeconds * effectiveScale, 1);
+        const percent = Math.min((totalSeconds / denominatorSeconds) * 100, 100);
+        progressBarEl.style.width = percent + '%';
+
+        // Position the marker at the original requirement within the current scale
+        const markerLeft = Math.min(baseSeconds / denominatorSeconds * 100, 100);
+        markerEl.style.left = markerLeft + '%';
+        startBtn.disabled = !!sessionStart;
+        stopBtn.disabled = !sessionStart;
+      }
+
+      function renderPastDays(){
+        pastDaysTbody.innerHTML = '';
+        Object.keys(dailyData).filter(k => k !== todayKey).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
+          const minutes = dailyData[date];
+          const reqVal = requiredInput.value || '300';
+          const reqMinutes = parseInputTime(reqVal);
+          const diff = minutes - reqMinutes;
+          let status = '';
+          if (diff > 0) status = `✅ Surpassed (+${formatDuration(diff)})`;
+          else if (diff === 0) status = '✅ Met';
+          else status = `❌ Missed (-${formatDuration(-diff)})`;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${date}</td><td>${formatDuration(minutes)}</td><td>${status}</td>`;
+          pastDaysTbody.appendChild(tr);
+        });
+      }
+
+      todayDateEl.textContent = todayKey;
+      const savedReq = localStorage.getItem(STORAGE_REQUIRED);
+      requiredInput.value = savedReq || '300';
+      requiredInput.addEventListener('change', ()=>{
+        localStorage.setItem(STORAGE_REQUIRED, requiredInput.value);
+        updateDisplay();
+        renderPastDays();
+      });
+
+      startBtn.addEventListener('click', ()=>{
+        if (!sessionStart){
+          sessionStart = Date.now();
+          localStorage.setItem(STORAGE_SESSION, sessionStart.toString());
+          intervalId = setInterval(updateDisplay,1000);
+          updateDisplay();
+        }
+      });
+
+      stopBtn.addEventListener('click', ()=>{
+        if (sessionStart){
+          clearInterval(intervalId);
+          const elapsed = Math.floor((Date.now() - sessionStart)/60000);
+          dailyData[todayKey] = (dailyData[todayKey]||0) + elapsed;
+          saveDaily();
+          localStorage.removeItem(STORAGE_SESSION);
+          sessionStart = null;
+          updateDisplay();
+          renderPastDays();
+        }
+      });
+
+      resetBtn.addEventListener('click', ()=>{
+        if (sessionStart){ clearInterval(intervalId); localStorage.removeItem(STORAGE_SESSION); sessionStart = null; }
+        dailyData[todayKey] = 0;
+        saveDaily();
+        // Reset scale for today
+        dailyMaxScale[todayKey] = 1;
+        saveScale();
+        updateDisplay();
+        renderPastDays();
+      });
+
+      if (sessionStart){ intervalId = setInterval(updateDisplay,1000); }
+      updateDisplay();
+      renderPastDays();
+    })();
+  </script>
+</body>
+</html>

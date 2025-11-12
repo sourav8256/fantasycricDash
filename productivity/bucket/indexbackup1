@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spending Progress Tracker</title>
+  <meta name="theme-color" content="#0b0e14" />
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --bg-soft: #121723;
+      --panel: #151a26;
+      --panel-2: #1b2232;
+      --text: #e6e9ef;
+      --muted: #a3a9b6;
+      --green: #28c07a;
+      --green-2: #1ea766;
+      --blue: #4aa3ff;
+      --blue-2: #2b7cd6;
+      --grey: #2b3244;
+      --shadow: rgba(0,0,0,0.35);
+      --accent: #ffcc66;
+      --danger: #ff6b6b;
+      --progress-bg: #212838;
+      --progress-filled: #56d6a5;
+      --progress-active: #71b7ff;
+      --progress-wait: #5b6274;
+      --divider: #23293a;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    header.appbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: linear-gradient(0deg, rgba(11,14,20,0.6), rgba(11,14,20,0.9));
+      backdrop-filter: blur(8px);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--divider);
+      box-shadow: 0 6px 24px var(--shadow);
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .title {
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      font-size: 12px;
+      padding: 2px 8px;
+      background: var(--panel);
+      border: 1px solid var(--divider);
+      border-radius: 999px;
+      color: var(--muted);
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--divider);
+      border-radius: 12px;
+      box-shadow: 0 8px 28px var(--shadow);
+      padding: 12px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+      width: 100%;
+    }
+    @media (min-width: 720px) {
+      .controls {
+        grid-template-columns: repeat(4, minmax(0,1fr));
+      }
+    }
+    .control {
+      background: var(--panel-2);
+      border: 1px solid var(--divider);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 64px;
+    }
+    .label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .value {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    input[type="number"] {
+      width: 100%;
+      background: var(--bg-soft);
+      color: var(--text);
+      border: 1px solid var(--divider);
+      border-radius: 8px;
+      padding: 8px 10px;
+      outline: none;
+    }
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--blue);
+    }
+    .sections {
+      display: grid;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .section {
+      display: grid;
+      gap: 10px;
+    }
+    .section h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 999px;
+    }
+    .dot.green { background: var(--green); }
+    .dot.blue { background: var(--blue); }
+    .dot.grey { background: var(--grey); }
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+    .item {
+      background: var(--panel-2);
+      border: 1px solid var(--divider);
+      border-radius: 12px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      transition: transform 140ms ease, border-color 140ms ease;
+      position: relative;
+    }
+    .item.active {
+      border-color: rgba(74,163,255,0.5);
+      box-shadow: 0 8px 24px rgba(74,163,255,0.15);
+    }
+    .item.filled {
+      border-color: rgba(40,192,122,0.45);
+      box-shadow: 0 8px 24px rgba(40,192,122,0.15);
+    }
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .cost {
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--progress-bg);
+      overflow: hidden;
+      border: 1px solid var(--divider);
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      transition: width 160ms linear;
+      border-radius: 999px;
+    }
+    .bar.wait { background: var(--progress-wait); }
+    .bar.active { background: var(--progress-active); }
+    .bar.done { background: var(--progress-filled); }
+    .meta {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .divider {
+      height: 1px;
+      background: var(--divider);
+      margin: 8px 0;
+    }
+    .purchases {
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11,14,20,0.75);
+      backdrop-filter: blur(6px);
+      z-index: 10;
+    }
+    .overlay.visible { display: flex; }
+    .catchup-card {
+      width: min(92vw, 460px);
+      background: var(--panel);
+      border: 1px solid var(--divider);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 18px 52px var(--shadow);
+      display: grid;
+      gap: 10px;
+      text-align: center;
+    }
+    .catchup-title { font-weight: 700; }
+    .catchup-sub { color: var(--muted); font-size: 13px; }
+    .catchup-progress {
+      height: 12px;
+      border-radius: 999px;
+      background: var(--progress-bg);
+      overflow: hidden;
+      border: 1px solid var(--divider);
+    }
+    .catchup-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      transition: width 120ms linear;
+    }
+    @keyframes bounce {
+      0% { transform: scale(1); }
+      35% { transform: scale(0.98); }
+      70% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    .bounce {
+      animation: bounce 380ms ease;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .small {
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header class="appbar">
+    <div class="row">
+      <div class="title">
+        <span>Spending Progress Tracker</span>
+        <span class="badge">Queue-based • Long-press • Catch-up</span>
+      </div>
+      <div id="saveIndicator" class="small muted">Saved</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="panel">
+      <div class="controls">
+        <div class="control">
+          <div class="label">Money bucket</div>
+          <div class="value" id="bucketValue">₹0</div>
+          <div class="hint">Accumulating automatically</div>
+        </div>
+        <div class="control">
+          <div class="label">Refill rate</div>
+          <div class="inline">
+            <input id="rateInput" type="number" min="0" step="0.1" inputmode="decimal" />
+            <div class="small muted">₹/sec</div>
+          </div>
+        </div>
+        <div class="control">
+          <div class="label">Loop after all filled</div>
+          <div class="inline">
+            <input id="loopToggle" type="checkbox" />
+            <div class="small muted">Resets filled and restarts queue</div>
+          </div>
+        </div>
+        <div class="control">
+          <div class="label">Status</div>
+          <div class="value" id="statusText">Running</div>
+          <div class="hint">Long-press an item to purchase</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sections">
+      <section class="section">
+        <h3><span class="dot green"></span> Filled Items</h3>
+        <div id="filledList" class="list"></div>
+      </section>
+      <div class="divider"></div>
+      <section class="section">
+        <h3><span class="dot blue"></span> Currently Filling</h3>
+        <div id="activeContainer" class="list"></div>
+      </section>
+      <div class="divider"></div>
+      <section class="section">
+        <h3><span class="dot grey"></span> Unfilled Queue</h3>
+        <div id="queueList" class="list"></div>
+      </section>
+      <div class="divider"></div>
+      <section class="section">
+        <h3>Recent Purchases</h3>
+        <div id="purchasesList" class="purchases"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="catchupOverlay" class="overlay">
+    <div class="catchup-card">
+      <div class="catchup-title">Catching up…</div>
+      <div class="catchup-sub" id="catchupSubtitle">Simulating time while you were away</div>
+      <div class="catchup-progress">
+        <div id="catchupBar" class="catchup-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "spendingProgressTrackerV1";
+    const SAVE_DEBOUNCE_MS = 300;
+    const PERIODIC_SAVE_MS = 3000;
+    const LONG_PRESS_MS = 700;
+
+    const el = (id) => document.getElementById(id);
+    const formatCurrency = (n) => "₹" + (Math.round(n * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const nowSec = () => Date.now() / 1000;
+
+    const defaultItems = () => ([
+      { id: "icecream", name: "Ice Cream", cost: 15, progress: 0 },
+      { id: "coffee", name: "Coffee Treat", cost: 25, progress: 0 },
+      { id: "movie", name: "Movie Ticket", cost: 30, progress: 0 },
+      { id: "massage", name: "Massage", cost: 50, progress: 0 },
+      { id: "dinner", name: "Dinner Out", cost: 120, progress: 0 },
+    ]);
+
+    const initialState = () => {
+      const items = defaultItems();
+      return {
+        items,
+        queue: items.map(i => i.id),
+        filledIds: [],
+        bucket: 0,
+        rate: 1, // ₹/sec
+        loopMode: false,
+        recentPurchases: [], // {name, timestamp}
+        lastSavedTimestamp: Date.now(), // ms
+      };
+    };
+
+    let state = initialState();
+    let lastFrameTs = performance.now();
+    let saveTimeout = null;
+    let isCatchup = false;
+    let catchupRemainingSec = 0;
+    let catchupTotalSec = 0;
+    let running = true;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        // Basic validation and migration
+        if (!parsed.items || !Array.isArray(parsed.items)) return;
+        state = {
+          ...initialState(),
+          ...parsed,
+          items: parsed.items.map(it => ({
+            id: String(it.id),
+            name: String(it.name),
+            cost: Number(it.cost),
+            progress: Math.max(0, Number(it.progress || 0))
+          })),
+          queue: Array.isArray(parsed.queue) ? parsed.queue.map(String) : parsed.items.map(i => i.id),
+          filledIds: Array.isArray(parsed.filledIds) ? parsed.filledIds.map(String) : [],
+          bucket: Math.max(0, Number(parsed.bucket || 0)),
+          rate: Math.max(0, Number(parsed.rate || 1)),
+          loopMode: Boolean(parsed.loopMode),
+          recentPurchases: Array.isArray(parsed.recentPurchases) ? parsed.recentPurchases.slice(0, 25) : [],
+          lastSavedTimestamp: Number(parsed.lastSavedTimestamp || Date.now()),
+        };
+      } catch (e) {
+        console.warn("Failed to load state:", e);
+      }
+    }
+
+    function scheduleSave() {
+      el("saveIndicator").textContent = "Saving…";
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(persistState, SAVE_DEBOUNCE_MS);
+    }
+
+    function persistState() {
+      try {
+        state.lastSavedTimestamp = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        el("saveIndicator").textContent = "Saved";
+      } catch (e) {
+        console.warn("Failed to save state:", e);
+        el("saveIndicator").textContent = "Save error";
+      }
+    }
+
+    function getItemById(id) {
+      return state.items.find(i => i.id === id);
+    }
+
+    function getActiveId() {
+      for (const id of state.queue) {
+        const it = getItemById(id);
+        if (it && it.progress < it.cost) return id;
+      }
+      return null;
+    }
+
+    function allFilled() {
+      return state.items.every(i => i.progress >= i.cost);
+    }
+
+    function resetFilledIfLooping() {
+      if (!state.loopMode) return false;
+      if (!allFilled()) return false;
+      for (const it of state.items) {
+        it.progress = 0;
+      }
+      state.filledIds = [];
+      // Restore original order by items list, then maintain current order where possible
+      const setIds = new Set(state.items.map(i => i.id));
+      state.queue = Array.from(setIds);
+      return true;
+    }
+
+    function distributeAcrossQueue(amount) {
+      let remaining = amount;
+      let safety = 0;
+      while (remaining > 0 && safety < 10000) {
+        safety++;
+        if (allFilled()) {
+          const looped = resetFilledIfLooping();
+          if (!looped) break;
+        }
+        const activeId = getActiveId();
+        if (!activeId) break;
+        const it = getItemById(activeId);
+        const need = Math.max(0, it.cost - it.progress);
+        if (need <= 0) {
+          // Move to filled if not already
+          if (!state.filledIds.includes(activeId)) {
+            state.filledIds.push(activeId);
+          }
+          // Remove from queue
+          state.queue = state.queue.filter(id => id !== activeId);
+          continue;
+        }
+        const add = Math.min(need, remaining);
+        it.progress += add;
+        remaining -= add;
+        if (it.progress >= it.cost - 1e-9) {
+          if (!state.filledIds.includes(activeId)) {
+            state.filledIds.push(activeId);
+          }
+          state.queue = state.queue.filter(id => id !== activeId);
+        }
+      }
+      return remaining;
+    }
+
+    function longPressAttach(element, handler) {
+      let timeoutId = null;
+      let pressed = false;
+      const start = (e) => {
+        pressed = true;
+        timeoutId = setTimeout(() => {
+          if (pressed) handler(e);
+        }, LONG_PRESS_MS);
+      };
+      const cancel = () => {
+        pressed = false;
+        if (timeoutId) clearTimeout(timeoutId);
+      };
+      element.addEventListener("mousedown", start);
+      element.addEventListener("mouseup", cancel);
+      element.addEventListener("mouseleave", cancel);
+      element.addEventListener("touchstart", (e) => { start(e); }, { passive: true });
+      element.addEventListener("touchend", cancel);
+      element.addEventListener("touchcancel", cancel);
+    }
+
+    function purchaseItem(itemId) {
+      const it = getItemById(itemId);
+      if (!it) return;
+      it.progress = 0;
+      state.filledIds = state.filledIds.filter(id => id !== itemId);
+      state.queue = state.queue.filter(id => id !== itemId);
+      state.queue.push(itemId);
+      state.recentPurchases.unshift({
+        name: it.name,
+        timestamp: Date.now()
+      });
+      state.recentPurchases = state.recentPurchases.slice(0, 20);
+      if (navigator.vibrate) {
+        try { navigator.vibrate(20); } catch (e) {}
+      }
+      scheduleSave();
+      render();
+      const card = document.querySelector(`[data-item-id="${CSS.escape(itemId)}"]`);
+      if (card) {
+        card.classList.add("bounce");
+        setTimeout(() => card.classList.remove("bounce"), 420);
+      }
+    }
+
+    function render() {
+      el("bucketValue").textContent = formatCurrency(state.bucket);
+      el("rateInput").value = String(state.rate);
+      el("loopToggle").checked = !!state.loopMode;
+
+      const activeId = getActiveId();
+      el("statusText").textContent = activeId ? "Running" : (allFilled() ? (state.loopMode ? "Looping" : "All filled") : "Waiting");
+
+      // Filled list
+      const filledList = el("filledList");
+      if (state.filledIds.length === 0) {
+        filledList.innerHTML = `<div class="small muted">None yet</div>`;
+      } else {
+        filledList.innerHTML = state.filledIds.map(id => {
+          const it = getItemById(id);
+          const pct = Math.min(100, (it.progress / it.cost) * 100);
+          return `
+            <div class="item filled" data-item-id="${it.id}">
+              <div class="topline">
+                <div class="name">${it.name}</div>
+                <div class="cost">${formatCurrency(it.cost)}</div>
+              </div>
+              <div class="progress"><div class="bar done" style="width:${pct}%"></div></div>
+              <div class="meta">
+                <div>Completed</div>
+                <div>${formatCurrency(it.progress)} / ${formatCurrency(it.cost)}</div>
+              </div>
+              <div class="hint">Long-press to purchase again (reset and send to queue)</div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // Active container
+      const activeContainer = el("activeContainer");
+      if (!activeId) {
+        activeContainer.innerHTML = `<div class="small muted">No active item</div>`;
+      } else {
+        const it = getItemById(activeId);
+        const pct = Math.min(100, (it.progress / it.cost) * 100);
+        activeContainer.innerHTML = `
+          <div class="item active" data-item-id="${it.id}">
+            <div class="topline">
+              <div class="name">${it.name}</div>
+              <div class="cost">${formatCurrency(it.cost)}</div>
+            </div>
+            <div class="progress"><div class="bar active" style="width:${pct}%"></div></div>
+            <div class="meta">
+              <div>${pct.toFixed(1)}%</div>
+              <div>${formatCurrency(it.progress)} / ${formatCurrency(it.cost)}</div>
+            </div>
+            <div class="hint">Long-press to purchase (move to bottom of queue)</div>
+          </div>
+        `;
+      }
+
+      // Queue list (waiting)
+      const queueList = el("queueList");
+      const waiting = state.queue.filter(id => {
+        const it = getItemById(id);
+        return it && it.progress < it.cost && id !== activeId;
+      });
+      if (waiting.length === 0) {
+        queueList.innerHTML = `<div class="small muted">Queue is empty</div>`;
+      } else {
+        queueList.innerHTML = waiting.map(id => {
+          const it = getItemById(id);
+          const pct = Math.min(100, (it.progress / it.cost) * 100);
+          return `
+            <div class="item" data-item-id="${it.id}">
+              <div class="topline">
+                <div class="name">${it.name}</div>
+                <div class="cost">${formatCurrency(it.cost)}</div>
+              </div>
+              <div class="progress"><div class="bar wait" style="width:${pct}%"></div></div>
+              <div class="meta">
+                <div>Waiting</div>
+                <div>${formatCurrency(it.progress)} / ${formatCurrency(it.cost)}</div>
+              </div>
+              <div class="hint">Long-press to purchase (reset and move to end)</div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // Recent purchases
+      const purchases = el("purchasesList");
+      if (!state.recentPurchases.length) {
+        purchases.innerHTML = `<div class="small muted">No purchases yet</div>`;
+      } else {
+        const fmtTime = (t) => {
+          const d = new Date(t);
+          return d.toLocaleString();
+        };
+        purchases.innerHTML = state.recentPurchases.slice(0, 8).map(p => {
+          return `<div>• ${p.name} — <span class="small muted">${fmtTime(p.timestamp)}</span></div>`;
+        }).join("");
+      }
+
+      // Attach long-press handlers
+      document.querySelectorAll('.item').forEach(node => {
+        const id = node.getAttribute('data-item-id');
+        longPressAttach(node, () => purchaseItem(id));
+      });
+    }
+
+    function update(frameTs) {
+      const dtReal = Math.max(0, (frameTs - lastFrameTs) / 1000);
+      lastFrameTs = frameTs;
+      if (!running) {
+        requestAnimationFrame(update);
+        return;
+      }
+
+      let simulatedSec = dtReal;
+      if (isCatchup) {
+        const factor = Math.max(10, catchupTotalSec > 0 ? (catchupTotalSec / 5) : 10);
+        simulatedSec = Math.min(catchupRemainingSec, dtReal * factor);
+        catchupRemainingSec -= simulatedSec;
+        const doneFrac = catchupTotalSec > 0 ? (1 - (catchupRemainingSec / catchupTotalSec)) : 1;
+        el("catchupBar").style.width = (doneFrac * 100).toFixed(1) + "%";
+        el("catchupSubtitle").textContent = `Simulating ${(catchupTotalSec).toFixed(1)}s at ~${factor.toFixed(0)}× speed`;
+        if (catchupRemainingSec <= 0.0001) {
+          isCatchup = false;
+          el("catchupOverlay").classList.remove("visible");
+        }
+      }
+
+      const earned = state.rate * simulatedSec;
+      const available = state.bucket + earned;
+      const leftover = distributeAcrossQueue(available);
+      state.bucket = Math.max(0, leftover);
+
+      render();
+      requestAnimationFrame(update);
+    }
+
+    function computeCatchup() {
+      const lastSavedMs = Number(state.lastSavedTimestamp || Date.now());
+      const elapsedSec = Math.max(0, (Date.now() - lastSavedMs) / 1000);
+      if (elapsedSec < 0.5) return; // negligible
+      isCatchup = true;
+      catchupRemainingSec = elapsedSec;
+      catchupTotalSec = elapsedSec;
+      el("catchupBar").style.width = "0%";
+      el("catchupOverlay").classList.add("visible");
+    }
+
+    function bindControls() {
+      el("rateInput").addEventListener("change", (e) => {
+        const v = Number(e.target.value);
+        state.rate = isFinite(v) && v >= 0 ? v : state.rate;
+        scheduleSave();
+      });
+      el("loopToggle").addEventListener("change", (e) => {
+        state.loopMode = !!e.target.checked;
+        scheduleSave();
+        render();
+      });
+      // Periodic save
+      setInterval(() => {
+        persistState();
+      }, PERIODIC_SAVE_MS);
+    }
+
+    function boot() {
+      loadState();
+      render();
+      bindControls();
+      computeCatchup();
+      lastFrameTs = performance.now();
+      requestAnimationFrame(update);
+      // Save on unload
+      window.addEventListener("beforeunload", () => {
+        persistState();
+      });
+    }
+
+    // Seed if no previous state
+    boot();
+  </script>
+</body>
+</html>
+
+

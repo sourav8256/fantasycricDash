@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Spending Progress Tracker</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --panel: #151925;
+        --panel-2: #1b2130;
+        --text: #e6e8ef;
+        --muted: #9aa3b2;
+        --accent: #6ee7b7;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --progress-bg: #2a2f3f;
+        --progress-fill: #22d3ee;
+        --progress-fill-2: #8b5cf6;
+        --shadow: 0 10px 20px rgba(0,0,0,0.35);
+        --radius: 12px;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: linear-gradient(180deg, #0d1016, #0f1115 30%, #0f1115);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .container {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px;
+        background: linear-gradient(180deg, #161a26, #10131c);
+        border: 1px solid #242b3c;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+      .title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .title h1 {
+        font-size: 18px;
+        margin: 0;
+      }
+      .rate-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+        max-width: 680px;
+        align-items: center;
+      }
+      .input {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: var(--panel);
+        border: 1px solid #20283a;
+        padding: 10px;
+        border-radius: 10px;
+      }
+      .input label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .input input {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 16px;
+        color: var(--text);
+        background: #0e1220;
+        border: 1px solid #243049;
+        border-radius: 8px;
+        outline: none;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .stat {
+        background: var(--panel);
+        border: 1px solid #222a3d;
+        border-radius: var(--radius);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        box-shadow: var(--shadow);
+      }
+      .stat .label { color: var(--muted); font-size: 12px; }
+      .stat .value { font-size: 18px; font-weight: 600; }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      button, .btn {
+        cursor: pointer;
+        border: 1px solid #243049;
+        color: var(--text);
+        background: #141a2a;
+        padding: 10px 14px;
+        border-radius: 10px;
+        transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      }
+      button:hover, .btn:hover { background: #172034; border-color: #2c3a57; }
+      button:active, .btn:active { transform: translateY(1px) scale(0.99); }
+      .btn-danger {
+        border-color: #3a1f24;
+        background: #201417;
+        color: #fecaca;
+      }
+      .btn-danger:hover { background: #2a161b; border-color: #53202a; }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .panel {
+        background: var(--panel-2);
+        border: 1px solid #222a3d;
+        border-radius: var(--radius);
+        padding: 12px;
+        box-shadow: var(--shadow);
+      }
+      .panel h2 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        color: #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .queue {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .placeholder {
+        padding: 16px;
+        color: var(--muted);
+        background: #111624;
+        border: 1px dashed #2a3857;
+        border-radius: 10px;
+        text-align: center;
+      }
+      .item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid #25314b;
+        border-radius: 12px;
+        background: #0f1424;
+        position: relative;
+        overflow: hidden;
+      }
+      .item.active { border-color: #2f436d; box-shadow: inset 0 0 0 1px #243a6b; }
+      .item.filled { opacity: 0.9; }
+      .item-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .item-meta {
+        display: flex;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .progress {
+        height: 12px;
+        background: var(--progress-bg);
+        border-radius: 999px;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid #2a3756;
+      }
+      .progress > .bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--progress-fill), var(--progress-fill-2));
+        transition: width .2s ease;
+      }
+      .item-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tag {
+        font-size: 11px;
+        color: #a5b4fc;
+        background: #1b1f34;
+        border: 1px solid #2b2f49;
+        border-radius: 999px;
+        padding: 3px 8px;
+      }
+      .delete-btn {
+        color: #fecaca;
+        background: #2b1a1e;
+        border-color: #3a2229;
+      }
+      .delete-btn:hover { background: #341d23; }
+      .purchase-hint {
+        color: #93c5fd;
+        font-size: 11px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .add-form {
+        display: grid;
+        grid-template-columns: 1fr 140px auto;
+        gap: 8px;
+        align-items: end;
+      }
+      .recent {
+        max-height: 200px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .recent-item {
+        display: flex;
+        justify-content: space-between;
+        background: #0f1424;
+        border: 1px solid #25314b;
+        padding: 8px 10px;
+        border-radius: 8px;
+        color: #cbd5e1;
+        font-size: 13px;
+      }
+      .overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10,12,18,0.85);
+        backdrop-filter: blur(3px);
+        z-index: 50;
+      }
+      .overlay-content {
+        background: #0e1322;
+        border: 1px solid #26324f;
+        border-radius: 14px;
+        padding: 18px;
+        width: min(90vw, 420px);
+        text-align: center;
+        box-shadow: var(--shadow);
+      }
+      .overlay h3 { margin: 0 0 6px 0; }
+      .overlay .small { color: var(--muted); font-size: 13px; }
+      .overlay .catchup-progress {
+        margin-top: 12px;
+        height: 10px;
+        background: #10172a;
+        border: 1px solid #2a3756;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .overlay .catchup-progress > div {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #22d3ee, #8b5cf6);
+        transition: width .08s ease;
+      }
+      @media (max-width: 720px) {
+        .rate-controls { grid-template-columns: 1fr; }
+        .stats { grid-template-columns: 1fr; }
+        .row { grid-template-columns: 1fr; }
+        .add-form { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="title">
+          <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);box-shadow:0 0 18px rgba(139,92,246,0.35)"></div>
+          <h1>Spending Progress Tracker</h1>
+        </div>
+        <div class="actions">
+          <button id="resetBtn" class="btn btn-danger">Reset All</button>
+        </div>
+      </header>
+
+      <section class="panel" style="margin-top:16px">
+        <div class="rate-controls">
+          <div class="input">
+            <label for="dailyRate">Daily Rate (₹/day)</label>
+            <input id="dailyRate" type="number" step="0.01" min="0" placeholder="e.g. 300" />
+          </div>
+          <div class="input">
+            <label>Per-Second Rate (₹/sec)</label>
+            <input id="perSecondDisplay" type="text" readonly />
+          </div>
+          <div class="input">
+            <label>Bucket Amount (₹)</label>
+            <input id="bucketAmountDisplay" type="text" readonly />
+          </div>
+        </div>
+        <div class="actions" style="margin-top:12px">
+          <span class="tag">Refills sequentially top-to-bottom</span>
+          <span class="purchase-hint">Long-press an item to purchase and re-queue</span>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-top:16px">
+        <h2>Add Item</h2>
+        <div class="add-form">
+          <div class="input">
+            <label>Name</label>
+            <input id="itemName" type="text" placeholder="e.g. Headphones" />
+          </div>
+          <div class="input">
+            <label>Cost (₹)</label>
+            <input id="itemCost" type="number" step="0.01" min="0" placeholder="e.g. 2500" />
+          </div>
+          <button id="addItemBtn">Add</button>
+        </div>
+      </section>
+
+      <div class="grid">
+        <section class="panel">
+          <h2>Currently Filling <span id="activeCountTag" class="tag">0 active</span></h2>
+          <div id="activeList" class="queue"></div>
+          <div id="activePlaceholder" class="placeholder" style="display:none">No active item</div>
+        </section>
+        <section class="panel">
+          <h2>Unfilled Queue</h2>
+          <div id="queueList" class="queue"></div>
+          <div id="queuePlaceholder" class="placeholder" style="display:none">No items yet — add one to begin!</div>
+        </section>
+        <section class="panel">
+          <h2>Filled Items</h2>
+          <div id="filledList" class="queue"></div>
+          <div id="filledPlaceholder" class="placeholder" style="display:none">No filled items yet</div>
+        </section>
+        <section class="panel">
+          <h2>Recent Purchases</h2>
+          <div id="recentList" class="recent"></div>
+          <div id="recentPlaceholder" class="placeholder" style="display:none">No purchases yet</div>
+        </section>
+      </div>
+    </div>
+
+    <div id="catchupOverlay" class="overlay" aria-hidden="true">
+      <div class="overlay-content">
+        <h3>💨 Catching up…</h3>
+        <div id="catchupText" class="small">Calculating offline progress…</div>
+        <div class="catchup-progress"><div id="catchupBar"></div></div>
+      </div>
+    </div>
+    <div id="confirmOverlay" class="overlay" aria-hidden="true" style="z-index:60">
+      <div class="overlay-content">
+        <h3 id="confirmText">Confirm</h3>
+        <div class="actions" style="justify-content:center;margin-top:8px">
+          <button id="confirmCancel" class="btn">Cancel</button>
+          <button id="confirmOk" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const STATE_KEY = 'spt_state_v1';
+        const CATCHUP_SECONDS = 3.5; // animate catch-up over ~3.5s
+        const LONG_PRESS_MS = 700;
+        const SAVE_INTERVAL_MS = 2000;
+
+        /**
+         * State Model
+         * items: [{ id, name, cost, progress, createdAt, filledAt? }]
+         * bucketAmount: number
+         * dailyRate: number (₹/day)
+         * lastUpdatedAt: number (ms)
+         * purchases: [{ id, name, timestamp }]
+         */
+        const state = {
+          items: [],
+          bucketAmount: 0,
+          dailyRate: 0,
+          lastUpdatedAt: Date.now(),
+          purchases: []
+        };
+
+        let rafId = null;
+        let previousTs = 0;
+        let catchup = {
+          total: 0,
+          remaining: 0,
+          duration: CATCHUP_SECONDS,
+          elapsed: 0,
+          active: false
+        };
+        let lastSavedAt = 0;
+
+        // Elements
+        const dailyRateInput = document.getElementById('dailyRate');
+        const perSecondDisplay = document.getElementById('perSecondDisplay');
+        const bucketAmountDisplay = document.getElementById('bucketAmountDisplay');
+        const addItemBtn = document.getElementById('addItemBtn');
+        const itemNameInput = document.getElementById('itemName');
+        const itemCostInput = document.getElementById('itemCost');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const activeList = document.getElementById('activeList');
+        const queueList = document.getElementById('queueList');
+        const filledList = document.getElementById('filledList');
+        const activePlaceholder = document.getElementById('activePlaceholder');
+        const queuePlaceholder = document.getElementById('queuePlaceholder');
+        const filledPlaceholder = document.getElementById('filledPlaceholder');
+        const recentList = document.getElementById('recentList');
+        const recentPlaceholder = document.getElementById('recentPlaceholder');
+        const activeCountTag = document.getElementById('activeCountTag');
+
+        const catchupOverlay = document.getElementById('catchupOverlay');
+        const catchupText = document.getElementById('catchupText');
+        const catchupBar = document.getElementById('catchupBar');
+        const confirmOverlay = document.getElementById('confirmOverlay');
+        const confirmText = document.getElementById('confirmText');
+        const confirmOk = document.getElementById('confirmOk');
+        const confirmCancel = document.getElementById('confirmCancel');
+
+        function perSecondRate() {
+          return Number(state.dailyRate || 0) / 86400;
+        }
+
+        function fmt(n) {
+          const v = Number(n || 0);
+          return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function saveState() {
+          state.lastUpdatedAt = Date.now();
+          try {
+            localStorage.setItem(STATE_KEY, JSON.stringify(state));
+          } catch (e) {
+            // ignore quota errors
+          }
+        }
+
+        function loadState() {
+          const raw = localStorage.getItem(STATE_KEY);
+          if (!raw) return;
+          try {
+            const loaded = JSON.parse(raw);
+            if (loaded && typeof loaded === 'object') {
+              state.items = Array.isArray(loaded.items) ? loaded.items : [];
+              state.bucketAmount = Number(loaded.bucketAmount || 0);
+              state.dailyRate = Number(loaded.dailyRate || 0);
+              state.lastUpdatedAt = Number(loaded.lastUpdatedAt || Date.now());
+              state.purchases = Array.isArray(loaded.purchases) ? loaded.purchases : [];
+            }
+          } catch (e) {
+            // ignore corrupt state
+          }
+        }
+
+        function uid() {
+          return 'i_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+        }
+
+        function computeActiveIndex() {
+          for (let i = 0; i < state.items.length; i++) {
+            const it = state.items[i];
+            if (it.cost > 0 && it.progress < it.cost) return i;
+          }
+          return -1;
+        }
+
+        function distributeFromBucket() {
+          // Move funds from bucket to the current active item (FIFO)
+          let guard = 0;
+          while (state.bucketAmount > 0.000001 && guard < 1000) {
+            guard++;
+            const idx = computeActiveIndex();
+            if (idx < 0) break;
+            const it = state.items[idx];
+            const need = Math.max(0, it.cost - it.progress);
+            if (need <= 0) continue;
+            if (state.bucketAmount >= need) {
+              it.progress += need;
+              state.bucketAmount -= need;
+              it.filledAt = Date.now();
+            } else {
+              it.progress += state.bucketAmount;
+              state.bucketAmount = 0;
+            }
+          }
+        }
+
+        function render() {
+          // Inputs and stats
+          if (document.activeElement !== dailyRateInput) {
+            dailyRateInput.value = String(state.dailyRate || '');
+          }
+          perSecondDisplay.value = fmt(perSecondRate());
+          bucketAmountDisplay.value = fmt(state.bucketAmount);
+
+          // Clear lists
+          activeList.innerHTML = '';
+          queueList.innerHTML = '';
+          filledList.innerHTML = '';
+
+          const activeIdx = computeActiveIndex();
+          let activeCount = 0;
+          for (let i = 0; i < state.items.length; i++) {
+            const it = state.items[i];
+            const isFilled = it.progress >= it.cost && it.cost > 0;
+            const isActive = i === activeIdx && !isFilled;
+            const percent = it.cost > 0 ? Math.min(100, (it.progress / it.cost) * 100) : 0;
+
+            const el = document.createElement('div');
+            el.className = 'item' + (isActive ? ' active' : '') + (isFilled ? ' filled' : '');
+            el.dataset.id = it.id;
+            el.innerHTML = `
+              <div>
+                <div class="item-header">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <strong>${escapeHtml(it.name || 'Untitled')}</strong>
+                    ${isActive ? '<span class="tag">Active</span>' : ''}
+                    ${isFilled ? '<span class="tag" style="color:#86efac;border-color:#254631;background:#0f1a12">Filled</span>' : ''}
+                  </div>
+                  <div class="item-actions">
+                    <button class="delete-btn btn" data-action="delete">🗑️ Delete</button>
+                  </div>
+                </div>
+                <div class="item-meta">
+                  <span>Cost: ₹${fmt(it.cost)}</span>
+                  <span>Progress: ₹${fmt(it.progress)}</span>
+                  <span>${fmt(percent)}%</span>
+                </div>
+                <div class="progress"><div class="bar" style="width:${percent}%;"></div></div>
+              </div>
+            `;
+
+            // Long-press using direct property handlers
+            let lpTimer = null;
+            const startLongPress = () => {
+              if (lpTimer) clearTimeout(lpTimer);
+              el.style.background = 'var(--active)';
+              lpTimer = setTimeout(() => {
+                lpTimer = null;
+                el.style.background = '';
+                purchaseItem(it.id);
+              }, 700);
+            };
+            const endLongPress = () => {
+              if (lpTimer) {
+                clearTimeout(lpTimer);
+                lpTimer = null;
+              }
+              el.style.background = '';
+            };
+            el.onmousedown = startLongPress;
+            el.ontouchstart = startLongPress;
+            el.onmouseup = endLongPress;
+            el.onmouseleave = endLongPress;
+            el.ontouchend = endLongPress;
+            el.ontouchcancel = endLongPress;
+
+            // Delete button via direct property handler
+            const delBtn = el.querySelector('[data-action="delete"]');
+            delBtn.onclick = (event) => {
+              event.stopPropagation();
+              showConfirm('Delete this item?', () => deleteItem(it.id));
+            };
+
+            if (isActive) {
+              activeList.appendChild(el);
+              activeCount++;
+            } else if (isFilled) {
+              filledList.appendChild(el);
+            } else {
+              queueList.appendChild(el);
+            }
+          }
+
+          activeCountTag.textContent = activeCount + ' active';
+          // Placeholders
+          activePlaceholder.style.display = activeList.children.length ? 'none' : 'block';
+          const hasUnfilled = queueList.children.length || activeList.children.length;
+          queuePlaceholder.style.display = hasUnfilled ? 'none' : 'block';
+          filledPlaceholder.style.display = filledList.children.length ? 'none' : 'block';
+
+          // Recent purchases
+          recentList.innerHTML = '';
+          if (!state.purchases.length) {
+            recentPlaceholder.style.display = 'block';
+          } else {
+            recentPlaceholder.style.display = 'none';
+            for (const p of state.purchases.slice().reverse()) {
+              const row = document.createElement('div');
+              row.className = 'recent-item';
+              const ts = new Date(p.timestamp);
+              row.innerHTML = `
+                <div>${escapeHtml(p.name)}</div>
+                <div style="color:var(--muted)">${ts.toLocaleString()}</div>
+              `;
+              recentList.appendChild(row);
+            }
+          }
+        }
+
+        function addItem(name, cost) {
+          const n = String(name || '').trim();
+          const c = Math.max(0, Number(cost || 0));
+          if (!n) return;
+          const item = {
+            id: uid(),
+            name: n,
+            cost: c,
+            progress: 0,
+            createdAt: Date.now()
+          };
+          state.items.push(item);
+          saveState();
+          render();
+        }
+
+        function deleteItem(itemId) {
+          const idx = state.items.findIndex(i => i.id === itemId);
+          if (idx >= 0) {
+            state.items.splice(idx, 1);
+            saveState();
+            render();
+          }
+        }
+
+        function purchaseItem(itemId) {
+          const idx = state.items.findIndex(i => i.id === itemId);
+          if (idx < 0) return;
+          const it = state.items[idx];
+          // Log purchase
+          state.purchases.push({ id: it.id, name: it.name, timestamp: Date.now() });
+          // Reset and move to bottom
+          const moved = { ...it, progress: 0, filledAt: undefined, createdAt: Date.now() };
+          state.items.splice(idx, 1);
+          state.items.push(moved);
+          // Haptic (optional)
+          if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+          saveState();
+          render();
+        }
+
+        function escapeHtml(s) {
+          return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        }
+
+        function attachLongPress(target, onTrigger) {
+          let timer = null;
+          let pointerDown = false;
+
+          const start = () => {
+            if (pointerDown) return;
+            pointerDown = true;
+            timer = setTimeout(() => {
+              timer = null;
+              pointerDown = false;
+              onTrigger();
+              // visual feedback flash
+              target.style.outline = '2px solid #60a5fa';
+              setTimeout(() => { target.style.outline = 'none'; }, 150);
+            }, LONG_PRESS_MS);
+          };
+          const cancel = () => {
+            if (timer) clearTimeout(timer);
+            timer = null;
+            pointerDown = false;
+          };
+
+          target.addEventListener('mousedown', start);
+          target.addEventListener('touchstart', start, { passive: true });
+          target.addEventListener('mouseup', cancel);
+          target.addEventListener('mouseleave', cancel);
+          target.addEventListener('touchend', cancel);
+          target.addEventListener('touchcancel', cancel);
+        }
+
+        function updateDisplays() {
+          perSecondDisplay.value = fmt(perSecondRate());
+          bucketAmountDisplay.value = fmt(state.bucketAmount);
+        }
+
+        function tick(ts) {
+          if (!previousTs) previousTs = ts;
+          const dt = Math.max(0, (ts - previousTs) / 1000);
+          previousTs = ts;
+
+          // Normal live accrual
+          state.bucketAmount += perSecondRate() * dt;
+
+          // Catch-up animation
+          if (catchup.active) {
+            catchup.elapsed += dt;
+            const rate = catchup.total / catchup.duration;
+            const add = Math.min(catchup.remaining, rate * dt);
+            catchup.remaining -= add;
+            state.bucketAmount += add;
+            const progress = Math.min(100, ((catchup.total - catchup.remaining) / catchup.total) * 100);
+            catchupBar.style.width = (isFinite(progress) ? progress : 100) + '%';
+            if (catchup.elapsed >= catchup.duration - 0.001 || catchup.remaining <= 0.000001) {
+              catchup.active = false;
+              hideCatchupOverlay();
+            }
+          }
+
+          // Distribute from bucket to items FIFO
+          distributeFromBucket();
+          // Save periodically
+          if (Date.now() - lastSavedAt > SAVE_INTERVAL_MS) {
+            saveState();
+            lastSavedAt = Date.now();
+          }
+          // Update displays & possibly progress bars
+          updateDisplays();
+          // To avoid heavy DOM work each frame, we re-render less frequently if needed.
+          // For simplicity and given small DOM, render on every animation frame for accurate bars.
+          render();
+          rafId = requestAnimationFrame(tick);
+        }
+
+        function showCatchupOverlay(hours) {
+          catchupText.textContent = 'Catching up for ' + hours.toFixed(2) + ' hours offline…';
+          catchupBar.style.width = '0%';
+          catchupOverlay.style.display = 'flex';
+          catchupOverlay.setAttribute('aria-hidden', 'false');
+        }
+        function hideCatchupOverlay() {
+          catchupOverlay.style.display = 'none';
+          catchupOverlay.setAttribute('aria-hidden', 'true');
+        }
+
+        // Confirm modal helper
+        function showConfirm(message, callback) {
+          confirmText.textContent = message;
+          confirmOverlay.style.display = 'flex';
+          confirmOverlay.setAttribute('aria-hidden', 'false');
+          confirmOk.onclick = () => {
+            callback();
+            confirmOverlay.style.display = 'none';
+            confirmOverlay.setAttribute('aria-hidden', 'true');
+          };
+          confirmCancel.onclick = () => {
+            confirmOverlay.style.display = 'none';
+            confirmOverlay.setAttribute('aria-hidden', 'true');
+          };
+        }
+        function setDailyRateDirect(val) {
+          const num = Number(val);
+          const safe = isFinite(num) && num >= 0 ? num : 0;
+          state.dailyRate = safe;
+          saveState();
+          updateDisplays();
+          render();
+        }
+        function addItemFromFormDirect () {
+          addItem(itemNameInput.value, itemCostInput.value);
+          itemNameInput.value = '';
+          itemCostInput.value = '';
+          itemNameInput.focus();
+        }
+        function resetAllDirect () {
+          if (!window.confirm('This will clear all data. Continue?')) return;
+          try { localStorage.removeItem(STATE_KEY); } catch (e) {}
+          state.items = [];
+          state.bucketAmount = 0;
+          state.dailyRate = 0;
+          state.purchases = [];
+          state.lastUpdatedAt = Date.now();
+          catchup.active = false;
+          hideCatchupOverlay();
+          render();
+          updateDisplays();
+          saveState();
+        }
+
+        function start() {
+          loadState();
+          // Initialize UI once
+          render();
+          // Compute offline elapsed and catch-up
+          const now = Date.now();
+          const elapsedMs = Math.max(0, now - Number(state.lastUpdatedAt || now));
+          const elapsedSec = elapsedMs / 1000;
+          const earned = elapsedSec * perSecondRate();
+          if (earned > 0.00001 && elapsedSec > 2) {
+            const hours = elapsedSec / 3600;
+            showCatchupOverlay(hours);
+            catchup.total = earned;
+            catchup.remaining = earned;
+            catchup.elapsed = 0;
+            catchup.active = true;
+          }
+
+          // Wire up direct property handlers (no addEventListener)
+          dailyRateInput.oninput = () => setDailyRateDirect(dailyRateInput.value);
+          dailyRateInput.onchange = () => setDailyRateDirect(dailyRateInput.value);
+          addItemBtn.onclick = addItemFromFormDirect;
+          resetBtn.onclick = resetAllDirect;
+          // confirmOk and confirmCancel are set dynamically by showConfirm()
+
+          // Start RAF loop
+          lastSavedAt = Date.now();
+          rafId = requestAnimationFrame(tick);
+          // Save on unload
+          window.onbeforeunload = function () {
+            saveState();
+            if (rafId) cancelAnimationFrame(rafId);
+          };
+        }
+
+        // Kickoff
+        start();
+      })();
+    </script>
+  </body>
+</html>
+

@@ -327,7 +327,7 @@
         </div>
         <div class="actions" style="margin-top:12px">
           <span class="tag">Refills sequentially top-to-bottom</span>
-          <span class="purchase-hint">Long-press an item to purchase and re-queue</span>
+          <span class="purchase-hint">Click "Purchase" on an item to buy and re-queue it</span>
         </div>
       </section>
 
@@ -382,7 +382,7 @@
         <h3 id="confirmText">Confirm</h3>
         <div class="actions" style="justify-content:center;margin-top:8px">
           <button id="confirmCancel" class="btn">Cancel</button>
-          <button id="confirmOk" class="btn btn-danger">Delete</button>
+          <button id="confirmOk" class="btn" style="background:#172a3e;border-color:#2c4a6f;color:#93c5fd">Confirm</button>
         </div>
       </div>
     </div>
@@ -391,7 +391,6 @@
       (function () {
         const STATE_KEY = 'spt_state_v1';
         const CATCHUP_SECONDS = 3.5; // animate catch-up over ~3.5s
-        const LONG_PRESS_MS = 700;
         const SAVE_INTERVAL_MS = 2000;
 
         /**
@@ -497,6 +496,8 @@
 
         function distributeFromBucket() {
           // Move funds from bucket to the current active item (FIFO)
+          // Returns true if any item changed state (filled)
+          let stateChanged = false;
           let guard = 0;
           while (state.bucketAmount > 0.000001 && guard < 1000) {
             guard++;
@@ -505,15 +506,18 @@
             const it = state.items[idx];
             const need = Math.max(0, it.cost - it.progress);
             if (need <= 0) continue;
+            const wasFilled = it.progress >= it.cost;
             if (state.bucketAmount >= need) {
               it.progress += need;
               state.bucketAmount -= need;
               it.filledAt = Date.now();
+              if (!wasFilled) stateChanged = true; // Item just became filled
             } else {
               it.progress += state.bucketAmount;
               state.bucketAmount = 0;
             }
           }
+          return stateChanged;
         }
 
         function render() {
@@ -549,7 +553,8 @@
                     ${isFilled ? '<span class="tag" style="color:#86efac;border-color:#254631;background:#0f1a12">Filled</span>' : ''}
                   </div>
                   <div class="item-actions">
-                    <button class="delete-btn btn" data-action="delete">🗑️ Delete</button>
+                    <button class="btn" data-action="purchase" data-item-id="${it.id}" data-item-name="${escapeHtml(it.name)}" style="background:#0f2a1a;border-color:#1e4a2f;color:#86efac">🛒 Purchase</button>
+                    <button class="delete-btn btn" data-action="delete" data-item-id="${it.id}">🗑️ Delete</button>
                   </div>
                 </div>
                 <div class="item-meta">
@@ -560,38 +565,6 @@
                 <div class="progress"><div class="bar" style="width:${percent}%;"></div></div>
               </div>
             `;
-
-            // Long-press using direct property handlers
-            let lpTimer = null;
-            const startLongPress = () => {
-              if (lpTimer) clearTimeout(lpTimer);
-              el.style.background = 'var(--active)';
-              lpTimer = setTimeout(() => {
-                lpTimer = null;
-                el.style.background = '';
-                purchaseItem(it.id);
-              }, 700);
-            };
-            const endLongPress = () => {
-              if (lpTimer) {
-                clearTimeout(lpTimer);
-                lpTimer = null;
-              }
-              el.style.background = '';
-            };
-            el.onmousedown = startLongPress;
-            el.ontouchstart = startLongPress;
-            el.onmouseup = endLongPress;
-            el.onmouseleave = endLongPress;
-            el.ontouchend = endLongPress;
-            el.ontouchcancel = endLongPress;
-
-            // Delete button via direct property handler
-            const delBtn = el.querySelector('[data-action="delete"]');
-            delBtn.onclick = (event) => {
-              event.stopPropagation();
-              showConfirm('Delete this item?', () => deleteItem(it.id));
-            };
 
             if (isActive) {
               activeList.appendChild(el);
@@ -646,24 +619,53 @@
         }
 
         function deleteItem(itemId) {
+          console.log('🗑️ deleteItem called with itemId:', itemId);
           const idx = state.items.findIndex(i => i.id === itemId);
+          console.log('📍 Item index found:', idx);
           if (idx >= 0) {
+            console.log('🔥 Deleting item at index:', idx);
             state.items.splice(idx, 1);
             saveState();
             render();
+            console.log('✅ Item deleted');
+          } else {
+            console.log('❌ Item not found!');
           }
         }
 
+        function confirmAndDelete(itemId) {
+          console.log('🔴 confirmAndDelete called with itemId:', itemId);
+          showConfirm('Delete this item?', function() {
+            console.log('✅ Delete confirmed, calling deleteItem');
+            deleteItem(itemId);
+          });
+        }
+
+        function confirmAndPurchase(itemId, itemName) {
+          console.log('🟢 confirmAndPurchase called with itemId:', itemId, 'name:', itemName);
+          showConfirm('Purchase "' + itemName + '" and re-queue it?', function() {
+            console.log('✅ Purchase confirmed, calling purchaseItem');
+            purchaseItem(itemId);
+          });
+        }
+
         function purchaseItem(itemId) {
+          console.log('💰 purchaseItem called with itemId:', itemId);
           const idx = state.items.findIndex(i => i.id === itemId);
-          if (idx < 0) return;
+          console.log('📍 Item index found:', idx);
+          if (idx < 0) {
+            console.log('❌ Item not found!');
+            return;
+          }
           const it = state.items[idx];
+          console.log('📦 Item to purchase:', it);
           // Log purchase
           state.purchases.push({ id: it.id, name: it.name, timestamp: Date.now() });
           // Reset and move to bottom
           const moved = { ...it, progress: 0, filledAt: undefined, createdAt: Date.now() };
           state.items.splice(idx, 1);
           state.items.push(moved);
+          console.log('✅ Item purchased and re-queued');
           // Haptic (optional)
           if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
           saveState();
@@ -679,39 +681,28 @@
             .replace(/'/g, '&#039;');
         }
 
-        function attachLongPress(target, onTrigger) {
-          let timer = null;
-          let pointerDown = false;
-
-          const start = () => {
-            if (pointerDown) return;
-            pointerDown = true;
-            timer = setTimeout(() => {
-              timer = null;
-              pointerDown = false;
-              onTrigger();
-              // visual feedback flash
-              target.style.outline = '2px solid #60a5fa';
-              setTimeout(() => { target.style.outline = 'none'; }, 150);
-            }, LONG_PRESS_MS);
-          };
-          const cancel = () => {
-            if (timer) clearTimeout(timer);
-            timer = null;
-            pointerDown = false;
-          };
-
-          target.addEventListener('mousedown', start);
-          target.addEventListener('touchstart', start, { passive: true });
-          target.addEventListener('mouseup', cancel);
-          target.addEventListener('mouseleave', cancel);
-          target.addEventListener('touchend', cancel);
-          target.addEventListener('touchcancel', cancel);
-        }
-
         function updateDisplays() {
           perSecondDisplay.value = fmt(perSecondRate());
           bucketAmountDisplay.value = fmt(state.bucketAmount);
+        }
+
+        function updateProgressBars() {
+          // Update only progress bars and text without recreating DOM
+          for (const it of state.items) {
+            const itemEl = document.querySelector(`[data-id="${it.id}"]`);
+            if (!itemEl) continue;
+            
+            const percent = it.cost > 0 ? Math.min(100, (it.progress / it.cost) * 100) : 0;
+            const progressBar = itemEl.querySelector('.progress .bar');
+            if (progressBar) {
+              progressBar.style.width = percent + '%';
+            }
+            
+            // Update progress text
+            const metaSpans = itemEl.querySelectorAll('.item-meta span');
+            if (metaSpans[1]) metaSpans[1].textContent = 'Progress: ₹' + fmt(it.progress);
+            if (metaSpans[2]) metaSpans[2].textContent = fmt(percent) + '%';
+          }
         }
 
         function tick(ts) {
@@ -738,17 +729,21 @@
           }
 
           // Distribute from bucket to items FIFO
-          distributeFromBucket();
+          const needsRerender = distributeFromBucket();
           // Save periodically
           if (Date.now() - lastSavedAt > SAVE_INTERVAL_MS) {
             saveState();
             lastSavedAt = Date.now();
           }
-          // Update displays & possibly progress bars
+          // Update displays
           updateDisplays();
-          // To avoid heavy DOM work each frame, we re-render less frequently if needed.
-          // For simplicity and given small DOM, render on every animation frame for accurate bars.
-          render();
+          // Only update progress bars, not full re-render
+          updateProgressBars();
+          // Full re-render only when items change state
+          if (needsRerender) {
+            console.log('🔄 Full re-render triggered by state change');
+            render();
+          }
           rafId = requestAnimationFrame(tick);
         }
 
@@ -765,15 +760,20 @@
 
         // Confirm modal helper
         function showConfirm(message, callback) {
+          console.log('💬 showConfirm called with message:', message);
+          console.log('💬 Callback function:', callback);
           confirmText.textContent = message;
           confirmOverlay.style.display = 'flex';
           confirmOverlay.setAttribute('aria-hidden', 'false');
-          confirmOk.onclick = () => {
+          console.log('💬 Confirm dialog shown');
+          confirmOk.onclick = function() {
+            console.log('✔️ User clicked OK/Confirm button');
             callback();
             confirmOverlay.style.display = 'none';
             confirmOverlay.setAttribute('aria-hidden', 'true');
           };
-          confirmCancel.onclick = () => {
+          confirmCancel.onclick = function() {
+            console.log('❌ User clicked Cancel button');
             confirmOverlay.style.display = 'none';
             confirmOverlay.setAttribute('aria-hidden', 'true');
           };
@@ -807,6 +807,48 @@
           saveState();
         }
 
+        function setupEventDelegation() {
+          console.log('🔧 setupEventDelegation called - attaching event handlers');
+          
+          // Event delegation for dynamically created buttons in all lists
+          const handleClick = function(e) {
+            console.log('👆 Click detected on list container:', e.target);
+            const target = e.target;
+            if (!target) {
+              console.log('⚠️ No target found');
+              return;
+            }
+            
+            // Check if clicked element is a button or inside a button
+            const btn = target.closest('[data-action]');
+            console.log('🔍 Closest button found:', btn);
+            if (!btn) {
+              console.log('⚠️ No button with data-action found');
+              return;
+            }
+            
+            e.stopPropagation();
+            const action = btn.getAttribute('data-action');
+            const itemId = btn.getAttribute('data-item-id');
+            console.log('📋 Action:', action, 'ItemID:', itemId);
+            
+            if (action === 'purchase') {
+              const itemName = btn.getAttribute('data-item-name');
+              console.log('🛒 Calling confirmAndPurchase with:', itemId, itemName);
+              confirmAndPurchase(itemId, itemName);
+            } else if (action === 'delete') {
+              console.log('🗑️ Calling confirmAndDelete with:', itemId);
+              confirmAndDelete(itemId);
+            }
+          };
+
+          // Attach to all three list containers
+          activeList.onclick = handleClick;
+          queueList.onclick = handleClick;
+          filledList.onclick = handleClick;
+          console.log('✅ Event handlers attached to:', activeList, queueList, filledList);
+        }
+
         function start() {
           loadState();
           // Initialize UI once
@@ -826,11 +868,14 @@
           }
 
           // Wire up direct property handlers (no addEventListener)
-          dailyRateInput.oninput = () => setDailyRateDirect(dailyRateInput.value);
-          dailyRateInput.onchange = () => setDailyRateDirect(dailyRateInput.value);
+          dailyRateInput.oninput = function() { setDailyRateDirect(dailyRateInput.value); };
+          dailyRateInput.onchange = function() { setDailyRateDirect(dailyRateInput.value); };
           addItemBtn.onclick = addItemFromFormDirect;
           resetBtn.onclick = resetAllDirect;
           // confirmOk and confirmCancel are set dynamically by showConfirm()
+          
+          // Setup event delegation for item buttons
+          setupEventDelegation();
 
           // Start RAF loop
           lastSavedAt = Date.now();

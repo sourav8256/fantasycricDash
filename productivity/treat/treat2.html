@@ -272,14 +272,16 @@
 
                 // Allow claim if ready OR if negative credit hasn't been used
                 if (isReady) {
-                    // Normal claim - reset timer and restore negative credit
+                    // Normal claim - reset timer
+                    // Don't reset negativeUsed here - it will reset after the NEXT cycle
                     treat.lastClaimed = now;
-                    treat.negativeUsed = false;
                     this.saveState();
                 } else if (!treat.negativeUsed) {
-                    // Use negative credit - claim early
+                    // Use negative credit - claim early but compensate with next reward
                     this.showConfirm(() => {
-                        treat.lastClaimed = now;
+                        // Set lastClaimed to when it WOULD have been ready
+                        // This ensures the next reward is delayed to compensate
+                        treat.lastClaimed = nextAvailableAt;
                         treat.negativeUsed = true;
                         this.saveState();
                     });
@@ -315,10 +317,20 @@
                 let shouldRender = false;
 
                 this.state.treats.forEach(treat => {
+                    const durationMs = treat.frequencyDays * 24 * 60 * 60 * 1000;
+                    const nextAvailableAt = treat.lastClaimed + durationMs;
+                    const isReady = now >= nextAvailableAt;
+
+                    // If timer is ready and credit was used, restore it for the next cycle
+                    if (isReady && treat.negativeUsed) {
+                        treat.negativeUsed = false;
+                        this.saveState();
+                        shouldRender = true;
+                    }
+
                     const card = document.getElementById(`card-${treat.id}`);
                     if (!card) return;
 
-                    const durationMs = treat.frequencyDays * 24 * 60 * 60 * 1000;
                     const elapsed = now - treat.lastClaimed;
                     const remainingMs = (treat.lastClaimed + durationMs) - now;
 
@@ -402,12 +414,12 @@
                         timerClass = 'text-brand-600 font-bold';
                         creditBadge = '';
                     } else if (hasCredit) {
-                        containerClass = 'glass-panel bg-white/60 border-white/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 border-l-4 border-l-amber-400';
-                        btnClass = 'bg-amber-500 text-white hover:bg-amber-400 shadow-lg shadow-amber-500/30';
-                        statusText = 'Credit Available';
+                        containerClass = 'glass-panel bg-white/60 border-white/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-500';
+                        btnClass = 'bg-slate-100 text-slate-400 opacity-50 cursor-pointer';
+                        statusText = 'Locked';
                         timerText = 'Loading...';
                         timerClass = 'text-slate-600 font-mono';
-                        creditBadge = '<div class="absolute top-2 left-2 bg-amber-100 text-amber-700 text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-amber-300">1 CREDIT</div>';
+                        creditBadge = '';
                     } else {
                         containerClass = 'glass-panel bg-white/60 border-white/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-500';
                         btnClass = 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed';
@@ -435,10 +447,10 @@
                                         stroke-dasharray="${circumference}" 
                                         stroke-dashoffset="${circumference}" 
                                         stroke-linecap="round"
-                                        class="progress-ring-circle ${isReady ? 'text-brand-500' : hasCredit ? 'text-amber-400' : 'text-brand-500'}" />
+                                        class="progress-ring-circle ${isReady ? 'text-brand-500' : 'text-brand-500'}" />
                                 </svg>
                                 <div class="absolute inset-0 flex items-center justify-center">
-                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-7 md:w-7 ${isReady ? 'text-brand-600' : hasCredit ? 'text-amber-500' : 'text-slate-300'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-7 md:w-7 ${isReady ? 'text-brand-600' : 'text-slate-300'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recurring Treats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(124, 58, 237, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-highlight {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen text-slate-800 antialiased p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <header class="mb-12 text-center md:text-left flex flex-col md:flex-row justify-between items-end gap-6">
+            <div>
+                <h1
+                    class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 to-indigo-600 mb-2 tracking-tight">
+                    Recurring Treats
+                </h1>
+                <p class="text-slate-500 font-medium">Rewards that replenish over time.</p>
+            </div>
+
+            <button onclick="app.showAddModal()"
+                class="group flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-2xl shadow-lg hover:shadow-brand-500/30 transition-all active:scale-95 duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-90 transition-transform"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span class="font-semibold">New Treat</span>
+            </button>
+        </header>
+
+        <!-- Main Grid -->
+        <main id="treatsGrid" class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+            <!-- Cards will be injected here -->
+        </main>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex flex-col items-center justify-center py-24 text-center">
+            <div class="bg-indigo-50 p-6 rounded-full mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-300" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-slate-700 mb-2">No recurring treats yet</h3>
+            <p class="text-slate-500 max-w-sm">Add a treat you'd like to receive regularly, like a cheat meal, a gaming
+                session, or a purchase.</p>
+            <button onclick="app.showAddModal()"
+                class="mt-8 text-brand-600 font-semibold hover:text-brand-500 hover:underline">
+                Create your first treat
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Modal -->
+    <dialog id="addModal"
+        class="bg-transparent p-0 w-full h-full max-w-none max-h-none m-0 fixed inset-0 z-50 backdrop:bg-indigo-900/10 backdrop:backdrop-blur-sm hidden open:flex items-center justify-center">
+        <div class="glass-highlight w-full max-w-md p-8 rounded-3xl shadow-2xl relative animate-up">
+            <button onclick="app.closeAddModal()"
+                class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Create Recurring Treat</h2>
+
+            <form onsubmit="app.addTreat(event)" class="space-y-6">
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-500 uppercase tracking-wide">Treat Name</label>
+                    <input type="text" id="treatName" required placeholder="e.g. Sushi Night"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-500 uppercase tracking-wide">Repeats
+                        Every</label>
+                    <div class="flex gap-4">
+                        <div class="relative flex-1">
+                            <input type="number" id="treatFrequency" required min="0.001" step="any" placeholder="7"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all">
+                            <span
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium pointer-events-none">Days</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit"
+                        class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-brand-500/25 transition-all active:scale-[0.98] mt-2">
+                        Start Tracking
+                    </button>
+                    <p class="text-xs text-center text-slate-400 mt-4">Timer starts immediately after creation</p>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Confirmation Modal -->
+    <dialog id="confirmModal"
+        class="bg-transparent p-0 w-full h-full max-w-none max-h-none m-0 fixed inset-0 z-50 backdrop:bg-slate-900/30 backdrop:backdrop-blur-sm hidden open:flex items-center justify-center">
+        <div class="glass-highlight w-full max-w-sm p-6 rounded-3xl shadow-2xl relative animate-up">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-amber-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Use Early Claim?</h3>
+                <p class="text-sm text-slate-600 leading-relaxed" id="confirmMessage">This will use your one-time
+                    credit. You won't be able to claim again until the timer completes.</p>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="app.cancelConfirm()"
+                    class="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors">
+                    Cancel
+                </button>
+                <button onclick="app.acceptConfirm()"
+                    class="flex-1 px-4 py-3 bg-amber-500 hover:bg-amber-400 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/30 transition-all active:scale-95">
+                    Use Credit
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        const STORAGE_KEY = 'recurring_treats_data';
+
+        class App {
+            constructor() {
+                this.state = this.loadState();
+                this.init();
+            }
+
+            loadState() {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : { treats: [] };
+            }
+
+            saveState() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+                this.render();
+            }
+
+            init() {
+                this.render();
+                setInterval(() => this.updateTimers(), 1000);
+            }
+
+            showAddModal() {
+                const modal = document.getElementById('addModal');
+                modal.classList.remove('hidden');
+                modal.showModal();
+                document.getElementById('treatName').focus();
+            }
+
+            closeAddModal() {
+                const modal = document.getElementById('addModal');
+                modal.classList.add('hidden');
+                modal.close();
+                document.getElementById('treatName').value = '';
+                document.getElementById('treatFrequency').value = '';
+            }
+
+            addTreat(e) {
+                e.preventDefault();
+                const name = document.getElementById('treatName').value;
+                const days = parseFloat(document.getElementById('treatFrequency').value);
+
+                if (!name || isNaN(days) || days <= 0) return;
+
+                const treat = {
+                    id: Date.now(),
+                    name,
+                    frequencyDays: days,
+                    lastClaimed: Date.now(),
+                    created: Date.now(),
+                    negativeUsed: false
+                };
+
+                this.state.treats.unshift(treat);
+                this.saveState();
+                this.closeAddModal();
+            }
+
+            deleteTreat(id) {
+                if (confirm('Stop tracking this treat?')) {
+                    this.state.treats = this.state.treats.filter(t => t.id !== id);
+                    this.saveState();
+                }
+            }
+
+            claimTreat(id) {
+                const treat = this.state.treats.find(t => t.id === id);
+                if (!treat) return;
+
+                const now = Date.now();
+                const durationMs = treat.frequencyDays * 24 * 60 * 60 * 1000;
+                const nextAvailableAt = treat.lastClaimed + durationMs;
+                const isReady = now >= nextAvailableAt;
+
+                // Allow claim if ready OR if negative credit hasn't been used
+                if (isReady) {
+                    // Normal claim - reset timer
+                    // Don't reset negativeUsed here - it will reset after the NEXT cycle
+                    treat.lastClaimed = now;
+                    this.saveState();
+                } else if (!treat.negativeUsed) {
+                    // Use negative credit - claim early but compensate with next reward
+                    this.showConfirm(() => {
+                        // Set lastClaimed to when it WOULD have been ready
+                        // This ensures the next reward is delayed to compensate
+                        treat.lastClaimed = nextAvailableAt;
+                        treat.negativeUsed = true;
+                        this.saveState();
+                    });
+                }
+            }
+
+            showConfirm(callback) {
+                this.confirmCallback = callback;
+                const modal = document.getElementById('confirmModal');
+                modal.classList.remove('hidden');
+                modal.showModal();
+            }
+
+            acceptConfirm() {
+                const modal = document.getElementById('confirmModal');
+                modal.classList.add('hidden');
+                modal.close();
+                if (this.confirmCallback) {
+                    this.confirmCallback();
+                    this.confirmCallback = null;
+                }
+            }
+
+            cancelConfirm() {
+                const modal = document.getElementById('confirmModal');
+                modal.classList.add('hidden');
+                modal.close();
+                this.confirmCallback = null;
+            }
+
+            updateTimers() {
+                const now = Date.now();
+                let shouldRender = false;
+
+                this.state.treats.forEach(treat => {
+                    const durationMs = treat.frequencyDays * 24 * 60 * 60 * 1000;
+                    const nextAvailableAt = treat.lastClaimed + durationMs;
+                    const isReady = now >= nextAvailableAt;
+
+                    // If timer is ready and credit was used, restore it for the next cycle
+                    if (isReady && treat.negativeUsed) {
+                        treat.negativeUsed = false;
+                        this.saveState();
+                        shouldRender = true;
+                    }
+
+                    const card = document.getElementById(`card-${treat.id}`);
+                    if (!card) return;
+
+                    const elapsed = now - treat.lastClaimed;
+                    const remainingMs = (treat.lastClaimed + durationMs) - now;
+
+                    // Calculate Percentage
+                    const percentage = Math.min(100, (elapsed / durationMs) * 100);
+
+                    // Update Progress Ring
+                    const circle = card.querySelector('.progress-ring-circle');
+                    const circumference = 2 * Math.PI * 40;
+                    const offset = circumference - (percentage / 100) * circumference;
+                    if (circle) circle.style.strokeDashoffset = offset;
+
+                    // Update Text
+                    const timerText = card.querySelector('.timer-text');
+
+                    if (remainingMs <= 0) {
+                        // Check if we need to trigger a state change (sort)
+                        if (timerText.textContent !== 'Available Now!') {
+                            shouldRender = true;
+                        }
+                    } else {
+                        // WAITING STATE - update text only
+                        const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+
+                        let timeString = '';
+                        if (days > 0) timeString = `${days}d ${hours}h`;
+                        else if (hours > 0) timeString = `${hours}h ${minutes}m`;
+                        else if (minutes > 0) timeString = `${minutes}m ${seconds}s`;
+                        else timeString = `${seconds}s`;
+
+                        timerText.textContent = timeString;
+                    }
+                });
+
+                if (shouldRender) {
+                    this.render();
+                }
+            }
+
+            render() {
+                const grid = document.getElementById('treatsGrid');
+                const empty = document.getElementById('emptyState');
+
+                if (this.state.treats.length === 0) {
+                    grid.innerHTML = '';
+                    empty.classList.remove('hidden');
+                    return;
+                }
+
+                empty.classList.add('hidden');
+
+                // Sort: Available First, then by creation date
+                const now = Date.now();
+                const sortedTreats = [...this.state.treats].sort((a, b) => {
+                    const aReady = (now - a.lastClaimed) >= (a.frequencyDays * 86400000);
+                    const bReady = (now - b.lastClaimed) >= (b.frequencyDays * 86400000);
+                    if (aReady && !bReady) return -1;
+                    if (!aReady && bReady) return 1;
+                    return b.created - a.created;
+                });
+
+                grid.innerHTML = sortedTreats.map(treat => {
+                    const radius = 40;
+                    const circumference = 2 * Math.PI * radius;
+                    const durationMs = treat.frequencyDays * 24 * 60 * 60 * 1000;
+                    const isReady = (now - treat.lastClaimed) >= durationMs;
+                    const hasCredit = !treat.negativeUsed;
+                    const canClaim = isReady || hasCredit;
+
+                    // Styles based on state
+                    let containerClass, btnClass, statusText, timerText, timerClass, creditBadge;
+
+                    if (isReady) {
+                        containerClass = 'bg-brand-50 border-2 border-brand-500 shadow-brand-500/20 shadow-xl scale-[1.02] z-10 transition-all duration-500';
+                        btnClass = 'bg-brand-600 text-white hover:bg-brand-500 shadow-lg shadow-brand-500/30';
+                        statusText = 'Ready!';
+                        timerText = 'Available!';
+                        timerClass = 'text-brand-600 font-bold';
+                        creditBadge = '';
+                    } else if (hasCredit) {
+                        containerClass = 'glass-panel bg-white/60 border-white/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-500';
+                        btnClass = 'bg-slate-100 text-slate-400 opacity-50 cursor-pointer';
+                        statusText = 'Locked';
+                        timerText = 'Loading...';
+                        timerClass = 'text-slate-600 font-mono';
+                        creditBadge = '';
+                    } else {
+                        containerClass = 'glass-panel bg-white/60 border-white/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-500';
+                        btnClass = 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed';
+                        statusText = 'Locked';
+                        timerText = 'Loading...';
+                        timerClass = 'text-slate-600 font-mono';
+                        creditBadge = '';
+                    }
+
+                    return `
+                    <div id="card-${treat.id}" class="${containerClass} rounded-2xl md:rounded-3xl p-3 md:p-6 relative group">
+                        ${creditBadge}
+                        <button onclick="app.deleteTreat(${treat.id})" class="absolute top-2 right-2 md:top-4 md:right-4 p-1 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+
+                        <!-- Top Section: Icon + Title -->
+                        <div class="flex items-center gap-2.5 md:gap-4 mb-3 md:mb-5">
+                            <div class="relative w-11 h-11 md:w-20 md:h-20 flex-shrink-0">
+                                <svg class="transform rotate-90 w-11 h-11 md:w-20 md:h-20">
+                                    <circle cx="50%" cy="50%" r="42%" stroke="currentColor" stroke-width="5" fill="transparent" class="text-slate-200" />
+                                    <circle cx="50%" cy="50%" r="42%" stroke="currentColor" stroke-width="5" fill="transparent" 
+                                        stroke-dasharray="${circumference}" 
+                                        stroke-dashoffset="${circumference}" 
+                                        stroke-linecap="round"
+                                        class="progress-ring-circle ${isReady ? 'text-brand-500' : 'text-brand-500'}" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-7 md:w-7 ${isReady ? 'text-brand-600' : 'text-slate-300'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <div class="min-w-0 flex-1 overflow-hidden">
+                                <h3 class="text-sm md:text-lg font-bold text-slate-800 leading-tight mb-1 truncate">${treat.name}</h3>
+                                <div class="text-[9px] md:text-xs font-semibold text-brand-600 bg-brand-50 inline-block px-2 py-0.5 md:px-2.5 md:py-1 rounded-full uppercase tracking-wide border border-brand-100">
+                                    ${treat.frequencyDays}d cycle
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Section: Timer + Button (Side by Side) -->
+                        <div class="flex gap-2 md:gap-3 items-stretch">
+                            <div class="flex-1 flex flex-col items-center justify-center bg-white/60 rounded-xl md:rounded-2xl p-2 md:p-3 border border-slate-200">
+                                <span class="timer-text text-xs md:text-lg ${timerClass} leading-tight font-semibold">${timerText}</span>
+                                <span class="status-text text-[9px] md:text-[10px] font-medium text-slate-400 uppercase tracking-wide mt-0.5">${statusText}</span>
+                            </div>
+
+                            <button onclick="app.claimTreat(${treat.id})" ${!canClaim ? 'disabled' : ''} class="action-btn flex-1 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm tracking-wide transition-all duration-300 ${btnClass} flex items-center justify-center">
+                                ${isReady ? '🎁 Claim' : hasCredit ? '⚡ Use Credit' : '🔒 Locked'}
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+
+                // We call updateTimers separately to set exact offsets if needed, but since we re-rendered, we might not need to immediately.
+                // However, to be safe and set the initial state correctly:
+                // We avoid infinite loop by passing a flag or just letting the next tick handle it?
+                // The next tick will handle it.
+            }
+        }
+
+        const app = new App();
+    </script>
+</body>
+
+</html>

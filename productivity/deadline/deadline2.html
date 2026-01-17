@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadline Tracker | Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Color Palette - Premium Dark/Glass */
+            --bg-body: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #6366f1;
+            /* Indigo */
+            --primary-glow: rgba(99, 102, 241, 0.5);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --overlay: rgba(0, 0, 0, 0.8);
+
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 8px;
+
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px var(--primary-glow);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .btn-add {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--primary-glow);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px var(--primary-glow);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Deadlines List */
+        .deadline-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            min-height: 400px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--bg-glass);
+            color: white;
+            font-weight: 500;
+        }
+
+        .deadline-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Task Card */
+        .task-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .task-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .task-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .task-category {
+            font-size: 0.75rem;
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.15);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .countdown {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .countdown.urgent {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .countdown.soon {
+            color: var(--warning);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .countdown.safe {
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .progress-container {
+            margin-top: 1.5rem;
+        }
+
+        .progress-bar-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .task-date {
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .task-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .task-card:hover .task-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: rgba(0, 0, 0, 0.4);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+        }
+
+        .action-btn.delete:hover {
+            background: var(--danger);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--overlay);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: #1e293b;
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-glass);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-cancel:hover {
+            color: white;
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .btn-add {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Timeline View */
+        .timeline-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            overflow-x: auto;
+            display: none;
+            /* Hidden by default */
+        }
+
+        .timeline-container.active {
+            display: block;
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            min-width: 800px;
+            /* Ensure basic width */
+            padding-top: 40px;
+            /* Space for dates */
+        }
+
+        .timeline-header-row {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .timeline-date-marker {
+            position: absolute;
+            top: 0;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .timeline-grid-line {
+            position: absolute;
+            top: 30px;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+        }
+
+        .timeline-today-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--primary);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .timeline-today-label {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .timeline-track {
+            position: relative;
+            height: 48px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .timeline-bar {
+            position: absolute;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            color: white;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-bar:hover {
+            z-index: 5;
+            transform: scaleY(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: var(--primary);
+        }
+
+        .timeline-bar.urgent {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger);
+        }
+
+        .timeline-bar.urgent:hover {
+            background: var(--danger);
+        }
+
+        .timeline-bar.soon {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: var(--warning);
+        }
+
+        .timeline-bar.soon:hover {
+            background: var(--warning);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <header>
+            <div class="logo">Deadlines</div>
+            <button class="btn-add" onclick="openModal()">
+                <span>+</span> New Task
+            </button>
+        </header>
+
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <span class="stat-label">Total Tasks</span>
+                <span class="stat-value" id="statTotal">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Upcoming</span>
+                <span class="stat-value" style="color: var(--primary)" id="statUpcoming">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Critical</span>
+                <span class="stat-value" style="color: var(--danger)" id="statCritical">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Completed</span>
+                <span class="stat-value" style="color: var(--success)" id="statCompleted">0</span>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: -1rem;">
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-cancel"
+                    style="color: white; border-bottom: 2px solid var(--primary); border-radius: 0;" id="viewGrid"
+                    onclick="switchView('grid')">Grid View</button>
+                <button class="btn-cancel" style="color: var(--text-secondary); border-radius: 0;" id="viewTimeline"
+                    onclick="switchView('timeline')">Timeline View</button>
+            </div>
+
+            <div id="densityControl" style="display: none; align-items: center; gap: 0.5rem;">
+                <span style="color: var(--text-secondary); font-size: 0.85rem;">Density:</span>
+                <button class="btn-cancel" onclick="app.adjustDensity(-10)" title="Decrease Density"
+                    style="padding: 2px 8px; font-size: 1rem; color: var(--text-primary);">-</button>
+                <span id="densityDisplay"
+                    style="color: var(--text-primary); font-size: 0.85rem; min-width: 40px; text-align: center; font-variant-numeric: tabular-nums;">1
+                    Day</span>
+                <button class="btn-cancel" onclick="app.adjustDensity(10)" title="Increase Density"
+                    style="padding: 2px 8px; font-size: 1rem; color: var(--text-primary);">+</button>
+            </div>
+        </div>
+
+        <div class="deadline-section" id="gridViewContainer">
+            <div class="section-header">
+                <h2 class="section-title">Active Deadlines</h2>
+                <div class="filter-tabs">
+                    <div class="tab active" onclick="setFilter('all')">All</div>
+                    <div class="tab" onclick="setFilter('urgent')">Urgent</div>
+                    <div class="tab" onclick="setFilter('future')">Future</div>
+                </div>
+            </div>
+
+            <div class="deadline-grid" id="deadlineGrid">
+                <!-- Tasks injected here -->
+            </div>
+        </div>
+
+        <!-- Timeline Container -->
+        <div class="timeline-container" id="timelineContainer">
+            <div class="timeline-wrapper" id="timelineWrapper">
+                <!-- Timeline injected here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 class="modal-title" id="modalTitle">New Deadline</h3>
+            <form id="deadlineForm">
+                <input type="hidden" id="taskId">
+                <div class="form-group">
+                    <label class="form-label">Task Title</label>
+                    <input type="text" class="form-input" id="inputTitle" required placeholder="e.g. Project Delivery">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="text" class="form-input" id="inputCategory" placeholder="e.g. Work, Personal">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Deadline Date</label>
+                    <input type="date" class="form-input" id="inputDate" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-add">Save Deadline</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class DeadlineManager {
+            constructor() {
+                this.tasks = JSON.parse(localStorage.getItem('deadline_tasks_v2')) || [];
+                this.filter = 'all';
+                this.currentView = 'timeline';
+                // Density now means "Days per Column"
+                this.daysPerColumn = parseInt(localStorage.getItem('deadline_scale_days_v2')) || 1;
+
+                this.cacheDOM();
+                this.bindEvents();
+                this.switchView('timeline');
+            }
+
+            cacheDOM() {
+                this.dom = {
+                    grid: document.getElementById('deadlineGrid'),
+                    timeline: document.getElementById('timelineWrapper'),
+                    gridContainer: document.getElementById('gridViewContainer'),
+                    timelineContainer: document.getElementById('timelineContainer'),
+                    viewButtons: {
+                        grid: document.getElementById('viewGrid'),
+                        timeline: document.getElementById('viewTimeline')
+                    },
+                    densityControl: document.getElementById('densityControl'),
+                    densityDisplay: document.getElementById('densityDisplay'),
+                    form: document.getElementById('deadlineForm'),
+                    modal: document.getElementById('modalOverlay'),
+                    modalTitle: document.getElementById('modalTitle'),
+                    stats: {
+                        total: document.getElementById('statTotal'),
+                        upcoming: document.getElementById('statUpcoming'),
+                        critical: document.getElementById('statCritical'),
+                        completed: document.getElementById('statCompleted')
+                    }
+                };
+            }
+
+            bindEvents() {
+                this.dom.form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveTask();
+                });
+
+                // Close modal on outside click
+                this.dom.modal.addEventListener('click', (e) => {
+                    if (e.target === this.dom.modal) this.closeModal();
+                });
+            }
+
+            saveTask() {
+                const formData = {
+                    id: document.getElementById('taskId').value || Date.now().toString(),
+                    title: document.getElementById('inputTitle').value,
+                    category: document.getElementById('inputCategory').value || 'General',
+                    date: document.getElementById('inputDate').value,
+                    created: document.getElementById('taskId').value
+                        ? this.tasks.find(t => t.id === document.getElementById('taskId').value).created
+                        : new Date().toISOString()
+                };
+
+                const existingIndex = this.tasks.findIndex(t => t.id === formData.id);
+                if (existingIndex > -1) {
+                    this.tasks[existingIndex] = { ...this.tasks[existingIndex], ...formData };
+                } else {
+                    this.tasks.push(formData);
+                }
+
+                this.sync();
+                this.closeModal();
+                this.render();
+            }
+
+            deleteTask(id) {
+                if (confirm('Are you sure you want to delete this task?')) {
+                    this.tasks = this.tasks.filter(t => t.id !== id);
+                    this.sync();
+                    this.render();
+                }
+            }
+
+            editTask(id) {
+                const task = this.tasks.find(t => t.id === id);
+                if (!task) return;
+
+                document.getElementById('taskId').value = task.id;
+                document.getElementById('inputTitle').value = task.title;
+                document.getElementById('inputCategory').value = task.category;
+                document.getElementById('inputDate').value = task.date;
+
+                document.getElementById('modalTitle').textContent = 'Edit Deadline';
+                this.openModal();
+            }
+
+            sync() {
+                localStorage.setItem('deadline_tasks_v2', JSON.stringify(this.tasks));
+            }
+
+            openModal() {
+                this.dom.modal.classList.add('active');
+                // Set min date to today
+                const today = new Date().toISOString().split('T')[0];
+                const dateInput = document.getElementById('inputDate');
+                if (!dateInput.value) dateInput.value = today;
+                // Let user pick past dates if they want for start tracking? No, usually deadlines are future.
+                // But for editing we might keep it open.
+            }
+
+            closeModal() {
+                this.dom.modal.classList.remove('active');
+                this.dom.form.reset();
+                document.getElementById('taskId').value = '';
+                document.getElementById('modalTitle').textContent = 'New Deadline';
+            }
+
+            getDaysRemaining(dateStr) {
+                const deadline = new Date(dateStr);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                deadline.setHours(0, 0, 0, 0);
+                const diff = deadline - today;
+                return Math.ceil(diff / (1000 * 60 * 60 * 24));
+            }
+
+            calculateProgress(createdStr, dateStr) {
+                const created = new Date(createdStr).getTime();
+                const deadline = new Date(dateStr).getTime();
+                const now = new Date().getTime();
+
+                if (now >= deadline) return 100;
+                if (now <= created) return 0;
+
+                const total = deadline - created;
+                const elapsed = now - created;
+                return Math.min(100, Math.max(0, (elapsed / total) * 100));
+            }
+
+            adjustDensity(delta) {
+                // Simple increment/decrement
+                const newVal = this.daysPerColumn + delta;
+                // Clamp between 1 day and 365 days
+                this.daysPerColumn = Math.max(1, Math.min(365, newVal));
+
+                localStorage.setItem('deadline_scale_days_v2', this.daysPerColumn);
+                this.updateDensityDisplay();
+                this.renderTimeline();
+                this.scrollToToday();
+            }
+
+            updateDensityDisplay() {
+                if (this.dom.densityDisplay) {
+                    const d = this.daysPerColumn;
+                    this.dom.densityDisplay.textContent = `${d} Day${d > 1 ? 's' : ''}`;
+                }
+            }
+
+            switchView(view) {
+                this.currentView = view;
+
+                // Toggle container visibility
+                if (view === 'grid') {
+                    this.dom.gridContainer.style.display = 'block';
+                    this.dom.timelineContainer.classList.remove('active');
+                    if (this.dom.densityControl) this.dom.densityControl.style.display = 'none';
+
+                    this.dom.viewButtons.grid.style.borderBottom = '2px solid var(--primary)';
+                    this.dom.viewButtons.grid.style.color = 'white';
+                    this.dom.viewButtons.timeline.style.borderBottom = 'none';
+                    this.dom.viewButtons.timeline.style.color = 'var(--text-secondary)';
+                } else {
+                    this.dom.gridContainer.style.display = 'none';
+                    this.dom.timelineContainer.classList.add('active');
+                    if (this.dom.densityControl) this.dom.densityControl.style.display = 'flex';
+
+                    this.dom.viewButtons.grid.style.borderBottom = 'none';
+                    this.dom.viewButtons.grid.style.color = 'var(--text-secondary)';
+                    this.dom.viewButtons.timeline.style.borderBottom = '2px solid var(--primary)';
+                    this.dom.viewButtons.timeline.style.color = 'white';
+
+                    // Update display on switch
+                    this.updateDensityDisplay();
+                    this.renderTimeline();
+                    this.scrollToToday();
+                }
+                if (view === 'grid') this.render();
+            }
+
+            // Helper to parse "YYYY-MM-DD" as local midnight
+            parseDate(dateStr) {
+                if (!dateStr) return new Date();
+                const [y, m, d] = dateStr.split('-').map(Number);
+                return new Date(y, m - 1, d); // Month is 0-indexed
+            }
+
+            renderTimeline() {
+                if (this.tasks.length === 0) {
+                    this.dom.timeline.innerHTML = `
+                    <div class="empty-state">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <p>No deadlines found. Time to relax or add a new goal!</p>
+                    </div>
+                `;
+                    return;
+                }
+
+                // 2. Configuration & Dimensions
+                const daysPerCol = this.daysPerColumn || 1;
+                const columnVisualWidth = 100; // Fixed width for a "Column"
+                const oneDayPixels = columnVisualWidth / daysPerCol;
+
+                // 1. Determine Timeline Bounds
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+
+                // Determine min/max from tasks
+                let tasksMin = new Date(now);
+                let tasksMax = new Date(now);
+
+                if (this.tasks.length > 0) {
+                    const dates = this.tasks.map(t => this.parseDate(t.date));
+                    const timestamps = dates.map(d => d.getTime());
+                    tasksMin = new Date(Math.min(...timestamps));
+                    tasksMax = new Date(Math.max(...timestamps));
+                }
+
+                // Start date: earliest of (Now or MinTask) minus buffer
+                let minDate = new Date(Math.min(now.getTime(), tasksMin.getTime()));
+                minDate.setDate(minDate.getDate() - (10 * daysPerCol)); // Buffer helps see left context
+
+                // End date: latest of (Now or MaxTask) plus buffer
+                let maxDate = new Date(Math.max(now.getTime(), tasksMax.getTime()));
+                maxDate.setDate(maxDate.getDate() + (14 * daysPerCol)); // End buffer
+
+                const oneDayMs = 1000 * 60 * 60 * 24;
+                const totalDays = Math.ceil((maxDate - minDate) / oneDayMs);
+                const totalWidth = totalDays * oneDayPixels;
+
+                this.dom.timeline.style.minWidth = `${totalWidth}px`;
+                this.dom.timeline.style.height = `${(this.tasks.length + 3) * 60}px`;
+
+                let html = '';
+
+                // 3. Render Grid & Dates based on Columns
+                // We iterate by columns now
+                const numCols = Math.ceil(totalDays / daysPerCol);
+
+                for (let i = 0; i <= numCols; i++) {
+                    const daysOffset = i * daysPerCol;
+                    const currentDate = new Date(minDate);
+                    currentDate.setDate(currentDate.getDate() + daysOffset);
+
+                    const left = i * columnVisualWidth;
+
+                    if (left > totalWidth) break;
+
+                    // Grid Line
+                    html += `<div class="timeline-grid-line" style="left: ${left}px"></div>`;
+
+                    // Date Marker
+                    html += `<div class="timeline-date-marker" style="left: ${left}px; width: ${columnVisualWidth}px; text-align: left; padding-left: 5px;">
+                        ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                   </div>`;
+                }
+
+                // 4. Render 'Today' Line
+                const todayDiff = (now - minDate) / oneDayMs;
+                if (todayDiff >= 0) {
+                    const todayLeft = todayDiff * oneDayPixels;
+                    html += `
+                        <div class="timeline-today-line" style="left: ${todayLeft}px">
+                            <div class="timeline-today-label">Today</div>
+                        </div>
+                    `;
+                }
+
+                // 5. Render Tasks
+                const sortedTasks = [...this.tasks].sort((a, b) => this.parseDate(a.date) - this.parseDate(b.date));
+
+                sortedTasks.forEach((task, index) => {
+                    const deadlineDate = this.parseDate(task.date);
+
+                    const deadlineDiff = (deadlineDate - minDate) / oneDayMs;
+                    const left = deadlineDiff * oneDayPixels;
+
+                    // Stagger vertically
+                    const top = 50 + (index * 56);
+
+                    const daysLeft = this.getDaysRemaining(task.date);
+                    let urgencyClass = 'safe';
+                    if (daysLeft < 0) urgencyClass = 'urgent';
+                    else if (daysLeft <= 3) urgencyClass = 'urgent';
+                    else if (daysLeft <= 7) urgencyClass = 'soon';
+
+                    html += `
+                        <div class="timeline-track">
+                            <div class="timeline-bar ${urgencyClass}"
+                                 style="left: ${left}px; width: max-content; max-width: 200px; transform: translateX(-100%); padding-right: 12px; z-index: 2;"
+                                 onclick="app.editTask('${task.id}')"
+                                 title="${task.title} (Due: ${deadlineDate.toLocaleDateString()})">
+                                ${task.title}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                this.dom.timeline.innerHTML = html;
+
+                // Scroll Handling done in adjustDensity/switchView
+            }
+
+            scrollToToday() {
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+
+                // Recalculate minDate logic (could be shared, but simple enough to repeat for now)
+                // Or better: store minDate in 'this' during render? 
+                // For safety/speed, let's just re-derive basic bounds or scroll to .timeline-today-line element if it exists!
+
+                const todayLine = this.dom.timeline.querySelector('.timeline-today-line');
+                if (todayLine) {
+                    const left = parseInt(todayLine.style.left);
+                    const scrollPos = Math.max(0, left - 50);
+                    this.dom.timelineContainer.scrollTo({
+                        left: scrollPos,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+
+            render() {
+                // Update Stats
+                const total = this.tasks.length;
+                const critical = this.tasks.filter(t => this.getDaysRemaining(t.date) <= 3 && this.getDaysRemaining(t.date) >= 0).length;
+                const upcoming = this.tasks.filter(t => this.getDaysRemaining(t.date) > 3).length;
+
+                this.dom.stats.total.textContent = total;
+                this.dom.stats.critical.textContent = critical;
+                this.dom.stats.upcoming.textContent = upcoming;
+                // Note: "Completed" logic would need a status field, for now we track active deadlines
+
+                if (this.currentView === 'timeline') {
+                    this.renderTimeline();
+                    return;
+                }
+
+                // FILTER AND RENDER GRID VIEW
+                let filteredTasks = [...this.tasks];
+                if (this.filter === 'urgent') {
+                    filteredTasks = filteredTasks.filter(t => this.getDaysRemaining(t.date) <= 3);
+                } else if (this.filter === 'future') {
+                    filteredTasks = filteredTasks.filter(t => this.getDaysRemaining(t.date) > 7);
+                }
+
+                filteredTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                // Render Grid
+                if (filteredTasks.length === 0) {
+                    this.dom.grid.innerHTML = `
+                    <div class="empty-state">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <p>No deadlines found. Time to relax or add a new goal!</p>
+                    </div>
+                `;
+                    return;
+                }
+
+                this.dom.grid.innerHTML = filteredTasks.map(task => {
+                    const daysLeft = this.getDaysRemaining(task.date);
+                    let statusClass = 'safe';
+                    if (daysLeft < 0) statusClass = 'urgent'; // Overdue
+                    else if (daysLeft <= 3) statusClass = 'urgent';
+                    else if (daysLeft <= 7) statusClass = 'soon';
+
+                    const statusText = daysLeft < 0 ? 'Overdue' : (daysLeft === 0 ? 'Today' : `${daysLeft} days left`);
+                    const progress = this.calculateProgress(task.created, task.date);
+
+                    // Color for progress bar
+                    let progressColor = 'var(--success)';
+                    if (statusClass === 'urgent') progressColor = 'var(--danger)';
+                    else if (statusClass === 'soon') progressColor = 'var(--warning)';
+
+                    return `
+                    <div class="task-card">
+                        <div class="task-actions">
+                            <button class="action-btn" onclick="app.editTask('${task.id}')">✎</button>
+                            <button class="action-btn delete" onclick="app.deleteTask('${task.id}')">×</button>
+                        </div>
+                        <div class="task-header">
+                            <div>
+                                <h3 class="task-title">${task.title}</h3>
+                                <div class="task-category">${task.category}</div>
+                            </div>
+                            <div class="countdown ${statusClass}">${statusText}</div>
+                        </div>
+                        <div class="progress-container">
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;">
+                                <span>Progress</span>
+                                <span>${Math.round(progress)}%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${progress}%; background: ${progressColor}"></div>
+                            </div>
+                        </div>
+                        <div class="task-date">
+                            <span>📅</span> ${new Date(task.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </div>
+                    </div>
+                `;
+                }).join('');
+            }
+        }
+
+        // Initialize
+        const app = new DeadlineManager();
+
+        // Global helpers for HTML event attributes
+        window.openModal = () => app.openModal();
+        window.closeModal = () => app.closeModal();
+        window.setFilter = (filter) => {
+            app.filter = filter;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            app.render();
+        };
+        window.switchView = (view) => app.switchView(view);
+
+    </script>
+</body>
+
+</html>

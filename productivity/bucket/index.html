@@ -367,6 +367,32 @@
           <div id="recentList" class="recent"></div>
           <div id="recentPlaceholder" class="placeholder" style="display:none">No purchases yet</div>
         </section>
+
+        <!-- SAVINGS BUCKETS MODULE -->
+        <section class="panel">
+          <h2>💰 Savings Buckets 
+            <span class="tag" style="font-size:11px;font-weight:normal">Fills only when all items above are complete</span>
+          </h2>
+          
+          <!-- Add New Savings Bucket Form -->
+          <div class="add-form" style="margin-bottom:16px">
+            <div class="input">
+              <label>Bucket Name</label>
+              <input id="savingsBucketName" type="text" placeholder="e.g. Emergency Fund" />
+            </div>
+            <div class="input">
+              <label>Target Amount (₹)</label>
+              <input id="savingsBucketTarget" type="number" step="0.01" min="0" placeholder="e.g. 50000" />
+            </div>
+            <button id="addSavingsBucketBtn">Add Savings Bucket</button>
+          </div>
+          
+          <!-- Savings Buckets List -->
+          <div id="savingsBucketsList" class="queue"></div>
+          <div id="savingsBucketsPlaceholder" class="placeholder" style="display:none">
+            No savings buckets yet. Add one to start saving automatically!
+          </div>
+        </section>
       </div>
     </div>
 
@@ -392,6 +418,274 @@
         const STATE_KEY = 'spt_state_v1';
         const CATCHUP_SECONDS = 3.5; // animate catch-up over ~3.5s
         const SAVE_INTERVAL_MS = 2000;
+
+        // ===== SAVINGS BUCKETS MODULE - DATA & STORAGE =====
+        const SAVINGS_STATE_KEY = 'spt_savings_v1';
+
+        const savingsState = {
+          buckets: [],
+          activeBucketId: null,
+          lastSavingsUpdate: Date.now()
+        };
+
+        function saveSavingsState() {
+          savingsState.lastSavingsUpdate = Date.now();
+          try {
+            localStorage.setItem(SAVINGS_STATE_KEY, JSON.stringify(savingsState));
+          } catch (e) {
+            console.error('Failed to save savings state:', e);
+          }
+        }
+
+        function loadSavingsState() {
+          const raw = localStorage.getItem(SAVINGS_STATE_KEY);
+          if (!raw) return;
+          try {
+            const loaded = JSON.parse(raw);
+            if (loaded && typeof loaded === 'object') {
+              savingsState.buckets = Array.isArray(loaded.buckets) ? loaded.buckets : [];
+              savingsState.activeBucketId = loaded.activeBucketId || null;
+              savingsState.lastSavingsUpdate = Number(loaded.lastSavingsUpdate || Date.now());
+            }
+          } catch (e) {
+            console.error('Failed to load savings state:', e);
+          }
+        }
+
+        // Savings bucket model: { id, name, targetAmount, currentAmount, priority, isActive, createdAt }
+        function createSavingsBucket(name, targetAmount) {
+          return {
+            id: 'sb_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8),
+            name: String(name || 'Untitled').trim(),
+            targetAmount: Math.max(0, Number(targetAmount || 0)),
+            currentAmount: 0,
+            priority: savingsState.buckets.length,
+            isActive: false,
+            createdAt: Date.now()
+          };
+        }
+
+        // ===== SAVINGS BUCKETS - CRUD OPERATIONS =====
+
+        function addSavingsBucket(name, targetAmount) {
+          const bucket = createSavingsBucket(name, targetAmount);
+          savingsState.buckets.push(bucket);
+          
+          // If this is the first bucket, make it active
+          if (savingsState.buckets.length === 1) {
+            setActiveSavingsBucket(bucket.id);
+          }
+          
+          saveSavingsState();
+          renderSavingsBuckets();
+        }
+
+        function editSavingsBucket(bucketId, name, targetAmount) {
+          const bucket = savingsState.buckets.find(b => b.id === bucketId);
+          if (!bucket) return;
+          
+          bucket.name = String(name || 'Untitled').trim();
+          bucket.targetAmount = Math.max(0, Number(targetAmount || 0));
+          
+          saveSavingsState();
+          renderSavingsBuckets();
+        }
+
+        function deleteSavingsBucket(bucketId) {
+          const idx = savingsState.buckets.findIndex(b => b.id === bucketId);
+          if (idx < 0) return;
+          
+          const wasActive = savingsState.buckets[idx].id === savingsState.activeBucketId;
+          savingsState.buckets.splice(idx, 1);
+          
+          // Reorder priorities
+          savingsState.buckets.forEach((b, i) => b.priority = i);
+          
+          // If deleted bucket was active, activate next bucket
+          if (wasActive) {
+            if (savingsState.buckets.length > 0) {
+              setActiveSavingsBucket(savingsState.buckets[0].id);
+            } else {
+              savingsState.activeBucketId = null;
+            }
+          }
+          
+          saveSavingsState();
+          renderSavingsBuckets();
+        }
+
+        function setActiveSavingsBucket(bucketId) {
+          // Deactivate all buckets
+          savingsState.buckets.forEach(b => b.isActive = false);
+          
+          // Activate the selected one
+          const bucket = savingsState.buckets.find(b => b.id === bucketId);
+          
+          if (bucket) {
+            bucket.isActive = true;
+            savingsState.activeBucketId = bucketId;
+          } else {
+            savingsState.activeBucketId = null;
+          }
+          
+          saveSavingsState();
+          renderSavingsBuckets();
+        }
+
+        function moveSavingsBucketUp(bucketId) {
+          const idx = savingsState.buckets.findIndex(b => b.id === bucketId);
+          if (idx <= 0) return; // Already at top
+          
+          // Swap with previous
+          [savingsState.buckets[idx - 1], savingsState.buckets[idx]] = 
+          [savingsState.buckets[idx], savingsState.buckets[idx - 1]];
+          
+          // Reorder priorities
+          savingsState.buckets.forEach((b, i) => b.priority = i);
+          
+          saveSavingsState();
+          renderSavingsBuckets();
+        }
+
+        function moveSavingsBucketDown(bucketId) {
+          const idx = savingsState.buckets.findIndex(b => b.id === bucketId);
+          if (idx < 0 || idx >= savingsState.buckets.length - 1) return; // Already at bottom
+          
+          // Swap with next
+          [savingsState.buckets[idx], savingsState.buckets[idx + 1]] = 
+          [savingsState.buckets[idx + 1], savingsState.buckets[idx]];
+          
+          // Reorder priorities
+          savingsState.buckets.forEach((b, i) => b.priority = i);
+          
+          saveSavingsState();
+          renderSavingsBuckets();
+        }
+
+        // ===== SAVINGS BUCKETS - AUTO-FILL LOGIC =====
+
+        function areAllRegularBucketsFilled() {
+          // Check if ALL regular (non-savings) items are filled
+          for (const item of state.items) {
+            if (item.cost > 0 && item.progress < item.cost) {
+              return false; // Found an unfilled item
+            }
+          }
+          return true; // All items are filled (or no items exist)
+        }
+
+        function getActiveSavingsBucket() {
+          return savingsState.buckets.find(b => b.id === savingsState.activeBucketId);
+        }
+
+        function getNextUnfilledSavingsBucket() {
+          // Sort by priority and find first unfilled bucket
+          const sorted = savingsState.buckets.slice().sort((a, b) => a.priority - b.priority);
+          return sorted.find(b => b.currentAmount < b.targetAmount);
+        }
+
+        function distributeSavingsToBucket(amount) {
+          // Only distribute if all regular buckets are filled
+          if (!areAllRegularBucketsFilled()) {
+            return amount; // Return unused amount
+          }
+          
+          const activeBucket = getActiveSavingsBucket();
+          if (!activeBucket) {
+            return amount; // No active bucket, return unused
+          }
+          
+          const need = Math.max(0, activeBucket.targetAmount - activeBucket.currentAmount);
+          
+          if (need <= 0.000001) {
+            // Active bucket is full, activate next one
+            const nextBucket = getNextUnfilledSavingsBucket();
+            if (nextBucket && nextBucket.id !== activeBucket.id) {
+              setActiveSavingsBucket(nextBucket.id);
+              // Recursively try with new active bucket
+              return distributeSavingsToBucket(amount);
+            }
+            // No more buckets to fill
+            return amount;
+          }
+          
+          if (amount >= need) {
+            // Can fill completely
+            activeBucket.currentAmount += need;
+            const remaining = amount - need;
+            saveSavingsState();
+            // DON'T render here - will be handled by tick loop
+            
+            // Auto-activate next bucket
+            const nextBucket = getNextUnfilledSavingsBucket();
+            if (nextBucket && nextBucket.id !== activeBucket.id) {
+              setActiveSavingsBucket(nextBucket.id);
+            }
+            
+            return remaining;
+          } else {
+            // Partial fill
+            activeBucket.currentAmount += amount;
+            saveSavingsState();
+            // DON'T render here - will be handled by tick loop
+            return 0;
+          }
+        }
+
+        // ===== SAVINGS BUCKETS - CATCH-UP LOGIC =====
+
+        function applySavingsCatchup() {
+          const now = Date.now();
+          const elapsedMs = Math.max(0, now - Number(savingsState.lastSavingsUpdate || now));
+          const elapsedSec = elapsedMs / 1000;
+          const savingsRate = perSecondRate();
+          
+          if (elapsedSec <= 2 || savingsRate <= 0) return; // Skip if minimal time passed
+          
+          // Only apply catch-up if all regular buckets are currently filled
+          if (!areAllRegularBucketsFilled()) return;
+          
+          let remainingSavings = elapsedSec * savingsRate;
+          let guard = 0;
+          
+          while (remainingSavings > 0.000001 && guard < 100) {
+            guard++;
+            const activeBucket = getActiveSavingsBucket();
+            if (!activeBucket) break;
+            
+            const need = Math.max(0, activeBucket.targetAmount - activeBucket.currentAmount);
+            
+            if (need <= 0.000001) {
+              // Current bucket filled, move to next
+              const nextBucket = getNextUnfilledSavingsBucket();
+              if (nextBucket && nextBucket.id !== activeBucket.id) {
+                setActiveSavingsBucket(nextBucket.id);
+                continue;
+              } else {
+                break; // No more buckets
+              }
+            }
+            
+            if (remainingSavings >= need) {
+              activeBucket.currentAmount += need;
+              remainingSavings -= need;
+              
+              // Auto-activate next
+              const nextBucket = getNextUnfilledSavingsBucket();
+              if (nextBucket && nextBucket.id !== activeBucket.id) {
+                setActiveSavingsBucket(nextBucket.id);
+              } else {
+                break;
+              }
+            } else {
+              activeBucket.currentAmount += remainingSavings;
+              remainingSavings = 0;
+            }
+          }
+          
+          saveSavingsState();
+          // Don't render here - will be handled by initial render in start()
+        }
 
         /**
          * State Model
@@ -502,7 +796,14 @@
           while (state.bucketAmount > 0.000001 && guard < 1000) {
             guard++;
             const idx = computeActiveIndex();
-            if (idx < 0) break;
+            if (idx < 0) {
+              // No more regular items to fill - try savings buckets
+              const remainingAmount = state.bucketAmount;
+              state.bucketAmount = 0; // Clear bucket before distributing to savings
+              const unused = distributeSavingsToBucket(remainingAmount);
+              state.bucketAmount = unused; // Put back any unused amount
+              break;
+            }
             const it = state.items[idx];
             const need = Math.max(0, it.cost - it.progress);
             if (need <= 0) continue;
@@ -600,6 +901,74 @@
               recentList.appendChild(row);
             }
           }
+        }
+
+        // ===== SAVINGS BUCKETS - RENDER =====
+
+        function renderSavingsBuckets() {
+          const savingsBucketsList = document.getElementById('savingsBucketsList');
+          const savingsBucketsPlaceholder = document.getElementById('savingsBucketsPlaceholder');
+          
+          if (!savingsBucketsList) return; // UI not loaded yet
+          
+          savingsBucketsList.innerHTML = '';
+          
+          const allRegularFilled = areAllRegularBucketsFilled();
+          
+          if (savingsState.buckets.length === 0) {
+            savingsBucketsPlaceholder.style.display = 'block';
+            return;
+          }
+          
+          savingsBucketsPlaceholder.style.display = 'none';
+          
+          // Sort by priority
+          const sorted = savingsState.buckets.slice().sort((a, b) => a.priority - b.priority);
+          
+          sorted.forEach((bucket, index) => {
+            const percent = bucket.targetAmount > 0 
+              ? Math.min(100, (bucket.currentAmount / bucket.targetAmount) * 100) 
+              : 0;
+            const isActive = bucket.id === savingsState.activeBucketId;
+            const isFilled = bucket.currentAmount >= bucket.targetAmount && bucket.targetAmount > 0;
+            
+            const el = document.createElement('div');
+            el.className = 'item' + (isActive ? ' active' : '') + (isFilled ? ' filled' : '');
+            el.dataset.savingsId = bucket.id;
+            // Extra visual emphasis for active bucket
+            if (isActive) {
+              el.style.boxShadow = '0 0 0 3px #fbbf24, 0 10px 30px rgba(251, 191, 36, 0.3)';
+              el.style.border = '2px solid #fbbf24';
+            }
+            el.innerHTML = `
+              <div>
+                <div class="item-header">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <strong>${escapeHtml(bucket.name)}</strong>
+                    ${isActive ? '<span class="tag" style="color:#fbbf24;border-color:#3a2817;background:#1a1410;font-size:14px;font-weight:bold;padding:4px 12px">⭐ ACTIVE - RECEIVING MONEY</span>' : ''}
+                    ${isFilled ? '<span class="tag" style="color:#86efac;border-color:#254631;background:#0f1a12">✓ Target Reached</span>' : ''}
+                    ${!allRegularFilled ? '<span class="tag" style="color:#94a3b8;border-color:#2a3346;background:#0f1218">Waiting...</span>' : ''}
+                  </div>
+                  <div class="item-actions" style="gap:4px;">
+                    ${index > 0 ? `<button class="btn" data-savings-action="moveUp" data-savings-id="${bucket.id}" style="padding:6px 10px">↑</button>` : ''}
+                    ${index < sorted.length - 1 ? `<button class="btn" data-savings-action="moveDown" data-savings-id="${bucket.id}" style="padding:6px 10px">↓</button>` : ''}
+                    ${!isActive ? `<button class="btn" data-savings-action="setActive" data-savings-id="${bucket.id}" style="background:#1a2817;border-color:#2a4420;color:#86efac">Set Active</button>` : ''}
+                    <button class="btn" data-savings-action="edit" data-savings-id="${bucket.id}">✏️ Edit</button>
+                    <button class="delete-btn btn" data-savings-action="delete" data-savings-id="${bucket.id}">🗑️ Delete</button>
+                  </div>
+                </div>
+                <div class="item-meta">
+                  <span>Target: ₹${fmt(bucket.targetAmount)}</span>
+                  <span>Current: ₹${fmt(bucket.currentAmount)}</span>
+                  <span>${fmt(percent)}%</span>
+                  <span style="color:#94a3b8">Priority: #${index + 1}</span>
+                </div>
+                <div class="progress"><div class="bar" style="width:${percent}%;background:linear-gradient(90deg,#fbbf24,#f59e0b)"></div></div>
+              </div>
+            `;
+            
+            savingsBucketsList.appendChild(el);
+          });
         }
 
         function addItem(name, cost) {
@@ -705,6 +1074,27 @@
           }
         }
 
+        function updateSavingsBucketsProgress() {
+          // Update only savings bucket progress bars and text without recreating DOM
+          for (const bucket of savingsState.buckets) {
+            const itemEl = document.querySelector(`[data-savings-id="${bucket.id}"]`);
+            if (!itemEl) continue;
+            
+            const percent = bucket.targetAmount > 0 
+              ? Math.min(100, (bucket.currentAmount / bucket.targetAmount) * 100) 
+              : 0;
+            const progressBar = itemEl.querySelector('.progress .bar');
+            if (progressBar) {
+              progressBar.style.width = percent + '%';
+            }
+            
+            // Update progress text
+            const metaSpans = itemEl.querySelectorAll('.item-meta span');
+            if (metaSpans[1]) metaSpans[1].textContent = 'Current: ₹' + fmt(bucket.currentAmount);
+            if (metaSpans[2]) metaSpans[2].textContent = fmt(percent) + '%';
+          }
+        }
+
         function tick(ts) {
           if (!previousTs) previousTs = ts;
           const dt = Math.max(0, (ts - previousTs) / 1000);
@@ -739,6 +1129,8 @@
           updateDisplays();
           // Only update progress bars, not full re-render
           updateProgressBars();
+          // Update savings buckets progress bars (lightweight)
+          updateSavingsBucketsProgress();
           // Full re-render only when items change state
           if (needsRerender) {
             console.log('🔄 Full re-render triggered by state change');
@@ -793,18 +1185,24 @@
           itemNameInput.focus();
         }
         function resetAllDirect () {
-          if (!window.confirm('This will clear all data. Continue?')) return;
+          if (!window.confirm('This will clear all data including savings buckets. Continue?')) return;
           try { localStorage.removeItem(STATE_KEY); } catch (e) {}
+          try { localStorage.removeItem(SAVINGS_STATE_KEY); } catch (e) {}
           state.items = [];
           state.bucketAmount = 0;
           state.dailyRate = 0;
           state.purchases = [];
           state.lastUpdatedAt = Date.now();
+          savingsState.buckets = [];
+          savingsState.activeBucketId = null;
+          savingsState.lastSavingsUpdate = Date.now();
           catchup.active = false;
           hideCatchupOverlay();
           render();
+          renderSavingsBuckets();
           updateDisplays();
           saveState();
+          saveSavingsState();
         }
 
         function setupEventDelegation() {
@@ -849,10 +1247,93 @@
           console.log('✅ Event handlers attached to:', activeList, queueList, filledList);
         }
 
+        // ===== SAVINGS BUCKETS - EVENT HANDLERS =====
+
+        function setupSavingsEventHandlers() {
+          const savingsBucketsList = document.getElementById('savingsBucketsList');
+          const addSavingsBucketBtn = document.getElementById('addSavingsBucketBtn');
+          const savingsBucketName = document.getElementById('savingsBucketName');
+          const savingsBucketTarget = document.getElementById('savingsBucketTarget');
+          
+          if (!savingsBucketsList || !addSavingsBucketBtn) {
+            return; // UI not loaded yet
+          }
+          
+          // Add new savings bucket
+          addSavingsBucketBtn.onclick = function() {
+            const name = savingsBucketName.value.trim();
+            const target = Number(savingsBucketTarget.value || 0);
+            
+            if (!name) {
+              alert('Please enter a bucket name');
+              return;
+            }
+            
+            if (target <= 0) {
+              alert('Please enter a valid target amount');
+              return;
+            }
+            
+            addSavingsBucket(name, target);
+            savingsBucketName.value = '';
+            savingsBucketTarget.value = '';
+            savingsBucketName.focus();
+          };
+          
+          // Event delegation for savings bucket actions
+          savingsBucketsList.onclick = function(e) {
+            const btn = e.target.closest('[data-savings-action]');
+            if (!btn) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            const action = btn.getAttribute('data-savings-action');
+            const bucketId = btn.getAttribute('data-savings-id');
+            
+            if (action === 'delete') {
+              showConfirm('Delete this savings bucket?', function() {
+                deleteSavingsBucket(bucketId);
+              });
+            } else if (action === 'setActive') {
+              setActiveSavingsBucket(bucketId);
+            } else if (action === 'moveUp') {
+              moveSavingsBucketUp(bucketId);
+            } else if (action === 'moveDown') {
+              moveSavingsBucketDown(bucketId);
+            } else if (action === 'edit') {
+              const bucket = savingsState.buckets.find(b => b.id === bucketId);
+              if (!bucket) return;
+              
+              const newName = prompt('Enter new name:', bucket.name);
+              if (!newName || !newName.trim()) return;
+              
+              const newTarget = prompt('Enter new target amount:', bucket.targetAmount);
+              const targetNum = Number(newTarget);
+              if (!isFinite(targetNum) || targetNum <= 0) return;
+              
+              editSavingsBucket(bucketId, newName, targetNum);
+            }
+          };
+        }
+
         function start() {
           loadState();
+          
+          // Load savings state
+          loadSavingsState();
+          
           // Initialize UI once
           render();
+          
+          // Apply savings catch-up
+          applySavingsCatchup();
+          
+          // Setup savings event handlers
+          setupSavingsEventHandlers();
+          
+          // Initial render of savings buckets
+          renderSavingsBuckets();
+          
           // Compute offline elapsed and catch-up
           const now = Date.now();
           const elapsedMs = Math.max(0, now - Number(state.lastUpdatedAt || now));
@@ -883,6 +1364,7 @@
           // Save on unload
           window.onbeforeunload = function () {
             saveState();
+            saveSavingsState();
             if (rafId) cancelAnimationFrame(rafId);
           };
         }

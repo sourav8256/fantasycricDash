@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadline Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .add-form {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+            padding: 6px 12px;
+            font-size: 13px;
+            margin-right: 5px;
+        }
+
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .calendar-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .calendar-grid {
+            display: flex;
+            gap: 16px;
+            min-width: min-content;
+            padding-bottom: 10px;
+        }
+
+        .day-column {
+            flex: 0 0 320px;
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 200px;
+        }
+
+        .day-column.current-week {
+            background: #e8f5e9;
+            border: 2px solid #4CAF50;
+        }
+
+        .day-column.past-week {
+            background: #ffebee;
+            border: 2px solid #f44336;
+        }
+
+        .day-header {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .day-header.current-week {
+            border-bottom-color: #4CAF50;
+        }
+
+        .day-header.past-week {
+            border-bottom-color: #f44336;
+        }
+
+        .day-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .day-date {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-top: 6px;
+            line-height: 1.3;
+        }
+
+        .day-column.current-week .day-name {
+            color: #2e7d32;
+        }
+
+        .day-column.current-week .day-date {
+            color: #2e7d32;
+        }
+
+        .day-column.past-week .day-name {
+            color: #c62828;
+        }
+
+        .day-column.past-week .day-date {
+            color: #c62828;
+        }
+
+        .task-count {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .tasks-in-day {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .task-card.urgent {
+            border-color: #d32f2f;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+        }
+
+        .task-card.warning {
+            border-color: #ef6c00;
+            background: linear-gradient(135deg, #fff8f0 0%, #ffffff 100%);
+        }
+
+        .task-card.safe {
+            border-color: #66bb6a;
+            background: linear-gradient(135deg, #f1f8f4 0%, #ffffff 100%);
+        }
+
+        .task-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .task-badge.urgent {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .task-badge.warning {
+            background: #ef6c00;
+            color: white;
+        }
+
+        .task-badge.safe {
+            background: #66bb6a;
+            color: white;
+        }
+
+        .task-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .progress-container {
+            margin-top: 8px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-fill.safe {
+            background: linear-gradient(90deg, #66bb6a 0%, #81c784 100%);
+        }
+
+        .progress-bar-fill.warning {
+            background: linear-gradient(90deg, #ffa726 0%, #ffb74d 100%);
+        }
+
+        .progress-bar-fill.urgent {
+            background: linear-gradient(90deg, #ef6c00 0%, #ff7043 100%);
+        }
+
+        .progress-bar-fill.critical {
+            background: linear-gradient(90deg, #d32f2f 0%, #e53935 100%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .edit-form {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .edit-form .form-group {
+            margin-bottom: 8px;
+        }
+
+        .edit-form input {
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            header, .add-form, .calendar-container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .day-column {
+                flex: 0 0 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Deadline Tracker</h1>
+        </header>
+
+        <div class="add-form">
+            <form id="addDeadlineForm">
+                <div class="form-group">
+                    <label for="deadlineTitle">What needs to be done?</label>
+                    <input type="text" id="deadlineTitle" placeholder="Enter task or deadline title" required>
+                </div>
+                <div class="form-group">
+                    <label for="deadlineDate">Deadline Date</label>
+                    <input type="date" id="deadlineDate" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Deadline</button>
+            </form>
+        </div>
+
+        <div class="calendar-container">
+            <div id="calendarGrid" class="calendar-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let deadlines = [];
+        const STORAGE_KEY = 'deadlineTrackerData';
+
+        // Initialize app
+        function init() {
+            loadDeadlines();
+            renderCalendar();
+            setupEventListeners();
+            setMinDate();
+        }
+
+        // Set minimum date to today
+        function setMinDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('deadlineDate').setAttribute('min', today);
+        }
+
+        // Load deadlines from localStorage
+        function loadDeadlines() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                deadlines = JSON.parse(stored);
+            }
+        }
+
+        // Save deadlines to localStorage
+        function saveDeadlines() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(deadlines));
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('addDeadlineForm').addEventListener('submit', handleAddDeadline);
+        }
+
+        // Handle add deadline
+        function handleAddDeadline(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('deadlineTitle').value.trim();
+            const date = document.getElementById('deadlineDate').value;
+
+            if (!title || !date) return;
+
+            const deadline = {
+                id: Date.now(),
+                title: title,
+                date: date,
+                createdAt: new Date().toISOString()
+            };
+
+            deadlines.push(deadline);
+            saveDeadlines();
+            renderCalendar();
+
+            // Reset form
+            document.getElementById('addDeadlineForm').reset();
+        }
+
+        // Handle edit deadline
+        function handleEditDeadline(id) {
+            const deadline = deadlines.find(d => d.id === id);
+            if (!deadline) return;
+
+            const itemElement = document.querySelector(`[data-id="${id}"]`);
+            const existingEdit = itemElement.querySelector('.edit-form');
+            
+            if (existingEdit) {
+                existingEdit.remove();
+                return;
+            }
+
+            const editForm = document.createElement('div');
+            editForm.className = 'edit-form';
+            editForm.innerHTML = `
+                <div class="form-group">
+                    <input type="text" id="editTitle-${id}" value="${deadline.title}" placeholder="Title" required>
+                </div>
+                <div class="form-group">
+                    <input type="date" id="editDate-${id}" value="${deadline.date}" min="${new Date().toISOString().split('T')[0]}" required>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="saveEdit(${id})">Save</button>
+                <button type="button" class="btn btn-danger" onclick="cancelEdit(${id})">Cancel</button>
+            `;
+
+            itemElement.appendChild(editForm);
+        }
+
+        // Save edit
+        function saveEdit(id) {
+            const title = document.getElementById(`editTitle-${id}`).value.trim();
+            const date = document.getElementById(`editDate-${id}`).value;
+
+            if (!title || !date) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const deadline = deadlines.find(d => d.id === id);
+            if (deadline) {
+                deadline.title = title;
+                deadline.date = date;
+                saveDeadlines();
+                renderCalendar();
+            }
+        }
+
+        // Cancel edit
+        function cancelEdit(id) {
+            renderCalendar();
+        }
+
+        // Handle delete deadline
+        function handleDeleteDeadline(id) {
+            if (confirm('Are you sure you want to delete this deadline?')) {
+                deadlines = deadlines.filter(d => d.id !== id);
+                saveDeadlines();
+                renderCalendar();
+            }
+        }
+
+        // Calculate days remaining
+        function getDaysRemaining(dateString) {
+            const deadline = new Date(dateString);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            deadline.setHours(0, 0, 0, 0);
+            
+            const diffTime = deadline - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return diffDays;
+        }
+
+        // Calculate total days from creation to deadline
+        function getTotalDays(createdAt, deadlineDate) {
+            const created = new Date(createdAt);
+            const deadline = new Date(deadlineDate);
+            created.setHours(0, 0, 0, 0);
+            deadline.setHours(0, 0, 0, 0);
+            
+            const diffTime = deadline - created;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return Math.max(diffDays, 1);
+        }
+
+        // Calculate progress percentage
+        function getProgressPercentage(createdAt, deadlineDate) {
+            const totalDays = getTotalDays(createdAt, deadlineDate);
+            const daysRemaining = getDaysRemaining(deadlineDate);
+            
+            if (daysRemaining < 0) {
+                return 0;
+            }
+            
+            const percentage = (daysRemaining / totalDays) * 100;
+            return Math.max(0, Math.min(100, percentage));
+        }
+
+        // Get urgency class
+        function getUrgencyClass(days) {
+            if (days < 0) return 'urgent';
+            if (days === 0) return 'critical';
+            if (days < 3) return 'urgent';
+            if (days < 7) return 'warning';
+            return 'safe';
+        }
+
+        // Get urgency badge
+        function getUrgencyBadge(days) {
+            if (days < 0) return '⚠️ OVERDUE';
+            if (days === 0) return '🔴 TODAY';
+            if (days < 3) return '🔴 URGENT';
+            if (days < 7) return '📌 SOON';
+            return '✓ OK';
+        }
+
+        // Format date for display
+        function formatDateShort(dateString) {
+            const date = new Date(dateString);
+            const options = { month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Get week start (Monday)
+        function getWeekStart(date) {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            d.setDate(diff);
+            return d;
+        }
+
+        // Get week end (Sunday)
+        function getWeekEnd(date) {
+            const start = getWeekStart(date);
+            const end = new Date(start);
+            end.setDate(end.getDate() + 6);
+            return end;
+        }
+
+        // Format week range
+        function formatWeekRange(weekStart) {
+            const weekEnd = getWeekEnd(weekStart);
+            const startStr = formatDateShort(weekStart.toISOString().split('T')[0]);
+            const endStr = formatDateShort(weekEnd.toISOString().split('T')[0]);
+            return `${startStr} - ${endStr}`;
+        }
+
+        // Get week ranges for calendar
+        function getWeekRanges() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Get current week start
+            let earliestWeekStart = getWeekStart(today);
+            let latestWeekStart = new Date(earliestWeekStart);
+            latestWeekStart.setDate(latestWeekStart.getDate() + 28); // Show 4 weeks by default
+            
+            // Find earliest and latest weeks based on deadlines
+            deadlines.forEach(deadline => {
+                const deadlineDate = new Date(deadline.date);
+                deadlineDate.setHours(0, 0, 0, 0);
+                const weekStart = getWeekStart(deadlineDate);
+                
+                if (weekStart < earliestWeekStart) {
+                    earliestWeekStart = new Date(weekStart);
+                }
+                if (weekStart > latestWeekStart) {
+                    latestWeekStart = new Date(weekStart);
+                }
+            });
+            
+            // Generate array of week starts
+            const weeks = [];
+            const currentWeek = new Date(earliestWeekStart);
+            
+            while (currentWeek <= latestWeekStart) {
+                weeks.push(new Date(currentWeek));
+                currentWeek.setDate(currentWeek.getDate() + 7);
+            }
+            
+            return weeks;
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            const container = document.getElementById('calendarGrid');
+            
+            if (deadlines.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <p>No deadlines yet. Add one to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const weeks = getWeekRanges();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const currentWeekStart = getWeekStart(today);
+
+            let html = '';
+
+            weeks.forEach(weekStart => {
+                const weekEnd = getWeekEnd(weekStart);
+                const isCurrentWeek = weekStart.getTime() === currentWeekStart.getTime();
+                const isPastWeek = weekEnd < today;
+                
+                // Find tasks for this week
+                const tasksInWeek = deadlines.filter(d => {
+                    const deadlineDate = new Date(d.date);
+                    deadlineDate.setHours(0, 0, 0, 0);
+                    return deadlineDate >= weekStart && deadlineDate <= weekEnd;
+                });
+                
+                // Sort tasks within week by date
+                tasksInWeek.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // Column class
+                let columnClass = 'day-column';
+                if (isCurrentWeek) columnClass += ' current-week';
+                if (isPastWeek) columnClass += ' past-week';
+                
+                html += `<div class="${columnClass}">`;
+                
+                // Header class
+                let headerClass = 'day-header';
+                if (isCurrentWeek) headerClass += ' current-week';
+                if (isPastWeek) headerClass += ' past-week';
+                
+                // Week label
+                let weekLabel = 'WEEK';
+                if (isCurrentWeek) weekLabel = 'THIS WEEK';
+                if (isPastWeek) weekLabel = 'PAST WEEK';
+                
+                html += `
+                    <div class="${headerClass}">
+                        <div class="day-name">${weekLabel}</div>
+                        <div class="day-date">${formatWeekRange(weekStart)}</div>
+                        <div class="task-count">${tasksInWeek.length} task${tasksInWeek.length !== 1 ? 's' : ''}</div>
+                    </div>
+                `;
+                
+                html += `<div class="tasks-in-day">`;
+                
+                // Render tasks for this week
+                tasksInWeek.forEach(task => {
+                    const daysRemaining = getDaysRemaining(task.date);
+                    const urgencyClass = getUrgencyClass(daysRemaining);
+                    const urgencyBadge = getUrgencyBadge(daysRemaining);
+                    const progressPercentage = getProgressPercentage(task.createdAt, task.date);
+                    const totalDays = getTotalDays(task.createdAt, task.date);
+                    
+                    html += `
+                        <div class="task-card ${urgencyClass}" data-id="${task.id}">
+                            <span class="task-badge ${urgencyClass}">${urgencyBadge}</span>
+                            <div class="task-title">${task.title}</div>
+                            <div class="task-meta" style="font-size: 12px; color: #666; margin: 6px 0;">
+                                📅 ${formatDateShort(task.date)}
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-label">
+                                    <span>Progress</span>
+                                    <span>${Math.max(0, daysRemaining)}/${totalDays}d</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill ${urgencyClass}" style="width: ${progressPercentage}%"></div>
+                                </div>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn btn-secondary" onclick="handleEditDeadline(${task.id})">Edit</button>
+                                <button class="btn btn-danger" onclick="handleDeleteDeadline(${task.id})">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Initialize app when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

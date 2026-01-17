@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone-Free Timer 📵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.6s ease-out;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-btn:hover {
+            transform: rotate(90deg) scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @media (min-width: 768px) {
+            .main-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .timer-section {
+            text-align: center;
+        }
+
+        .level-display {
+            display: inline-block;
+            background: rgba(255, 215, 0, 0.3);
+            padding: 8px 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .timer-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 30px auto;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .timer-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .timer-time {
+            font-size: 4rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: 2px;
+        }
+
+        .timer-label {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .progress-percentage {
+            font-size: 1.2rem;
+            margin-top: 5px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .slider-container {
+            margin: 30px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .slider-value {
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: none;
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-pause:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .btn-stop:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(250, 112, 154, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .stats-section h2,
+        .achievements-section h2,
+        .history-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .compact-stats {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .compact-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            min-width: 60px;
+        }
+
+        .compact-label {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .compact-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .bar-chart-container {
+            margin-top: 20px;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .bar {
+            width: 100%;
+            background: linear-gradient(180deg, #ffd700 0%, #38ef7d 100%);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            min-height: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .bar:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(255, 215, 0, 0.5);
+            filter: brightness(1.2);
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #ffd700;
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+        }
+
+        .bar:hover .bar-value {
+            opacity: 1;
+        }
+
+        .bar-label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .bar-day {
+            font-weight: bold;
+        }
+
+        .bar-date {
+            font-size: 0.65rem;
+            opacity: 0.6;
+        }
+
+        .reference-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 0;
+            border-top: 2px dashed;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .reference-line.average {
+            border-color: rgba(56, 239, 237, 0.7);
+        }
+
+        .reference-line.goal {
+            border-color: rgba(255, 215, 0, 0.7);
+        }
+
+        .reference-label {
+            position: absolute;
+            right: 5px;
+            top: -10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .reference-label.average {
+            color: rgba(56, 239, 237, 1);
+            background: rgba(56, 239, 237, 0.2);
+        }
+
+        .reference-label.goal {
+            color: rgba(255, 215, 0, 1);
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        .achievements-section {
+            margin-top: 20px;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+        }
+
+        .achievement {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .achievement.unlocked {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #ffd700;
+            animation: unlock 0.6s ease-out;
+        }
+
+        .achievement-icon {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
+
+        .achievement.unlocked .achievement-icon {
+            filter: grayscale(0%);
+            opacity: 1;
+            animation: bounce 0.6s ease-out;
+        }
+
+        .achievement-name {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .history-section {
+            margin-top: 20px;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #38ef7d;
+        }
+
+        .history-item.cancelled {
+            border-left-color: #f5576c;
+            opacity: 0.7;
+        }
+
+        .history-time {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .history-date {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.6;
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px;
+            border-radius: 30px;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            animation: celebrate 0.6s ease-out;
+            color: #667eea;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .celebration.show {
+            display: block;
+        }
+
+        .celebration-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: spin 1s ease-out;
+        }
+
+        .celebration h2 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .celebration p {
+            font-size: 1.2rem;
+            color: #764ba2;
+        }
+
+        .new-badges {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .new-badge {
+            font-size: 3rem;
+            animation: bounce 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes celebrate {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg) scale(0.5); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-10px); }
+            50% { transform: translateY(0); }
+            75% { transform: translateY(-5px); }
+        }
+
+        @keyframes unlock {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translate(-50%, -20px);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        .motivational-message {
+            text-align: center;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            opacity: 0.9;
+            font-style: italic;
+            min-height: 30px;
+        }
+
+        @media (max-width: 767px) {
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .timer-time {
+                font-size: 3rem;
+            }
+            
+            .timer-container {
+                width: 240px;
+                height: 240px;
+            }
+            
+            button {
+                padding: 12px 24px;
+                font-size: 1rem;
+            }
+        }
+
+        /* Custom scrollbar */
+        .history-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Settings Modal */
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-modal.show {
+            display: flex;
+        }
+
+        .settings-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .settings-panel {
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.4s ease-out;
+            color: #333;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .settings-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #667eea;
+        }
+
+        .settings-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #667eea;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-close:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .settings-content {
+            padding: 30px;
+            max-height: calc(85vh - 180px);
+            overflow-y: auto;
+        }
+
+        .settings-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .settings-content::-webkit-scrollbar-track {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+        }
+
+        .settings-content::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+        }
+
+        .settings-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .settings-section > label:not(.toggle-label) {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1rem;
+        }
+
+        .settings-section input[type="number"] {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.2rem;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+            outline: none;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+
+        .settings-section input[type="number"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Toggle Switch */
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            gap: 12px;
+        }
+
+        .toggle-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #ccc;
+            border-radius: 13px;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-label input[type="checkbox"]:checked + .toggle-switch {
+            background: #667eea;
+        }
+
+        .toggle-label input[type="checkbox"]:checked + .toggle-switch::after {
+            transform: translateX(24px);
+        }
+
+        .toggle-text {
+            font-weight: 500;
+            color: #555;
+            flex: 1;
+        }
+
+        /* Buttons */
+        .settings-footer {
+            display: flex;
+            gap: 15px;
+            padding: 20px 30px;
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .btn-primary, .btn-secondary, .btn-danger {
+            flex: 1;
+            padding: 14px 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .settings-section .btn-danger {
+            width: 100%;
+            flex: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.5);
+        }
+
+        @media (max-width: 767px) {
+            .settings-panel {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .settings-header {
+                padding: 20px;
+            }
+
+            .settings-content {
+                padding: 20px;
+            }
+
+            .settings-footer {
+                flex-direction: column;
+                padding: 15px 20px;
+            }
+
+            .settings-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="settings-btn" id="settings-btn" title="Settings">⚙️</button>
+            <h1>📵 Phone-Free Timer</h1>
+            <p>Track your time away from distractions and level up!</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Timer Section -->
+            <div class="card timer-section">
+                <div class="level-display">
+                    Level <span id="level">1</span> | 🔥 <span id="streak">0</span> Day Streak
+                </div>
+
+                <div class="timer-container">
+                    <svg class="progress-ring" width="280" height="280">
+                        <circle
+                            class="progress-ring-bg"
+                            stroke="rgba(255, 255, 255, 0.2)"
+                            stroke-width="12"
+                            fill="transparent"
+                            r="130"
+                            cx="140"
+                            cy="140"
+                        />
+                        <circle
+                            class="progress-ring-circle"
+                            stroke="#ffd700"
+                            stroke-width="12"
+                            fill="transparent"
+                            r="130"
+                            cx="140"
+                            cy="140"
+                            stroke-dasharray="816.81"
+                            stroke-dashoffset="816.81"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    <div class="timer-display">
+                        <div class="timer-time" id="timer">25:00</div>
+                        <div class="timer-label">remaining</div>
+                        <div class="progress-percentage" id="percentage">0%</div>
+                    </div>
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Session Duration</span>
+                        <span class="slider-value"><span id="duration-value">25</span> minutes</span>
+                    </div>
+                    <input type="range" id="duration-slider" min="5" max="120" value="25" step="5">
+                </div>
+
+                <div class="controls">
+                    <button class="btn-start" id="start-btn">Start</button>
+                    <button class="btn-pause" id="pause-btn" disabled>Pause</button>
+                    <button class="btn-stop" id="stop-btn" disabled>Stop</button>
+                </div>
+
+                <div class="motivational-message" id="motivational-msg"></div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <!-- Bar Chart Section -->
+                <div class="card stats-section">
+                    <h2>📊 Daily Phone-Free Time</h2>
+                    
+                    <!-- Compact Stats Row -->
+                    <div class="compact-stats">
+                        <div class="compact-stat">
+                            <span class="compact-label">Today</span>
+                            <span class="compact-value" id="stat-today">0m</span>
+                        </div>
+                        <div class="compact-stat">
+                            <span class="compact-label">Week</span>
+                            <span class="compact-value" id="stat-week">0m</span>
+                        </div>
+                        <div class="compact-stat">
+                            <span class="compact-label">Total</span>
+                            <span class="compact-value" id="stat-total">0h</span>
+                        </div>
+                        <div class="compact-stat">
+                            <span class="compact-label">Sessions</span>
+                            <span class="compact-value" id="stat-sessions">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Bar Chart -->
+                    <div class="bar-chart-container">
+                        <div class="bar-chart" id="bar-chart">
+                            <!-- Bars will be generated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Achievements Section -->
+                <div class="card achievements-section">
+                    <h2>🏆 Achievements</h2>
+                    <div class="achievements-grid" id="achievements-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="card history-section" style="margin-top: 20px;">
+            <h2>📜 Session History</h2>
+            <div class="history-list" id="history-list">
+                <div class="empty-state">No sessions yet. Start your first timer!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div class="celebration" id="celebration">
+        <div class="celebration-icon">🎉</div>
+        <h2>Amazing!</h2>
+        <p id="celebration-text">You completed your session!</p>
+        <div class="new-badges" id="new-badges"></div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settings-modal">
+        <div class="settings-overlay"></div>
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h2>⚙️ Settings</h2>
+                <button class="settings-close" id="settings-close">✕</button>
+            </div>
+            
+            <div class="settings-content">
+                <!-- Goal Settings -->
+                <div class="settings-section">
+                    <label for="goal-input">🎯 Daily Goal (hours)</label>
+                    <input type="number" id="goal-input" min="1" max="24" value="9" step="0.5">
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="settings-section">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="enable-notifications" checked>
+                        <span class="toggle-switch"></span>
+                        <span class="toggle-text">🔔 Enable Notifications</span>
+                    </label>
+                </div>
+
+                <!-- Sound Settings -->
+                <div class="settings-section">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="enable-sound" checked>
+                        <span class="toggle-switch"></span>
+                        <span class="toggle-text">🔊 Enable Sound</span>
+                    </label>
+                </div>
+
+                <!-- Data Management -->
+                <div class="settings-section">
+                    <button class="btn-danger" id="reset-data-btn">💾 Reset All Data</button>
+                </div>
+            </div>
+
+            <div class="settings-footer">
+                <button class="btn-secondary" id="cancel-settings-btn">Cancel</button>
+                <button class="btn-primary" id="save-settings-btn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure
+        const ACHIEVEMENTS = [
+            { id: 'first', name: 'First Step', icon: '🌟', description: 'Complete your first session' },
+            { id: '30min', name: '30 Minutes', icon: '⭐', description: 'Complete a 30-minute session' },
+            { id: '1hour', name: '1 Hour Focus', icon: '🔥', description: 'Complete a 1-hour session' },
+            { id: '5sessions', name: '5 in a Day', icon: '💪', description: 'Complete 5 sessions in one day' },
+            { id: '5hours', name: '5 Hours', icon: '🎯', description: 'Reach 5 total hours' },
+            { id: '10hours', name: '10 Hours', icon: '💎', description: 'Reach 10 total hours' },
+            { id: '25hours', name: '25 Hours', icon: '👑', description: 'Reach 25 total hours' },
+            { id: '50hours', name: '50 Hours', icon: '🏆', description: 'Reach 50 total hours' },
+            { id: 'week-streak', name: 'Week Streak', icon: '🔥', description: '7-day streak' },
+            { id: 'dedication', name: 'Dedication', icon: '💯', description: 'Complete 50 sessions' }
+        ];
+
+        const MOTIVATIONAL_MESSAGES = [
+            "You're doing great! Stay focused!",
+            "Every minute counts towards your goal!",
+            "Stay strong! You've got this!",
+            "Focus is a superpower!",
+            "You're building great habits!",
+            "Keep going! Success is near!",
+            "Your future self will thank you!",
+            "Discipline equals freedom!",
+            "You're stronger than your distractions!",
+            "Excellence is a habit!"
+        ];
+
+        // State
+        let timerInterval = null;
+        let remainingTime = 0;
+        let totalDuration = 0;
+        let isPaused = false;
+        let currentSessionStart = null;
+        let pausedAt = null;
+        let totalPausedDuration = 0;
+
+        // DOM Elements
+        const timerDisplay = document.getElementById('timer');
+        const percentageDisplay = document.getElementById('percentage');
+        const durationSlider = document.getElementById('duration-slider');
+        const durationValue = document.getElementById('duration-value');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const progressCircle = document.querySelector('.progress-ring-circle');
+        const levelDisplay = document.getElementById('level');
+        const streakDisplay = document.getElementById('streak');
+        const motivationalMsg = document.getElementById('motivational-msg');
+        const celebration = document.getElementById('celebration');
+        const celebrationText = document.getElementById('celebration-text');
+        const newBadgesContainer = document.getElementById('new-badges');
+
+        // Initialize
+        function init() {
+            loadData();
+            renderAchievements();
+            updateStats();
+            updateHistory();
+            updateLevelAndStreak();
+            renderBarChart();
+            
+            // Restore active session if exists
+            restoreActiveSession();
+            
+            // Request notification permission
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        // Local Storage Functions
+        function getData() {
+            const data = localStorage.getItem('phoneFreeTimer');
+            return data ? JSON.parse(data) : {
+                sessions: [],
+                achievements: [],
+                stats: {
+                    totalTime: 0,
+                    currentStreak: 0,
+                    longestStreak: 0,
+                    level: 1,
+                    lastSessionDate: null
+                }
+            };
+        }
+
+        function saveData(data) {
+            localStorage.setItem('phoneFreeTimer', JSON.stringify(data));
+        }
+
+        function getSettings() {
+            const settings = localStorage.getItem('phoneFreeSettings');
+            return settings ? JSON.parse(settings) : {
+                goalHours: 9,
+                enableNotifications: true,
+                enableSound: true,
+                lastUpdated: Date.now()
+            };
+        }
+
+        function saveSettings(settings) {
+            settings.lastUpdated = Date.now();
+            localStorage.setItem('phoneFreeSettings', JSON.stringify(settings));
+        }
+
+        function loadData() {
+            const data = getData();
+            // Data loaded, will be used by other functions
+        }
+
+        function saveActiveSession() {
+            const activeSession = {
+                totalDuration: totalDuration,
+                remainingTime: remainingTime,
+                startTime: currentSessionStart,
+                isPaused: isPaused,
+                pausedAt: pausedAt,
+                totalPausedDuration: totalPausedDuration,
+                sliderValue: durationSlider.value
+            };
+            localStorage.setItem('phoneFreeActiveSession', JSON.stringify(activeSession));
+        }
+
+        function clearActiveSession() {
+            localStorage.removeItem('phoneFreeActiveSession');
+        }
+
+        function restoreActiveSession() {
+            const savedSession = localStorage.getItem('phoneFreeActiveSession');
+            if (!savedSession) return false;
+
+            try {
+                const session = JSON.parse(savedSession);
+                
+                // Check if session is still valid (not more than 24 hours old)
+                const now = Date.now();
+                const elapsed = now - session.startTime;
+                if (elapsed > 24 * 60 * 60 * 1000) {
+                    clearActiveSession();
+                    return false;
+                }
+
+                // Restore state
+                totalDuration = session.totalDuration;
+                currentSessionStart = session.startTime;
+                isPaused = session.isPaused;
+                pausedAt = session.pausedAt || null;
+                totalPausedDuration = session.totalPausedDuration || 0;
+                durationSlider.value = session.sliderValue;
+                durationValue.textContent = session.sliderValue;
+
+                // Calculate actual remaining time based on elapsed time
+                if (isPaused && pausedAt) {
+                    // If paused, calculate up to when it was paused
+                    const elapsedSeconds = Math.floor((pausedAt - currentSessionStart - totalPausedDuration) / 1000);
+                    remainingTime = totalDuration - elapsedSeconds;
+                } else {
+                    // If running, calculate based on current time
+                    const currentPausedDuration = isPaused && pausedAt ? totalPausedDuration : totalPausedDuration;
+                    const elapsedSeconds = Math.floor((now - currentSessionStart - currentPausedDuration) / 1000);
+                    remainingTime = totalDuration - elapsedSeconds;
+                }
+
+                // Check if session should have already completed
+                if (remainingTime <= 0 && !isPaused) {
+                    completeSession();
+                    return true;
+                }
+
+                // Update UI
+                updateTimerDisplay();
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+                durationSlider.disabled = true;
+                pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+
+                if (isPaused) {
+                    motivationalMsg.textContent = 'Timer paused. Take a breath!';
+                } else {
+                    showMotivationalMessage();
+                }
+
+                // Resume timer with elapsed time calculation
+                timerInterval = setInterval(() => {
+                    if (!isPaused) {
+                        // Calculate remaining time based on elapsed time from start
+                        const now = Date.now();
+                        const elapsed = Math.floor((now - currentSessionStart - totalPausedDuration) / 1000);
+                        remainingTime = totalDuration - elapsed;
+                        
+                        updateTimerDisplay();
+                        saveActiveSession(); // Save state every second
+
+                        if (remainingTime <= 0) {
+                            completeSession();
+                        }
+                    } else {
+                        saveActiveSession(); // Save even when paused
+                    }
+                }, 1000);
+
+                return true;
+            } catch (e) {
+                clearActiveSession();
+                return false;
+            }
+        }
+
+        // Timer Functions
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplay() {
+            timerDisplay.textContent = formatTime(remainingTime);
+            const progress = ((totalDuration - remainingTime) / totalDuration) * 100;
+            percentageDisplay.textContent = `${Math.round(progress)}%`;
+            updateProgressRing(progress);
+        }
+
+        function updateProgressRing(percentage) {
+            const circumference = 2 * Math.PI * 130;
+            const offset = circumference - (percentage / 100) * circumference;
+            progressCircle.style.strokeDashoffset = offset;
+        }
+
+        function startTimer() {
+            const minutes = parseInt(durationSlider.value);
+            totalDuration = minutes * 60;
+            remainingTime = totalDuration;
+            currentSessionStart = Date.now();
+            isPaused = false;
+            pausedAt = null;
+            totalPausedDuration = 0;
+
+            updateTimerDisplay();
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            stopBtn.disabled = false;
+            durationSlider.disabled = true;
+
+            showMotivationalMessage();
+            saveActiveSession(); // Save initial state
+
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    // Calculate remaining time based on elapsed time from start
+                    const now = Date.now();
+                    const elapsed = Math.floor((now - currentSessionStart - totalPausedDuration) / 1000);
+                    remainingTime = totalDuration - elapsed;
+                    
+                    updateTimerDisplay();
+                    saveActiveSession(); // Save state every second
+
+                    if (remainingTime <= 0) {
+                        completeSession();
+                    }
+                } else {
+                    saveActiveSession(); // Save even when paused
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+            
+            if (isPaused) {
+                // Store when we paused
+                pausedAt = Date.now();
+                motivationalMsg.textContent = 'Timer paused. Take a breath!';
+            } else {
+                // Add the pause duration to total paused time
+                if (pausedAt) {
+                    totalPausedDuration += (Date.now() - pausedAt);
+                    pausedAt = null;
+                }
+                showMotivationalMessage();
+            }
+            saveActiveSession(); // Save pause state
+        }
+
+        function stopTimer() {
+            if (confirm('Are you sure you want to stop this session?')) {
+                clearInterval(timerInterval);
+                const actualDuration = Math.floor((totalDuration - remainingTime) / 60);
+                
+                if (actualDuration > 0) {
+                    saveSession(actualDuration, false);
+                }
+
+                resetTimer();
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            remainingTime = 0;
+            totalDuration = 0;
+            isPaused = false;
+            currentSessionStart = null;
+            pausedAt = null;
+            totalPausedDuration = 0;
+
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            stopBtn.disabled = true;
+            durationSlider.disabled = false;
+            pauseBtn.textContent = 'Pause';
+
+            const minutes = parseInt(durationSlider.value);
+            timerDisplay.textContent = `${minutes}:00`;
+            percentageDisplay.textContent = '0%';
+            updateProgressRing(0);
+            motivationalMsg.textContent = '';
+            
+            clearActiveSession(); // Clear saved active session
+        }
+
+        function completeSession() {
+            clearInterval(timerInterval);
+            const duration = Math.floor(totalDuration / 60);
+            
+            clearActiveSession(); // Clear before saving session
+            saveSession(duration, true);
+            showCelebration(duration);
+            sendNotification(duration);
+            playCompletionSound();
+
+            resetTimer();
+        }
+
+        function saveSession(duration, completed) {
+            const data = getData();
+            const session = {
+                id: Date.now(),
+                startTime: currentSessionStart || Date.now(),
+                duration: duration,
+                completed: completed,
+                endTime: Date.now()
+            };
+
+            data.sessions.push(session);
+            
+            if (completed) {
+                data.stats.totalTime += duration;
+                updateStreak(data);
+                data.stats.level = calculateLevel(data.stats.totalTime);
+                checkAchievements(data, session);
+            }
+
+            saveData(data);
+            updateStats();
+            updateHistory();
+            updateLevelAndStreak();
+            renderBarChart();
+        }
+
+        function calculateLevel(totalMinutes) {
+            const hours = totalMinutes / 60;
+            return Math.floor(hours / 5) + 1; // Level up every 5 hours
+        }
+
+        function updateStreak(data) {
+            const today = new Date().toDateString();
+            const lastDate = data.stats.lastSessionDate ? new Date(data.stats.lastSessionDate).toDateString() : null;
+
+            if (lastDate === today) {
+                // Already logged today
+                return;
+            }
+
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
+
+            if (lastDate === yesterdayStr) {
+                // Continue streak
+                data.stats.currentStreak++;
+            } else if (lastDate === null || lastDate !== today) {
+                // Start new streak or first time
+                data.stats.currentStreak = 1;
+            }
+
+            data.stats.longestStreak = Math.max(data.stats.longestStreak, data.stats.currentStreak);
+            data.stats.lastSessionDate = new Date().toISOString();
+        }
+
+        function checkAchievements(data, session) {
+            const newAchievements = [];
+            const totalMinutes = data.stats.totalTime;
+            const totalHours = totalMinutes / 60;
+            const completedSessions = data.sessions.filter(s => s.completed);
+
+            // First session
+            if (!data.achievements.includes('first') && completedSessions.length === 1) {
+                newAchievements.push('first');
+            }
+
+            // 30 minute session
+            if (!data.achievements.includes('30min') && session.duration >= 30) {
+                newAchievements.push('30min');
+            }
+
+            // 1 hour session
+            if (!data.achievements.includes('1hour') && session.duration >= 60) {
+                newAchievements.push('1hour');
+            }
+
+            // 5 sessions in a day
+            const today = new Date().toDateString();
+            const todaySessions = completedSessions.filter(s => 
+                new Date(s.endTime).toDateString() === today
+            );
+            if (!data.achievements.includes('5sessions') && todaySessions.length >= 5) {
+                newAchievements.push('5sessions');
+            }
+
+            // Total time milestones
+            if (!data.achievements.includes('5hours') && totalHours >= 5) {
+                newAchievements.push('5hours');
+            }
+            if (!data.achievements.includes('10hours') && totalHours >= 10) {
+                newAchievements.push('10hours');
+            }
+            if (!data.achievements.includes('25hours') && totalHours >= 25) {
+                newAchievements.push('25hours');
+            }
+            if (!data.achievements.includes('50hours') && totalHours >= 50) {
+                newAchievements.push('50hours');
+            }
+
+            // Week streak
+            if (!data.achievements.includes('week-streak') && data.stats.currentStreak >= 7) {
+                newAchievements.push('week-streak');
+            }
+
+            // 50 sessions
+            if (!data.achievements.includes('dedication') && completedSessions.length >= 50) {
+                newAchievements.push('dedication');
+            }
+
+            newAchievements.forEach(achId => {
+                if (!data.achievements.includes(achId)) {
+                    data.achievements.push(achId);
+                }
+            });
+
+            return newAchievements;
+        }
+
+        function showMotivationalMessage() {
+            const message = MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length)];
+            motivationalMsg.textContent = message;
+        }
+
+        function showCelebration(duration) {
+            const data = getData();
+            const newAchievements = data.achievements.slice(-5); // Show last 5 for new ones
+            
+            celebrationText.textContent = `You stayed phone-free for ${duration} minutes!`;
+            
+            // Show new badges if any were just unlocked
+            newBadgesContainer.innerHTML = '';
+            const recentAchievements = ACHIEVEMENTS.filter(a => newAchievements.includes(a.id));
+            recentAchievements.slice(-3).forEach(ach => {
+                const badge = document.createElement('div');
+                badge.className = 'new-badge';
+                badge.textContent = ach.icon;
+                badge.title = ach.name;
+                newBadgesContainer.appendChild(badge);
+            });
+
+            celebration.classList.add('show');
+            
+            setTimeout(() => {
+                celebration.classList.remove('show');
+            }, 4000);
+
+            renderAchievements();
+        }
+
+        function sendNotification(duration) {
+            const settings = getSettings();
+            if (settings.enableNotifications && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification('🎉 Session Complete!', {
+                    body: `Great job! You stayed phone-free for ${duration} minutes!`,
+                    icon: '📵',
+                    badge: '⭐'
+                });
+            }
+        }
+
+        function playCompletionSound() {
+            const settings = getSettings();
+            if (!settings.enableSound) return;
+            
+            // Create a simple beep using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // UI Update Functions
+        function updateStats() {
+            const data = getData();
+            const today = new Date().toDateString();
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+
+            const todayMinutes = data.sessions
+                .filter(s => s.completed && new Date(s.endTime).toDateString() === today)
+                .reduce((sum, s) => sum + s.duration, 0);
+
+            const weekMinutes = data.sessions
+                .filter(s => s.completed && new Date(s.endTime) >= weekAgo)
+                .reduce((sum, s) => sum + s.duration, 0);
+
+            const totalHours = (data.stats.totalTime / 60).toFixed(1);
+            const completedSessions = data.sessions.filter(s => s.completed).length;
+
+            document.getElementById('stat-today').textContent = `${todayMinutes}m`;
+            document.getElementById('stat-week').textContent = `${weekMinutes}m`;
+            document.getElementById('stat-total').textContent = `${totalHours}h`;
+            document.getElementById('stat-sessions').textContent = completedSessions;
+        }
+
+        function updateLevelAndStreak() {
+            const data = getData();
+            levelDisplay.textContent = data.stats.level;
+            streakDisplay.textContent = data.stats.currentStreak;
+        }
+
+        function renderAchievements() {
+            const data = getData();
+            const grid = document.getElementById('achievements-grid');
+            grid.innerHTML = '';
+
+            ACHIEVEMENTS.forEach(ach => {
+                const isUnlocked = data.achievements.includes(ach.id);
+                const div = document.createElement('div');
+                div.className = `achievement ${isUnlocked ? 'unlocked' : ''}`;
+                div.title = `${ach.name}: ${ach.description}`;
+                div.innerHTML = `
+                    <div class="achievement-icon">${ach.icon}</div>
+                    <div class="achievement-name">${ach.name}</div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function updateHistory() {
+            const data = getData();
+            const historyList = document.getElementById('history-list');
+            
+            if (data.sessions.length === 0) {
+                historyList.innerHTML = '<div class="empty-state">No sessions yet. Start your first timer!</div>';
+                return;
+            }
+
+            const recentSessions = data.sessions.slice(-20).reverse();
+            historyList.innerHTML = '';
+
+            recentSessions.forEach(session => {
+                const div = document.createElement('div');
+                div.className = `history-item ${!session.completed ? 'cancelled' : ''}`;
+                
+                const date = new Date(session.endTime);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                div.innerHTML = `
+                    <div>
+                        <div class="history-time">${session.duration} minutes</div>
+                        <div class="history-date">${dateStr}</div>
+                    </div>
+                    <div>${session.completed ? '✅' : '⚠️'}</div>
+                `;
+                historyList.appendChild(div);
+            });
+        }
+
+        function renderBarChart() {
+            const data = getData();
+            const barChart = document.getElementById('bar-chart');
+            
+            // Calculate daily totals for the last 7 days
+            const dailyData = [];
+            const today = new Date();
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toDateString();
+                
+                // Sum up completed sessions for this day
+                const dayMinutes = data.sessions
+                    .filter(s => s.completed && new Date(s.endTime).toDateString() === dateStr)
+                    .reduce((sum, s) => sum + s.duration, 0);
+                
+                dailyData.push({
+                    date: date,
+                    dateStr: dateStr,
+                    minutes: dayMinutes,
+                    dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                    dayMonth: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                });
+            }
+            
+            // Calculate average
+            const totalMinutes = dailyData.reduce((sum, d) => sum + d.minutes, 0);
+            const averageMinutes = totalMinutes / 7;
+            
+            // Get goal from settings
+            const settings = getSettings();
+            const goalMinutes = settings.goalHours * 60;
+            
+            // Find max value for scaling (include goal in consideration)
+            const maxMinutes = Math.max(...dailyData.map(d => d.minutes), goalMinutes, averageMinutes, 1);
+            
+            // Clear and render bars
+            barChart.innerHTML = '';
+            
+            dailyData.forEach(day => {
+                const barWrapper = document.createElement('div');
+                barWrapper.className = 'bar-wrapper';
+                
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                
+                // Calculate height percentage (min 5px for visibility)
+                const heightPercent = day.minutes > 0 ? (day.minutes / maxMinutes) * 100 : 0;
+                bar.style.height = heightPercent > 0 ? `${heightPercent}%` : '5px';
+                
+                // Add value tooltip
+                const barValue = document.createElement('div');
+                barValue.className = 'bar-value';
+                barValue.textContent = day.minutes > 0 ? `${day.minutes}m` : '0m';
+                bar.appendChild(barValue);
+                
+                // Add label
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.innerHTML = `
+                    <div class="bar-day">${day.dayName}</div>
+                    <div class="bar-date">${day.dayMonth}</div>
+                `;
+                
+                barWrapper.appendChild(bar);
+                barWrapper.appendChild(label);
+                barChart.appendChild(barWrapper);
+            });
+            
+            // Add reference lines
+            // Average line
+            if (averageMinutes > 0) {
+                const avgLine = document.createElement('div');
+                avgLine.className = 'reference-line average';
+                const avgPercent = (averageMinutes / maxMinutes) * 100;
+                avgLine.style.bottom = `${avgPercent}%`;
+                
+                const avgLabel = document.createElement('div');
+                avgLabel.className = 'reference-label average';
+                avgLabel.textContent = `Avg: ${Math.round(averageMinutes)}m`;
+                avgLine.appendChild(avgLabel);
+                
+                barChart.appendChild(avgLine);
+            }
+            
+            // Goal line
+            const goalLine = document.createElement('div');
+            goalLine.className = 'reference-line goal';
+            const goalPercent = (goalMinutes / maxMinutes) * 100;
+            goalLine.style.bottom = `${goalPercent}%`;
+            
+            const goalLabel = document.createElement('div');
+            goalLabel.className = 'reference-label goal';
+            goalLabel.textContent = `Goal: ${settings.goalHours}h`;
+            goalLine.appendChild(goalLabel);
+            
+            barChart.appendChild(goalLine);
+        }
+
+        // Settings Modal Functions
+        function openSettings() {
+            const modal = document.getElementById('settings-modal');
+            const settings = getSettings();
+            
+            // Load current settings into form
+            document.getElementById('goal-input').value = settings.goalHours;
+            document.getElementById('enable-notifications').checked = settings.enableNotifications;
+            document.getElementById('enable-sound').checked = settings.enableSound;
+            
+            modal.classList.add('show');
+            
+            // Request notification permission if enabling
+            if (settings.enableNotifications && 'Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settings-modal');
+            modal.classList.remove('show');
+        }
+
+        function saveSettingsFromForm() {
+            const goalValue = parseFloat(document.getElementById('goal-input').value);
+            
+            // Validate goal hours
+            if (isNaN(goalValue) || goalValue < 1 || goalValue > 24) {
+                alert('Please enter a valid goal between 1 and 24 hours');
+                return;
+            }
+            
+            const settings = {
+                goalHours: goalValue,
+                enableNotifications: document.getElementById('enable-notifications').checked,
+                enableSound: document.getElementById('enable-sound').checked
+            };
+            
+            saveSettings(settings);
+            closeSettings();
+            
+            // Update the bar chart to reflect new goal
+            renderBarChart();
+            
+            // Show confirmation
+            showTempMessage('✅ Settings saved successfully!');
+        }
+
+        function resetAllData() {
+            if (confirm('⚠️ Are you absolutely sure you want to delete all your data? This cannot be undone!')) {
+                if (confirm('This will delete all sessions, achievements, and statistics. Continue?')) {
+                    localStorage.removeItem('phoneFreeTimer');
+                    localStorage.removeItem('phoneFreeActiveSession');
+                    
+                    // Reload the page to reset everything
+                    location.reload();
+                }
+            }
+        }
+
+        function showTempMessage(message) {
+            const msg = document.createElement('div');
+            msg.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(56, 239, 125, 0.95);
+                color: white;
+                padding: 15px 30px;
+                border-radius: 50px;
+                font-weight: bold;
+                z-index: 3000;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                animation: slideDown 0.3s ease-out;
+            `;
+            msg.textContent = message;
+            document.body.appendChild(msg);
+            
+            setTimeout(() => {
+                msg.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => msg.remove(), 300);
+            }, 2000);
+        }
+
+        // Event Listeners
+        durationSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            durationValue.textContent = value;
+            if (!timerInterval) {
+                timerDisplay.textContent = `${value}:00`;
+            }
+        });
+
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        stopBtn.addEventListener('click', stopTimer);
+
+        // Close celebration on click
+        celebration.addEventListener('click', () => {
+            celebration.classList.remove('show');
+        });
+
+        // Settings modal event listeners
+        document.getElementById('settings-btn').addEventListener('click', openSettings);
+        document.getElementById('settings-close').addEventListener('click', closeSettings);
+        document.getElementById('cancel-settings-btn').addEventListener('click', closeSettings);
+        document.getElementById('save-settings-btn').addEventListener('click', saveSettingsFromForm);
+        document.getElementById('reset-data-btn').addEventListener('click', resetAllData);
+
+        // Close modal on overlay click
+        document.querySelector('.settings-overlay').addEventListener('click', closeSettings);
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('settings-modal');
+                if (modal.classList.contains('show')) {
+                    closeSettings();
+                }
+            }
+        });
+
+        // Initialize app
+        init();
+    </script>
+</body>
+</html>
+

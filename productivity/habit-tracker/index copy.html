@@ -1,3 +1,11 @@
+<!-- 
+
+This adds sorting of uncomplete ones to the top
+on 13 Feb 2026
+
+-->
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -569,11 +577,26 @@
             updateStats();
             habitList.innerHTML = '';
             const weekDates = getPast7Days();
+            const todayStr = getFormattedDate(0);
 
-            // Sort habits: Enabled first, then by creation date (newest first)
+            // Sort habits: Enabled first, then uncompleted today first, then by creation date (newest first)
             const sortedHabits = [...habits].sort((a, b) => {
-                if (a.isEnabled === b.isEnabled) return b.id - a.id;
-                return a.isEnabled ? -1 : 1;
+                // 1. Enabled habits first
+                if (a.isEnabled !== b.isEnabled) {
+                    return a.isEnabled ? -1 : 1;
+                }
+
+                // 2. If both are enabled, sort by completion status today
+                if (a.isEnabled) {
+                    const aCompleted = a.completedDates.includes(todayStr);
+                    const bCompleted = b.completedDates.includes(todayStr);
+                    if (aCompleted !== bCompleted) {
+                        return aCompleted ? 1 : -1; // Uncompleted first
+                    }
+                }
+
+                // 3. Keep existing secondary sort (newest first)
+                return b.id - a.id;
             });
 
             sortedHabits.forEach(habit => {

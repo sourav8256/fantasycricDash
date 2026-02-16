@@ -1,0 +1,836 @@
+<!-- 
+
+enabling notes
+on 16 Feb 2026
+
+-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .habit-card {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .habit-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .day-circle {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .day-circle:active {
+            transform: scale(0.9);
+        }
+
+        /* Show controls on hover or if on mobile */
+        .card-controls {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .habit-card:hover .card-controls {
+            opacity: 1;
+        }
+
+        @media (max-width: 640px) {
+            .card-controls {
+                opacity: 1;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 100;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+
+        .habit-card.completing {
+            animation: slideRight 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            pointer-events: none;
+        }
+
+        @keyframes slideRight {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg">
+                    <i class="fa-solid fa-chart-line text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">HabitFlow</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-sm text-gray-500 hidden sm:block" id="currentDate"></div>
+                <button onclick="openSettings()"
+                    class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                    title="Settings (Import/Export)">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-2 sm:p-4 pb-24">
+        <div class="max-w-3xl mx-auto space-y-6">
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-2 gap-4">
+                <div
+                    class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between h-24">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Habits</span>
+                    <span class="text-3xl font-bold text-gray-800" id="totalHabitsCount">0</span>
+                </div>
+                <div
+                    class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between h-24">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Completions Today</span>
+                    <span class="text-3xl font-bold text-indigo-600" id="completedTodayCount">0</span>
+                </div>
+            </div>
+
+            <!-- Add Habit Form -->
+            <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-2">
+                <input type="text" id="habitInput" placeholder="Enter a new habit (e.g., Read 30 mins)..."
+                    class="flex-1 px-4 py-3 outline-none text-gray-700 placeholder-gray-400 bg-transparent"
+                    autocomplete="off">
+                <button onclick="addHabit()"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">Add</span>
+                </button>
+            </div>
+
+            <!-- Habits List -->
+            <div id="habitList" class="space-y-4">
+                <!-- Habits will be injected here via JS -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden flex-col items-center justify-center py-12 text-center">
+                <div
+                    class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400 text-2xl">
+                    <i class="fa-regular fa-calendar-check"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">No habits yet</h3>
+                <p class="text-gray-500 max-w-xs mt-1">Start building better routines by adding your first habit above.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings/Data Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div
+            class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-6 max-h-[90vh] overflow-y-auto transform transition-all scale-100">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+                <h3 class="text-xl font-bold text-gray-900">Data Management</h3>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Export Section -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-end">
+                    <label class="text-sm font-semibold text-gray-700">Export Data</label>
+                    <span class="text-xs text-gray-400">JSON Format</span>
+                </div>
+                <div class="relative group">
+                    <textarea id="exportArea" readonly
+                        class="w-full h-32 p-3 text-xs font-mono bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none text-gray-600"></textarea>
+                    <button onclick="copyData()" id="copyBtn"
+                        class="absolute top-2 right-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs px-3 py-1.5 rounded-md shadow-sm font-medium transition-all flex items-center gap-1.5">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy</span>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400">Save this text to back up your habits or transfer them to another
+                    device.</p>
+            </div>
+
+            <!-- Import Section -->
+            <div class="space-y-2 pt-2 border-t border-gray-100">
+                <label class="text-sm font-semibold text-gray-700 mt-2 block">Import Data</label>
+                <textarea id="importArea" placeholder='Paste your JSON data here...'
+                    class="w-full h-32 p-3 text-xs font-mono bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 resize-none transition-all"></textarea>
+                <div class="flex justify-between items-center pt-2">
+                    <p class="text-xs text-orange-500 flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Warning: Importing overwrites current data.
+                    </p>
+                    <button onclick="importData()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-indigo-200">
+                        Import Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal (Delete) -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl transform transition-all scale-100">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Habit?</h3>
+            <p class="text-gray-500 mb-6">Are you sure you want to delete "<span id="deleteHabitName"
+                    class="font-semibold text-gray-700"></span>"? This action cannot be undone.</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeDeleteModal()"
+                    class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
+                <button id="confirmDeleteBtn"
+                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Modal -->
+    <div id="notesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div
+            class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 transform transition-all scale-100">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+                <h3 class="text-xl font-bold text-gray-900">Habit Notes</h3>
+                <button onclick="closeNotesModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500 mb-2">Notes for: <span id="notesHabitName"
+                        class="font-semibold text-gray-700"></span></p>
+                <textarea id="habitNotesArea" placeholder="Write your notes here..."
+                    class="w-full h-40 p-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none text-gray-700"></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeNotesModal()"
+                    class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
+                <button onclick="saveNotes()"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-indigo-200">Save
+                    Notes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed bottom-6 left-1/2 transform -translate-x-1/2 translate-y-20 opacity-0 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl transition-all duration-300 z-[60] flex items-center gap-3 font-medium pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-check-circle text-green-400"></i>
+        <span id="toastMsg">Action Successful</span>
+    </div>
+
+    <script>
+        // State
+        let habits = [];
+        let habitToDeleteId = null;
+        let currentNoteHabitId = null;
+
+        // Constants
+        const DAYS_TO_SHOW = 7;
+        const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        // DOM Elements
+        const habitInput = document.getElementById('habitInput');
+        const habitList = document.getElementById('habitList');
+        const emptyState = document.getElementById('emptyState');
+        const totalHabitsCount = document.getElementById('totalHabitsCount');
+        const completedTodayCount = document.getElementById('completedTodayCount');
+
+        // Modals
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteHabitName = document.getElementById('deleteHabitName');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const exportArea = document.getElementById('exportArea');
+        const importArea = document.getElementById('importArea');
+        const copyBtn = document.getElementById('copyBtn');
+        const notesModal = document.getElementById('notesModal');
+        const notesHabitName = document.getElementById('notesHabitName');
+        const habitNotesArea = document.getElementById('habitNotesArea');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHabits();
+            updateDateHeader();
+            renderHabits();
+        });
+
+        // Event Listeners
+        habitInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addHabit();
+        });
+
+        confirmDeleteBtn.addEventListener('click', () => {
+            if (habitToDeleteId) {
+                habits = habits.filter(h => h.id !== habitToDeleteId);
+                saveHabits();
+                renderHabits();
+                closeDeleteModal();
+                showToast('Habit deleted');
+            }
+        });
+
+        // Core Functions
+        function loadHabits() {
+            const stored = localStorage.getItem('habitFlowData');
+            if (stored) {
+                try {
+                    habits = JSON.parse(stored);
+                    // Backward compatibility
+                    habits.forEach(h => {
+                        if (typeof h.isEnabled === 'undefined') h.isEnabled = true;
+                        if (typeof h.notes === 'undefined') h.notes = '';
+                    });
+                } catch (e) {
+                    console.error("Failed to parse habits", e);
+                    habits = [];
+                }
+            } else {
+                // Default data for first-time users
+                habits = [
+                    {
+                        id: Date.now(),
+                        name: 'Drink 2L Water',
+                        created: new Date().toISOString(),
+                        isEnabled: true,
+                        completedDates: [getFormattedDate(0)]
+                    }
+                ];
+                saveHabits();
+            }
+        }
+
+        function saveHabits() {
+            localStorage.setItem('habitFlowData', JSON.stringify(habits));
+            updateStats();
+        }
+
+        function addHabit() {
+            const name = habitInput.value.trim();
+            if (!name) return;
+
+            const newHabit = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: ''
+            };
+
+            habits.unshift(newHabit);
+            saveHabits();
+            renderHabits();
+            habitInput.value = '';
+            showToast('New habit added');
+        }
+
+        // Settings / Import / Export Functions
+        function openSettings() {
+            exportArea.value = JSON.stringify(habits, null, 2);
+            importArea.value = '';
+            settingsModal.classList.remove('hidden');
+            settingsModal.classList.add('flex');
+        }
+
+        function closeSettings() {
+            settingsModal.classList.add('hidden');
+            settingsModal.classList.remove('flex');
+        }
+
+        function copyData() {
+            exportArea.select();
+            document.execCommand('copy');
+
+            // Visual feedback on button
+            const originalHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Copied!</span>';
+            copyBtn.classList.add('text-green-600', 'bg-green-50', 'border-green-200');
+
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHtml;
+                copyBtn.classList.remove('text-green-600', 'bg-green-50', 'border-green-200');
+            }, 2000);
+
+            showToast('Data copied to clipboard');
+        }
+
+        function importData() {
+            const json = importArea.value.trim();
+            if (!json) return;
+
+            try {
+                const data = JSON.parse(json);
+                if (!Array.isArray(data)) throw new Error('Root must be an array');
+
+                // Basic validation
+                const isValid = data.every(h =>
+                    h.id &&
+                    h.name &&
+                    Array.isArray(h.completedDates)
+                );
+
+                if (!isValid) throw new Error('Invalid habit structure');
+
+                // Normalize data
+                data.forEach(h => {
+                    if (typeof h.isEnabled === 'undefined') h.isEnabled = true;
+                });
+
+                habits = data;
+                saveHabits();
+                renderHabits();
+                closeSettings();
+                showToast('Data imported successfully');
+            } catch (e) {
+                showToast('Invalid JSON data provided', true);
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = msg;
+            toastIcon.className = isError ? 'fa-solid fa-circle-exclamation text-red-400' : 'fa-solid fa-check-circle text-green-400';
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+
+            // Clear existing timeout if any (simple implementation)
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Modal Logic
+        function confirmDelete(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+
+            habitToDeleteId = id;
+            deleteHabitName.textContent = habit.name;
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+            habitToDeleteId = null;
+        }
+
+        // Notes Modal Logic
+        function openNotes(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+
+            currentNoteHabitId = id;
+            notesHabitName.textContent = habit.name;
+            habitNotesArea.value = habit.notes || '';
+            notesModal.classList.remove('hidden');
+            notesModal.classList.add('flex');
+        }
+
+        function closeNotesModal() {
+            notesModal.classList.add('hidden');
+            notesModal.classList.remove('flex');
+            currentNoteHabitId = null;
+        }
+
+        function saveNotes() {
+            if (!currentNoteHabitId) return;
+
+            const habit = habits.find(h => h.id === currentNoteHabitId);
+            if (habit) {
+                habit.notes = habitNotesArea.value.trim();
+                saveHabits();
+                showToast('Notes saved');
+            }
+            closeNotesModal();
+        }
+
+        function toggleHabitStatus(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+
+            habit.isEnabled = !habit.isEnabled;
+            saveHabits();
+            renderHabits();
+
+            const msg = habit.isEnabled ? 'Habit resumed' : 'Habit paused';
+            showToast(msg);
+        }
+
+        function toggleDate(habitId, dateStr, btnElement) {
+            const habit = habits.find(h => h.id === habitId);
+            if (!habit || !habit.isEnabled) return;
+
+            const index = habit.completedDates.indexOf(dateStr);
+            const isCompleting = index === -1;
+
+            if (isCompleting) {
+                habit.completedDates.push(dateStr);
+                saveHabits();
+                triggerConfetti(btnElement);
+
+                // Add animation class before re-rendering
+                const card = btnElement.closest('.habit-card');
+                if (card) {
+                    card.classList.add('completing');
+                    // Wait for animation to finish before re-ordering list
+                    setTimeout(() => {
+                        renderHabits();
+                    }, 500);
+                } else {
+                    renderHabits();
+                }
+            } else {
+                habit.completedDates.splice(index, 1);
+                saveHabits();
+                renderHabits();
+            }
+        }
+
+        // Helper Functions
+        function getFormattedDate(offset = 0) {
+            const date = new Date();
+            date.setDate(date.getDate() - offset);
+            // Use local date to avoid timezone issues
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getPast7Days() {
+            const dates = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                // Use local date to avoid timezone issues
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
+
+                dates.push({
+                    dateStr: dateStr,
+                    dayName: WEEK_DAYS[date.getDay()],
+                    dayNum: date.getDate(),
+                    isToday: i === 0
+                });
+            }
+            return dates;
+        }
+
+        function calculateStreak(habit) {
+            if (!habit.isEnabled) return 0;
+
+            let streak = 0;
+            const today = getFormattedDate(0);
+            const yesterday = getFormattedDate(1);
+
+            if (habit.completedDates.includes(today)) {
+                streak++;
+            } else if (!habit.completedDates.includes(yesterday)) {
+                return 0;
+            }
+
+            let i = 1;
+            while (true) {
+                const dateCheck = getFormattedDate(i);
+                if (habit.completedDates.includes(dateCheck)) {
+                    if (dateCheck !== today || !habit.completedDates.includes(today)) {
+                        if (i > 0 || (i === 0 && !habit.completedDates.includes(today))) {
+                            // Streak logic
+                        }
+                    }
+                } else {
+                    break;
+                }
+                i++;
+            }
+
+            const sorted = [...habit.completedDates].sort().reverse();
+            if (sorted.length === 0) return 0;
+
+            let checkDate = new Date();
+            checkDate.setHours(0, 0, 0, 0);
+
+            const lastComp = new Date(sorted[0]);
+            lastComp.setHours(0, 0, 0, 0);
+
+            const diffTime = Math.abs(checkDate - lastComp);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 1) return 0;
+
+            let tempStreak = 0;
+            for (let d = 0; d < 365; d++) {
+                const dStr = getFormattedDate(d);
+                if (habit.completedDates.includes(dStr)) {
+                    tempStreak++;
+                } else {
+                    if (d === 0) continue;
+                    break;
+                }
+            }
+            return tempStreak;
+        }
+
+        function updateDateHeader() {
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', options);
+        }
+
+        function updateStats() {
+            const activeHabits = habits.filter(h => h.isEnabled);
+            totalHabitsCount.textContent = activeHabits.length;
+
+            const todayStr = getFormattedDate(0);
+            const completed = activeHabits.filter(h => h.completedDates.includes(todayStr)).length;
+            completedTodayCount.textContent = completed;
+
+            if (habits.length === 0) {
+                habitList.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                habitList.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+        }
+
+        function renderHabits() {
+            updateStats();
+            habitList.innerHTML = '';
+            const weekDates = getPast7Days();
+            const todayStr = getFormattedDate(0);
+
+            // Sort habits: Enabled first, then uncompleted today first, then by creation date (newest first)
+            const sortedHabits = [...habits].sort((a, b) => {
+                // 1. Enabled habits first
+                if (a.isEnabled !== b.isEnabled) {
+                    return a.isEnabled ? -1 : 1;
+                }
+
+                // 2. If both are enabled, sort by completion status today
+                if (a.isEnabled) {
+                    const aCompleted = a.completedDates.includes(todayStr);
+                    const bCompleted = b.completedDates.includes(todayStr);
+                    if (aCompleted !== bCompleted) {
+                        return aCompleted ? 1 : -1; // Uncompleted first
+                    }
+                }
+
+                // 3. Keep existing secondary sort (newest first)
+                return b.id - a.id;
+            });
+
+            sortedHabits.forEach(habit => {
+                const streak = calculateStreak(habit);
+                const isEnabled = habit.isEnabled;
+
+                const card = document.createElement('div');
+                let cardClasses = 'habit-card p-4 sm:p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-4';
+                if (!isEnabled) {
+                    cardClasses += ' opacity-60 grayscale bg-gray-50';
+                } else if (!habit.completedDates.includes(todayStr)) {
+                    cardClasses += ' bg-white border-indigo-400';
+                } else {
+                    cardClasses += ' bg-white';
+                }
+                card.className = cardClasses;
+
+                const streakHtml = isEnabled
+                    ? `<div class="flex items-center text-xs font-medium ${streak > 0 ? 'text-orange-500' : 'text-gray-400'} mt-1">
+                            <i class="fa-solid fa-fire mr-1"></i>
+                            <span>${streak} day streak</span>
+                       </div>`
+                    : `<div class="flex items-center text-xs font-medium text-gray-400 mt-1">
+                            <i class="fa-solid fa-pause mr-1"></i>
+                            <span>Paused</span>
+                       </div>`;
+
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-start';
+
+                const notesHtml = habit.notes
+                    ? `<div class="mt-3 text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <span class="whitespace-pre-wrap">${escapeHtml(habit.notes)}</span>
+                       </div>`
+                    : '';
+
+                header.innerHTML = `
+                    <div class="flex-1 min-w-0 mr-2">
+                        <h3 class="font-semibold text-lg text-gray-800 ${!isEnabled ? 'line-through text-gray-500' : ''} truncate">${escapeHtml(habit.name)}</h3>
+                        ${streakHtml}
+                        ${notesHtml}
+                    </div>
+                    <div class="card-controls flex gap-1 shrink-0">
+                        <button onclick="openNotes(${habit.id})" class="text-gray-300 hover:text-indigo-500 transition-colors p-2" title="Notes">
+                            <i class="fa-regular fa-note-sticky"></i>
+                        </button>
+                        <button onclick="toggleHabitStatus(${habit.id})" class="text-gray-300 hover:text-indigo-500 transition-colors p-2" title="${isEnabled ? 'Pause Habit' : 'Resume Habit'}">
+                            <i class="fa-solid ${isEnabled ? 'fa-pause' : 'fa-play'}"></i>
+                        </button>
+                        <button onclick="confirmDelete(${habit.id})" class="text-gray-300 hover:text-red-500 transition-colors p-2" title="Delete Habit">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+
+                const daysContainer = document.createElement('div');
+                daysContainer.className = 'flex justify-between items-center pt-2 border-t border-gray-50';
+
+                weekDates.forEach(dayObj => {
+                    const isCompleted = habit.completedDates.includes(dayObj.dateStr);
+                    const dayCol = document.createElement('div');
+                    dayCol.className = 'flex flex-col items-center gap-2';
+
+                    const label = document.createElement('span');
+                    label.className = `text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${dayObj.isToday && isEnabled ? 'text-indigo-600' : 'text-gray-400'}`;
+                    label.textContent = dayObj.dayName;
+
+                    const btn = document.createElement('button');
+
+                    if (isEnabled) {
+                        btn.onclick = (e) => toggleDate(habit.id, dayObj.dateStr, e.target);
+                    }
+
+                    let btnClasses = 'day-circle w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-300 ';
+
+                    if (isCompleted) {
+                        btnClasses += isEnabled ? 'bg-indigo-500 text-white shadow-md shadow-indigo-200' : 'bg-gray-400 text-white';
+                        btn.innerHTML = '<i class="fa-solid fa-check pointer-events-none"></i>';
+                    } else {
+                        btnClasses += isEnabled ? 'bg-gray-100 text-gray-400 hover:bg-gray-200' : 'bg-gray-100 text-gray-300 cursor-not-allowed';
+                        btn.textContent = dayObj.dayNum;
+                    }
+
+                    btn.className = btnClasses;
+                    if (!isEnabled) btn.disabled = true;
+
+                    dayCol.appendChild(label);
+                    dayCol.appendChild(btn);
+                    daysContainer.appendChild(dayCol);
+                });
+
+                card.appendChild(header);
+                card.appendChild(daysContainer);
+                habitList.appendChild(card);
+            });
+        }
+
+        // Utils
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function triggerConfetti(element) {
+            const rect = element.getBoundingClientRect();
+            const center = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+
+            for (let i = 0; i < 20; i++) {
+                createConfettiParticle(center.x, center.y);
+            }
+        }
+
+        function createConfettiParticle(x, y) {
+            const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
+            const particle = document.createElement('div');
+            particle.classList.add('confetti');
+            document.body.appendChild(particle);
+
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.backgroundColor = color;
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+
+            const destinationX = (Math.random() - 0.5) * 100;
+            const destinationY = (Math.random() - 0.5) * 100 - 50;
+            const rotation = Math.random() * 520;
+
+            const animation = particle.animate([
+                { transform: `translate(0,0) rotate(0deg)`, opacity: 1 },
+                { transform: `translate(${destinationX}px, ${destinationY}px) rotate(${rotation}deg)`, opacity: 0 }
+            ], {
+                duration: 800 + Math.random() * 400,
+                easing: 'cubic-bezier(0, .9, .57, 1)',
+                fill: 'forwards'
+            });
+
+            animation.onfinish = () => particle.remove();
+        }
+    </script>
+</body>
+
+</html>

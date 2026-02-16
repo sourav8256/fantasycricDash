@@ -1,6 +1,6 @@
 <!-- 
 
-enabling notes
+edit notes and title in a different page
 on 16 Feb 2026
 
 -->
@@ -134,7 +134,8 @@ on 16 Feb 2026
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto p-2 sm:p-4 pb-24">
+    <!-- Main Content -->
+    <main id="mainView" class="flex-1 overflow-y-auto p-2 sm:p-4 pb-24">
         <div class="max-w-3xl mx-auto space-y-6">
 
             <!-- Stats Overview -->
@@ -180,6 +181,60 @@ on 16 Feb 2026
             </div>
         </div>
     </main>
+
+    <!-- Edit View (Hidden by default) -->
+    <div id="editView" class="hidden h-screen flex flex-col bg-white z-20 absolute inset-0">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10">
+            <div class="max-w-xl mx-auto px-4 py-4 flex items-center gap-3">
+                <button onclick="showMainView()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Edit Habit</h1>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-4">
+            <div class="max-w-xl mx-auto space-y-6">
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-6">
+
+                    <!-- Helper Text -->
+                    <p class="text-sm text-gray-500">Update your habit details below.</p>
+
+                    <!-- Habit Name Input -->
+                    <div class="space-y-2">
+                        <label for="editHabitName" class="block text-sm font-medium text-gray-700">Habit Name</label>
+                        <input type="text" id="editHabitName"
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                            placeholder="e.g. Read 30 mins">
+                    </div>
+
+                    <!-- Notes Input -->
+                    <div class="space-y-2">
+                        <label for="editHabitNotes" class="block text-sm font-medium text-gray-700">Notes</label>
+                        <textarea id="editHabitNotes" rows="8"
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none placeholder-gray-400"
+                            placeholder="Add details, motivations, or tracking notes here..."></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3 pt-4">
+                        <button onclick="showMainView()"
+                            class="flex-1 px-4 py-3 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">
+                            Cancel
+                        </button>
+                        <button onclick="saveEditChanges()"
+                            class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-indigo-200">
+                            Save Changes
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
 
     <!-- Settings/Data Modal -->
     <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
@@ -246,30 +301,7 @@ on 16 Feb 2026
     </div>
 
     <!-- Notes Modal -->
-    <div id="notesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div
-            class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 transform transition-all scale-100">
-            <div class="flex justify-between items-center border-b border-gray-100 pb-4">
-                <h3 class="text-xl font-bold text-gray-900">Habit Notes</h3>
-                <button onclick="closeNotesModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
-            <div>
-                <p class="text-sm text-gray-500 mb-2">Notes for: <span id="notesHabitName"
-                        class="font-semibold text-gray-700"></span></p>
-                <textarea id="habitNotesArea" placeholder="Write your notes here..."
-                    class="w-full h-40 p-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none text-gray-700"></textarea>
-            </div>
-            <div class="flex justify-end gap-3 pt-2">
-                <button onclick="closeNotesModal()"
-                    class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
-                <button onclick="saveNotes()"
-                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-indigo-200">Save
-                    Notes</button>
-            </div>
-        </div>
-    </div>
+    <!-- Notes Modal Removed -->
 
     <!-- Toast Notification -->
     <div id="toast"
@@ -282,7 +314,7 @@ on 16 Feb 2026
         // State
         let habits = [];
         let habitToDeleteId = null;
-        let currentNoteHabitId = null;
+        let currentEditHabitId = null;
 
         // Constants
         const DAYS_TO_SHOW = 7;
@@ -294,6 +326,10 @@ on 16 Feb 2026
         const emptyState = document.getElementById('emptyState');
         const totalHabitsCount = document.getElementById('totalHabitsCount');
         const completedTodayCount = document.getElementById('completedTodayCount');
+        const mainView = document.getElementById('mainView');
+        const editView = document.getElementById('editView');
+        const editHabitName = document.getElementById('editHabitName');
+        const editHabitNotes = document.getElementById('editHabitNotes');
 
         // Modals
         const deleteModal = document.getElementById('deleteModal');
@@ -303,9 +339,7 @@ on 16 Feb 2026
         const exportArea = document.getElementById('exportArea');
         const importArea = document.getElementById('importArea');
         const copyBtn = document.getElementById('copyBtn');
-        const notesModal = document.getElementById('notesModal');
-        const notesHabitName = document.getElementById('notesHabitName');
-        const habitNotesArea = document.getElementById('habitNotesArea');
+
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -481,36 +515,47 @@ on 16 Feb 2026
             habitToDeleteId = null;
         }
 
-        // Notes Modal Logic
-        function openNotes(id) {
+        // Edit View Logic
+        function showEditView(id) {
             const habit = habits.find(h => h.id === id);
             if (!habit) return;
 
-            currentNoteHabitId = id;
-            notesHabitName.textContent = habit.name;
-            habitNotesArea.value = habit.notes || '';
-            notesModal.classList.remove('hidden');
-            notesModal.classList.add('flex');
+            currentEditHabitId = id;
+            editHabitName.value = habit.name;
+            editHabitNotes.value = habit.notes || '';
+
+            mainView.classList.add('hidden');
+            editView.classList.remove('hidden');
         }
 
-        function closeNotesModal() {
-            notesModal.classList.add('hidden');
-            notesModal.classList.remove('flex');
-            currentNoteHabitId = null;
+        function showMainView() {
+            editView.classList.add('hidden');
+            mainView.classList.remove('hidden');
+            currentEditHabitId = null;
         }
 
-        function saveNotes() {
-            if (!currentNoteHabitId) return;
+        function saveEditChanges() {
+            if (!currentEditHabitId) return;
 
-            const habit = habits.find(h => h.id === currentNoteHabitId);
+            const name = editHabitName.value.trim();
+            if (!name) {
+                showToast('Habit name cannot be empty', true);
+                return;
+            }
+
+            const habit = habits.find(h => h.id === currentEditHabitId);
             if (habit) {
-                habit.notes = habitNotesArea.value.trim();
+                habit.name = name;
+                habit.notes = editHabitNotes.value.trim();
                 saveHabits();
                 renderHabits();
-                showToast('Notes saved');
+
+                showMainView();
+                showToast('Changes saved');
             }
-            closeNotesModal();
         }
+
+
 
         function toggleHabitStatus(id) {
             const habit = habits.find(h => h.id === id);
@@ -727,14 +772,16 @@ on 16 Feb 2026
 
                 header.innerHTML = `
                     <div class="flex-1 min-w-0 mr-2">
-                        <h3 class="font-semibold text-lg text-gray-800 ${!isEnabled ? 'line-through text-gray-500' : ''} truncate">${escapeHtml(habit.name)}</h3>
+                        <button onclick="showEditView(${habit.id})" class="text-left w-full group">
+                            <h3 class="font-semibold text-lg text-gray-800 ${!isEnabled ? 'line-through text-gray-500' : ''} truncate group-hover:text-indigo-600 transition-colors">
+                                ${escapeHtml(habit.name)}
+                                <i class="fa-solid fa-pen-to-square text-xs text-gray-300 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </h3>
+                        </button>
                         ${streakHtml}
                         ${notesHtml}
                     </div>
                     <div class="card-controls flex gap-1 shrink-0">
-                        <button onclick="openNotes(${habit.id})" class="text-gray-300 hover:text-indigo-500 transition-colors p-2" title="Notes">
-                            <i class="fa-regular fa-note-sticky"></i>
-                        </button>
                         <button onclick="toggleHabitStatus(${habit.id})" class="text-gray-300 hover:text-indigo-500 transition-colors p-2" title="${isEnabled ? 'Pause Habit' : 'Resume Habit'}">
                             <i class="fa-solid ${isEnabled ? 'fa-pause' : 'fa-play'}"></i>
                         </button>
@@ -821,7 +868,7 @@ on 16 Feb 2026
             const rotation = Math.random() * 520;
 
             const animation = particle.animate([
-                { transform: `translate(0,0) rotate(0deg)`, opacity: 1 },
+                { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
                 { transform: `translate(${destinationX}px, ${destinationY}px) rotate(${rotation}deg)`, opacity: 0 }
             ], {
                 duration: 800 + Math.random() * 400,

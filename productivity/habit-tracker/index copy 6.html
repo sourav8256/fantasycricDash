@@ -1,7 +1,7 @@
 <!-- 
 
-edit notes and title in a different page
-on 16 Feb 2026
+pattern lock
+on 27 Feb 2026
 
 -->
 
@@ -107,6 +107,65 @@ on 16 Feb 2026
                 transform: translateX(100%);
                 opacity: 0;
             }
+        }
+
+        /* Pattern Lock Styles */
+        #lockScreen {
+            background-color: #ffffff;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .pattern-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            width: 240px;
+            margin: 0 auto;
+            touch-action: none;
+        }
+
+        .pattern-dot {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pattern-dot.active {
+            background-color: #6366f1;
+            transform: scale(1.1);
+        }
+
+        .pattern-dot.error {
+            background-color: #ef4444;
+        }
+
+        .pattern-dot::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .pattern-dot.active::after {
+            opacity: 1;
+        }
+
+        #patternCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 5;
         }
     </style>
 </head>
@@ -282,6 +341,68 @@ on 16 Feb 2026
                     </button>
                 </div>
             </div>
+
+            <!-- Security Section -->
+            <div class="space-y-4 pt-4 border-t border-gray-100">
+                <label class="text-sm font-semibold text-gray-700 block text-indigo-600">Privacy & Security</label>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900">Pattern Lock</h4>
+                        <p class="text-xs text-gray-500">Require a pattern to open the app</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="setPatternBtn" onclick="openPatternSetup()"
+                            class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-100 px-3 py-1.5 rounded-md shadow-sm transition-all hidden">
+                            Setup Pattern
+                        </button>
+                        <button id="changePatternBtn" onclick="openPatternSetup()"
+                            class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-100 px-3 py-1.5 rounded-md shadow-sm transition-all hidden">
+                            Change
+                        </button>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="patternToggle" class="sr-only peer"
+                                onchange="togglePatternLock()">
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pattern Setup/Unlock Overlay -->
+    <div id="lockScreen" class="fixed inset-0 z-[100] hidden flex-col items-center justify-center p-6 bg-white">
+        <div class="max-w-xs w-full text-center space-y-8 relative">
+            <div class="space-y-2">
+                <div
+                    class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto text-indigo-600 text-3xl mb-4">
+                    <i class="fa-solid fa-lock" id="lockIcon"></i>
+                </div>
+                <h2 id="patternMessage" class="text-2xl font-bold text-gray-900">Enter Pattern</h2>
+                <p id="patternSubMessage" class="text-sm text-gray-500">Draw your secret sequence</p>
+            </div>
+
+            <div id="patternLockContainer" class="pattern-container relative">
+                <canvas id="patternCanvas"></canvas>
+                <div class="pattern-dot" data-id="1"></div>
+                <div class="pattern-dot" data-id="2"></div>
+                <div class="pattern-dot" data-id="3"></div>
+                <div class="pattern-dot" data-id="4"></div>
+                <div class="pattern-dot" data-id="5"></div>
+                <div class="pattern-dot" data-id="6"></div>
+                <div class="pattern-dot" data-id="7"></div>
+                <div class="pattern-dot" data-id="8"></div>
+                <div class="pattern-dot" data-id="9"></div>
+            </div>
+
+            <div id="patternActions" class="flex gap-4 pt-4">
+                <button id="cancelPatternBtn" onclick="closePatternScreen()"
+                    class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all hidden">
+                    Cancel
+                </button>
+            </div>
         </div>
     </div>
 
@@ -346,6 +467,7 @@ on 16 Feb 2026
             loadHabits();
             updateDateHeader();
             renderHabits();
+            initPatternLock();
         });
 
         // Event Listeners
@@ -422,6 +544,24 @@ on 16 Feb 2026
         function openSettings() {
             exportArea.value = JSON.stringify(habits, null, 2);
             importArea.value = '';
+
+            // Pattern Lock UI state
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            const patternToggle = document.getElementById('patternToggle');
+            const setPatternBtn = document.getElementById('setPatternBtn');
+            const changePatternBtn = document.getElementById('changePatternBtn');
+
+            patternToggle.checked = patternData.enabled || false;
+
+            if (patternData.pattern) {
+                setPatternBtn.classList.add('hidden');
+                changePatternBtn.classList.remove('hidden');
+            } else {
+                setPatternBtn.classList.remove('hidden');
+                changePatternBtn.classList.add('hidden');
+                patternToggle.checked = false;
+            }
+
             settingsModal.classList.remove('hidden');
             settingsModal.classList.add('flex');
         }
@@ -610,8 +750,10 @@ on 16 Feb 2026
         // Helper Functions
         function getFormattedDate(offset = 0) {
             const date = new Date();
+            // 6 AM Reset Logic: Subtract 6 hours from current time
+            date.setHours(date.getHours() - 6);
             date.setDate(date.getDate() - offset);
-            // Use local date to avoid timezone issues
+            // Use adjusted local date
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
@@ -622,8 +764,10 @@ on 16 Feb 2026
             const dates = [];
             for (let i = 6; i >= 0; i--) {
                 const date = new Date();
+                // 6 AM Reset Logic: Subtract 6 hours from current time
+                date.setHours(date.getHours() - 6);
                 date.setDate(date.getDate() - i);
-                // Use local date to avoid timezone issues
+
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
@@ -696,7 +840,10 @@ on 16 Feb 2026
 
         function updateDateHeader() {
             const options = { weekday: 'long', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', options);
+            const date = new Date();
+            // 6 AM Reset Logic: Subtract 6 hours from current time for header display
+            date.setHours(date.getHours() - 6);
+            document.getElementById('currentDate').textContent = date.toLocaleDateString('en-US', options);
         }
 
         function updateStats() {
@@ -841,6 +988,270 @@ on 16 Feb 2026
             });
         }
 
+        // --- Pattern Lock Implementation ---
+        let patternLock = {
+            active: false,
+            points: [],
+            isSetup: false,
+            tempPattern: null,
+            canvas: null,
+            ctx: null,
+            container: null,
+            dots: []
+        };
+
+        function initPatternLock() {
+            patternLock.canvas = document.getElementById('patternCanvas');
+            patternLock.ctx = patternLock.canvas.getContext('2d');
+            patternLock.container = document.getElementById('patternLockContainer');
+            patternLock.dots = Array.from(document.querySelectorAll('.pattern-dot'));
+
+            const resizeCanvas = () => {
+                const rect = patternLock.container.getBoundingClientRect();
+                patternLock.canvas.width = rect.width;
+                patternLock.canvas.height = rect.height;
+            };
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // Lock on visibility change and blur (covers phone lock/app switch/snapshot)
+            const lockOnPrivacyEvent = () => {
+                const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                if (patternData.enabled && patternData.pattern) {
+                    showLockScreen('unlock');
+                }
+            };
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') lockOnPrivacyEvent();
+            });
+
+            window.addEventListener('blur', lockOnPrivacyEvent);
+
+            // Touch/Mouse Events
+            const startHandler = (e) => {
+                e.preventDefault();
+                const pos = getPos(e);
+                const dot = getDotAt(pos.x, pos.y);
+                if (dot) {
+                    patternLock.active = true;
+                    addPoint(dot);
+                }
+            };
+
+            const moveHandler = (e) => {
+                if (!patternLock.active) return;
+                const pos = getPos(e);
+                const dot = getDotAt(pos.x, pos.y);
+                if (dot && !patternLock.points.includes(dot)) {
+                    addPoint(dot);
+                }
+                drawPattern(pos);
+            };
+
+            const endHandler = () => {
+                if (!patternLock.active) return;
+                patternLock.active = false;
+                handlePatternComplete();
+            };
+
+            patternLock.container.addEventListener('mousedown', startHandler);
+            patternLock.container.addEventListener('mousemove', moveHandler);
+            window.addEventListener('mouseup', endHandler);
+
+            patternLock.container.addEventListener('touchstart', startHandler);
+            patternLock.container.addEventListener('touchmove', moveHandler);
+            window.addEventListener('touchend', endHandler);
+
+            // Startup Check
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            if (patternData.enabled && patternData.pattern) {
+                showLockScreen('unlock');
+            }
+        }
+
+        function getPos(e) {
+            const rect = patternLock.container.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function getDotAt(x, y) {
+            const threshold = 30;
+            return patternLock.dots.find(dot => {
+                const rect = dot.getBoundingClientRect();
+                const containerRect = patternLock.container.getBoundingClientRect();
+                const centerX = (rect.left - containerRect.left) + rect.width / 2;
+                const centerY = (rect.top - containerRect.top) + rect.height / 2;
+                const dist = Math.hypot(x - centerX, y - centerY);
+                return dist < threshold;
+            })?.dataset.id;
+        }
+
+        function addPoint(id) {
+            patternLock.points.push(id);
+            const dot = patternLock.dots.find(d => d.dataset.id === id);
+            dot.classList.add('active');
+        }
+
+        function drawPattern(mousePos = null) {
+            const ctx = patternLock.ctx;
+            ctx.clearRect(0, 0, patternLock.canvas.width, patternLock.canvas.height);
+
+            if (patternLock.points.length === 0) return;
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 4;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            patternLock.points.forEach((id, index) => {
+                const dot = patternLock.dots.find(d => d.dataset.id === id);
+                const rect = dot.getBoundingClientRect();
+                const containerRect = patternLock.container.getBoundingClientRect();
+                const x = (rect.left - containerRect.left) + rect.width / 2;
+                const y = (rect.top - containerRect.top) + rect.height / 2;
+
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            if (mousePos && patternLock.active) {
+                ctx.lineTo(mousePos.x, mousePos.y);
+            }
+            ctx.stroke();
+        }
+
+        function handlePatternComplete() {
+            if (patternLock.points.length < 3) {
+                resetPatternUI('At least 3 dots required');
+                return;
+            }
+
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+
+            if (patternLock.isSetup) {
+                if (!patternLock.tempPattern) {
+                    patternLock.tempPattern = [...patternLock.points];
+                    resetPatternUI('Draw again to confirm');
+                } else {
+                    if (JSON.stringify(patternLock.tempPattern) === JSON.stringify(patternLock.points)) {
+                        patternData.pattern = patternLock.points;
+                        patternData.enabled = true;
+                        localStorage.setItem('habitFlowPattern', JSON.stringify(patternData));
+                        showToast('Pattern lock enabled');
+                        closePatternScreen();
+                        document.getElementById('patternToggle').checked = true; // Update toggle state
+                    } else {
+                        patternLock.tempPattern = null;
+                        resetPatternUI('Patterns did not match. Try again.');
+                    }
+                }
+            } else {
+                // Unlock mode
+                if (JSON.stringify(patternData.pattern) === JSON.stringify(patternLock.points)) {
+                    showToast('Unlocked');
+                    closePatternScreen();
+                } else {
+                    patternLock.dots.forEach(d => d.classList.add('error'));
+                    resetPatternUI('Incorrect pattern');
+                }
+            }
+        }
+
+        function resetPatternUI(msg) {
+            drawPattern(); // Clear mouse line
+            if (msg) document.getElementById('patternMessage').textContent = msg;
+
+            setTimeout(() => {
+                patternLock.points = [];
+                patternLock.dots.forEach(d => d.classList.remove('active', 'error'));
+                patternLock.ctx.clearRect(0, 0, patternLock.canvas.width, patternLock.canvas.height);
+                if (patternLock.isSetup && !patternLock.tempPattern) {
+                    document.getElementById('patternMessage').textContent = 'Set New Pattern';
+                } else if (!patternLock.tempPattern) {
+                    const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                    document.getElementById('patternMessage').textContent = patternData.enabled ? 'Enter Pattern' : 'Set New Pattern';
+                }
+            }, 800);
+        }
+
+        function togglePatternLock() {
+            const toggle = document.getElementById('patternToggle');
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+
+            if (toggle.checked) {
+                if (!patternData.pattern) {
+                    openPatternSetup();
+                    toggle.checked = false; // Will be set true on successful setup
+                } else {
+                    patternData.enabled = true;
+                    localStorage.setItem('habitFlowPattern', JSON.stringify(patternData));
+                    showToast('Lock enabled');
+                }
+            } else {
+                patternData.enabled = false;
+                localStorage.setItem('habitFlowPattern', JSON.stringify(patternData));
+                showToast('Lock disabled');
+            }
+        }
+
+        function openPatternSetup() {
+            closeSettings();
+            patternLock.isSetup = true;
+            patternLock.tempPattern = null;
+            showLockScreen('setup');
+        }
+
+        function showLockScreen(mode) {
+            const screen = document.getElementById('lockScreen');
+            const msg = document.getElementById('patternMessage');
+            const subMsg = document.getElementById('patternSubMessage');
+            const cancelBtn = document.getElementById('cancelPatternBtn');
+            const icon = document.getElementById('lockIcon');
+
+            screen.classList.remove('hidden');
+            screen.classList.add('flex');
+
+            if (mode === 'setup') {
+                msg.textContent = 'Set New Pattern';
+                subMsg.textContent = 'Connect at least 3 dots';
+                cancelBtn.classList.remove('hidden');
+                icon.className = 'fa-solid fa-fingerprint';
+                patternLock.isSetup = true;
+            } else {
+                msg.textContent = 'Enter Pattern';
+                subMsg.textContent = 'Draw your secret sequence';
+                cancelBtn.classList.add('hidden');
+                icon.className = 'fa-solid fa-lock';
+                patternLock.isSetup = false;
+            }
+
+            // Re-sync canvas size
+            setTimeout(() => {
+                const rect = patternLock.container.getBoundingClientRect();
+                patternLock.canvas.width = rect.width;
+                patternLock.canvas.height = rect.height;
+            }, 100);
+        }
+
+        function closePatternScreen() {
+            document.getElementById('lockScreen').classList.add('hidden');
+            document.getElementById('lockScreen').classList.remove('flex');
+            patternLock.points = [];
+            patternLock.tempPattern = null;
+            patternLock.isSetup = false;
+            resetPatternUI(''); // Clear any messages
+        }
+
+        // --- End Pattern Lock ---
+
         // Utils
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -848,8 +1259,8 @@ on 16 Feb 2026
             return div.innerHTML;
         }
 
-        function triggerConfetti(element) {
-            const rect = element.getBoundingClientRect();
+        function triggerConfetti(btn) {
+            const rect = btn.getBoundingClientRect();
             const center = {
                 x: rect.left + rect.width / 2,
                 y: rect.top + rect.height / 2

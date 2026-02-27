@@ -1,7 +1,7 @@
 <!-- 
 
-edit notes and title in a different page
-on 16 Feb 2026
+change reset time to 6 am
+on 25 Feb 2026
 
 -->
 
@@ -610,8 +610,10 @@ on 16 Feb 2026
         // Helper Functions
         function getFormattedDate(offset = 0) {
             const date = new Date();
+            // 6 AM Reset Logic: Subtract 6 hours from current time
+            date.setHours(date.getHours() - 6);
             date.setDate(date.getDate() - offset);
-            // Use local date to avoid timezone issues
+            // Use adjusted local date
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
@@ -622,8 +624,10 @@ on 16 Feb 2026
             const dates = [];
             for (let i = 6; i >= 0; i--) {
                 const date = new Date();
+                // 6 AM Reset Logic: Subtract 6 hours from current time
+                date.setHours(date.getHours() - 6);
                 date.setDate(date.getDate() - i);
-                // Use local date to avoid timezone issues
+
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
@@ -696,7 +700,10 @@ on 16 Feb 2026
 
         function updateDateHeader() {
             const options = { weekday: 'long', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', options);
+            const date = new Date();
+            // 6 AM Reset Logic: Subtract 6 hours from current time for header display
+            date.setHours(date.getHours() - 6);
+            document.getElementById('currentDate').textContent = date.toLocaleDateString('en-US', options);
         }
 
         function updateStats() {

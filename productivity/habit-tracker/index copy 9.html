@@ -1,7 +1,7 @@
 <!-- 
 
-Defend and Improve tabs
-on 19 Mar 2026
+Auto delete 
+on 24 Mar 2026
 
 -->
 
@@ -220,6 +220,15 @@ on 19 Mar 2026
             left: 0;
             pointer-events: none;
             z-index: 5;
+        }
+
+        /* Collapsible Paused Habits */
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        details[open] summary i.fa-chevron-down {
+            transform: rotate(180deg);
         }
     </style>
 </head>
@@ -531,6 +540,7 @@ on 19 Mar 2026
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadHabits();
+            prunePausedHabits();
             updateDateHeader();
             renderHabits();
             initPatternLock();
@@ -799,11 +809,39 @@ on 19 Mar 2026
             if (!habit) return;
 
             habit.isEnabled = !habit.isEnabled;
+            if (!habit.isEnabled) {
+                habit.pausedAt = new Date().toISOString();
+            } else {
+                delete habit.pausedAt;
+            }
             saveHabits();
             renderHabits();
 
             const msg = habit.isEnabled ? 'Habit resumed' : 'Habit paused';
             showToast(msg);
+        }
+
+        function prunePausedHabits() {
+            const now = new Date();
+            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+            let habitsChanged = false;
+
+            const originalLength = habits.length;
+            habits = habits.filter(habit => {
+                if (!habit.isEnabled && habit.pausedAt) {
+                    const pausedDate = new Date(habit.pausedAt);
+                    if (now - pausedDate > SEVEN_DAYS_MS) {
+                        habitsChanged = true;
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            if (habitsChanged) {
+                saveHabits();
+                console.log(`Pruned ${originalLength - habits.length} old paused habits`);
+            }
         }
 
         function toggleDate(habitId, dateStr, btnElement) {
@@ -992,27 +1030,24 @@ on 19 Mar 2026
             // Filter by active tab
             const tabHabits = habits.filter(h => (h.category || 'defence') === activeTab);
 
-            // Sort habits: Enabled first, then uncompleted today first, then by creation date (newest first)
-            const sortedHabits = [...tabHabits].sort((a, b) => {
-                // 1. Enabled habits first
-                if (a.isEnabled !== b.isEnabled) {
-                    return a.isEnabled ? -1 : 1;
-                }
+            const activeHabits = tabHabits.filter(h => h.isEnabled);
+            const pausedHabits = tabHabits.filter(h => !h.isEnabled);
 
-                // 2. If both are enabled, sort by completion status today
-                if (a.isEnabled) {
-                    const aCompleted = a.completedDates.includes(todayStr);
-                    const bCompleted = b.completedDates.includes(todayStr);
-                    if (aCompleted !== bCompleted) {
-                        return aCompleted ? 1 : -1; // Uncompleted first
-                    }
+            // Sort active habits: uncompleted today first, then newest first
+            activeHabits.sort((a, b) => {
+                const aCompleted = a.completedDates.includes(todayStr);
+                const bCompleted = b.completedDates.includes(todayStr);
+                if (aCompleted !== bCompleted) {
+                    return aCompleted ? 1 : -1; // Uncompleted first
                 }
-
-                // 3. Keep existing secondary sort (newest first)
                 return b.id - a.id;
             });
 
-            sortedHabits.forEach(habit => {
+            // Sort paused habits: newest first
+            pausedHabits.sort((a, b) => b.id - a.id);
+
+            // Helper to create habit card
+            function createHabitCard(habit) {
                 const streak = calculateStreak(habit);
                 const isEnabled = habit.isEnabled;
 
@@ -1032,10 +1067,18 @@ on 19 Mar 2026
                             <i class="fa-solid fa-fire mr-1"></i>
                             <span>${streak} day streak</span>
                        </div>`
-                    : `<div class="flex items-center text-xs font-medium text-gray-400 mt-1">
-                            <i class="fa-solid fa-pause mr-1"></i>
-                            <span>Paused</span>
-                       </div>`;
+                    : (function () {
+                        const pausedAt = habit.pausedAt;
+                        if (!pausedAt) return `<div class="flex items-center text-xs font-medium text-gray-400 mt-1"><i class="fa-solid fa-pause mr-1"></i><span>Paused</span></div>`;
+                        const pausedDate = new Date(pausedAt);
+                        const now = new Date();
+                        const diff = now - pausedDate;
+                        const daysLeft = Math.max(0, 7 - Math.floor(diff / (1000 * 60 * 60 * 24)));
+                        return `<div class="flex items-center text-xs font-medium text-red-400 mt-1">
+                                    <i class="fa-solid fa-clock-rotate-left mr-1"></i>
+                                    <span>Deleting in ${daysLeft}d</span>
+                                </div>`;
+                    })();
 
                 const header = document.createElement('div');
                 header.className = 'flex justify-between items-start';
@@ -1108,8 +1151,40 @@ on 19 Mar 2026
 
                 card.appendChild(header);
                 card.appendChild(daysContainer);
-                habitList.appendChild(card);
+                return card;
+            }
+
+            // Render active habits
+            activeHabits.forEach(habit => {
+                habitList.appendChild(createHabitCard(habit));
             });
+
+            // Render paused habits in a collapsible section
+            if (pausedHabits.length > 0) {
+                const details = document.createElement('details');
+                details.className = 'group pt-4 select-none';
+                
+                const summary = document.createElement('summary');
+                summary.className = 'flex items-center justify-between cursor-pointer list-none text-gray-400 hover:text-gray-600 transition-colors py-2 px-1';
+                summary.innerHTML = `
+                    <div class="flex items-center gap-2 font-bold text-[10px] uppercase tracking-[0.2em]">
+                        <i class="fa-solid fa-circle-pause opacity-50"></i>
+                        <span>Paused Habits (${pausedHabits.length})</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+                `;
+                
+                const pausedContainer = document.createElement('div');
+                pausedContainer.className = 'space-y-4 mt-4 overflow-hidden';
+                
+                pausedHabits.forEach(habit => {
+                    pausedContainer.appendChild(createHabitCard(habit));
+                });
+                
+                details.appendChild(summary);
+                details.appendChild(pausedContainer);
+                habitList.appendChild(details);
+            }
         }
 
         // --- Pattern Lock Implementation ---

@@ -1,7 +1,7 @@
 <!-- 
 
-Defend and Improve tabs
-on 19 Mar 2026
+try to category | coin | pending coin
+on 3 Apr 2026
 
 -->
 
@@ -28,11 +28,54 @@ on 19 Mar 2026
 
         .habit-card {
             transition: all 0.2s ease-in-out;
+            position: relative;
         }
 
         .habit-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .habit-number-coin {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+            border: 1.5px solid white;
+            z-index: 10;
+        }
+
+        .unfinished-indicator {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+            border: 1.5px solid white;
+            z-index: 5;
+            transition: opacity 0.2s;
+        }
+
+        .habit-card:hover .unfinished-indicator {
+            opacity: 0;
         }
 
         .day-circle {
@@ -85,7 +128,7 @@ on 19 Mar 2026
             padding: 4px;
             position: relative;
             width: 100%;
-            max-width: 280px;
+            max-width: 360px;
             margin: 0 auto;
         }
 
@@ -93,7 +136,7 @@ on 19 Mar 2026
             position: absolute;
             top: 4px;
             bottom: 4px;
-            width: calc(50% - 4px);
+            width: calc(33.33% - 4px);
             border-radius: 999px;
             background: #4f46e5;
             transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
@@ -102,10 +145,12 @@ on 19 Mar 2026
             z-index: 0;
         }
 
+        .tab-toggle-slider.tryto {
+            transform: translateX(calc(100% + 4px));
+        }
+
         .tab-toggle-slider.attack {
-            transform: translateX(calc(100% + 8px));
-            background: #4f46e5;
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+            transform: translateX(calc(200% + 8px));
         }
 
         .tab-btn {
@@ -221,6 +266,15 @@ on 19 Mar 2026
             pointer-events: none;
             z-index: 5;
         }
+
+        /* Collapsible Paused Habits */
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        details[open] summary i.fa-chevron-down {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 
@@ -270,6 +324,9 @@ on 19 Mar 2026
                 <div class="tab-toggle-slider" id="tabSlider"></div>
                 <button id="tabDefend" class="tab-btn active" onclick="switchTab('defence')">
                     <i class="fa-solid fa-shield-halved"></i> Defend
+                </button>
+                <button id="tabTry" class="tab-btn" onclick="switchTab('tryto')">
+                    <i class="fa-solid fa-hand-holding-heart"></i> Try To
                 </button>
                 <button id="tabImprove" class="tab-btn" onclick="switchTab('attack')">
                     <i class="fa-solid fa-bolt"></i> Improve
@@ -531,6 +588,7 @@ on 19 Mar 2026
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadHabits();
+            prunePausedHabits();
             updateDateHeader();
             renderHabits();
             initPatternLock();
@@ -786,12 +844,16 @@ on 19 Mar 2026
             const habit = habits.find(h => h.id === id);
             if (!habit) return;
 
-            habit.category = habit.category === 'defence' ? 'attack' : 'defence';
+            const cats = ['defence', 'tryto', 'attack'];
+            let currIdx = cats.indexOf(habit.category || 'defence');
+            if (currIdx === -1) currIdx = 0;
+            
+            habit.category = cats[(currIdx + 1) % cats.length];
             saveHabits();
             renderHabits();
 
-            const dest = habit.category === 'defence' ? 'Defend' : 'Improve';
-            showToast(`Moved to ${dest}`);
+            const names = { 'defence': 'Defend', 'tryto': 'Try To', 'attack': 'Improve' };
+            showToast(`Moved to ${names[habit.category]}`);
         }
 
         function toggleHabitStatus(id) {
@@ -799,11 +861,39 @@ on 19 Mar 2026
             if (!habit) return;
 
             habit.isEnabled = !habit.isEnabled;
+            if (!habit.isEnabled) {
+                habit.pausedAt = new Date().toISOString();
+            } else {
+                delete habit.pausedAt;
+            }
             saveHabits();
             renderHabits();
 
             const msg = habit.isEnabled ? 'Habit resumed' : 'Habit paused';
             showToast(msg);
+        }
+
+        function prunePausedHabits() {
+            const now = new Date();
+            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+            let habitsChanged = false;
+
+            const originalLength = habits.length;
+            habits = habits.filter(habit => {
+                if (!habit.isEnabled && habit.pausedAt) {
+                    const pausedDate = new Date(habit.pausedAt);
+                    if (now - pausedDate > SEVEN_DAYS_MS) {
+                        habitsChanged = true;
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            if (habitsChanged) {
+                saveHabits();
+                console.log(`Pruned ${originalLength - habits.length} old paused habits`);
+            }
         }
 
         function toggleDate(habitId, dateStr, btnElement) {
@@ -965,21 +1055,26 @@ on 19 Mar 2026
         function updateTabUI(tab) {
             const slider = document.getElementById('tabSlider');
             const defBtn = document.getElementById('tabDefend');
+            const tryBtn = document.getElementById('tabTry');
             const atkBtn = document.getElementById('tabImprove');
             const addBtn = document.getElementById('addHabitBtn');
 
-            if (!slider || !defBtn || !atkBtn || !addBtn) return;
+            if (!slider || !defBtn || !tryBtn || !atkBtn || !addBtn) return;
 
-            if (tab === 'attack') {
+            // Reset
+            slider.classList.remove('tryto', 'attack');
+            defBtn.classList.remove('active');
+            tryBtn.classList.remove('active');
+            atkBtn.classList.remove('active');
+
+            if (tab === 'tryto') {
+                slider.classList.add('tryto');
+                tryBtn.classList.add('active');
+            } else if (tab === 'attack') {
                 slider.classList.add('attack');
-                defBtn.classList.remove('active');
                 atkBtn.classList.add('active');
-                addBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2';
             } else {
-                slider.classList.remove('attack');
                 defBtn.classList.add('active');
-                atkBtn.classList.remove('active');
-                addBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2';
             }
         }
 
@@ -992,27 +1087,24 @@ on 19 Mar 2026
             // Filter by active tab
             const tabHabits = habits.filter(h => (h.category || 'defence') === activeTab);
 
-            // Sort habits: Enabled first, then uncompleted today first, then by creation date (newest first)
-            const sortedHabits = [...tabHabits].sort((a, b) => {
-                // 1. Enabled habits first
-                if (a.isEnabled !== b.isEnabled) {
-                    return a.isEnabled ? -1 : 1;
-                }
+            const activeHabits = tabHabits.filter(h => h.isEnabled);
+            const pausedHabits = tabHabits.filter(h => !h.isEnabled);
 
-                // 2. If both are enabled, sort by completion status today
-                if (a.isEnabled) {
-                    const aCompleted = a.completedDates.includes(todayStr);
-                    const bCompleted = b.completedDates.includes(todayStr);
-                    if (aCompleted !== bCompleted) {
-                        return aCompleted ? 1 : -1; // Uncompleted first
-                    }
+            // Sort active habits: uncompleted today first, then newest first
+            activeHabits.sort((a, b) => {
+                const aCompleted = a.completedDates.includes(todayStr);
+                const bCompleted = b.completedDates.includes(todayStr);
+                if (aCompleted !== bCompleted) {
+                    return aCompleted ? 1 : -1; // Uncompleted first
                 }
-
-                // 3. Keep existing secondary sort (newest first)
                 return b.id - a.id;
             });
 
-            sortedHabits.forEach(habit => {
+            // Sort paused habits: newest first
+            pausedHabits.sort((a, b) => b.id - a.id);
+
+            // Helper to create habit card
+            function createHabitCard(habit, index) {
                 const streak = calculateStreak(habit);
                 const isEnabled = habit.isEnabled;
 
@@ -1032,10 +1124,18 @@ on 19 Mar 2026
                             <i class="fa-solid fa-fire mr-1"></i>
                             <span>${streak} day streak</span>
                        </div>`
-                    : `<div class="flex items-center text-xs font-medium text-gray-400 mt-1">
-                            <i class="fa-solid fa-pause mr-1"></i>
-                            <span>Paused</span>
-                       </div>`;
+                    : (function () {
+                        const pausedAt = habit.pausedAt;
+                        if (!pausedAt) return `<div class="flex items-center text-xs font-medium text-gray-400 mt-1"><i class="fa-solid fa-pause mr-1"></i><span>Paused</span></div>`;
+                        const pausedDate = new Date(pausedAt);
+                        const now = new Date();
+                        const diff = now - pausedDate;
+                        const daysLeft = Math.max(0, 7 - Math.floor(diff / (1000 * 60 * 60 * 24)));
+                        return `<div class="flex items-center text-xs font-medium text-red-400 mt-1">
+                                    <i class="fa-solid fa-clock-rotate-left mr-1"></i>
+                                    <span>Deleting in ${daysLeft}d</span>
+                                </div>`;
+                    })();
 
                 const header = document.createElement('div');
                 header.className = 'flex justify-between items-start';
@@ -1046,11 +1146,19 @@ on 19 Mar 2026
                        </div>`
                     : '';
 
+                const unfinishedIndicatorHtml = (isEnabled && !habit.completedDates.includes(todayStr))
+                    ? `<div class="unfinished-indicator" title="Not completed today">
+                        <i class="fa-solid fa-star"></i>
+                       </div>`
+                    : '';
+
                 header.innerHTML = `
-                    <div class="flex-1 min-w-0 mr-2">
+                    <div class="habit-number-coin">${index}</div>
+                    ${unfinishedIndicatorHtml}
+                    <div class="flex-1 min-w-0 mr-2 pl-4">
                         <button onclick="showEditView(${habit.id})" class="text-left w-full group">
                             <h3 class="font-semibold text-lg text-gray-800 ${!isEnabled ? 'line-through text-gray-500' : ''} group-hover:text-indigo-600 transition-colors">
-                                ${escapeHtml(habit.name)}
+                                 ${escapeHtml(habit.name)}
                                 <i class="fa-solid fa-pen-to-square text-xs text-gray-300 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
                             </h3>
                         </button>
@@ -1058,8 +1166,8 @@ on 19 Mar 2026
                         ${notesHtml}
                     </div>
                     <div class="card-controls flex gap-1 shrink-0">
-                        <button onclick="toggleCategory(${habit.id})" class="text-gray-300 transition-colors p-2 ${habit.category === 'defence' ? 'hover:text-amber-500' : 'hover:text-indigo-500'}" title="Move to ${habit.category === 'defence' ? 'Improve' : 'Defend'}">
-                            <i class="fa-solid ${habit.category === 'defence' ? 'fa-bolt' : 'fa-shield-halved'}"></i>
+                        <button onclick="toggleCategory(${habit.id})" class="text-gray-300 transition-colors p-2 hover:text-indigo-500" title="Change Category">
+                            <i class="fa-solid fa-rotate"></i>
                         </button>
                         <button onclick="toggleHabitStatus(${habit.id})" class="text-gray-300 hover:text-indigo-500 transition-colors p-2" title="${isEnabled ? 'Pause Habit' : 'Resume Habit'}">
                             <i class="fa-solid ${isEnabled ? 'fa-pause' : 'fa-play'}"></i>
@@ -1108,8 +1216,40 @@ on 19 Mar 2026
 
                 card.appendChild(header);
                 card.appendChild(daysContainer);
-                habitList.appendChild(card);
+                return card;
+            }
+
+            // Render active habits
+            activeHabits.forEach((habit, i) => {
+                habitList.appendChild(createHabitCard(habit, i + 1));
             });
+
+            // Render paused habits in a collapsible section
+            if (pausedHabits.length > 0) {
+                const details = document.createElement('details');
+                details.className = 'group pt-4 select-none';
+                
+                const summary = document.createElement('summary');
+                summary.className = 'flex items-center justify-between cursor-pointer list-none text-gray-400 hover:text-gray-600 transition-colors py-2 px-1';
+                summary.innerHTML = `
+                    <div class="flex items-center gap-2 font-bold text-[10px] uppercase tracking-[0.2em]">
+                        <i class="fa-solid fa-circle-pause opacity-50"></i>
+                        <span>Paused Habits (${pausedHabits.length})</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+                `;
+                
+                const pausedContainer = document.createElement('div');
+                pausedContainer.className = 'space-y-4 mt-4 overflow-hidden';
+                
+                pausedHabits.forEach((habit, i) => {
+                    pausedContainer.appendChild(createHabitCard(habit, i + 1));
+                });
+                
+                details.appendChild(summary);
+                details.appendChild(pausedContainer);
+                habitList.appendChild(details);
+            }
         }
 
         // --- Pattern Lock Implementation ---

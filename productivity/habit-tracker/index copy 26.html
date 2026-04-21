@@ -1,0 +1,1749 @@
+<!-- 
+
+21 April
+permanent habit section
+
+17 April
+Adding the counts back
+
+16 April
+
+remove try to
+
+
+left margin for pending cards
+
+on 5 Apr 2026
+
+-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Habit Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Re-enable selection for inputs and text */
+        input, textarea, p, h1, h2, h3, span, div.selectable {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        /* Prevent selection for interactive UI elements that shouldn't have text selection */
+        button, summary, .tab-btn, .day-circle, .pattern-dot {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .habit-card {
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            border-left-width: 1px; /* Default */
+        }
+
+        .habit-card.pending-habit {
+            border-left-width: 8px;
+            border-left-color: #6366f1;
+        }
+
+        .habit-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .habit-number-coin {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+            border: 1.5px solid white;
+            z-index: 10;
+        }
+
+
+
+
+        .day-circle {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .day-circle:active {
+            transform: scale(0.9);
+        }
+
+        /* Show controls on hover or if on mobile */
+        .card-controls {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .habit-card:hover .card-controls {
+            opacity: 1;
+        }
+
+        @media (max-width: 640px) {
+            .card-controls {
+                opacity: 1;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Tab Toggle */
+        .tab-toggle {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 999px;
+            padding: 4px;
+            position: relative;
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+        }
+
+        .tab-toggle-slider {
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            width: calc(50% - 4px);
+            border-radius: 999px;
+            background: #4f46e5;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                background 0.25s ease;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+            z-index: 0;
+        }
+
+        .tab-toggle-slider.attack {
+            transform: translateX(calc(100% + 4px));
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            background: transparent;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: color 0.2s;
+            color: #64748b;
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 100;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+
+
+
+        /* Pattern Lock Styles */
+        #lockScreen {
+            background-color: #ffffff;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .pattern-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            width: 240px;
+            margin: 0 auto;
+            touch-action: none;
+        }
+
+        .pattern-dot {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pattern-dot.active {
+            background-color: #6366f1;
+            transform: scale(1.1);
+        }
+
+        .pattern-dot.error {
+            background-color: #ef4444;
+        }
+
+        .pattern-dot::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .pattern-dot.active::after {
+            opacity: 1;
+        }
+
+        #patternCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Collapsible Paused Habits */
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        details[open] summary i.fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        /* Category Selection in Edit View */
+        .category-btn {
+            border-color: #f1f5f9;
+        }
+
+        .category-btn.active {
+            border-color: #6366f1;
+            background-color: #f5f3ff;
+        }
+
+        .category-btn.active i {
+            color: #6366f1;
+        }
+
+        .category-btn.active span {
+            color: #4f46e5;
+        }
+        /* Global Notes Styles */
+        .notes-section {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .notes-section summary {
+            padding: 12px 16px;
+            cursor: pointer;
+            list-none: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            color: #4b5563;
+            user-select: none;
+            outline: none;
+        }
+
+        .notes-section summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .notes-section[open] summary {
+            border-bottom: 1px solid #f8fafc;
+        }
+
+        .notes-content {
+            padding: 0 16px 16px 16px;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 180px;
+            border: none;
+            resize: vertical;
+            font-size: 16px;
+            color: #374151;
+            padding-top: 12px;
+            outline: none;
+            line-height: 1.5;
+            background: transparent;
+        }
+
+        .notes-textarea::placeholder {
+            color: #9ca3af;
+        }
+    </style>
+</head>
+
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg">
+                    <i class="fa-solid fa-chart-line text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 tracking-tight">HabitFlow</h1>
+                    <div id="completionText" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">0 OF 0 DONE</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-sm text-gray-500 hidden sm:block" id="currentDate"></div>
+                <button onclick="openSettings()"
+                    class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                    title="Settings (Import/Export)">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Progress Bar Thin -->
+        <div class="w-full h-[2px] bg-gray-50 overflow-hidden">
+            <div id="completionBar" class="h-full bg-green-500 transition-all duration-1000 w-0"></div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <!-- Main Content -->
+    <main id="mainView" class="flex-1 overflow-y-auto p-2 sm:p-4 pb-24">
+        <div class="max-w-3xl mx-auto space-y-6">
+
+
+
+            <!-- Objectives -->
+            <details class="notes-section group">
+                <summary>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-bullseye text-indigo-500"></i>
+                        <span>Objectives</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-xs text-gray-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="notes-content">
+                    <textarea id="globalNotes" class="notes-textarea" placeholder="Define your daily or long-term objectives here..."></textarea>
+                </div>
+            </details>
+
+            <!-- Permanent Habits -->
+            <details id="permanentSection" class="notes-section group" open>
+                <summary>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-infinity text-indigo-500"></i>
+                        <span>Permanent Habits</span>
+                        <span id="permanentCount" class="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full ml-1 hidden">0/0</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-xs text-gray-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div id="permanentList" class="notes-content space-y-4 pt-4">
+                    <!-- Permanent habits will be injected here -->
+                </div>
+            </details>
+
+            <!-- Tab Toggle: Defence / Improve -->
+            <div class="tab-toggle" id="tabToggle">
+                <div class="tab-toggle-slider" id="tabSlider"></div>
+                <button id="tabDefend" class="tab-btn active" onclick="switchTab('defence')">
+                    <i class="fa-solid fa-shield-halved"></i> Defend
+                </button>
+                <button id="tabImprove" class="tab-btn" onclick="switchTab('attack')">
+                    <i class="fa-solid fa-bolt"></i> Improve
+                </button>
+            </div>
+
+            <!-- Add Habit Form -->
+            <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex gap-2">
+                <input type="text" id="habitInput" placeholder="Enter a new habit (e.g., Read 30 mins)..."
+                    class="flex-1 px-4 py-3 outline-none text-gray-700 placeholder-gray-400 bg-transparent text-base"
+                    autocomplete="off">
+                <button onclick="addHabit()" id="addHabitBtn"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">Add</span>
+                </button>
+            </div>
+
+            <!-- Habits List -->
+            <div id="habitList" class="space-y-4">
+                <!-- Habits will be injected here via JS -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden flex-col items-center justify-center py-12 text-center">
+                <div
+                    class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400 text-2xl">
+                    <i class="fa-regular fa-calendar-check"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">No habits yet</h3>
+                <p class="text-gray-500 max-w-xs mt-1">Start building better routines by adding your first habit above.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit View (Hidden by default) -->
+    <div id="editView" class="hidden h-screen flex flex-col bg-white z-20 absolute inset-0">
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-10">
+            <div class="max-w-xl mx-auto px-4 py-4 flex items-center gap-3">
+                <button onclick="showMainView()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-arrow-left text-xl"></i>
+                </button>
+                <h1 class="text-xl font-bold text-gray-900 tracking-tight">Edit Habit</h1>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-4">
+            <div class="max-w-xl mx-auto space-y-6">
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-6">
+
+                    <!-- Helper Text -->
+                    <p class="text-sm text-gray-500">Update your habit details below.</p>
+
+                    <!-- Habit Name Input -->
+                    <div class="space-y-2">
+                        <label for="editHabitName" class="block text-sm font-medium text-gray-700">Habit Name</label>
+                        <textarea rows="1" id="editHabitName"
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder-gray-400 overflow-hidden text-base"
+                            oninput="autoResize(this)" placeholder="e.g. Read 30 mins"></textarea>
+                    </div>
+
+                    <!-- Category Selection -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Category</label>
+                        <div class="flex gap-2" id="editCategorySelect">
+                            <button onclick="setEditCategory('permanent')" data-category="permanent"
+                                class="category-btn flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all hover:border-indigo-100">
+                                <i class="fa-solid fa-infinity text-xl text-gray-400"></i>
+                                <span class="text-[10px] font-semibold text-gray-500">Permanent</span>
+                            </button>
+                            <button onclick="setEditCategory('defence')" data-category="defence"
+                                class="category-btn flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all hover:border-indigo-100">
+                                <i class="fa-solid fa-shield-halved text-xl text-gray-400"></i>
+                                <span class="text-[10px] font-semibold text-gray-500">Defend</span>
+                            </button>
+                            <button onclick="setEditCategory('attack')" data-category="attack"
+                                class="category-btn flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all hover:border-indigo-100">
+                                <i class="fa-solid fa-bolt text-xl text-gray-400"></i>
+                                <span class="text-[10px] font-semibold text-gray-500">Improve</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notes Input -->
+                    <div class="space-y-2">
+                        <label for="editHabitNotes" class="block text-sm font-medium text-gray-700">Notes</label>
+                        <textarea id="editHabitNotes" rows="8"
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none placeholder-gray-400 text-base"
+                            placeholder="Add details, motivations, or tracking notes here..."></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3 pt-4">
+                        <button onclick="showMainView()"
+                            class="flex-1 px-4 py-3 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">
+                            Cancel
+                        </button>
+                        <button onclick="saveEditChanges()"
+                            class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm shadow-indigo-200">
+                            Save Changes
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings/Data Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div
+            class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-6 max-h-[90vh] overflow-y-auto transform transition-all scale-100">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+                <h3 class="text-xl font-bold text-gray-900">Data Management</h3>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Export Section -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-end">
+                    <label class="text-sm font-semibold text-gray-700">Export Data</label>
+                    <span class="text-xs text-gray-400">JSON Format</span>
+                </div>
+                <div class="relative group">
+                    <textarea id="exportArea" readonly
+                        class="w-full h-32 p-3 text-xs font-mono bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none text-gray-600 focus:text-base"></textarea>
+                    <button onclick="copyData()" id="copyBtn"
+                        class="absolute top-2 right-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs px-3 py-1.5 rounded-md shadow-sm font-medium transition-all flex items-center gap-1.5">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy</span>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400">Save this text to back up your habits or transfer them to another
+                    device.</p>
+            </div>
+
+            <!-- Import Section -->
+            <div class="space-y-2 pt-2 border-t border-gray-100">
+                <label class="text-sm font-semibold text-gray-700 mt-2 block">Import Data</label>
+                <textarea id="importArea" placeholder='Paste your JSON data here...'
+                    class="w-full h-32 p-3 text-xs font-mono bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 resize-none transition-all focus:text-base"></textarea>
+                <div class="flex justify-between items-center pt-2">
+                    <p class="text-xs text-orange-500 flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Warning: Importing overwrites current data.
+                    </p>
+                    <button onclick="importData()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-indigo-200">
+                        Import Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Security Section -->
+            <div class="space-y-4 pt-4 border-t border-gray-100">
+                <label class="text-sm font-semibold text-gray-700 block text-indigo-600">Privacy & Security</label>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900">Pattern Lock</h4>
+                        <p class="text-xs text-gray-500">Require a pattern to open the app</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="setPatternBtn" onclick="openPatternSetup()"
+                            class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-100 px-3 py-1.5 rounded-md shadow-sm transition-all hidden">
+                            Setup Pattern
+                        </button>
+                        <button id="changePatternBtn" onclick="openPatternSetup()"
+                            class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-100 px-3 py-1.5 rounded-md shadow-sm transition-all hidden">
+                            Change
+                        </button>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="patternToggle" class="sr-only peer"
+                                onchange="togglePatternLock()">
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pattern Setup/Unlock Overlay -->
+    <div id="lockScreen" class="fixed inset-0 z-[100] hidden flex-col items-center justify-center p-6 bg-white">
+        <div class="max-w-xs w-full text-center space-y-8 relative">
+            <div class="space-y-2">
+                <div
+                    class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto text-indigo-600 text-3xl mb-4">
+                    <i class="fa-solid fa-lock" id="lockIcon"></i>
+                </div>
+                <h2 id="patternMessage" class="text-2xl font-bold text-gray-900">Enter Pattern</h2>
+                <p id="patternSubMessage" class="text-sm text-gray-500">Draw your secret sequence</p>
+            </div>
+
+            <div id="patternLockContainer" class="pattern-container relative">
+                <canvas id="patternCanvas"></canvas>
+                <div class="pattern-dot" data-id="1"></div>
+                <div class="pattern-dot" data-id="2"></div>
+                <div class="pattern-dot" data-id="3"></div>
+                <div class="pattern-dot" data-id="4"></div>
+                <div class="pattern-dot" data-id="5"></div>
+                <div class="pattern-dot" data-id="6"></div>
+                <div class="pattern-dot" data-id="7"></div>
+                <div class="pattern-dot" data-id="8"></div>
+                <div class="pattern-dot" data-id="9"></div>
+            </div>
+
+            <div id="patternActions" class="flex gap-4 pt-4">
+                <button id="cancelPatternBtn" onclick="closePatternScreen()"
+                    class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all hidden">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal (Delete) -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl transform transition-all scale-100">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Habit?</h3>
+            <p class="text-gray-500 mb-6">Are you sure you want to delete "<span id="deleteHabitName"
+                    class="font-semibold text-gray-700"></span>"? This action cannot be undone.</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeDeleteModal()"
+                    class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
+                <button id="confirmDeleteBtn"
+                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Modal -->
+    <!-- Notes Modal Removed -->
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed bottom-6 left-1/2 transform -translate-x-1/2 translate-y-20 opacity-0 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl transition-all duration-300 z-[60] flex items-center gap-3 font-medium pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-check-circle text-green-400"></i>
+        <span id="toastMsg">Action Successful</span>
+    </div>
+
+    <script>
+        // State
+        let habits = [];
+        let habitToDeleteId = null;
+        let currentEditHabitId = null;
+        let activeTab = 'defence'; // 'defence' | 'attack'
+        let currentEditCategory = 'defence';
+
+        // Constants
+        const DAYS_TO_SHOW = 7;
+        const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        // DOM Elements
+        const habitInput = document.getElementById('habitInput');
+        const habitList = document.getElementById('habitList');
+        const emptyState = document.getElementById('emptyState');
+
+        const mainView = document.getElementById('mainView');
+        const editView = document.getElementById('editView');
+        const editHabitName = document.getElementById('editHabitName');
+        const editHabitNotes = document.getElementById('editHabitNotes');
+        const globalNotesArea = document.getElementById('globalNotes');
+
+        // Modals
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteHabitName = document.getElementById('deleteHabitName');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const exportArea = document.getElementById('exportArea');
+        const importArea = document.getElementById('importArea');
+        const copyBtn = document.getElementById('copyBtn');
+
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHabits();
+            prunePausedHabits();
+            updateDateHeader();
+            renderHabits();
+            initPatternLock();
+            loadGlobalNotes();
+        });
+
+        // Event Listeners
+        habitInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addHabit();
+        });
+
+        globalNotesArea.addEventListener('input', saveGlobalNotes);
+
+        confirmDeleteBtn.addEventListener('click', () => {
+            if (habitToDeleteId) {
+                habits = habits.filter(h => h.id !== habitToDeleteId);
+                saveHabits();
+                renderHabits();
+                closeDeleteModal();
+                showToast('Habit deleted');
+            }
+        });
+
+        // Core Functions
+        function loadHabits() {
+            const stored = localStorage.getItem('habitFlowData');
+            if (stored) {
+                try {
+                    habits = JSON.parse(stored);
+                    // Backward compatibility
+                    habits.forEach(h => {
+                        if (typeof h.isEnabled === 'undefined') h.isEnabled = true;
+                        if (typeof h.notes === 'undefined') h.notes = '';
+                        if (typeof h.category === 'undefined' || h.category === 'tryto') h.category = 'defence';
+                    });
+                } catch (e) {
+                    console.error("Failed to parse habits", e);
+                    habits = [];
+                }
+            } else {
+                // Default data for first-time users
+                habits = [
+                    {
+                        id: Date.now(),
+                        name: 'Drink 2L Water',
+                        created: new Date().toISOString(),
+                        isEnabled: true,
+                        completedDates: [getFormattedDate(0)],
+                        category: 'defence'
+                    }
+                ];
+                saveHabits();
+            }
+
+            // Persistence: Restore active tab
+            const savedTab = localStorage.getItem('habitFlowActiveTab');
+            if (savedTab === 'attack' || savedTab === 'defence') {
+                activeTab = savedTab;
+                // Sync UI without full render (renderHabits called later in DOMContentLoaded)
+                updateTabUI(activeTab);
+            }
+
+            // Sort: Uncompleted today first, then newest first (ID descending)
+            // This only happens on load, keeping the list stable during the session
+            const todayStr = getFormattedDate(0);
+            habits.sort((a, b) => {
+                const aCompleted = a.completedDates.includes(todayStr);
+                const bCompleted = b.completedDates.includes(todayStr);
+                if (aCompleted !== bCompleted) {
+                    return aCompleted ? 1 : -1; // Uncompleted first
+                }
+                return b.id - a.id;
+            });
+        }
+
+        function saveHabits() {
+            localStorage.setItem('habitFlowData', JSON.stringify(habits));
+            updateStats();
+        }
+
+        function addHabit() {
+            const name = habitInput.value.trim();
+            if (!name) return;
+
+            const newHabit = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: activeTab
+            };
+
+            habits.unshift(newHabit);
+            saveHabits();
+            renderHabits();
+            habitInput.value = '';
+            showToast('New habit added');
+        }
+
+        // Settings / Import / Export Functions
+        function openSettings() {
+            exportArea.value = JSON.stringify(habits, null, 2);
+            importArea.value = '';
+
+            // Pattern Lock UI state
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            const patternToggle = document.getElementById('patternToggle');
+            const setPatternBtn = document.getElementById('setPatternBtn');
+            const changePatternBtn = document.getElementById('changePatternBtn');
+
+            patternToggle.checked = patternData.enabled || false;
+
+            if (patternData.pattern) {
+                setPatternBtn.classList.add('hidden');
+                changePatternBtn.classList.remove('hidden');
+            } else {
+                setPatternBtn.classList.remove('hidden');
+                changePatternBtn.classList.add('hidden');
+                patternToggle.checked = false;
+            }
+
+            settingsModal.classList.remove('hidden');
+            settingsModal.classList.add('flex');
+        }
+
+        function closeSettings() {
+            settingsModal.classList.add('hidden');
+            settingsModal.classList.remove('flex');
+        }
+
+        function copyData() {
+            exportArea.select();
+            document.execCommand('copy');
+
+            // Visual feedback on button
+            const originalHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Copied!</span>';
+            copyBtn.classList.add('text-green-600', 'bg-green-50', 'border-green-200');
+
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHtml;
+                copyBtn.classList.remove('text-green-600', 'bg-green-50', 'border-green-200');
+            }, 2000);
+
+            showToast('Data copied to clipboard');
+        }
+
+        function importData() {
+            const json = importArea.value.trim();
+            if (!json) return;
+
+            try {
+                const data = JSON.parse(json);
+                if (!Array.isArray(data)) throw new Error('Root must be an array');
+
+                // Basic validation
+                const isValid = data.every(h =>
+                    h.id &&
+                    h.name &&
+                    Array.isArray(h.completedDates)
+                );
+
+                if (!isValid) throw new Error('Invalid habit structure');
+
+                // Normalize data
+                data.forEach(h => {
+                    if (typeof h.isEnabled === 'undefined') h.isEnabled = true;
+                });
+
+                habits = data;
+                saveHabits();
+                renderHabits();
+                closeSettings();
+                showToast('Data imported successfully');
+            } catch (e) {
+                showToast('Invalid JSON data provided', true);
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = msg;
+            toastIcon.className = isError ? 'fa-solid fa-circle-exclamation text-red-400' : 'fa-solid fa-check-circle text-green-400';
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+
+            // Clear existing timeout if any (simple implementation)
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Modal Logic
+        function confirmDelete(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+
+            habitToDeleteId = id;
+            deleteHabitName.textContent = habit.name;
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+            habitToDeleteId = null;
+        }
+
+        // Edit View Logic
+        function showEditView(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+
+            currentEditHabitId = id;
+            editHabitName.value = habit.name;
+            editHabitNotes.value = habit.notes || '';
+            currentEditCategory = habit.category || 'defence';
+            updateEditCategoryUI(currentEditCategory);
+
+            mainView.classList.add('hidden');
+            editView.classList.remove('hidden');
+
+            // Auto-resize the name textarea after showing
+            setTimeout(() => autoResize(editHabitName), 0);
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        function showMainView() {
+            editView.classList.add('hidden');
+            mainView.classList.remove('hidden');
+            currentEditHabitId = null;
+        }
+
+        function saveEditChanges() {
+            if (!currentEditHabitId) return;
+
+            const name = editHabitName.value.trim();
+            if (!name) {
+                showToast('Habit name cannot be empty', true);
+                return;
+            }
+
+            const habit = habits.find(h => h.id === currentEditHabitId);
+            if (habit) {
+                habit.name = name;
+                habit.notes = editHabitNotes.value.trim();
+                habit.category = currentEditCategory;
+                saveHabits();
+                renderHabits();
+
+                showMainView();
+                showToast('Changes saved');
+            }
+        }
+
+        function setEditCategory(category) {
+            currentEditCategory = category;
+            updateEditCategoryUI(category);
+        }
+
+        // Global Notes logic
+        function loadGlobalNotes() {
+            const saved = localStorage.getItem('habitFlowGlobalNotes');
+            if (saved) {
+                globalNotesArea.value = saved;
+            }
+        }
+
+        function saveGlobalNotes() {
+            localStorage.setItem('habitFlowGlobalNotes', globalNotesArea.value);
+        }
+
+        function updateEditCategoryUI(category) {
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                if (btn.dataset.category === category) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+
+
+        function toggleCategory(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+
+            const cats = ['permanent', 'defence', 'attack'];
+            let currIdx = cats.indexOf(habit.category || 'defence');
+            if (currIdx === -1) currIdx = 1; // Default to defence if somehow unknown
+            
+            habit.category = cats[(currIdx + 1) % cats.length];
+            saveHabits();
+            renderHabits();
+
+            const names = { 'defence': 'Defend', 'attack': 'Improve' };
+            showToast(`Moved to ${names[habit.category]}`);
+        }
+
+        function toggleHabitStatus(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+
+            habit.isEnabled = !habit.isEnabled;
+            if (!habit.isEnabled) {
+                habit.pausedAt = new Date().toISOString();
+            } else {
+                delete habit.pausedAt;
+            }
+            saveHabits();
+            renderHabits();
+
+            const msg = habit.isEnabled ? 'Habit resumed' : 'Habit paused';
+            showToast(msg);
+        }
+
+        function prunePausedHabits() {
+            const now = new Date();
+            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+            let habitsChanged = false;
+
+            const originalLength = habits.length;
+            habits = habits.filter(habit => {
+                if (!habit.isEnabled && habit.pausedAt) {
+                    const pausedDate = new Date(habit.pausedAt);
+                    if (now - pausedDate > SEVEN_DAYS_MS) {
+                        habitsChanged = true;
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            if (habitsChanged) {
+                saveHabits();
+                console.log(`Pruned ${originalLength - habits.length} old paused habits`);
+            }
+        }
+
+        function toggleDate(habitId, dateStr, btnElement) {
+            const habit = habits.find(h => h.id === habitId);
+            if (!habit || !habit.isEnabled) return;
+
+            const index = habit.completedDates.indexOf(dateStr);
+            const isCompleting = index === -1;
+
+            if (isCompleting) {
+                habit.completedDates.push(dateStr);
+                saveHabits();
+                triggerConfetti(btnElement);
+                renderHabits();
+            } else {
+                habit.completedDates.splice(index, 1);
+                saveHabits();
+                renderHabits();
+            }
+        }
+
+        // Helper Functions
+        function getFormattedDate(offset = 0) {
+            const date = new Date();
+            // 6 AM Reset Logic: Subtract 6 hours from current time
+            date.setHours(date.getHours() - 6);
+            date.setDate(date.getDate() - offset);
+            // Use adjusted local date
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getPast7Days() {
+            const dates = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                // 6 AM Reset Logic: Subtract 6 hours from current time
+                date.setHours(date.getHours() - 6);
+                date.setDate(date.getDate() - i);
+
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
+
+                dates.push({
+                    dateStr: dateStr,
+                    dayName: WEEK_DAYS[date.getDay()],
+                    dayNum: date.getDate(),
+                    isToday: i === 0
+                });
+            }
+            return dates;
+        }
+
+        function calculateStreak(habit) {
+            if (!habit.isEnabled) return 0;
+
+            let streak = 0;
+            const today = getFormattedDate(0);
+            const yesterday = getFormattedDate(1);
+
+            if (habit.completedDates.includes(today)) {
+                streak++;
+            } else if (!habit.completedDates.includes(yesterday)) {
+                return 0;
+            }
+
+            let i = 1;
+            while (true) {
+                const dateCheck = getFormattedDate(i);
+                if (habit.completedDates.includes(dateCheck)) {
+                    if (dateCheck !== today || !habit.completedDates.includes(today)) {
+                        if (i > 0 || (i === 0 && !habit.completedDates.includes(today))) {
+                            // Streak logic
+                        }
+                    }
+                } else {
+                    break;
+                }
+                i++;
+            }
+
+            const sorted = [...habit.completedDates].sort().reverse();
+            if (sorted.length === 0) return 0;
+
+            let checkDate = new Date();
+            checkDate.setHours(0, 0, 0, 0);
+
+            const lastComp = new Date(sorted[0]);
+            lastComp.setHours(0, 0, 0, 0);
+
+            const diffTime = Math.abs(checkDate - lastComp);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 1) return 0;
+
+            let tempStreak = 0;
+            for (let d = 0; d < 365; d++) {
+                const dStr = getFormattedDate(d);
+                if (habit.completedDates.includes(dStr)) {
+                    tempStreak++;
+                } else {
+                    if (d === 0) continue;
+                    break;
+                }
+            }
+            return tempStreak;
+        }
+
+        function updateDateHeader() {
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            const date = new Date();
+            // 6 AM Reset Logic: Subtract 6 hours from current time for header display
+            date.setHours(date.getHours() - 6);
+            document.getElementById('currentDate').textContent = date.toLocaleDateString('en-US', options);
+        }
+
+        function updateStats() {
+            const todayStr = getFormattedDate(0);
+            
+            // Stats for current tab
+            const tabHabits = habits.filter(h => (h.category || 'defence') === activeTab);
+            const activeTabHabits = tabHabits.filter(h => h.isEnabled);
+            
+            // Stats for permanent section
+            const permanentHabits = habits.filter(h => h.category === 'permanent');
+            const activePermanentHabits = permanentHabits.filter(h => h.isEnabled);
+            
+            // Overall stats (Permanent + Active Tab)
+            const allActiveHabits = [...activePermanentHabits, ...activeTabHabits];
+            const completedCount = allActiveHabits.filter(h => h.completedDates.includes(todayStr)).length;
+            const totalCount = allActiveHabits.length;
+
+            // Update Permanent Header Count
+            const permCountArea = document.getElementById('permanentCount');
+            const permSection = document.getElementById('permanentSection');
+            if (permCountArea && permSection) {
+                if (activePermanentHabits.length > 0) {
+                    const permCompleted = activePermanentHabits.filter(h => h.completedDates.includes(todayStr)).length;
+                    permCountArea.textContent = `${permCompleted}/${activePermanentHabits.length}`;
+                    permCountArea.classList.remove('hidden');
+                    permSection.classList.remove('hidden');
+                } else if (permanentHabits.length === 0) {
+                     permSection.classList.add('hidden');
+                } else {
+                     permCountArea.classList.add('hidden');
+                     permSection.classList.remove('hidden');
+                }
+            }
+
+            // Update Thin UI
+            const bar = document.getElementById('completionBar');
+            const statusArea = document.getElementById('completionText');
+            
+            if (bar && statusArea) {
+                const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+                bar.style.width = `${progress}%`;
+                statusArea.textContent = `${completedCount} OF ${totalCount} DONE`;
+                
+                // Color shift for completion
+                if (progress === 100 && totalCount > 0) {
+                    bar.classList.replace('bg-green-500', 'bg-indigo-500'); // Blue when done
+                    statusArea.classList.replace('text-gray-400', 'text-indigo-600');
+                } else {
+                    bar.classList.replace('bg-indigo-500', 'bg-green-500'); // Green when pending
+                    statusArea.classList.replace('text-indigo-600', 'text-gray-400');
+                }
+            }
+
+            if (tabHabits.length === 0 && permanentHabits.length === 0) {
+                habitList.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                habitList.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+        }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            localStorage.setItem('habitFlowActiveTab', tab);
+            updateTabUI(tab);
+            renderHabits();
+        }
+
+        function updateTabUI(tab) {
+            const slider = document.getElementById('tabSlider');
+            const defBtn = document.getElementById('tabDefend');
+            const atkBtn = document.getElementById('tabImprove');
+            const addBtn = document.getElementById('addHabitBtn');
+
+            if (!slider || !defBtn || !atkBtn || !addBtn) return;
+
+            // Reset
+            slider.classList.remove('attack');
+            defBtn.classList.remove('active');
+            atkBtn.classList.remove('active');
+
+            if (tab === 'attack') {
+                slider.classList.add('attack');
+                atkBtn.classList.add('active');
+            } else {
+                defBtn.classList.add('active');
+            }
+        }
+
+        function renderHabits() {
+            updateStats();
+            
+            const mainHabitList = document.getElementById('habitList');
+            const permanentHabitList = document.getElementById('permanentList');
+            
+            mainHabitList.innerHTML = '';
+            if (permanentHabitList) permanentHabitList.innerHTML = '';
+            
+            const weekDates = getPast7Days();
+            const todayStr = getFormattedDate(0);
+
+            // Filter habits
+            const permanentHabits = habits.filter(h => h.category === 'permanent');
+            const tabHabits = habits.filter(h => (h.category || 'defence') === activeTab);
+
+            const activePermanent = permanentHabits.filter(h => h.isEnabled);
+            const activeTabHabits = tabHabits.filter(h => h.isEnabled);
+            
+            // Paused habits from both currently relevant categories
+            const pausedHabits = [...permanentHabits, ...tabHabits].filter(h => !h.isEnabled);
+
+            // Sort paused habits: newest first
+            pausedHabits.sort((a, b) => b.id - a.id);
+
+            // Helper to create habit card (remains the same)
+            function createHabitCard(habit, index) {
+                const streak = calculateStreak(habit);
+                const isEnabled = habit.isEnabled;
+
+                const card = document.createElement('div');
+                let cardClasses = 'habit-card p-4 sm:p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-4';
+                if (!isEnabled) {
+                    cardClasses += ' opacity-60 grayscale bg-gray-50';
+                } else if (!habit.completedDates.includes(todayStr)) {
+                    cardClasses += ' bg-white border-indigo-400 pending-habit';
+                } else {
+                    cardClasses += ' bg-white';
+                }
+                card.className = cardClasses;
+
+                const streakHtml = isEnabled
+                    ? `<div class="flex items-center text-xs font-medium ${streak > 0 ? 'text-orange-500' : 'text-gray-400'} mt-1">
+                            <i class="fa-solid fa-fire mr-1"></i>
+                            <span>${streak} day streak</span>
+                       </div>`
+                    : (function () {
+                        const pausedAt = habit.pausedAt;
+                        if (!pausedAt) return `<div class="flex items-center text-xs font-medium text-gray-400 mt-1"><i class="fa-solid fa-pause mr-1"></i><span>Paused</span></div>`;
+                        const pausedDate = new Date(pausedAt);
+                        const now = new Date();
+                        const diff = now - pausedDate;
+                        const daysLeft = Math.max(0, 7 - Math.floor(diff / (1000 * 60 * 60 * 24)));
+                        return `<div class="flex items-center text-xs font-medium text-red-400 mt-1">
+                                    <i class="fa-solid fa-clock-rotate-left mr-1"></i>
+                                    <span>Deleting in ${daysLeft}d</span>
+                                </div>`;
+                    })();
+
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-start';
+
+                const notesHtml = habit.notes
+                    ? `<div class="mt-3 text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <span class="whitespace-pre-wrap">${escapeHtml(habit.notes)}</span>
+                       </div>`
+                    : '';
+
+
+                header.innerHTML = `
+                    <div class="habit-number-coin">${index}</div>
+                    <div class="flex-1 min-w-0 mr-2 pl-4">
+                        <button onclick="showEditView(${habit.id})" class="text-left w-full group">
+                            <h3 class="font-semibold text-lg text-gray-800 ${!isEnabled ? 'line-through text-gray-500' : ''} group-hover:text-indigo-600 transition-colors">
+                                 ${escapeHtml(habit.name)}
+                                <i class="fa-solid fa-pen-to-square text-xs text-gray-300 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </h3>
+                        </button>
+                        ${streakHtml}
+                        ${notesHtml}
+                    </div>
+                    <div class="card-controls flex gap-1 shrink-0">
+                        <button onclick="toggleCategory(${habit.id})" class="text-gray-300 transition-colors p-2 hover:text-indigo-500" title="Change Category">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                        <button onclick="toggleHabitStatus(${habit.id})" class="text-gray-300 hover:text-indigo-500 transition-colors p-2" title="${isEnabled ? 'Pause Habit' : 'Resume Habit'}">
+                            <i class="fa-solid ${isEnabled ? 'fa-pause' : 'fa-play'}"></i>
+                        </button>
+                        <button onclick="confirmDelete(${habit.id})" class="text-gray-300 hover:text-red-500 transition-colors p-2" title="Delete Habit">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+
+                const daysContainer = document.createElement('div');
+                daysContainer.className = 'flex justify-between items-center pt-2 border-t border-gray-50';
+
+                weekDates.forEach(dayObj => {
+                    const isCompleted = habit.completedDates.includes(dayObj.dateStr);
+                    const dayCol = document.createElement('div');
+                    dayCol.className = 'flex flex-col items-center gap-2';
+
+                    const label = document.createElement('span');
+                    label.className = `text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${dayObj.isToday && isEnabled ? 'text-indigo-600' : 'text-gray-400'}`;
+                    label.textContent = dayObj.dayName;
+
+                    const btn = document.createElement('button');
+
+                    if (isEnabled) {
+                        btn.onclick = (e) => toggleDate(habit.id, dayObj.dateStr, e.target);
+                    }
+
+                    let btnClasses = 'day-circle w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-300 ';
+
+                    if (isCompleted) {
+                        btnClasses += isEnabled ? 'bg-indigo-500 text-white shadow-md shadow-indigo-200' : 'bg-gray-400 text-white';
+                        btn.innerHTML = '<i class="fa-solid fa-check pointer-events-none"></i>';
+                    } else {
+                        btnClasses += isEnabled ? 'bg-gray-100 text-gray-400 hover:bg-gray-200' : 'bg-gray-100 text-gray-300 cursor-not-allowed';
+                        btn.textContent = dayObj.dayNum;
+                    }
+
+                    btn.className = btnClasses;
+                    if (!isEnabled) btn.disabled = true;
+
+                    dayCol.appendChild(label);
+                    dayCol.appendChild(btn);
+                    daysContainer.appendChild(dayCol);
+                });
+
+                card.appendChild(header);
+                card.appendChild(daysContainer);
+                return card;
+            }
+
+            // Render permanent habits
+            activePermanent.forEach((habit, i) => {
+                permanentHabitList.appendChild(createHabitCard(habit, i + 1));
+            });
+
+            // Render active tab habits
+            activeTabHabits.forEach((habit, i) => {
+                mainHabitList.appendChild(createHabitCard(habit, i + 1));
+            });
+
+            // Render paused habits in a collapsible section
+            if (pausedHabits.length > 0) {
+                const details = document.createElement('details');
+                details.className = 'group pt-4 select-none';
+                
+                const summary = document.createElement('summary');
+                summary.className = 'flex items-center justify-between cursor-pointer list-none text-gray-400 hover:text-gray-600 transition-colors py-2 px-1';
+                summary.innerHTML = `
+                    <div class="flex items-center gap-2 font-bold text-[10px] uppercase tracking-[0.2em]">
+                        <i class="fa-solid fa-circle-pause opacity-50"></i>
+                        <span>Paused Habits (${pausedHabits.length})</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+                `;
+                
+                const pausedContainer = document.createElement('div');
+                pausedContainer.className = 'space-y-4 mt-4 overflow-hidden';
+                
+                pausedHabits.forEach((habit, i) => {
+                    pausedContainer.appendChild(createHabitCard(habit, i + 1));
+                });
+                
+                details.appendChild(summary);
+                details.appendChild(pausedContainer);
+                mainHabitList.appendChild(details);
+            }
+        }
+
+        // --- Pattern Lock Implementation ---
+        let patternLock = {
+            active: false,
+            points: [],
+            isSetup: false,
+            tempPattern: null,
+            canvas: null,
+            ctx: null,
+            container: null,
+            dots: []
+        };
+
+        function initPatternLock() {
+            patternLock.canvas = document.getElementById('patternCanvas');
+            patternLock.ctx = patternLock.canvas.getContext('2d');
+            patternLock.container = document.getElementById('patternLockContainer');
+            patternLock.dots = Array.from(document.querySelectorAll('.pattern-dot'));
+
+            const resizeCanvas = () => {
+                const rect = patternLock.container.getBoundingClientRect();
+                patternLock.canvas.width = rect.width;
+                patternLock.canvas.height = rect.height;
+            };
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // Lock on visibility change and blur (covers phone lock/app switch/snapshot)
+            const lockOnPrivacyEvent = () => {
+                const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                if (patternData.enabled && patternData.pattern) {
+                    showLockScreen('unlock');
+                }
+            };
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') lockOnPrivacyEvent();
+            });
+
+            window.addEventListener('blur', lockOnPrivacyEvent);
+
+            // Touch/Mouse Events
+            const startHandler = (e) => {
+                e.preventDefault();
+                const pos = getPos(e);
+                const dot = getDotAt(pos.x, pos.y);
+                if (dot) {
+                    patternLock.active = true;
+                    addPoint(dot);
+                }
+            };
+
+            const moveHandler = (e) => {
+                if (!patternLock.active) return;
+                const pos = getPos(e);
+                const dot = getDotAt(pos.x, pos.y);
+                if (dot && !patternLock.points.includes(dot)) {
+                    addPoint(dot);
+                }
+                drawPattern(pos);
+            };
+
+            const endHandler = () => {
+                if (!patternLock.active) return;
+                patternLock.active = false;
+                handlePatternComplete();
+            };
+
+            patternLock.container.addEventListener('mousedown', startHandler);
+            patternLock.container.addEventListener('mousemove', moveHandler);
+            window.addEventListener('mouseup', endHandler);
+
+            patternLock.container.addEventListener('touchstart', startHandler);
+            patternLock.container.addEventListener('touchmove', moveHandler);
+            window.addEventListener('touchend', endHandler);
+
+            // Startup Check
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            if (patternData.enabled && patternData.pattern) {
+                showLockScreen('unlock');
+            }
+        }
+
+        function getPos(e) {
+            const rect = patternLock.container.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function getDotAt(x, y) {
+            const threshold = 30;
+            return patternLock.dots.find(dot => {
+                const rect = dot.getBoundingClientRect();
+                const containerRect = patternLock.container.getBoundingClientRect();
+                const centerX = (rect.left - containerRect.left) + rect.width / 2;
+                const centerY = (rect.top - containerRect.top) + rect.height / 2;
+                const dist = Math.hypot(x - centerX, y - centerY);
+                return dist < threshold;
+            })?.dataset.id;
+        }
+
+        function addPoint(id) {
+            patternLock.points.push(id);
+            const dot = patternLock.dots.find(d => d.dataset.id === id);
+            dot.classList.add('active');
+        }
+
+        function drawPattern(mousePos = null) {
+            const ctx = patternLock.ctx;
+            ctx.clearRect(0, 0, patternLock.canvas.width, patternLock.canvas.height);
+
+            if (patternLock.points.length === 0) return;
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 4;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            patternLock.points.forEach((id, index) => {
+                const dot = patternLock.dots.find(d => d.dataset.id === id);
+                const rect = dot.getBoundingClientRect();
+                const containerRect = patternLock.container.getBoundingClientRect();
+                const x = (rect.left - containerRect.left) + rect.width / 2;
+                const y = (rect.top - containerRect.top) + rect.height / 2;
+
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            if (mousePos && patternLock.active) {
+                ctx.lineTo(mousePos.x, mousePos.y);
+            }
+            ctx.stroke();
+        }
+
+        function handlePatternComplete() {
+            if (patternLock.points.length < 3) {
+                resetPatternUI('At least 3 dots required');
+                return;
+            }
+
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+
+            if (patternLock.isSetup) {
+                if (!patternLock.tempPattern) {
+                    patternLock.tempPattern = [...patternLock.points];
+                    resetPatternUI('Draw again to confirm');
+                } else {
+                    if (JSON.stringify(patternLock.tempPattern) === JSON.stringify(patternLock.points)) {
+                        patternData.pattern = patternLock.points;
+                        patternData.enabled = true;
+                        localStorage.setItem('habitFlowPattern', JSON.stringify(patternData));
+                        showToast('Pattern lock enabled');
+                        closePatternScreen();
+                        document.getElementById('patternToggle').checked = true; // Update toggle state
+                    } else {
+                        patternLock.tempPattern = null;
+                        resetPatternUI('Patterns did not match. Try again.');
+                    }
+                }
+            } else {
+                // Unlock mode
+                if (JSON.stringify(patternData.pattern) === JSON.stringify(patternLock.points)) {
+                    showToast('Unlocked');
+                    closePatternScreen();
+                } else {
+                    patternLock.dots.forEach(d => d.classList.add('error'));
+                    resetPatternUI('Incorrect pattern');
+                }
+            }
+        }
+
+        function resetPatternUI(msg) {
+            drawPattern(); // Clear mouse line
+            if (msg) document.getElementById('patternMessage').textContent = msg;
+
+            setTimeout(() => {
+                patternLock.points = [];
+                patternLock.dots.forEach(d => d.classList.remove('active', 'error'));
+                patternLock.ctx.clearRect(0, 0, patternLock.canvas.width, patternLock.canvas.height);
+                if (patternLock.isSetup && !patternLock.tempPattern) {
+                    document.getElementById('patternMessage').textContent = 'Set New Pattern';
+                } else if (!patternLock.tempPattern) {
+                    const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                    document.getElementById('patternMessage').textContent = patternData.enabled ? 'Enter Pattern' : 'Set New Pattern';
+                }
+            }, 800);
+        }
+
+        function togglePatternLock() {
+            const toggle = document.getElementById('patternToggle');
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+
+            if (toggle.checked) {
+                if (!patternData.pattern) {
+                    openPatternSetup();
+                    toggle.checked = false; // Will be set true on successful setup
+                } else {
+                    patternData.enabled = true;
+                    localStorage.setItem('habitFlowPattern', JSON.stringify(patternData));
+                    showToast('Lock enabled');
+                }
+            } else {
+                patternData.enabled = false;
+                localStorage.setItem('habitFlowPattern', JSON.stringify(patternData));
+                showToast('Lock disabled');
+            }
+        }
+
+        function openPatternSetup() {
+            closeSettings();
+            patternLock.isSetup = true;
+            patternLock.tempPattern = null;
+            showLockScreen('setup');
+        }
+
+        function showLockScreen(mode) {
+            const screen = document.getElementById('lockScreen');
+            const msg = document.getElementById('patternMessage');
+            const subMsg = document.getElementById('patternSubMessage');
+            const cancelBtn = document.getElementById('cancelPatternBtn');
+            const icon = document.getElementById('lockIcon');
+
+            screen.classList.remove('hidden');
+            screen.classList.add('flex');
+
+            if (mode === 'setup') {
+                msg.textContent = 'Set New Pattern';
+                subMsg.textContent = 'Connect at least 3 dots';
+                cancelBtn.classList.remove('hidden');
+                icon.className = 'fa-solid fa-fingerprint';
+                patternLock.isSetup = true;
+            } else {
+                msg.textContent = 'Enter Pattern';
+                subMsg.textContent = 'Draw your secret sequence';
+                cancelBtn.classList.add('hidden');
+                icon.className = 'fa-solid fa-lock';
+                patternLock.isSetup = false;
+            }
+
+            // Re-sync canvas size
+            setTimeout(() => {
+                const rect = patternLock.container.getBoundingClientRect();
+                patternLock.canvas.width = rect.width;
+                patternLock.canvas.height = rect.height;
+            }, 100);
+        }
+
+        function closePatternScreen() {
+            document.getElementById('lockScreen').classList.add('hidden');
+            document.getElementById('lockScreen').classList.remove('flex');
+            patternLock.points = [];
+            patternLock.tempPattern = null;
+            patternLock.isSetup = false;
+            resetPatternUI(''); // Clear any messages
+        }
+
+        // --- End Pattern Lock ---
+
+        // Utils
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function triggerConfetti(btn) {
+            const rect = btn.getBoundingClientRect();
+            const center = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+
+            for (let i = 0; i < 20; i++) {
+                createConfettiParticle(center.x, center.y);
+            }
+        }
+
+        function createConfettiParticle(x, y) {
+            const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
+            const particle = document.createElement('div');
+            particle.classList.add('confetti');
+            document.body.appendChild(particle);
+
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.backgroundColor = color;
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+
+            const destinationX = (Math.random() - 0.5) * 100;
+            const destinationY = (Math.random() - 0.5) * 100 - 50;
+            const rotation = Math.random() * 520;
+
+            const animation = particle.animate([
+                { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+                { transform: `translate(${destinationX}px, ${destinationY}px) rotate(${rotation}deg)`, opacity: 0 }
+            ], {
+                duration: 800 + Math.random() * 400,
+                easing: 'cubic-bezier(0, .9, .57, 1)',
+                fill: 'forwards'
+            });
+
+            animation.onfinish = () => particle.remove();
+        }
+    </script>
+</body>
+
+</html>

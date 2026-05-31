@@ -1,0 +1,1522 @@
+<!-- 
+Redesigned Serene Personal Operating System & Habit Tracker
+Calm, supportive, mobile-first, psychologically supportive
+Focuses on Work (Growth) and Emotional Processing
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Habit Flow</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Outfit for headers, Inter for UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #f8fafc;
+            --accent-color: #0f766e;
+            --accent-light: #ccfbf1;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --transition-speed: 0.4s;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        h1, h2, h3, .font-title {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Selection controls */
+        input, textarea, p, h1, h2, h3, span, div.selectable {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        /* Themes */
+        body.theme-work {
+            --bg-primary: #f1f5f9;
+            --accent-color: #0f766e;
+            --accent-light: #ccfbf1;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+        }
+
+        body.theme-emotional {
+            --bg-primary: #faf8f5;
+            --accent-color: #8b5cf6;
+            --accent-light: #f5f3ff;
+            --card-bg: #ffffff;
+            --text-primary: #1e1b4b;
+            --text-secondary: #4f46e5;
+        }
+
+        /* Serene Animations */
+        .fade-slide-in {
+            animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tab-transition {
+            transition: all var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Glassmorphism Navigation */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* Cards */
+        .habit-card {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+        }
+
+        .habit-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 99px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Pattern Lock Overlay */
+        #lockScreen {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .pattern-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            width: 220px;
+            margin: 0 auto;
+            touch-action: none;
+        }
+
+        .pattern-dot {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .pattern-dot.active {
+            background-color: var(--accent-light);
+            border-color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .pattern-dot.error {
+            background-color: #fef2f2;
+            border-color: #ef4444;
+        }
+
+        .pattern-dot::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .pattern-dot.active::after {
+            opacity: 1;
+        }
+
+        #patternCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* Day circles micro-animation */
+        .day-circle-btn {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .day-circle-btn:active {
+            transform: scale(0.85);
+        }
+
+        /* Toggle Button */
+        .toggle-switch-checkbox:checked + .toggle-switch-label {
+            background-color: var(--accent-color);
+        }
+
+        .toggle-switch-checkbox:checked + .toggle-switch-label::after {
+            left: 20px;
+        }
+    </style>
+</head>
+
+<body class="theme-work h-screen flex flex-col overflow-hidden antialiased">
+
+    <!-- Top Supportive Header -->
+    <header class="bg-white/45 backdrop-blur-md border-b border-gray-100 z-10 py-5 px-6 shrink-0 transition-colors">
+        <div class="max-w-xl mx-auto flex justify-between items-center">
+            <div class="space-y-1">
+                <span id="mindfulGreeting" class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Taking a quiet breath</span>
+                <h1 id="dateHeader" class="text-2xl font-bold text-gray-800 tracking-tight">Today</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="openSettings()" class="text-gray-400 hover:text-gray-600 transition-colors p-2.5 rounded-full hover:bg-gray-100/60" title="Settings">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Serene Completion Ring Placeholder or Thin Progress Bar -->
+        <div class="max-w-xl mx-auto mt-4 h-[3px] bg-gray-100 rounded-full overflow-hidden">
+            <div id="overallProgress" class="h-full bg-teal-600 transition-all duration-1000 w-0"></div>
+        </div>
+    </header>
+
+    <!-- Main Views Container -->
+    <main id="mainContainer" class="flex-1 overflow-y-auto px-4 pb-32 pt-6">
+        
+        <!-- =================== FOCUS VIEW (WORK) =================== -->
+        <div id="viewWork" class="max-w-xl mx-auto space-y-6 fade-slide-in">
+            
+            <!-- Quick Entry Work Habit -->
+            <div class="bg-white/80 backdrop-blur-md border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="workInput" placeholder="Nurture a growth habit (e.g. Coding, Reading)..."
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-gray-700 placeholder-gray-400 border border-transparent focus:border-teal-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addWorkHabit()"
+                        class="bg-teal-700 hover:bg-teal-800 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-teal-100">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Focus</span>
+                    </button>
+                </div>
+                <!-- Custom Days Target Picker -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Work Habits -->
+            <div id="workList" class="space-y-4">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Paused Work Habits Collapsible -->
+            <div id="pausedWorkContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
+                        <span>Paused Growth Activities</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="pausedWorkList" class="p-4 pt-0 space-y-4">
+                        <!-- Injected via JS -->
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== PROCESS VIEW (EMOTIONAL) =================== -->
+        <div id="viewEmotional" class="max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            
+            <!-- Quick Entry Emotional Habit -->
+            <div class="bg-white/80 backdrop-blur-md border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="emotionalInput" placeholder="What are you holding space to process (e.g. Overthinking)?"
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-indigo-950 placeholder-indigo-300 border border-transparent focus:border-purple-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addEmotionalHabit()"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-purple-100">
+                        <i class="fa-solid fa-spa text-xs"></i>
+                        <span>Process</span>
+                    </button>
+                </div>
+                <p class="text-[10px] text-purple-400 font-medium px-1 flex items-center gap-1.5">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Emotional process habits are temporary and expire automatically after 3 days.</span>
+                </p>
+            </div>
+
+            <!-- Active Emotional Habits -->
+            <div id="emotionalList" class="space-y-4">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Archived Processes Collapsible -->
+            <div id="archivedEmotionalContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-purple-400 uppercase tracking-widest select-none">
+                        <span>Completed / Archived Processes</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="archivedEmotionalList" class="p-4 pt-0 space-y-4">
+                        <!-- Injected via JS -->
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-center">
+            <div class="w-16 h-16 bg-gray-100/60 rounded-full flex items-center justify-center mb-4 text-gray-400 text-xl">
+                <i class="fa-regular fa-compass"></i>
+            </div>
+            <h3 class="text-base font-semibold text-gray-700">A clean slate</h3>
+            <p class="text-xs text-gray-400 max-w-xs mt-1">Nurture growth activities or process complex moments. Tap the input fields above to start.</p>
+        </div>
+    </main>
+
+    <!-- Sleek Floating Bottom Navigation -->
+    <nav class="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-11/12 max-w-md glass-nav rounded-2xl shadow-xl py-3 px-6 flex justify-around items-center z-40">
+        <button onclick="switchTab('work')" id="tabBtnWork" class="flex flex-col items-center gap-1.5 text-teal-700 transition-all font-medium">
+            <div id="navWorkIndicator" class="w-7 h-7 rounded-full flex items-center justify-center bg-teal-50 text-teal-700 transition-all">
+                <i class="fa-solid fa-seedling text-sm"></i>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Growth</span>
+        </button>
+        <button onclick="switchTab('emotional')" id="tabBtnEmotional" class="flex flex-col items-center gap-1.5 text-gray-400 transition-all font-medium">
+            <div id="navEmotionalIndicator" class="w-7 h-7 rounded-full flex items-center justify-center bg-transparent text-gray-400 transition-all">
+                <i class="fa-solid fa-wind text-sm"></i>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Process</span>
+        </button>
+    </nav>
+
+    <!-- Edit View overlay (Sleek drawer-style full overlay) -->
+    <div id="editView" class="hidden fixed inset-0 bg-white z-50 flex flex-col md:max-w-xl md:mx-auto md:shadow-2xl fade-slide-in">
+        <header class="bg-gray-50 border-b border-gray-100 px-5 py-4 flex justify-between items-center shrink-0">
+            <h2 class="text-lg font-bold text-gray-800">Customize Detail</h2>
+            <button onclick="closeEditView()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </header>
+        <main class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="space-y-4">
+                <!-- Name -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Activity Name</label>
+                    <input type="text" id="editHabitName" class="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none border border-transparent focus:border-gray-200 focus:bg-white text-sm font-semibold text-gray-700 transition-all">
+                </div>
+                <!-- Category Select (Custom inline pill) -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Nature of Activity</label>
+                    <div class="flex gap-2">
+                        <button onclick="setEditCategory('work')" id="editCategoryWork" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Growth (Work)</button>
+                        <button onclick="setEditCategory('emotional')" id="editCategoryEmotional" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Processing (Emotional)</button>
+                    </div>
+                </div>
+                <!-- Target duration (only if work) -->
+                <div id="editTargetDaysContainer" class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Target Duration (Days)</label>
+                    <input type="number" id="editTargetDays" min="1" max="1000" class="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none border border-transparent focus:border-gray-200 focus:bg-white text-sm font-semibold text-gray-700 transition-all">
+                </div>
+                <!-- Description / Intent -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Intention / Notes</label>
+                    <textarea id="editHabitNotes" rows="5" placeholder="Set a quiet intention or log motivations..." class="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none border border-transparent focus:border-gray-200 focus:bg-white text-sm text-gray-600 transition-all resize-none"></textarea>
+                </div>
+            </div>
+            <!-- Actions -->
+            <div class="flex gap-3 pt-4">
+                <button onclick="deleteCurrentHabit()" class="flex-1 px-4 py-3 border border-red-100 hover:bg-red-50 text-red-500 font-semibold rounded-xl text-sm transition-colors">
+                    Remove Habit
+                </button>
+                <button onclick="saveEditChanges()" class="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-900 text-white font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-gray-200">
+                    Apply Changes
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white/95 glass-modal rounded-3xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-5 max-h-[85vh] overflow-y-auto transform transition-all scale-100">
+            <div class="flex justify-between items-center border-b border-gray-100/50 pb-3">
+                <h3 class="text-lg font-bold text-gray-800">Space Settings</h3>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600 p-1 rounded-full">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Export -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Backup Data</label>
+                <div class="relative">
+                    <textarea id="exportArea" readonly class="w-full h-24 p-2.5 text-[10px] font-mono bg-gray-50/50 border border-gray-100 rounded-xl focus:outline-none resize-none text-gray-500"></textarea>
+                    <button onclick="copyData()" id="copyBtn" class="absolute top-2 right-2 bg-white hover:bg-gray-50 text-gray-600 text-[10px] px-2.5 py-1 rounded-md border border-gray-100 font-bold transition-all flex items-center gap-1">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy JSON</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Import -->
+            <div class="space-y-2 border-t border-gray-100/50 pt-3">
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block">Restore Data</label>
+                <textarea id="importArea" placeholder="Paste your backup JSON text here..." class="w-full h-24 p-2.5 text-[10px] font-mono bg-white border border-gray-100 rounded-xl focus:outline-none focus:border-indigo-200 resize-none"></textarea>
+                <div class="flex justify-between items-center">
+                    <p class="text-[9px] text-amber-500 flex items-center gap-1 font-semibold">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Overwrites active session.
+                    </p>
+                    <button onclick="importData()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors">Import</button>
+                </div>
+            </div>
+
+            <!-- Security Pattern Lock -->
+            <div class="space-y-3 border-t border-gray-100/50 pt-3">
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block">Privacy Lock</label>
+                <div class="flex items-center justify-between p-3.5 bg-gray-50/50 border border-gray-100/30 rounded-xl">
+                    <div class="space-y-0.5">
+                        <h4 class="text-xs font-bold text-gray-800">Pattern Security</h4>
+                        <p class="text-[10px] text-gray-400 font-medium">Require passcode gesture on load</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="setPatternBtn" onclick="openPatternSetup()" class="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-100 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 transition-all">Configure</button>
+                        <button id="changePatternBtn" onclick="openPatternSetup()" class="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-100 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 transition-all hidden">Change</button>
+                        <!-- Custom Toggle switch -->
+                        <div class="flex items-center">
+                            <input type="checkbox" id="patternToggle" class="sr-only toggle-switch-checkbox" onchange="togglePatternLock()">
+                            <label for="patternToggle" class="toggle-switch-label relative inline-block w-9 h-5 bg-gray-200 rounded-full cursor-pointer transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pattern Setup/Unlock Overlay -->
+    <div id="lockScreen" class="fixed inset-0 z-[100] hidden flex-col items-center justify-center p-6 bg-white/95 backdrop-blur-md">
+        <div class="max-w-xs w-full text-center space-y-6 relative">
+            <div class="space-y-2">
+                <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-xl mb-3 shadow-inner">
+                    <i class="fa-solid fa-lock" id="lockIcon"></i>
+                </div>
+                <h2 id="patternMessage" class="text-xl font-bold text-gray-800">Enter Pattern</h2>
+                <p id="patternSubMessage" class="text-xs text-gray-400">Draw your security passcode</p>
+            </div>
+
+            <div id="patternLockContainer" class="pattern-container relative">
+                <canvas id="patternCanvas"></canvas>
+                <div class="pattern-dot" data-id="1"></div>
+                <div class="pattern-dot" data-id="2"></div>
+                <div class="pattern-dot" data-id="3"></div>
+                <div class="pattern-dot" data-id="4"></div>
+                <div class="pattern-dot" data-id="5"></div>
+                <div class="pattern-dot" data-id="6"></div>
+                <div class="pattern-dot" data-id="7"></div>
+                <div class="pattern-dot" data-id="8"></div>
+                <div class="pattern-dot" data-id="9"></div>
+            </div>
+
+            <div id="patternActions" class="flex gap-4 pt-2">
+                <button id="cancelPatternBtn" onclick="closePatternScreen()" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-xs font-semibold transition-all hidden">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 translate-y-20 opacity-0 bg-gray-900/90 text-white px-5 py-3 rounded-full shadow-2xl transition-all duration-300 z-[60] flex items-center gap-2.5 text-xs font-medium pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-check-circle text-green-400"></i>
+        <span id="toastMsg">Action Successful</span>
+    </div>
+
+    <!-- ==================== JS CONTROLLERS ==================== -->
+    <script>
+        // State Management
+        let habits = [];
+        let currentTab = 'work'; // 'work' or 'emotional'
+        let currentEditHabitId = null;
+        let selectedTargetDays = 21; // 7, 21, or 30 for fast entry
+        let editSelectedCategory = 'work';
+
+        // Constants & Config
+        const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        // DOM Elements
+        const dateHeader = document.getElementById('dateHeader');
+        const mindfulGreeting = document.getElementById('mindfulGreeting');
+        const overallProgress = document.getElementById('overallProgress');
+        const mainContainer = document.getElementById('mainContainer');
+        const emptyState = document.getElementById('emptyState');
+
+        // Lists
+        const workList = document.getElementById('workList');
+        const pausedWorkContainer = document.getElementById('pausedWorkContainer');
+        const pausedWorkList = document.getElementById('pausedWorkList');
+        const emotionalList = document.getElementById('emotionalList');
+        const archivedEmotionalContainer = document.getElementById('archivedEmotionalContainer');
+        const archivedEmotionalList = document.getElementById('archivedEmotionalList');
+
+        // Modals & Overlays
+        const editView = document.getElementById('editView');
+        const settingsModal = document.getElementById('settingsModal');
+        const exportArea = document.getElementById('exportArea');
+        const importArea = document.getElementById('importArea');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHabits();
+            updateHeader();
+            switchTab('work'); // Default tab
+            initPatternLock();
+
+            // Keydown listeners for Enter on laptops and phones
+            document.getElementById('workInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addWorkHabit();
+                }
+            });
+            document.getElementById('emotionalInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addEmotionalHabit();
+                }
+            });
+        });
+
+        function loadHabits() {
+            const stored = localStorage.getItem('habitFlowData');
+            if (stored) {
+                try {
+                    habits = JSON.parse(stored);
+
+                    // Migration logic
+                    habits.forEach(h => {
+                        if (typeof h.isEnabled === 'undefined') h.isEnabled = true;
+                        if (typeof h.notes === 'undefined') h.notes = '';
+                        
+                        // Map old priority categories directly to Category
+                        if (!h.category) {
+                            const emotionalKeywords = ['meditation', 'journal', 'no contact', 'reflection', 'walk', 'breathe', 'emotion', 'grief', 'anxiety', 'calm', 'grounding'];
+                            const isEmotional = emotionalKeywords.some(keyword => h.name.toLowerCase().includes(keyword));
+                            h.category = isEmotional ? 'emotional' : 'work';
+                        }
+                        if (typeof h.targetDays === 'undefined') h.targetDays = 21;
+                    });
+                } catch (e) {
+                    console.error("Failed to parse habit data", e);
+                    habits = [];
+                }
+            } else {
+                // Prepopulate for demonstration
+                habits = [
+                    {
+                        id: Date.now() - 100000,
+                        name: 'Deep Work/Coding',
+                        created: new Date().toISOString(),
+                        isEnabled: true,
+                        completedDates: [],
+                        notes: 'Stay focused on primary work block for 90 minutes.',
+                        category: 'work',
+                        targetDays: 21
+                    },
+                    {
+                        id: Date.now() - 50000,
+                        name: 'Daily Grounding Walk',
+                        created: new Date().toISOString(),
+                        isEnabled: true,
+                        completedDates: [],
+                        notes: 'Quiet walk around the park with no headphones.',
+                        category: 'emotional',
+                        targetDays: 3
+                    }
+                ];
+                saveHabits();
+            }
+            render();
+        }
+
+        function saveHabits() {
+            localStorage.setItem('habitFlowData', JSON.stringify(habits));
+            updateOverallProgress();
+        }
+
+        // --- View & Navigation Controller ---
+        function switchTab(tab) {
+            currentTab = tab;
+            const body = document.body;
+
+            // Nav indicators
+            const btnWork = document.getElementById('tabBtnWork');
+            const btnEmo = document.getElementById('tabBtnEmotional');
+            const indWork = document.getElementById('navWorkIndicator');
+            const indEmo = document.getElementById('navEmotionalIndicator');
+
+            if (tab === 'work') {
+                body.className = 'theme-work h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewWork').classList.remove('hidden');
+                document.getElementById('viewEmotional').classList.add('hidden');
+
+                // Update active tab buttons styling
+                btnWork.className = 'flex flex-col items-center gap-1.5 text-teal-700 font-bold transition-all';
+                indWork.className = 'w-7 h-7 rounded-full flex items-center justify-center bg-teal-100 text-teal-800 transition-all scale-105';
+                
+                btnEmo.className = 'flex flex-col items-center gap-1.5 text-gray-400 font-normal transition-all';
+                indEmo.className = 'w-7 h-7 rounded-full flex items-center justify-center bg-transparent text-gray-400 transition-all';
+            } else {
+                body.className = 'theme-emotional h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewWork').classList.add('hidden');
+                document.getElementById('viewEmotional').classList.remove('hidden');
+
+                btnEmo.className = 'flex flex-col items-center gap-1.5 text-purple-700 font-bold transition-all';
+                indEmo.className = 'w-7 h-7 rounded-full flex items-center justify-center bg-purple-100 text-purple-800 transition-all scale-105';
+
+                btnWork.className = 'flex flex-col items-center gap-1.5 text-gray-400 font-normal transition-all';
+                indWork.className = 'w-7 h-7 rounded-full flex items-center justify-center bg-transparent text-gray-400 transition-all';
+            }
+            render();
+        }
+
+        // Target Picker in Entry
+        function setTargetDaysSelect(btn, days) {
+            selectedTargetDays = days;
+            const buttons = document.querySelectorAll('.target-days-btn');
+            buttons.forEach(b => {
+                b.className = 'target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all';
+            });
+            btn.className = 'target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all';
+        }
+
+        // --- Operations: Add Habits ---
+        function addWorkHabit() {
+            const input = document.getElementById('workInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'work',
+                targetDays: selectedTargetDays
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('Growth activity added');
+        }
+
+        function addEmotionalHabit() {
+            const input = document.getElementById('emotionalInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'emotional',
+                targetDays: 3 // Fixed 3 day period
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('New 3-day emotional process started');
+        }
+
+        // --- Rendering Logic ---
+        function render() {
+            workList.innerHTML = '';
+            pausedWorkList.innerHTML = '';
+            emotionalList.innerHTML = '';
+            archivedEmotionalList.innerHTML = '';
+
+            const todayStr = getFormattedDate(0);
+            let activeWorkCount = 0;
+            let activeEmoCount = 0;
+            let pausedWorkCount = 0;
+            let archivedEmoCount = 0;
+
+            habits.forEach(habit => {
+                if (habit.category === 'work') {
+                    if (habit.isEnabled) {
+                        activeWorkCount++;
+                        workList.appendChild(createWorkCard(habit));
+                    } else {
+                        pausedWorkCount++;
+                        pausedWorkList.appendChild(createWorkCard(habit));
+                    }
+                } else if (habit.category === 'emotional') {
+                    const days = getDaysSinceCreation(habit);
+                    if (days < 3) {
+                        activeEmoCount++;
+                        emotionalList.appendChild(createEmotionalCard(habit));
+                    } else {
+                        archivedEmoCount++;
+                        archivedEmotionalList.appendChild(createEmotionalCard(habit, true));
+                    }
+                }
+            });
+
+            // Handle section visibilities
+            if (pausedWorkCount > 0) {
+                pausedWorkContainer.classList.remove('hidden');
+            } else {
+                pausedWorkContainer.classList.add('hidden');
+            }
+
+            if (archivedEmoCount > 0) {
+                archivedEmotionalContainer.classList.remove('hidden');
+            } else {
+                archivedEmotionalContainer.classList.add('hidden');
+            }
+
+            // Empty state handling
+            const totalOnActiveTab = (currentTab === 'work') ? activeWorkCount : activeEmoCount;
+            if (totalOnActiveTab === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+
+            updateOverallProgress();
+        }
+
+        // Card Factory: Work
+        function createWorkCard(habit) {
+            const streak = calculateStreak(habit);
+            const isCompletedToday = habit.completedDates.includes(getFormattedDate(0));
+            
+            const card = document.createElement('div');
+            card.className = `habit-card bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3.5 shadow-sm relative ${!habit.isEnabled ? 'opacity-65 grayscale bg-gray-50' : ''}`;
+            card.style.borderLeft = `4px solid ${!habit.isEnabled ? '#cbd5e1' : '#0d9488'}`;
+
+            // Mini historical strip (last 5 days)
+            let historyHtml = '';
+            for (let i = 4; i >= 0; i--) {
+                const dateStr = getFormattedDate(i);
+                const d = new Date();
+                d.setHours(d.getHours() - 6);
+                d.setDate(d.getDate() - i);
+                const isCompleted = habit.completedDates.includes(dateStr);
+                const initial = WEEK_DAYS[d.getDay()][0];
+
+                historyHtml += `
+                    <button onclick="toggleWorkDay(${habit.id}, '${dateStr}', this)" 
+                        class="day-circle-btn flex flex-col items-center gap-1 focus:outline-none" title="Toggle ${dateStr}">
+                        <span class="text-[9px] font-bold text-gray-400 uppercase">${initial}</span>
+                        <div class="w-4 h-4 rounded-full flex items-center justify-center text-[7px] transition-all hover:scale-110 ${isCompleted ? 'bg-teal-600 text-white shadow-sm shadow-teal-100' : 'bg-gray-100 text-gray-300 hover:bg-gray-200'}">
+                            <i class="fa-solid fa-check ${isCompleted ? '' : 'opacity-0'}"></i>
+                        </div>
+                    </button>
+                `;
+            }
+
+            const progress = Math.min(100, Math.round((streak / habit.targetDays) * 100));
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start gap-3">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-base text-gray-800 tracking-tight leading-snug break-words ${!habit.isEnabled ? 'line-through text-gray-400' : ''}">${escapeHtml(habit.name)}</h3>
+                        <!-- Streak & Progress Text -->
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-xs font-semibold ${streak > 0 ? 'text-amber-500' : 'text-gray-400'} flex items-center gap-0.5">
+                                <i class="fa-solid fa-fire text-xs"></i> ${streak} day streak
+                            </span>
+                            <span class="text-[10px] text-gray-300">|</span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${streak}/${habit.targetDays} Days</span>
+                        </div>
+                    </div>
+                    <!-- Right Check-in Circle Toggle Button -->
+                    <button onclick="toggleWorkToday(${habit.id}, this)" class="day-circle-btn w-10 h-10 rounded-full flex items-center justify-center border transition-all shrink-0 shadow-inner ${isCompletedToday ? 'bg-teal-600 border-teal-600 text-white shadow-teal-100' : 'bg-gray-50 border-gray-100 text-gray-300 hover:border-teal-200'}">
+                        <i class="fa-solid fa-check text-base"></i>
+                    </button>
+                </div>
+
+                <!-- Minimal Streak Bar -->
+                <div class="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                    <div class="h-full bg-teal-600 transition-all duration-1000" style="width: ${progress}%"></div>
+                </div>
+
+                <!-- Footer area: Past 5 days and subtle edit trigger -->
+                <div class="flex justify-between items-center pt-2 border-t border-gray-50/50">
+                    <div class="flex gap-2.5">
+                        ${historyHtml}
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button onclick="toggleHabitState(${habit.id})" class="text-gray-300 hover:text-teal-600 p-1.5 transition-colors" title="${habit.isEnabled ? 'Pause' : 'Resume'}">
+                            <i class="fa-solid ${habit.isEnabled ? 'fa-pause' : 'fa-play'} text-xs"></i>
+                        </button>
+                        <button onclick="showEditView(${habit.id})" class="text-gray-300 hover:text-teal-600 p-1.5 transition-colors" title="Customize">
+                            <i class="fa-solid fa-ellipsis-h text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+                ${habit.notes ? `<p class="text-[11px] text-gray-400 bg-gray-50/60 border border-gray-100/20 px-2 py-1.5 rounded-lg whitespace-pre-wrap">${escapeHtml(habit.notes)}</p>` : ''}
+            `;
+            return card;
+        }
+
+        // Card Factory: Emotional
+        function createEmotionalCard(habit, isArchived = false) {
+            const card = document.createElement('div');
+            card.className = `habit-card bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3.5 shadow-sm relative ${isArchived ? 'opacity-60 bg-gray-50/70' : ''}`;
+            card.style.borderLeft = `4px solid ${isArchived ? '#cbd5e1' : '#c084fc'}`;
+
+            // 3 Day Pill buttons mapping
+            const dates = getEmotionalDates(habit);
+            let pillHtml = '';
+            dates.forEach((dateStr, idx) => {
+                const isComp = habit.completedDates.includes(dateStr);
+                const disabled = isArchived;
+                pillHtml += `
+                    <button onclick="toggleEmotionalPill(${habit.id}, '${dateStr}', ${idx})" ${disabled ? 'disabled' : ''}
+                        class="day-circle-btn flex-1 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center justify-center gap-1.5 ${isComp ? 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-100' : 'bg-purple-50/30 border-purple-100/60 text-purple-600 hover:bg-purple-50'}">
+                        <i class="fa-solid ${isComp ? 'fa-circle-check' : 'fa-circle-notch text-[10px]'}"></i>
+                        <span>Day ${idx + 1}</span>
+                    </button>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start gap-3">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-base text-purple-950 tracking-tight break-words">${escapeHtml(habit.name)}</h3>
+                        <p class="text-[10px] text-purple-400 font-semibold mt-0.5 flex items-center gap-1">
+                            <i class="fa-regular fa-calendar-alt"></i>
+                            <span>${isArchived ? 'Completed 3-Day Journey' : '3-Day Processing Window'}</span>
+                        </p>
+                    </div>
+                    <button onclick="showEditView(${habit.id})" class="text-gray-300 hover:text-purple-600 p-1.5 transition-colors shrink-0">
+                        <i class="fa-solid fa-ellipsis-h text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- 3 pill day buttons -->
+                <div class="flex gap-2">
+                    ${pillHtml}
+                </div>
+
+                <!-- Inline Reflection Notes -->
+                <div class="space-y-1">
+                    <span class="text-[9px] font-bold uppercase tracking-wider text-purple-400">Journal & Reflections</span>
+                    <textarea oninput="saveInlineReflection(${habit.id}, this)" placeholder="${isArchived ? 'Completed reflections.' : 'Write a quiet observation or reflection directly...'}" class="w-full px-3 py-2 bg-purple-50/30 text-purple-900 border border-purple-100/50 rounded-xl text-xs outline-none focus:border-purple-200 focus:bg-white transition-all resize-none h-14 placeholder-purple-300">${escapeHtml(habit.notes || '')}</textarea>
+                </div>
+            `;
+            return card;
+        }
+
+        // --- Core Business Logic Functions ---
+        function toggleWorkToday(id, btn) {
+            const h = habits.find(x => x.id === id);
+            if (!h || !h.isEnabled) return;
+
+            const today = getFormattedDate(0);
+            const idx = h.completedDates.indexOf(today);
+
+            if (idx === -1) {
+                h.completedDates.push(today);
+                saveHabits();
+                triggerConfetti(btn);
+                showToast('Consistency is key.');
+            } else {
+                h.completedDates.splice(idx, 1);
+                saveHabits();
+                showToast('Check-in removed.');
+            }
+            render();
+        }
+
+        function toggleWorkDay(id, dateStr, btn) {
+            const h = habits.find(x => x.id === id);
+            if (!h || !h.isEnabled) return;
+
+            const idx = h.completedDates.indexOf(dateStr);
+            if (idx === -1) {
+                h.completedDates.push(dateStr);
+                saveHabits();
+                triggerConfetti(btn);
+                showToast('Consistency is key.');
+            } else {
+                h.completedDates.splice(idx, 1);
+                saveHabits();
+                showToast('Check-in removed.');
+            }
+            render();
+        }
+
+        function toggleEmotionalPill(id, dateStr, idx) {
+            const h = habits.find(x => x.id === id);
+            if (!h) return;
+
+            const completedIdx = h.completedDates.indexOf(dateStr);
+            if (completedIdx === -1) {
+                h.completedDates.push(dateStr);
+                saveHabits();
+                showToast(`Day ${idx + 1} processing complete.`);
+            } else {
+                h.completedDates.splice(completedIdx, 1);
+                saveHabits();
+            }
+            render();
+        }
+
+        function saveInlineReflection(id, textarea) {
+            const h = habits.find(x => x.id === id);
+            if (h) {
+                h.notes = textarea.value.trim();
+                localStorage.setItem('habitFlowData', JSON.stringify(habits));
+            }
+        }
+
+        function toggleHabitState(id) {
+            const h = habits.find(x => x.id === id);
+            if (!h) return;
+            h.isEnabled = !h.isEnabled;
+            saveHabits();
+            render();
+            showToast(h.isEnabled ? 'Growth activity resumed' : 'Growth activity paused');
+        }
+
+        // --- Date & Time Utilities ---
+        function getFormattedDate(offset = 0) {
+            const date = new Date();
+            // 6 AM Daily Reset logic: Offset hours by 6 so that 12 AM to 5:59 AM falls in the previous calendar day
+            date.setHours(date.getHours() - 6);
+            date.setDate(date.getDate() - offset);
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getDaysSinceCreation(habit) {
+            const created = new Date(habit.created);
+            created.setHours(0,0,0,0);
+            const today = new Date();
+            // Match the 6 AM logic
+            today.setHours(today.getHours() - 6);
+            today.setHours(0,0,0,0);
+
+            const diff = today - created;
+            return Math.floor(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function getEmotionalDates(habit) {
+            const dates = [];
+            for (let i = 0; i < 3; i++) {
+                const d = new Date(habit.created);
+                d.setDate(d.getDate() + i);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                dates.push(`${year}-${month}-${day}`);
+            }
+            return dates;
+        }
+
+        function calculateStreak(habit) {
+            if (!habit.isEnabled) return 0;
+            let streak = 0;
+            let dayOffset = 0;
+            const todayStr = getFormattedDate(0);
+            const yesterdayStr = getFormattedDate(1);
+
+            // Streak keeps going if completed today or yesterday
+            if (!habit.completedDates.includes(todayStr) && !habit.completedDates.includes(yesterdayStr)) {
+                return 0;
+            }
+
+            // Start tracing backward
+            if (habit.completedDates.includes(todayStr)) {
+                streak++;
+                dayOffset = 1;
+            } else if (habit.completedDates.includes(yesterdayStr)) {
+                streak++;
+                dayOffset = 2;
+            }
+
+            while (true) {
+                const dateStr = getFormattedDate(dayOffset);
+                if (habit.completedDates.includes(dateStr)) {
+                    streak++;
+                    dayOffset++;
+                } else {
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        function updateHeader() {
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            const date = new Date();
+            date.setHours(date.getHours() - 6);
+            dateHeader.textContent = date.toLocaleDateString('en-US', options);
+
+            // Dynamic psychological support greetings based on time
+            const hr = new Date().getHours();
+            if (hr >= 5 && hr < 12) {
+                mindfulGreeting.textContent = "A fresh start. Move at your own pace.";
+            } else if (hr >= 12 && hr < 18) {
+                mindfulGreeting.textContent = "Take a deep breath. You are doing enough.";
+            } else {
+                mindfulGreeting.textContent = "Rest is just as productive as action.";
+            }
+        }
+
+        function updateOverallProgress() {
+            const today = getFormattedDate(0);
+            const activeWorkHabits = habits.filter(h => h.category === 'work' && h.isEnabled);
+            const total = activeWorkHabits.length;
+            const completed = activeWorkHabits.filter(h => h.completedDates.includes(today)).length;
+
+            if (total === 0) {
+                overallProgress.style.width = '0%';
+            } else {
+                overallProgress.style.width = `${(completed / total) * 100}%`;
+            }
+        }
+
+        // --- Edit Modal Actions ---
+        function showEditView(id) {
+            const h = habits.find(x => x.id === id);
+            if (!h) return;
+
+            currentEditHabitId = id;
+            document.getElementById('editHabitName').value = h.name;
+            document.getElementById('editHabitNotes').value = h.notes || '';
+            document.getElementById('editTargetDays').value = h.targetDays || 21;
+            
+            editSelectedCategory = h.category || 'work';
+            setEditCategory(editSelectedCategory);
+
+            editView.classList.remove('hidden');
+        }
+
+        function closeEditView() {
+            editView.classList.add('hidden');
+            currentEditHabitId = null;
+        }
+
+        function setEditCategory(category) {
+            editSelectedCategory = category;
+            const btnWork = document.getElementById('editCategoryWork');
+            const btnEmo = document.getElementById('editCategoryEmotional');
+            const targetContainer = document.getElementById('editTargetDaysContainer');
+
+            if (category === 'work') {
+                btnWork.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-teal-50 border-teal-500 text-teal-800';
+                btnEmo.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+                targetContainer.classList.remove('hidden');
+            } else {
+                btnWork.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+                btnEmo.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-purple-50 border-purple-500 text-purple-800';
+                targetContainer.classList.add('hidden');
+            }
+        }
+
+        function saveEditChanges() {
+            if (!currentEditHabitId) return;
+            const h = habits.find(x => x.id === currentEditHabitId);
+            if (!h) return;
+
+            const name = document.getElementById('editHabitName').value.trim();
+            if (!name) {
+                showToast('Name cannot be empty', true);
+                return;
+            }
+
+            h.name = name;
+            h.notes = document.getElementById('editHabitNotes').value.trim();
+            h.category = editSelectedCategory;
+            if (editSelectedCategory === 'work') {
+                h.targetDays = parseInt(document.getElementById('editTargetDays').value) || 21;
+            }
+
+            saveHabits();
+            render();
+            closeEditView();
+            showToast('Changes applied');
+        }
+
+        function deleteCurrentHabit() {
+            if (!currentEditHabitId) return;
+            habits = habits.filter(x => x.id !== currentEditHabitId);
+            saveHabits();
+            render();
+            closeEditView();
+            showToast('Activity removed');
+        }
+
+        // --- Settings & Data Modal Actions ---
+        function openSettings() {
+            exportArea.value = JSON.stringify(habits, null, 2);
+            importArea.value = '';
+
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            const patternToggle = document.getElementById('patternToggle');
+            const setPatternBtn = document.getElementById('setPatternBtn');
+            const changePatternBtn = document.getElementById('changePatternBtn');
+
+            patternToggle.checked = patternData.enabled || false;
+
+            if (patternData.pattern) {
+                setPatternBtn.classList.add('hidden');
+                changePatternBtn.classList.remove('hidden');
+            } else {
+                setPatternBtn.classList.remove('hidden');
+                changePatternBtn.classList.add('hidden');
+                patternToggle.checked = false;
+            }
+
+            settingsModal.classList.remove('hidden');
+            settingsModal.classList.add('flex');
+        }
+
+        function closeSettings() {
+            settingsModal.classList.add('hidden');
+            settingsModal.classList.remove('flex');
+        }
+
+        function copyData() {
+            exportArea.select();
+            document.execCommand('copy');
+
+            const origHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Copied!</span>';
+            copyBtn.className = 'absolute top-2 right-2 bg-green-50 hover:bg-green-100 text-green-700 text-[10px] px-2.5 py-1 rounded-md border border-green-200 font-bold transition-all';
+
+            setTimeout(() => {
+                copyBtn.innerHTML = origHtml;
+                copyBtn.className = 'absolute top-2 right-2 bg-white hover:bg-gray-50 text-gray-600 text-[10px] px-2.5 py-1 rounded-md border border-gray-100 font-bold transition-all';
+            }, 2000);
+
+            showToast('JSON Copied');
+        }
+
+        function importData() {
+            const raw = importArea.value.trim();
+            if (!raw) return;
+
+            try {
+                const data = JSON.parse(raw);
+                if (!Array.isArray(data)) throw new Error();
+
+                const valid = data.every(x => x.id && x.name && Array.isArray(x.completedDates));
+                if (!valid) throw new Error();
+
+                habits = data;
+                saveHabits();
+                render();
+                closeSettings();
+                showToast('Import successful');
+            } catch(e) {
+                showToast('Invalid session JSON format', true);
+            }
+        }
+
+        // --- Toasts ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = msg;
+            toastIcon.className = isError ? 'fa-solid fa-triangle-exclamation text-red-400' : 'fa-solid fa-check-circle text-teal-400';
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- Confetti FX ---
+        function triggerConfetti(btn) {
+            const rect = btn.getBoundingClientRect();
+            const center = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+            for (let i = 0; i < 20; i++) {
+                createConfettiParticle(center.x, center.y);
+            }
+        }
+
+        function createConfettiParticle(x, y) {
+            const colors = ['#0d9488', '#0f766e', '#8b5cf6', '#a78bfa', '#f59e0b'];
+            const p = document.createElement('div');
+            p.className = 'confetti rounded-full';
+            document.body.appendChild(p);
+
+            p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            p.style.left = x + 'px';
+            p.style.top = y + 'px';
+
+            const destX = (Math.random() - 0.5) * 120;
+            const destY = (Math.random() - 0.5) * 120 - 40;
+            const rot = Math.random() * 360;
+
+            const anim = p.animate([
+                { transform: 'translate(0, 0) rotate(0deg) scale(1)', opacity: 1 },
+                { transform: `translate(${destX}px, ${destY}px) rotate(${rot}deg) scale(0)`, opacity: 0 }
+            ], {
+                duration: 600 + Math.random() * 400,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards'
+            });
+            anim.onfinish = () => p.remove();
+        }
+
+        // --- Pattern Lock Implementation ---
+        let patternLock = {
+            active: false,
+            points: [],
+            isSetup: false,
+            tempPattern: null,
+            canvas: null,
+            ctx: null,
+            container: null,
+            dots: []
+        };
+
+        function initPatternLock() {
+            patternLock.canvas = document.getElementById('patternCanvas');
+            patternLock.ctx = patternLock.canvas.getContext('2d');
+            patternLock.container = document.getElementById('patternLockContainer');
+            patternLock.dots = Array.from(document.querySelectorAll('.pattern-dot'));
+
+            const resize = () => {
+                const rect = patternLock.container.getBoundingClientRect();
+                patternLock.canvas.width = rect.width;
+                patternLock.canvas.height = rect.height;
+            };
+            window.addEventListener('resize', resize);
+            resize();
+
+            // Lock on app blur or focus lost
+            const privacyBlur = () => {
+                const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                if (data.enabled && data.pattern) {
+                    showLockScreen('unlock');
+                }
+            };
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') privacyBlur();
+            });
+            window.addEventListener('blur', privacyBlur);
+
+            // Touches / Mouse
+            const getPos = (e) => {
+                const rect = patternLock.container.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - rect.left, y: clientY - rect.top };
+            };
+
+            const getDotAt = (x, y) => {
+                const threshold = 25;
+                return patternLock.dots.find(dot => {
+                    const dRect = dot.getBoundingClientRect();
+                    const cRect = patternLock.container.getBoundingClientRect();
+                    const cx = (dRect.left - cRect.left) + dRect.width / 2;
+                    const cy = (dRect.top - cRect.top) + dRect.height / 2;
+                    return Math.hypot(x - cx, y - cy) < threshold;
+                })?.dataset.id;
+            };
+
+            const start = (e) => {
+                e.preventDefault();
+                const pos = getPos(e);
+                const dot = getDotAt(pos.x, pos.y);
+                if (dot) {
+                    patternLock.active = true;
+                    addPoint(dot);
+                }
+            };
+
+            const move = (e) => {
+                if (!patternLock.active) return;
+                const pos = getPos(e);
+                const dot = getDotAt(pos.x, pos.y);
+                if (dot && !patternLock.points.includes(dot)) {
+                    addPoint(dot);
+                }
+                draw(pos);
+            };
+
+            const end = () => {
+                if (!patternLock.active) return;
+                patternLock.active = false;
+                handlePatternComplete();
+            };
+
+            patternLock.container.addEventListener('mousedown', start);
+            patternLock.container.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', end);
+
+            patternLock.container.addEventListener('touchstart', start);
+            patternLock.container.addEventListener('touchmove', move);
+            window.addEventListener('touchend', end);
+
+            // Startup check
+            const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            if (data.enabled && data.pattern) {
+                showLockScreen('unlock');
+            }
+        }
+
+        function addPoint(id) {
+            patternLock.points.push(id);
+            const dot = patternLock.dots.find(x => x.dataset.id === id);
+            dot.classList.add('active');
+        }
+
+        function draw(pos = null) {
+            const ctx = patternLock.ctx;
+            ctx.clearRect(0, 0, patternLock.canvas.width, patternLock.canvas.height);
+            if (patternLock.points.length === 0) return;
+
+            ctx.beginPath();
+            ctx.strokeStyle = currentTab === 'work' ? '#0f766e' : '#8b5cf6';
+            ctx.lineWidth = 4;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            patternLock.points.forEach((id, idx) => {
+                const dot = patternLock.dots.find(x => x.dataset.id === id);
+                const dRect = dot.getBoundingClientRect();
+                const cRect = patternLock.container.getBoundingClientRect();
+                const x = (dRect.left - cRect.left) + dRect.width / 2;
+                const y = (dRect.top - cRect.top) + dRect.height / 2;
+
+                if (idx === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            if (pos && patternLock.active) {
+                ctx.lineTo(pos.x, pos.y);
+            }
+            ctx.stroke();
+        }
+
+        function handlePatternComplete() {
+            if (patternLock.points.length < 3) {
+                resetPatternUI('At least 3 dots required');
+                return;
+            }
+
+            const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+
+            if (patternLock.isSetup) {
+                if (!patternLock.tempPattern) {
+                    patternLock.tempPattern = [...patternLock.points];
+                    resetPatternUI('Draw again to confirm');
+                } else {
+                    if (JSON.stringify(patternLock.tempPattern) === JSON.stringify(patternLock.points)) {
+                        data.pattern = patternLock.points;
+                        data.enabled = true;
+                        localStorage.setItem('habitFlowPattern', JSON.stringify(data));
+                        showToast('Lock Pattern saved');
+                        closePatternScreen();
+                        document.getElementById('patternToggle').checked = true;
+                    } else {
+                        patternLock.tempPattern = null;
+                        resetPatternUI('Patterns mismatched. Restart.');
+                    }
+                }
+            } else {
+                if (JSON.stringify(data.pattern) === JSON.stringify(patternLock.points)) {
+                    showToast('Unlocked');
+                    closePatternScreen();
+                } else {
+                    patternLock.dots.forEach(d => d.classList.add('error'));
+                    resetPatternUI('Incorrect pattern');
+                }
+            }
+        }
+
+        function resetPatternUI(msg) {
+            draw();
+            if (msg) document.getElementById('patternMessage').textContent = msg;
+
+            setTimeout(() => {
+                patternLock.points = [];
+                patternLock.dots.forEach(d => d.classList.remove('active', 'error'));
+                patternLock.ctx.clearRect(0, 0, patternLock.canvas.width, patternLock.canvas.height);
+                if (patternLock.isSetup && !patternLock.tempPattern) {
+                    document.getElementById('patternMessage').textContent = 'Define New Pattern';
+                } else if (!patternLock.tempPattern) {
+                    const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                    document.getElementById('patternMessage').textContent = data.enabled ? 'Unlock Pattern' : 'Define New Pattern';
+                }
+            }, 800);
+        }
+
+        function togglePatternLock() {
+            const toggle = document.getElementById('patternToggle');
+            const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+
+            if (toggle.checked) {
+                if (!data.pattern) {
+                    openPatternSetup();
+                    toggle.checked = false;
+                } else {
+                    data.enabled = true;
+                    localStorage.setItem('habitFlowPattern', JSON.stringify(data));
+                    showToast('Lock enabled');
+                }
+            } else {
+                data.enabled = false;
+                localStorage.setItem('habitFlowPattern', JSON.stringify(data));
+                showToast('Lock disabled');
+            }
+        }
+
+        function openPatternSetup() {
+            closeSettings();
+            patternLock.isSetup = true;
+            patternLock.tempPattern = null;
+            showLockScreen('setup');
+        }
+
+        function showLockScreen(mode) {
+            const screen = document.getElementById('lockScreen');
+            const msg = document.getElementById('patternMessage');
+            const subMsg = document.getElementById('patternSubMessage');
+            const cancelBtn = document.getElementById('cancelPatternBtn');
+            const icon = document.getElementById('lockIcon');
+
+            screen.classList.remove('hidden');
+            screen.classList.add('flex');
+
+            if (mode === 'setup') {
+                msg.textContent = 'Set New Pattern';
+                subMsg.textContent = 'Connect 3 or more dots';
+                cancelBtn.classList.remove('hidden');
+                icon.className = 'fa-solid fa-fingerprint';
+                patternLock.isSetup = true;
+            } else {
+                msg.textContent = 'Enter Lock Pattern';
+                subMsg.textContent = 'Draw sequence to unlock session';
+                cancelBtn.classList.add('hidden');
+                icon.className = 'fa-solid fa-lock';
+                patternLock.isSetup = false;
+            }
+
+            setTimeout(() => {
+                const rect = patternLock.container.getBoundingClientRect();
+                patternLock.canvas.width = rect.width;
+                patternLock.canvas.height = rect.height;
+            }, 100);
+        }
+
+        function closePatternScreen() {
+            document.getElementById('lockScreen').classList.add('hidden');
+            document.getElementById('lockScreen').classList.remove('flex');
+            patternLock.points = [];
+            patternLock.tempPattern = null;
+            patternLock.isSetup = false;
+            resetPatternUI('');
+        }
+
+        // --- Helper utils ---
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+
+</html>

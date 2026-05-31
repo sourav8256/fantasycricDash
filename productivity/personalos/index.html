@@ -1,0 +1,3255 @@
+<!-- 
+
+
+10 May
+Fix - process
+
+
+9 May --
+Making home screen also scrollable since the top is getting cropped out.
+
+9 May
+Settings screen has to be more mobile friendly
+
+
+9 May
+in the process application, i need some stats on how many are in day1 day 2 and day 3
+
+
+Serene Personal Operating System & App Drawer
+Android-style App Drawer containing three custom apps:
+1. STRENGTH (Work Habit tracker)
+2. Process (3-day Emotional Processing)
+3. Notes (Daily intentions & journaling notebook)
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Personal OS</title>
+    <!-- Tailwind CSS -->
+    <script>
+        // Suppress Tailwind production warning
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+            originalWarn.apply(console, args);
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Outfit for headers, Inter for UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #f8fafc;
+            --accent-color: #0f766e;
+            --accent-light: #ccfbf1;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --transition-speed: 0.4s;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        h1, h2, h3, .font-title {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Selection controls */
+        input, textarea, p, h1, h2, h3, span, div.selectable {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        /* Home Theme (Serene gradient) */
+        body.theme-home {
+            --bg-primary: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 40%, #faf5ff 100%);
+            --text-primary: #1e293b;
+        }
+
+        /* STRENGTH Theme (Slate & Teal) */
+        body.theme-work {
+            --bg-primary: #f1f5f9;
+            --accent-color: #0f766e;
+            --accent-light: #ccfbf1;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+        }
+
+        /* Process Theme (Beige & Lavender) */
+        body.theme-emotional {
+            --bg-primary: #faf8f5;
+            --accent-color: #8b5cf6;
+            --accent-light: #f5f3ff;
+            --card-bg: #ffffff;
+            --text-primary: #1e1b4b;
+            --text-secondary: #4f46e5;
+        }
+
+        /* Mental Theme (Slate & Teal) */
+        body.theme-mental {
+            --bg-primary: #f1f5f9;
+            --accent-color: #0f766e;
+            --accent-light: #ccfbf1;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+        }
+
+        /* Memorize Theme (Rose & Indigo) */
+        body.theme-memorize {
+            --bg-primary: #fff1f2;
+            --accent-color: #e11d48;
+            --accent-light: #ffe4e6;
+            --card-bg: #ffffff;
+            --text-primary: #4c1d95;
+            --text-secondary: #e11d48;
+        }
+
+        /* Mental Resilience Theme (Forest Green & Slate) */
+        body.theme-resilience {
+            --bg-primary: #f0fdf4;
+            --accent-color: #059669;
+            --accent-light: #dcfce7;
+            --card-bg: #ffffff;
+            --text-primary: #064e3b;
+            --text-secondary: #059669;
+        }
+
+        /* Intelligence Theme (Navy & Gold) */
+        body.theme-intelligence {
+            --bg-primary: #f8fafc;
+            --accent-color: #d97706;
+            --accent-light: #fef3c7;
+            --card-bg: #ffffff;
+            --text-primary: #1e3a8a;
+            --text-secondary: #d97706;
+        }
+
+        /* Exercise Theme (Orange & Indigo) */
+        body.theme-exercise {
+            --bg-primary: #fff7ed;
+            --accent-color: #ea580c;
+            --accent-light: #ffedd5;
+            --card-bg: #ffffff;
+            --text-primary: #431407;
+            --text-secondary: #ea580c;
+        }
+
+        /* Notes Theme (Warm Honey Notebook) */
+        body.theme-notes {
+            --bg-primary: #fdfbf7;
+            --accent-color: #d97706;
+            --accent-light: #fef3c7;
+            --card-bg: #ffffff;
+            --text-primary: #451a03;
+            --text-secondary: #b45309;
+        }
+
+        /* Practice Theme (Sky Blue) */
+        body.theme-practice {
+            --bg-primary: #f0f9ff;
+            --accent-color: #0284c7;
+            --accent-light: #e0f2fe;
+            --card-bg: #ffffff;
+            --text-primary: #0c4a6e;
+            --text-secondary: #0ea5e9;
+        }
+
+        /* Learning Theme (Indigo & Violet) */
+        body.theme-learning {
+            --bg-primary: #f5f3ff;
+            --accent-color: #6366f1;
+            --accent-light: #e0e7ff;
+            --card-bg: #ffffff;
+            --text-primary: #1e1b4b;
+            --text-secondary: #4f46e5;
+        }
+
+        /* Expenses Theme (Mint & Teal) */
+        body.theme-expenses {
+            --bg-primary: #f0fdfa;
+            --accent-color: #0d9488;
+            --accent-light: #ccfbf1;
+            --card-bg: #ffffff;
+            --text-primary: #115e59;
+            --text-secondary: #0d9488;
+        }
+
+        /* Serene Animations */
+        .app-screen {
+            transition: opacity var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1), transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .app-screen.hidden {
+            opacity: 0;
+            transform: scale(0.96);
+            pointer-events: none;
+            display: none !important;
+        }
+
+        .fade-slide-in {
+            animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glassmorphism Navigation */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* Cards */
+        .habit-card {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+        }
+
+        .habit-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 99px;
+        }
+
+        /* Pattern Lock Overlay */
+        #lockScreen {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .pattern-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            width: 220px;
+            margin: 0 auto;
+            touch-action: none;
+        }
+
+        .pattern-dot {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .pattern-dot.active {
+            background-color: var(--accent-light);
+            border-color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .pattern-dot.error {
+            background-color: #fef2f2;
+            border-color: #ef4444;
+        }
+
+        .pattern-dot::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .pattern-dot.active::after {
+            opacity: 1;
+        }
+
+        #patternCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* Day buttons */
+        .day-circle-btn {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .day-circle-btn:active {
+            transform: scale(0.85);
+        }
+
+        /* Toggle Button */
+        .toggle-switch-checkbox:checked + .toggle-switch-label {
+            background-color: var(--accent-color);
+        }
+
+        .toggle-switch-checkbox:checked + .toggle-switch-label::after {
+            left: 20px;
+        }
+    </style>
+</head>
+
+<body class="theme-home h-screen flex flex-col overflow-hidden antialiased">
+
+    <!-- Active App Header (Hidden when on Home Screen/App Drawer) -->
+    <header id="appHeader" class="hidden bg-white/45 backdrop-blur-md border-b border-gray-100 z-10 py-4 px-5 shrink-0 transition-all">
+        <div class="max-w-xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <button onclick="goHome()" class="text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100/60 transition-colors" title="Back to Home">
+                    <i class="fa-solid fa-arrow-left text-lg"></i>
+                </button>
+                <div class="flex items-center gap-2">
+                    <i id="headerIcon" class="fa-solid fa-seedling text-teal-600"></i>
+                    <h1 id="headerTitle" class="text-lg font-bold text-gray-800 tracking-tight">STRENGTH</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Screens Container -->
+    <main class="flex-1 overflow-y-auto px-4 pt-6 pb-24">
+
+        <!-- =================== HOME SCREEN / APP DRAWER =================== -->
+        <div id="appDrawer" class="app-screen max-w-xl mx-auto flex flex-col justify-between min-h-full py-8">
+            <!-- Typographic Clock Widget -->
+            <div class="text-center space-y-2 mt-6">
+                <span id="mindfulGreeting" class="text-[10px] font-bold uppercase tracking-widest text-gray-400 leading-none">A fresh start</span>
+                <div id="clockTime" class="text-6xl font-extrabold tracking-tight text-gray-800 font-title leading-tight">04:56 <span class="text-lg font-bold text-gray-400 uppercase">PM</span></div>
+                <div id="dateStrHeader" class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Saturday, May 9</div>
+                <div class="pt-2 flex justify-center items-center gap-2">
+                    <div class="h-[2px] w-8 bg-gray-200"></div>
+                    <p id="overallProgressText" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">0 OF 0 COMPLETED</p>
+                    <div class="h-[2px] w-8 bg-gray-200"></div>
+                </div>
+            </div>
+
+            <!-- Android-Style App Grid -->
+            <div class="grid grid-cols-3 gap-6 w-full max-w-sm mx-auto px-4 py-12 shrink-0">
+                <!-- App 1: STRENGTH (Work) -->
+                <button onclick="openApp('work')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-teal-100 group-hover:scale-105 transition-all duration-300 border border-teal-400/10">
+                        <i class="fa-solid fa-seedling"></i>
+                        <div id="badgeWork" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-teal-700 transition-colors uppercase tracking-wider text-[10px]">STRENGTH</span>
+                </button>
+
+                <!-- App 2: Process (Emotional) -->
+                <button onclick="openApp('emotional')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-purple-100 group-hover:scale-105 transition-all duration-300 border border-purple-400/10">
+                        <i class="fa-solid fa-wind"></i>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-purple-700 transition-colors uppercase tracking-wider text-[10px]">Process</span>
+                </button>
+
+                <!-- App 3: Notes (Diary/Objectives) -->
+                <button onclick="openApp('notes')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-amber-100 group-hover:scale-105 transition-all duration-300 border border-amber-400/10">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-amber-700 transition-colors uppercase tracking-wider text-[10px]">Notes</span>
+                </button>
+
+                <!-- App 4: Speeches (Practice) -->
+                <button onclick="openApp('practice')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-sky-100 group-hover:scale-105 transition-all duration-300 border border-sky-400/10">
+                        <i class="fa-solid fa-microphone"></i>
+                        <div id="badgePractice" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-sky-700 transition-colors uppercase tracking-wider text-[10px]">Speeches</span>
+                </button>
+
+                <!-- App 5: Mental STRENGTH -->
+                <button onclick="openApp('mental')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-teal-100 group-hover:scale-105 transition-all duration-300 border border-teal-400/10">
+                        <i class="fa-solid fa-brain"></i>
+                        <div id="badgeMental" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-teal-700 transition-colors uppercase tracking-wider text-[10px]">Mental STRENGTH</span>
+                </button>
+
+                <!-- App 6: Memorize -->
+                <button onclick="openApp('memorize')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-rose-100 group-hover:scale-105 transition-all duration-300 border border-rose-400/10">
+                        <i class="fa-solid fa-memory"></i>
+                        <div id="badgeMemorize" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-rose-700 transition-colors uppercase tracking-wider text-[10px]">Memorize</span>
+                </button>
+
+                <!-- App 7: Exercise -->
+                <button onclick="openApp('exercise')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-orange-100 group-hover:scale-105 transition-all duration-300 border border-orange-400/10">
+                        <i class="fa-solid fa-dumbbell"></i>
+                        <div id="badgeExercise" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-orange-700 transition-colors uppercase tracking-wider text-[10px]">Exercise</span>
+                </button>
+
+                <!-- App 8: Intelligence -->
+                <button onclick="openApp('intelligence')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-900 text-white flex items-center justify-center text-2xl shadow-lg shadow-blue-100 group-hover:scale-105 transition-all duration-300 border border-blue-400/10">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <div id="badgeIntelligence" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-blue-800 transition-colors uppercase tracking-wider text-[10px]">Intelligence</span>
+                </button>
+
+                <!-- App 9: Mental Resilience -->
+                <button onclick="openApp('resilience')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-emerald-100 group-hover:scale-105 transition-all duration-300 border border-emerald-400/10">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <div id="badgeResilience" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-emerald-700 transition-colors uppercase tracking-wider text-[10px]">Mental Resilience</span>
+                </button>
+
+                <!-- App 10: Learning -->
+                <button onclick="openApp('learning')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-indigo-100 group-hover:scale-105 transition-all duration-300 border border-indigo-400/10">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <div id="badgeLearning" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-indigo-700 transition-colors uppercase tracking-wider text-[10px]">Learning</span>
+                </button>
+
+                <!-- App 11: Expenses -->
+                <button onclick="openApp('expenses')" class="flex flex-col items-center gap-2 group focus:outline-none">
+                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-teal-100 group-hover:scale-105 transition-all duration-300 border border-teal-400/10">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <span class="text-xs font-bold text-gray-500 group-hover:text-teal-700 transition-colors uppercase tracking-wider text-[10px]">Expenses</span>
+                </button>
+            </div>
+
+            <!-- Settings Trigger from Home -->
+            <div class="flex justify-center shrink-0 mb-4">
+                <button onclick="openSettings()" class="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:shadow-sm transition-all shadow-sm">
+                    <i class="fa-solid fa-gear text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- =================== APP 1: STRENGTH SCREEN =================== -->
+        <div id="viewWork" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Quick Entry -->
+            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="workInput" placeholder="Nurture a STRENGTH habit (e.g. Coding, Reading)..."
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-gray-700 placeholder-gray-400 border border-transparent focus:border-teal-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addWorkHabit()"
+                        class="bg-teal-700 hover:bg-teal-800 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-teal-100">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Focus</span>
+                    </button>
+                </div>
+                <!-- Custom Days Target Picker -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active List -->
+            <div id="workList" class="space-y-4"></div>
+
+            <!-- Paused List -->
+            <div id="pausedWorkContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
+                        <span>Paused STRENGTH Activities</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="pausedWorkList" class="p-4 pt-0 space-y-4"></div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== APP 5: MENTAL STRENGTH SCREEN =================== -->
+        <div id="viewMental" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Quick Entry -->
+            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="mentalInput" placeholder="Nurture a Mental STRENGTH habit..."
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-gray-700 placeholder-gray-400 border border-transparent focus:border-teal-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addMentalHabit()"
+                        class="bg-teal-700 hover:bg-teal-800 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-teal-100">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Focus</span>
+                    </button>
+                </div>
+                <!-- Custom Days Target Picker -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active List -->
+            <div id="mentalList" class="space-y-4"></div>
+
+            <!-- Paused List -->
+            <div id="pausedMentalContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
+                        <span>Paused Mental STRENGTH Activities</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="pausedMentalList" class="p-4 pt-0 space-y-4"></div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== APP 6: MEMORIZE SCREEN =================== -->
+        <div id="viewMemorize" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Quick Entry -->
+            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="memorizeInput" placeholder="Add something to memorize..."
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-rose-950 placeholder-rose-300 border border-transparent focus:border-rose-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addMemorizeHabit()"
+                        class="bg-rose-600 hover:bg-rose-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-rose-100">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Focus</span>
+                    </button>
+                </div>
+                <!-- Custom Days Target Picker -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active List -->
+            <div id="memorizeList" class="space-y-4"></div>
+
+            <!-- Paused List -->
+            <div id="pausedMemorizeContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
+                        <span>Paused Memorize Activities</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="pausedMemorizeList" class="p-4 pt-0 space-y-4"></div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== APP 7: EXERCISE SCREEN =================== -->
+        <div id="viewExercise" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Quick Entry -->
+            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="exerciseInput" placeholder="Add an exercise habit..."
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-orange-950 placeholder-orange-300 border border-transparent focus:border-orange-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addExerciseHabit()"
+                        class="bg-orange-600 hover:bg-orange-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-orange-100">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Focus</span>
+                    </button>
+                </div>
+                <!-- Custom Days Target Picker -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active List -->
+            <div id="exerciseList" class="space-y-4"></div>
+
+            <!-- Paused List -->
+            <div id="pausedExerciseContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
+                        <span>Paused Exercise Activities</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="pausedExerciseList" class="p-4 pt-0 space-y-4"></div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== APP 9: MENTAL RESILIENCE SCREEN =================== -->
+        <div id="viewResilience" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Quick Entry -->
+            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="resilienceInput" placeholder="Add a mental resilience habit..."
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-emerald-950 placeholder-emerald-300 border border-transparent focus:border-emerald-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addResilienceHabit()"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-100">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Focus</span>
+                    </button>
+                </div>
+                <!-- Custom Days Target Picker -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active List -->
+            <div id="resilienceList" class="space-y-4"></div>
+
+            <!-- Paused List -->
+            <div id="pausedResilienceContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
+                        <span>Paused Resilience Activities</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="pausedResilienceList" class="p-4 pt-0 space-y-4"></div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== APP 10: LEARNING SCREEN =================== -->
+        <div id="viewLearning" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Quick Entry -->
+            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="learningInput" placeholder="Add a learning habit (e.g. Read 30 mins, Watch tutorial)..."
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-indigo-950 placeholder-indigo-300 border border-transparent focus:border-indigo-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addLearningHabit()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-indigo-100">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Focus</span>
+                    </button>
+                </div>
+                <!-- Custom Days Target Picker -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active List -->
+            <div id="learningList" class="space-y-4"></div>
+
+            <!-- Paused List -->
+            <div id="pausedLearningContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
+                        <span>Paused Learning Activities</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="pausedLearningList" class="p-4 pt-0 space-y-4"></div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== APP 8: INTELLIGENCE SCREEN =================== -->
+        <div id="viewIntelligence" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Quick Entry -->
+            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="intelligenceInput" placeholder="Add an intelligence habit..."
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-blue-950 placeholder-blue-300 border border-transparent focus:border-blue-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addIntelligenceHabit()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-blue-100">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Focus</span>
+                    </button>
+                </div>
+                <!-- Custom Days Target Picker -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active List -->
+            <div id="intelligenceList" class="space-y-4"></div>
+
+            <!-- Paused List -->
+            <div id="pausedIntelligenceContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
+                        <span>Paused Intelligence Activities</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="pausedIntelligenceList" class="p-4 pt-0 space-y-4"></div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== APP 2: PROCESS SCREEN =================== -->
+        <div id="viewEmotional" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Quick Entry -->
+            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="emotionalInput" placeholder="What are you holding space to process (e.g. Overthinking)?"
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-indigo-950 placeholder-indigo-300 border border-transparent focus:border-purple-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addEmotionalHabit()"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-purple-100">
+                        <i class="fa-solid fa-spa text-xs"></i>
+                        <span>Process</span>
+                    </button>
+                </div>
+                <p class="text-[10px] text-purple-400 font-medium px-1 flex items-center gap-1.5">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Emotional process habits are temporary and expire automatically after 3 days.</span>
+                </p>
+            </div>
+
+            <!-- Process Stats Widget -->
+            <div id="emotionalStats" class="flex justify-between items-center gap-2 bg-purple-50/20 border border-purple-100/40 px-4 py-2 rounded-xl text-[10px] font-bold text-purple-950">
+                <div class="flex items-center gap-1.5 flex-1 justify-center">
+                    <span class="text-purple-400 uppercase tracking-wider text-[9px]">Day 1:</span>
+                    <span id="day1Count" class="font-extrabold text-purple-900 text-xs">0</span>
+                </div>
+                <div class="h-3 w-[1px] bg-purple-100"></div>
+                <div class="flex items-center gap-1.5 flex-1 justify-center">
+                    <span class="text-purple-400 uppercase tracking-wider text-[9px]">Day 2:</span>
+                    <span id="day2Count" class="font-extrabold text-purple-900 text-xs">0</span>
+                </div>
+                <div class="h-3 w-[1px] bg-purple-100"></div>
+                <div class="flex items-center gap-1.5 flex-1 justify-center">
+                    <span class="text-purple-400 uppercase tracking-wider text-[9px]">Day 3:</span>
+                    <span id="day3Count" class="font-extrabold text-purple-900 text-xs">0</span>
+                </div>
+            </div>
+
+            <!-- Active List -->
+            <div id="emotionalList" class="space-y-4"></div>
+
+            <!-- Archived Collapsible -->
+            <div id="archivedEmotionalContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-purple-400 uppercase tracking-widest select-none">
+                        <span>Completed / Archived Processes</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="archivedEmotionalList" class="p-4 pt-0 space-y-4"></div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== APP 3: NOTES SCREEN =================== -->
+        <div id="viewNotes" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Rich notepad -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
+                <div class="flex justify-between items-center border-b border-gray-50 pb-3">
+                    <div class="space-y-0.5">
+                        <h3 class="font-bold text-base text-amber-950 tracking-tight">Journal & Intentions</h3>
+                        <p class="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Write without any pressure</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1 text-amber-400">
+                        <i class="fa-solid fa-feather text-lg"></i>
+                        <span id="notesLineCount" class="text-[10px] font-bold">0 lines</span>
+                    </div>
+                </div>
+                <textarea id="globalNotes" oninput="saveGlobalNotes()" onscroll="saveNotesScroll()" placeholder="Write down your daily intentions, deep reflections, or quiet thoughts here..." 
+                    class="w-full bg-amber-50/10 text-amber-950 border border-amber-100/30 rounded-2xl p-4 text-sm outline-none focus:border-amber-200 focus:bg-white transition-all h-[55vh] placeholder-amber-300/80 resize-none leading-relaxed"></textarea>
+            </div>
+        </div>
+
+        <!-- =================== APP 4: PRACTICE SCREEN =================== -->
+        <div id="viewPractice" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Quick Entry -->
+            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
+                <div class="flex gap-2.5">
+                    <input type="text" id="practiceInput" placeholder="Note a speech or concept to practice..."
+                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-sky-950 placeholder-sky-300 border border-transparent focus:border-sky-100 focus:bg-white text-sm transition-all"
+                        autocomplete="off">
+                    <button onclick="addPracticeItem()"
+                        class="bg-sky-600 hover:bg-sky-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-sky-100">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Focus</span>
+                    </button>
+                </div>
+                <!-- Custom Days Target Picker -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
+                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active List -->
+            <div id="practiceList" class="space-y-4"></div>
+
+            <!-- Paused List -->
+            <div id="pausedPracticeContainer" class="hidden">
+                <details class="group border border-gray-100 rounded-2xl bg-white/40">
+                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
+                        <span>Paused Speeches</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div id="pausedPracticeList" class="p-4 pt-0 space-y-4"></div>
+                </details>
+            </div>
+        </div>
+
+        <!-- =================== APP 11: EXPENSES SCREEN =================== -->
+        <div id="viewExpenses" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Expenses Overview Card -->
+            <div class="bg-gradient-to-br from-teal-500 to-teal-700 text-white rounded-3xl p-6 shadow-lg shadow-teal-100 flex flex-col justify-between mb-2">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-teal-100 uppercase tracking-widest font-bold">Total Balance</p>
+                        <h2 id="expensesTotalBalance" class="text-3xl font-extrabold font-title mt-1">₹0.00</h2>
+                    </div>
+                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Week Selection Card -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
+                <h3 class="font-bold text-sm text-teal-950 tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-week text-teal-600"></i>
+                    <span>Select Week</span>
+                </h3>
+                <div class="flex gap-2">
+                    <button onclick="selectQuickWeek(2)" id="quickWeek2Btn" class="flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-teal-200">2 Weeks Ago</button>
+                    <button onclick="selectQuickWeek(1)" id="quickWeek1Btn" class="flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-teal-200">Last Week</button>
+                    <button onclick="selectQuickWeek(0)" id="quickWeek0Btn" class="flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-teal-700 border-teal-700 text-white">This Week</button>
+                </div>
+            </div>
+
+            <!-- Weekly Allowance Settings Card -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
+                <h3 class="font-bold text-sm text-teal-950 tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-wallet text-teal-600"></i>
+                    <span>Weekly Settings & Allowance</span>
+                </h3>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Weekly Allowance</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="expensesAllowanceInput" placeholder="0.00" class="w-full px-3 py-2.5 bg-gray-50/50 rounded-xl text-xs border border-transparent focus:border-teal-100 focus:bg-white outline-none transition-all font-semibold">
+                        <button onclick="saveWeeklyAllowance()" class="bg-teal-700 hover:bg-teal-800 text-white px-5 rounded-xl font-medium text-xs transition-colors shadow-sm shadow-teal-100 shrink-0">Set Allowance</button>
+                    </div>
+                </div>
+                <!-- Remaining Allowance Progress Card -->
+                <div id="weeklyAllowanceProgressCard" class="bg-teal-50/30 border border-teal-100/50 rounded-2xl p-4 space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Allowance Spent</span>
+                        <span id="weeklyAllowanceText" class="font-bold text-gray-700">₹0.00 / ₹0.00</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                        <div id="weeklyAllowanceBar" class="bg-teal-600 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div id="weeklyAllowanceStatus" class="text-[10px] font-bold text-teal-700 hidden"></div>
+                </div>
+            </div>
+
+            <!-- Quick Add Transaction -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
+                <h3 class="font-bold text-sm text-teal-950 tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-plus text-teal-600" id="txFormIcon"></i>
+                    <span id="txFormTitle">Add Transaction</span>
+                </h3>
+                <div class="space-y-3">
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-3">
+                            <label class="w-24 text-xs font-bold text-gray-600">Lunch</label>
+                            <input type="number" id="txAmountLunch" step="0.01" placeholder="0.00" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-teal-100 focus:bg-white text-xs transition-all font-semibold">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="w-24 text-xs font-bold text-gray-600">Transport</label>
+                            <input type="number" id="txAmountTransport" step="0.01" placeholder="0.00" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-teal-100 focus:bg-white text-xs transition-all font-semibold">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="w-24 text-xs font-bold text-gray-600">Food</label>
+                            <input type="number" id="txAmountFood" step="0.01" placeholder="0.00" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-teal-100 focus:bg-white text-xs transition-all font-semibold">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="w-24 text-xs font-bold text-gray-600">Clothes</label>
+                            <input type="number" id="txAmountClothes" step="0.01" placeholder="0.00" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-teal-100 focus:bg-white text-xs transition-all font-semibold">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="w-24 text-xs font-bold text-gray-600">Barber</label>
+                            <input type="number" id="txAmountBarber" step="0.01" placeholder="0.00" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-teal-100 focus:bg-white text-xs transition-all font-semibold">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="w-24 text-xs font-bold text-gray-600">Other</label>
+                            <input type="number" id="txAmountOther" step="0.01" placeholder="0.00" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-teal-100 focus:bg-white text-xs transition-all font-semibold">
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="addTransaction()" id="txSubmitBtn" class="flex-1 bg-teal-700 hover:bg-teal-800 text-white py-2.5 rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-teal-100">
+                            <i class="fa-solid fa-plus" id="txSubmitIcon"></i>
+                            <span id="txSubmitText">Save Transaction</span>
+                        </button>
+                        <button onclick="cancelEditTransaction()" id="txCancelBtn" class="hidden px-4 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl font-medium text-xs transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-center">
+            <div class="w-16 h-16 bg-gray-100/60 rounded-full flex items-center justify-center mb-4 text-gray-400 text-xl">
+                <i class="fa-regular fa-compass"></i>
+            </div>
+            <h3 class="text-base font-semibold text-gray-700">A clean slate</h3>
+            <p class="text-xs text-gray-400 max-w-xs mt-1">Start by adding your first daily action inside this app.</p>
+        </div>
+    </main>
+
+    <!-- Edit View overlay (Sleek drawer-style full overlay) -->
+    <div id="editView" class="hidden fixed inset-0 bg-white z-50 flex flex-col md:max-w-xl md:mx-auto md:shadow-2xl fade-slide-in">
+        <header class="bg-gray-50 border-b border-gray-100 px-5 py-4 flex justify-between items-center shrink-0">
+            <h2 class="text-lg font-bold text-gray-800">Customize Detail</h2>
+            <button onclick="closeEditView()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </header>
+        <main class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="space-y-4">
+                <!-- Name -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Activity Name</label>
+                    <input type="text" id="editHabitName" class="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none border border-transparent focus:border-gray-200 focus:bg-white text-sm font-semibold text-gray-700 transition-all">
+                </div>
+                <!-- Category Select (Custom inline pill) -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Nature of Activity</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="setEditCategory('work')" id="editCategoryWork" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">STRENGTH (Work)</button>
+                        <button onclick="setEditCategory('emotional')" id="editCategoryEmotional" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Processing (Emotional)</button>
+                        <button onclick="setEditCategory('mental')" id="editCategoryMental" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Mental STRENGTH</button>
+                        <button onclick="setEditCategory('memorize')" id="editCategoryMemorize" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Memorize</button>
+                        <button onclick="setEditCategory('practice')" id="editCategoryPractice" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Speeches</button>
+                        <button onclick="setEditCategory('exercise')" id="editCategoryExercise" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Exercise</button>
+                        <button onclick="setEditCategory('intelligence')" id="editCategoryIntelligence" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Intelligence</button>
+                        <button onclick="setEditCategory('resilience')" id="editCategoryResilience" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Mental Resilience</button>
+                        <button onclick="setEditCategory('learning')" id="editCategoryLearning" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Learning</button>
+                    </div>
+                </div>
+                <!-- Target duration (only if work) -->
+                <div id="editTargetDaysContainer" class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Target Duration (Days)</label>
+                    <input type="number" id="editTargetDays" min="1" max="1000" class="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none border border-transparent focus:border-gray-200 focus:bg-white text-sm font-semibold text-gray-700 transition-all">
+                </div>
+                <!-- Description / Intent -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Intention / Notes</label>
+                    <textarea id="editHabitNotes" rows="5" placeholder="Set a quiet intention or log motivations..." class="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none border border-transparent focus:border-gray-200 focus:bg-white text-sm text-gray-600 transition-all resize-none"></textarea>
+                </div>
+            </div>
+            <!-- Actions -->
+            <div class="flex gap-3 pt-4">
+                <button onclick="deleteCurrentHabit()" class="flex-1 px-4 py-3 border border-red-100 hover:bg-red-50 text-red-500 font-semibold rounded-xl text-sm transition-colors">
+                    Remove Habit
+                </button>
+                <button onclick="saveEditChanges()" class="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-900 text-white font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-gray-200">
+                    Apply Changes
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Screen (Full-screen overlay for superior mobile-friendliness) -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-white z-50 flex flex-col md:max-w-xl md:mx-auto md:shadow-2xl fade-slide-in">
+        <header class="bg-gray-50 border-b border-gray-100 px-5 py-4 flex justify-between items-center shrink-0">
+            <h2 class="text-lg font-bold text-gray-800">Space Settings</h2>
+            <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </header>
+        <main class="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
+            <!-- Export -->
+            <div class="space-y-2">
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Backup Data</label>
+                <div class="relative">
+                    <textarea id="exportArea" readonly class="w-full h-24 p-2.5 text-[10px] font-mono bg-gray-50/50 border border-gray-100 rounded-xl focus:outline-none resize-none text-gray-500"></textarea>
+                    <button onclick="copyData()" id="copyBtn" class="absolute top-2 right-2 bg-white hover:bg-gray-50 text-gray-600 text-[10px] px-2.5 py-1 rounded-md border border-gray-100 font-bold transition-all flex items-center gap-1">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy JSON</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Import -->
+            <div class="space-y-3 border-t border-gray-100/50 pt-4">
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block">Restore Data</label>
+                <textarea id="importArea" placeholder="Paste your backup JSON text here..." class="w-full h-24 p-2.5 text-[10px] font-mono bg-white border border-gray-100 rounded-xl focus:outline-none focus:border-indigo-200 resize-none"></textarea>
+                <div class="flex justify-between items-center">
+                    <p class="text-[9px] text-amber-500 flex items-center gap-1 font-semibold">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Overwrites active session.
+                    </p>
+                    <button onclick="importData()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors">Import</button>
+                </div>
+            </div>
+
+            <!-- Security Pattern Lock -->
+            <div class="space-y-4 border-t border-gray-100/50 pt-4">
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block">Privacy Lock</label>
+                <div class="flex items-center justify-between p-3.5 bg-gray-50/50 border border-gray-100/30 rounded-xl">
+                    <div class="space-y-0.5">
+                        <h4 class="text-xs font-bold text-gray-800">Pattern Security</h4>
+                        <p class="text-[10px] text-gray-400 font-medium">Require passcode gesture on load</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="setPatternBtn" onclick="openPatternSetup()" class="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-100 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 transition-all">Configure</button>
+                        <button id="changePatternBtn" onclick="openPatternSetup()" class="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-100 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 transition-all hidden">Change</button>
+                        <!-- Custom Toggle switch -->
+                        <div class="flex items-center">
+                            <input type="checkbox" id="patternToggle" class="sr-only toggle-switch-checkbox" onchange="togglePatternLock()">
+                            <label for="patternToggle" class="toggle-switch-label relative inline-block w-9 h-5 bg-gray-200 rounded-full cursor-pointer transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Pattern Setup/Unlock Overlay -->
+    <div id="lockScreen" class="fixed inset-0 z-[100] hidden flex-col items-center justify-center p-6 bg-white/95 backdrop-blur-md">
+        <div class="max-w-xs w-full text-center space-y-6 relative">
+            <div class="space-y-2">
+                <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-xl mb-3 shadow-inner">
+                    <i class="fa-solid fa-lock" id="lockIcon"></i>
+                </div>
+                <h2 id="patternMessage" class="text-xl font-bold text-gray-800">Enter Pattern</h2>
+                <p id="patternSubMessage" class="text-xs text-gray-400">Draw your security passcode</p>
+            </div>
+
+            <div id="patternLockContainer" class="pattern-container relative">
+                <canvas id="patternCanvas"></canvas>
+                <div class="pattern-dot" data-id="1"></div>
+                <div class="pattern-dot" data-id="2"></div>
+                <div class="pattern-dot" data-id="3"></div>
+                <div class="pattern-dot" data-id="4"></div>
+                <div class="pattern-dot" data-id="5"></div>
+                <div class="pattern-dot" data-id="6"></div>
+                <div class="pattern-dot" data-id="7"></div>
+                <div class="pattern-dot" data-id="8"></div>
+                <div class="pattern-dot" data-id="9"></div>
+            </div>
+
+            <div id="patternActions" class="flex gap-4 pt-2">
+                <button id="cancelPatternBtn" onclick="closePatternScreen()" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-xs font-semibold transition-all hidden">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Floating Home Button in the bottom-left corner -->
+    <button id="floatingHomeBtn" onclick="goHome()" class="hidden fixed bottom-6 left-6 w-12 h-12 rounded-full bg-white/80 backdrop-blur-md border border-gray-100 shadow-lg flex items-center justify-center text-gray-400 hover:text-gray-600 active:scale-95 transition-all z-40" title="Home">
+        <i class="fa-solid fa-house text-sm"></i>
+    </button>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-12 left-1/2 transform -translate-x-1/2 translate-y-20 opacity-0 bg-gray-900/90 text-white px-5 py-3 rounded-full shadow-2xl transition-all duration-300 z-[60] flex items-center gap-2.5 text-xs font-medium pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-check-circle text-green-400"></i>
+        <span id="toastMsg">Action Successful</span>
+    </div>
+
+    <!-- ==================== JS CONTROLLERS ==================== -->
+    <script>
+        // State Management
+        let habits = [];
+        let currentActiveApp = 'home'; // 'home', 'work', 'emotional', 'notes'
+        let currentEditHabitId = null;
+        let selectedTargetDays = 21; 
+        let editSelectedCategory = 'work';
+
+        // Constants
+        const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        // DOM Elements
+        const clockTime = document.getElementById('clockTime');
+        const dateStrHeader = document.getElementById('dateStrHeader');
+        const mindfulGreeting = document.getElementById('mindfulGreeting');
+        const overallProgressText = document.getElementById('overallProgressText');
+        const emptyState = document.getElementById('emptyState');
+
+        // Lists
+        const workList = document.getElementById('workList');
+        const pausedWorkContainer = document.getElementById('pausedWorkContainer');
+        const pausedWorkList = document.getElementById('pausedWorkList');
+        const mentalList = document.getElementById('mentalList');
+        const pausedMentalContainer = document.getElementById('pausedMentalContainer');
+        const pausedMentalList = document.getElementById('pausedMentalList');
+        const practiceList = document.getElementById('practiceList');
+        const pausedPracticeContainer = document.getElementById('pausedPracticeContainer');
+        const pausedPracticeList = document.getElementById('pausedPracticeList');
+        const memorizeList = document.getElementById('memorizeList');
+        const pausedMemorizeContainer = document.getElementById('pausedMemorizeContainer');
+        const pausedMemorizeList = document.getElementById('pausedMemorizeList');
+        const exerciseList = document.getElementById('exerciseList');
+        const pausedExerciseContainer = document.getElementById('pausedExerciseContainer');
+        const pausedExerciseList = document.getElementById('pausedExerciseList');
+        const intelligenceList = document.getElementById('intelligenceList');
+        const pausedIntelligenceContainer = document.getElementById('pausedIntelligenceContainer');
+        const pausedIntelligenceList = document.getElementById('pausedIntelligenceList');
+        const resilienceList = document.getElementById('resilienceList');
+        const pausedResilienceContainer = document.getElementById('pausedResilienceContainer');
+        const pausedResilienceList = document.getElementById('pausedResilienceList');
+        const learningList = document.getElementById('learningList');
+        const pausedLearningContainer = document.getElementById('pausedLearningContainer');
+        const pausedLearningList = document.getElementById('pausedLearningList');
+        const emotionalList = document.getElementById('emotionalList');
+        const archivedEmotionalContainer = document.getElementById('archivedEmotionalContainer');
+        const archivedEmotionalList = document.getElementById('archivedEmotionalList');
+
+
+        // Modals & Overlays
+        const appHeader = document.getElementById('appHeader');
+        const editView = document.getElementById('editView');
+        const settingsModal = document.getElementById('settingsModal');
+        const exportArea = document.getElementById('exportArea');
+        const importArea = document.getElementById('importArea');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHabits();
+            updateHeader();
+            updateClock();
+            setInterval(updateClock, 1000);
+            goHome(); // Start on Home screen App Drawer
+            initPatternLock();
+            loadGlobalNotes();
+
+            // Keydown listeners for Enter on laptops and phones
+            document.getElementById('workInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addWorkHabit();
+                }
+            });
+            document.getElementById('mentalInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addMentalHabit();
+                }
+            });
+            document.getElementById('exerciseInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addExerciseHabit();
+                }
+            });
+            document.getElementById('intelligenceInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addIntelligenceHabit();
+                }
+            });
+            document.getElementById('resilienceInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addResilienceHabit();
+                }
+            });
+            document.getElementById('emotionalInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addEmotionalHabit();
+                }
+            });
+            document.getElementById('practiceInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addPracticeItem();
+                }
+            });
+            document.getElementById('memorizeInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addMemorizeHabit();
+                }
+            });
+            document.getElementById('learningInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addLearningHabit();
+                }
+            });
+        });
+
+        function loadHabits() {
+            const stored = localStorage.getItem('habitFlowData');
+            if (stored) {
+                try {
+                    habits = JSON.parse(stored);
+                    habits.forEach(h => {
+                        if (typeof h.isEnabled === 'undefined') h.isEnabled = true;
+                        if (typeof h.notes === 'undefined') h.notes = '';
+                        if (!h.category) {
+                            const emotionalKeywords = ['meditation', 'journal', 'no contact', 'reflection', 'walk', 'breathe', 'emotion', 'grief', 'anxiety', 'calm', 'grounding'];
+                            const isEmotional = emotionalKeywords.some(keyword => h.name.toLowerCase().includes(keyword));
+                            h.category = isEmotional ? 'emotional' : 'work';
+                        }
+                        if (typeof h.targetDays === 'undefined') h.targetDays = 21;
+                    });
+                } catch (e) {
+                    console.error("Failed to parse habit data", e);
+                    habits = [];
+                }
+            } else {
+                habits = [
+                    {
+                        id: Date.now() - 100000,
+                        name: 'Deep Work/Coding',
+                        created: new Date().toISOString(),
+                        isEnabled: true,
+                        completedDates: [],
+                        notes: 'Stay focused on primary work block for 90 minutes.',
+                        category: 'work',
+                        targetDays: 21
+                    },
+                    {
+                        id: Date.now() - 50000,
+                        name: 'Daily Grounding Walk',
+                        created: new Date().toISOString(),
+                        isEnabled: true,
+                        completedDates: [],
+                        notes: 'Quiet walk around the park with no headphones.',
+                        category: 'emotional',
+                        targetDays: 3
+                    }
+                ];
+                saveHabits();
+            }
+            render();
+        }
+
+        function saveHabits() {
+            localStorage.setItem('habitFlowData', JSON.stringify(habits));
+            updateOverallProgress();
+        }
+
+        // --- App Launcher Controller ---
+        function openApp(app) {
+            currentActiveApp = app;
+            
+            // Hide Home Screen
+            document.getElementById('appDrawer').classList.add('hidden');
+            
+            // Hide all apps first
+            document.getElementById('viewWork').classList.add('hidden');
+            document.getElementById('viewEmotional').classList.add('hidden');
+            document.getElementById('viewNotes').classList.add('hidden');
+            document.getElementById('viewPractice').classList.add('hidden');
+            document.getElementById('viewMental').classList.add('hidden');
+            document.getElementById('viewMemorize').classList.add('hidden');
+            document.getElementById('viewExercise').classList.add('hidden');
+            document.getElementById('viewIntelligence').classList.add('hidden');
+            document.getElementById('viewResilience').classList.add('hidden');
+            document.getElementById('viewLearning').classList.add('hidden');
+            document.getElementById('viewExpenses').classList.add('hidden');
+            
+            const body = document.body;
+
+            if (app === 'work') {
+                body.className = 'theme-work h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewWork').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'STRENGTH Activities';
+                document.getElementById('headerIcon').className = 'fa-solid fa-seedling text-teal-600';
+            } else if (app === 'emotional') {
+                body.className = 'theme-emotional h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewEmotional').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Emotional Processing';
+                document.getElementById('headerIcon').className = 'fa-solid fa-wind text-purple-600';
+            } else if (app === 'notes') {
+                body.className = 'theme-notes h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewNotes').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Notes & Reflection';
+                document.getElementById('headerIcon').className = 'fa-solid fa-book-open text-amber-500';
+                
+                const savedScroll = localStorage.getItem('habitFlowGlobalNotesScroll');
+                if (savedScroll) {
+                    setTimeout(() => {
+                        document.getElementById('globalNotes').scrollTop = parseInt(savedScroll, 10);
+                    }, 0);
+                }
+            } else if (app === 'practice') {
+                body.className = 'theme-practice h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewPractice').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Speech Practice';
+                document.getElementById('headerIcon').className = 'fa-solid fa-microphone text-sky-500';
+            } else if (app === 'memorize') {
+                body.className = 'theme-memorize h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewMemorize').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Memorize';
+                document.getElementById('headerIcon').className = 'fa-solid fa-memory text-rose-600';
+            } else if (app === 'exercise') {
+                body.className = 'theme-exercise h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewExercise').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Exercise';
+                document.getElementById('headerIcon').className = 'fa-solid fa-dumbbell text-orange-600';
+            } else if (app === 'intelligence') {
+                body.className = 'theme-intelligence h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewIntelligence').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Intelligence';
+                document.getElementById('headerIcon').className = 'fa-solid fa-lightbulb text-blue-600';
+            } else if (app === 'resilience') {
+                body.className = 'theme-resilience h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewResilience').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Mental Resilience';
+                document.getElementById('headerIcon').className = 'fa-solid fa-shield-halved text-emerald-600';
+            } else if (app === 'mental') {
+                body.className = 'theme-mental h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewMental').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Mental STRENGTH';
+                document.getElementById('headerIcon').className = 'fa-solid fa-brain text-teal-600';
+            } else if (app === 'learning') {
+                body.className = 'theme-learning h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewLearning').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Learning';
+                document.getElementById('headerIcon').className = 'fa-solid fa-graduation-cap text-indigo-600';
+            } else if (app === 'expenses') {
+                body.className = 'theme-expenses h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewExpenses').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerTitle').textContent = 'Expenses & Budget';
+                document.getElementById('headerIcon').className = 'fa-solid fa-wallet text-teal-600';
+                updateExpensesUi();
+            }
+            
+            // Show easy floating home button
+            document.getElementById('floatingHomeBtn').classList.remove('hidden');
+            render();
+        }
+
+        function goHome() {
+            currentActiveApp = 'home';
+            appHeader.classList.add('hidden');
+            document.getElementById('viewWork').classList.add('hidden');
+            document.getElementById('viewEmotional').classList.add('hidden');
+            document.getElementById('viewNotes').classList.add('hidden');
+            document.getElementById('viewPractice').classList.add('hidden');
+            document.getElementById('viewMental').classList.add('hidden');
+            document.getElementById('viewMemorize').classList.add('hidden');
+            document.getElementById('viewExercise').classList.add('hidden');
+            document.getElementById('viewIntelligence').classList.add('hidden');
+            document.getElementById('viewResilience').classList.add('hidden');
+            document.getElementById('viewLearning').classList.add('hidden');
+            document.getElementById('viewExpenses').classList.add('hidden');
+            
+            document.body.className = 'theme-home h-screen flex flex-col overflow-hidden antialiased';
+            document.getElementById('appDrawer').classList.remove('hidden');
+            
+            // Hide floating home button
+            document.getElementById('floatingHomeBtn').classList.add('hidden');
+            
+            updateHeader();
+        }
+
+        // Target Picker
+        function setTargetDaysSelect(btn, days) {
+            selectedTargetDays = days;
+            const buttons = document.querySelectorAll('.target-days-btn');
+            buttons.forEach(b => {
+                b.className = 'target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all';
+            });
+            btn.className = 'target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all';
+        }
+
+        // --- Operations: Add ---
+        function addWorkHabit() {
+            const input = document.getElementById('workInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'work',
+                targetDays: selectedTargetDays
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('STRENGTH activity added');
+        }
+
+        function addExerciseHabit() {
+            const input = document.getElementById('exerciseInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'exercise',
+                targetDays: selectedTargetDays
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('Exercise activity added');
+        }
+
+        function addIntelligenceHabit() {
+            const input = document.getElementById('intelligenceInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'intelligence',
+                targetDays: selectedTargetDays
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('Intelligence activity added');
+        }
+
+        function addResilienceHabit() {
+            const input = document.getElementById('resilienceInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'resilience',
+                targetDays: selectedTargetDays
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('Mental Resilience activity added');
+        }
+
+        function addLearningHabit() {
+            const input = document.getElementById('learningInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'learning',
+                targetDays: selectedTargetDays
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('Learning activity added');
+        }
+
+        function addMemorizeHabit() {
+            const input = document.getElementById('memorizeInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'memorize',
+                targetDays: selectedTargetDays
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('Memorize activity added');
+        }
+
+        function addMentalHabit() {
+            const input = document.getElementById('mentalInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'mental',
+                targetDays: selectedTargetDays
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('Mental STRENGTH activity added');
+        }
+
+        function addEmotionalHabit() {
+            const input = document.getElementById('emotionalInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'emotional',
+                targetDays: 3 
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('New 3-day emotional process started');
+        }
+
+        function addPracticeItem() {
+            const input = document.getElementById('practiceInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const h = {
+                id: Date.now(),
+                name: name,
+                created: new Date().toISOString(),
+                isEnabled: true,
+                completedDates: [],
+                notes: '',
+                category: 'practice',
+                targetDays: selectedTargetDays 
+            };
+
+            habits.unshift(h);
+            saveHabits();
+            render();
+            input.value = '';
+            showToast('Speeches activity added');
+        }
+
+        function autoSelectEmotionalDays() {
+            let hasChanged = false;
+            habits.forEach(h => {
+                if (h.category === 'emotional') {
+                    const currentDayIdx = getDaysSinceCreation(h);
+                    const dates = getEmotionalDates(h);
+                    const limit = Math.min(currentDayIdx, 2);
+                    for (let i = 0; i <= limit; i++) {
+                        const dateStr = dates[i];
+                        if (dateStr && !h.completedDates.includes(dateStr)) {
+                            h.completedDates.push(dateStr);
+                            hasChanged = true;
+                        }
+                    }
+                }
+            });
+            if (hasChanged) saveHabits();
+        }
+
+        // --- Rendering Logic ---
+        function render() {
+            autoSelectEmotionalDays();
+
+            // Sort: pending (not completed today) habits surface to top
+            const todayStr = getFormattedDate(0);
+            habits.sort((a, b) => {
+                const aDone = a.completedDates.includes(todayStr) ? 1 : 0;
+                const bDone = b.completedDates.includes(todayStr) ? 1 : 0;
+                return aDone - bDone;
+            });
+
+            workList.innerHTML = '';
+            pausedWorkList.innerHTML = '';
+            mentalList.innerHTML = '';
+            pausedMentalList.innerHTML = '';
+            memorizeList.innerHTML = '';
+            pausedMemorizeList.innerHTML = '';
+            exerciseList.innerHTML = '';
+            pausedExerciseList.innerHTML = '';
+            intelligenceList.innerHTML = '';
+            pausedIntelligenceList.innerHTML = '';
+            resilienceList.innerHTML = '';
+            pausedResilienceList.innerHTML = '';
+            emotionalList.innerHTML = '';
+            archivedEmotionalList.innerHTML = '';
+            practiceList.innerHTML = '';
+            pausedPracticeList.innerHTML = '';
+            learningList.innerHTML = '';
+            pausedLearningList.innerHTML = '';
+
+            let activeWorkCount = 0;
+            let activeMentalCount = 0;
+            let activeEmoCount = 0;
+            let pausedWorkCount = 0;
+            let pausedMentalCount = 0;
+            let archivedEmoCount = 0;
+            let activePracticeCount = 0;
+            let pausedPracticeCount = 0;
+            let activeMemorizeCount = 0;
+            let pausedMemorizeCount = 0;
+            let activeExerciseCount = 0;
+            let pausedExerciseCount = 0;
+            let activeIntelligenceCount = 0;
+            let pausedIntelligenceCount = 0;
+            let activeResilienceCount = 0;
+            let pausedResilienceCount = 0;
+            let activeLearningCount = 0;
+            let pausedLearningCount = 0;
+
+            let day1Active = 0;
+            let day2Active = 0;
+            let day3Active = 0;
+
+            habits.forEach(habit => {
+                if (habit.category === 'work') {
+                    if (habit.isEnabled) {
+                        activeWorkCount++;
+                        workList.appendChild(createWorkCard(habit));
+                    } else {
+                        pausedWorkCount++;
+                        pausedWorkList.appendChild(createWorkCard(habit));
+                    }
+                } else if (habit.category === 'mental') {
+                    if (habit.isEnabled) {
+                        activeMentalCount++;
+                        mentalList.appendChild(createWorkCard(habit));
+                    } else {
+                        pausedMentalCount++;
+                        pausedMentalList.appendChild(createWorkCard(habit));
+                    }
+                } else if (habit.category === 'emotional') {
+                    const days = getDaysSinceCreation(habit);
+                    if (days < 3) {
+                        activeEmoCount++;
+                        emotionalList.appendChild(createEmotionalCard(habit));
+
+                        if (days === 0) {
+                            day1Active++;
+                        } else if (days === 1) {
+                            day2Active++;
+                        } else if (days === 2) {
+                            day3Active++;
+                        }
+                    } else {
+                        archivedEmoCount++;
+                        archivedEmotionalList.appendChild(createEmotionalCard(habit, true));
+                    }
+                } else if (habit.category === 'memorize') {
+                    if (habit.isEnabled) {
+                        activeMemorizeCount++;
+                        memorizeList.appendChild(createWorkCard(habit));
+                    } else {
+                        pausedMemorizeCount++;
+                        pausedMemorizeList.appendChild(createWorkCard(habit));
+                    }
+                } else if (habit.category === 'exercise') {
+                    if (habit.isEnabled) {
+                        activeExerciseCount++;
+                        exerciseList.appendChild(createWorkCard(habit));
+                    } else {
+                        pausedExerciseCount++;
+                        pausedExerciseList.appendChild(createWorkCard(habit));
+                    }
+                } else if (habit.category === 'intelligence') {
+                    if (habit.isEnabled) {
+                        activeIntelligenceCount++;
+                        intelligenceList.appendChild(createWorkCard(habit));
+                    } else {
+                        pausedIntelligenceCount++;
+                        pausedIntelligenceList.appendChild(createWorkCard(habit));
+                    }
+                } else if (habit.category === 'resilience') {
+                    if (habit.isEnabled) {
+                        activeResilienceCount++;
+                        resilienceList.appendChild(createWorkCard(habit));
+                    } else {
+                        pausedResilienceCount++;
+                        pausedResilienceList.appendChild(createWorkCard(habit));
+                    }
+                } else if (habit.category === 'practice') {
+                    if (habit.isEnabled) {
+                        activePracticeCount++;
+                        practiceList.appendChild(createWorkCard(habit));
+                    } else {
+                        pausedPracticeCount++;
+                        pausedPracticeList.appendChild(createWorkCard(habit));
+                    }
+                } else if (habit.category === 'learning') {
+                    if (habit.isEnabled) {
+                        activeLearningCount++;
+                        learningList.appendChild(createWorkCard(habit));
+                    } else {
+                        pausedLearningCount++;
+                        pausedLearningList.appendChild(createWorkCard(habit));
+                    }
+                }
+            });
+
+            // Handle sections
+            if (pausedWorkCount > 0) pausedWorkContainer.classList.remove('hidden');
+            else pausedWorkContainer.classList.add('hidden');
+            
+            if (pausedMentalCount > 0) pausedMentalContainer.classList.remove('hidden');
+            else pausedMentalContainer.classList.add('hidden');
+
+            if (pausedPracticeCount > 0) pausedPracticeContainer.classList.remove('hidden');
+            else pausedPracticeContainer.classList.add('hidden');
+
+            if (pausedMemorizeCount > 0) pausedMemorizeContainer.classList.remove('hidden');
+            else pausedMemorizeContainer.classList.add('hidden');
+
+            if (pausedExerciseCount > 0) pausedExerciseContainer.classList.remove('hidden');
+            else pausedExerciseContainer.classList.add('hidden');
+
+            if (pausedIntelligenceCount > 0) pausedIntelligenceContainer.classList.remove('hidden');
+            else pausedIntelligenceContainer.classList.add('hidden');
+
+            if (pausedResilienceCount > 0) pausedResilienceContainer.classList.remove('hidden');
+            else pausedResilienceContainer.classList.add('hidden');
+
+            if (archivedEmoCount > 0) archivedEmotionalContainer.classList.remove('hidden');
+            else archivedEmotionalContainer.classList.add('hidden');
+
+            if (pausedLearningCount > 0) pausedLearningContainer.classList.remove('hidden');
+            else pausedLearningContainer.classList.add('hidden');
+
+            // Empty State
+            if (currentActiveApp !== 'home') {
+                const totalActive = (currentActiveApp === 'work') ? activeWorkCount : (currentActiveApp === 'mental' ? activeMentalCount : (currentActiveApp === 'memorize' ? activeMemorizeCount : (currentActiveApp === 'emotional' ? activeEmoCount : (currentActiveApp === 'practice' ? activePracticeCount : (currentActiveApp === 'exercise' ? activeExerciseCount : (currentActiveApp === 'intelligence' ? activeIntelligenceCount : (currentActiveApp === 'resilience' ? activeResilienceCount : (currentActiveApp === 'learning' ? activeLearningCount : 1))))))));
+                if (totalActive === 0) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                } else {
+                    emptyState.classList.add('hidden');
+                    emptyState.classList.remove('flex');
+                }
+            }
+
+            updateOverallProgress();
+
+            // Update Emotional Stats Elements
+            const d1Count = document.getElementById('day1Count');
+            const d2Count = document.getElementById('day2Count');
+            const d3Count = document.getElementById('day3Count');
+
+            if (d1Count) d1Count.textContent = day1Active;
+            if (d2Count) d2Count.textContent = day2Active;
+            if (d3Count) d3Count.textContent = day3Active;
+        }
+
+        // Work Card
+        function createWorkCard(habit) {
+            const streak = calculateStreak(habit);
+            const isCompletedToday = habit.completedDates.includes(getFormattedDate(0));
+            
+            const card = document.createElement('div');
+            card.className = `habit-card bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3.5 shadow-sm relative ${!habit.isEnabled ? 'opacity-65 grayscale bg-gray-50' : ''}`;
+            if (!habit.isEnabled) {
+                card.style.borderLeft = `4px solid #cbd5e1`;
+            } else if (!isCompletedToday) {
+                card.style.borderLeft = `4px solid #0d9488`;
+            }
+
+            let historyHtml = '';
+            for (let i = 4; i >= 0; i--) {
+                const dateStr = getFormattedDate(i);
+                const d = new Date();
+                d.setHours(d.getHours() - 6);
+                d.setDate(d.getDate() - i);
+                const isCompleted = habit.completedDates.includes(dateStr);
+                const initial = WEEK_DAYS[d.getDay()][0];
+
+                historyHtml += `
+                    <button onclick="toggleWorkDay(${habit.id}, '${dateStr}', this)" 
+                        class="day-circle-btn flex flex-col items-center gap-1 focus:outline-none" title="Toggle ${dateStr}">
+                        <span class="text-[9px] font-bold text-gray-400 uppercase">${initial}</span>
+                        <div class="w-4 h-4 rounded-full flex items-center justify-center text-[7px] transition-all hover:scale-110 ${isCompleted ? 'bg-teal-600 text-white shadow-sm shadow-teal-100' : 'bg-gray-100 text-gray-300 hover:bg-gray-200'}">
+                            <i class="fa-solid fa-check ${isCompleted ? '' : 'opacity-0'}"></i>
+                        </div>
+                    </button>
+                `;
+            }
+
+            const target = habit.targetDays || 21;
+            const progress = Math.min(100, Math.round((streak / target) * 100));
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start gap-3">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-base text-gray-800 tracking-tight leading-snug break-words ${!habit.isEnabled ? 'line-through text-gray-400' : ''}">${escapeHtml(habit.name)}</h3>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-xs font-semibold ${streak > 0 ? 'text-amber-500' : 'text-gray-400'} flex items-center gap-0.5">
+                                <i class="fa-solid fa-fire text-xs"></i> ${streak} day streak
+                            </span>
+                            <span class="text-[10px] text-gray-300">|</span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${streak}/${target} Days</span>
+                        </div>
+                    </div>
+                    <button onclick="toggleWorkToday(${habit.id}, this)" class="day-circle-btn w-10 h-10 rounded-full flex items-center justify-center border transition-all shrink-0 shadow-inner ${isCompletedToday ? 'bg-teal-600 border-teal-600 text-white shadow-teal-100' : 'bg-gray-50 border-gray-100 text-gray-300 hover:border-teal-200'}">
+                        <i class="fa-solid fa-check text-base"></i>
+                    </button>
+                </div>
+
+                <div class="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
+                    <div class="h-full bg-teal-600 transition-all duration-1000" style="width: ${progress}%"></div>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-gray-50/50">
+                    <div class="flex gap-2.5">
+                        ${historyHtml}
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button onclick="toggleHabitState(${habit.id})" class="text-gray-300 hover:text-teal-600 p-1.5 transition-colors" title="${habit.isEnabled ? 'Pause' : 'Resume'}">
+                            <i class="fa-solid ${habit.isEnabled ? 'fa-pause' : 'fa-play'} text-xs"></i>
+                        </button>
+                        <button onclick="showEditView(${habit.id})" class="text-gray-300 hover:text-teal-600 p-1.5 transition-colors" title="Customize">
+                            <i class="fa-solid fa-ellipsis-h text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+                ${habit.notes ? `<p class="text-[11px] text-gray-400 bg-gray-50/60 border border-gray-100/20 px-2 py-1.5 rounded-lg whitespace-pre-wrap">${escapeHtml(habit.notes)}</p>` : ''}
+            `;
+            return card;
+        }
+
+        // Emotional Card
+        function createEmotionalCard(habit, isArchived = false) {
+            const card = document.createElement('div');
+            card.className = `habit-card bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3.5 shadow-sm relative ${isArchived ? 'opacity-60 bg-gray-50/70' : ''}`;
+            card.style.borderLeft = `4px solid ${isArchived ? '#cbd5e1' : '#c084fc'}`;
+
+            const dates = getEmotionalDates(habit);
+            const currentDayIdx = getDaysSinceCreation(habit);
+            let pillHtml = '';
+            dates.forEach((dateStr, idx) => {
+                const isComp = habit.completedDates.includes(dateStr);
+                const isToday = !isArchived && idx === currentDayIdx;
+                pillHtml += `
+                    <button onclick="toggleEmotionalPill(${habit.id}, '${dateStr}', ${idx})" ${isArchived ? 'disabled' : ''}
+                        class="day-circle-btn flex-1 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center justify-center gap-1.5 ${isComp ? 'bg-sky-100 border-sky-200 text-sky-700 shadow-sm' : 'bg-sky-50/30 border-sky-100/60 text-sky-600 hover:bg-sky-50'}">
+                        <i class="fa-solid ${isComp ? 'fa-circle-check' : 'fa-circle-notch text-[10px]'}"></i>
+                        <span>Day ${idx + 1}</span>
+                    </button>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start gap-3">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-base text-purple-950 tracking-tight break-words">${escapeHtml(habit.name)}</h3>
+                        <p class="text-[10px] text-purple-400 font-semibold mt-0.5 flex items-center gap-1">
+                            <i class="fa-regular fa-calendar-alt"></i>
+                            <span>${isArchived ? 'Completed 3-Day Journey' : `Active: Day ${Math.min(3, Math.max(1, currentDayIdx + 1))} of 3`}</span>
+                        </p>
+                    </div>
+                    <button onclick="showEditView(${habit.id})" class="text-gray-300 hover:text-purple-600 p-1.5 transition-colors shrink-0">
+                        <i class="fa-solid fa-ellipsis-h text-sm"></i>
+                    </button>
+                </div>
+
+                <div class="flex gap-2">
+                    ${pillHtml}
+                </div>
+
+
+            `;
+            return card;
+        }
+
+        // Practice Card
+        function createPracticeCard(habit) {
+            const card = document.createElement('div');
+            card.className = `habit-card bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3.5 shadow-sm relative`;
+            card.style.borderLeft = `4px solid #38bdf8`;
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start gap-3">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-base text-sky-950 tracking-tight break-words">${escapeHtml(habit.name)}</h3>
+                    </div>
+                    <button onclick="deletePracticeItem(${habit.id})" class="text-gray-300 hover:text-red-500 p-1.5 transition-colors shrink-0">
+                        <i class="fa-solid fa-trash text-sm"></i>
+                    </button>
+                </div>
+            `;
+            return card;
+        }
+
+        function deletePracticeItem(id) {
+            habits = habits.filter(x => x.id !== id);
+            saveHabits();
+            render();
+            showToast('Note removed');
+        }
+
+        // --- Core Toggles ---
+        function toggleWorkToday(id, btn) {
+            const h = habits.find(x => x.id === id);
+            if (!h || !h.isEnabled) return;
+
+            const today = getFormattedDate(0);
+            const idx = h.completedDates.indexOf(today);
+
+            if (idx === -1) {
+                h.completedDates.push(today);
+                saveHabits();
+                triggerConfetti(btn);
+                showToast('Consistency is key.');
+            } else {
+                h.completedDates.splice(idx, 1);
+                saveHabits();
+                showToast('Check-in removed.');
+            }
+            render();
+        }
+
+        function toggleWorkDay(id, dateStr, btn) {
+            const h = habits.find(x => x.id === id);
+            if (!h || !h.isEnabled) return;
+
+            const idx = h.completedDates.indexOf(dateStr);
+            if (idx === -1) {
+                h.completedDates.push(dateStr);
+                saveHabits();
+                triggerConfetti(btn);
+                showToast('Consistency is key.');
+            } else {
+                h.completedDates.splice(idx, 1);
+                saveHabits();
+                showToast('Check-in removed.');
+            }
+            render();
+        }
+
+        function toggleEmotionalPill(id, dateStr, idx) {
+            const h = habits.find(x => x.id === id);
+            if (!h) return;
+
+            const completedIdx = h.completedDates.indexOf(dateStr);
+            if (completedIdx === -1) {
+                h.completedDates.push(dateStr);
+                saveHabits();
+                showToast(`Day ${idx + 1} processing complete.`);
+            } else {
+                h.completedDates.splice(completedIdx, 1);
+                saveHabits();
+            }
+            render();
+        }
+
+        function saveInlineReflection(id, textarea) {
+            const h = habits.find(x => x.id === id);
+            if (h) {
+                h.notes = textarea.value.trim();
+                localStorage.setItem('habitFlowData', JSON.stringify(habits));
+            }
+        }
+
+        function toggleHabitState(id) {
+            const h = habits.find(x => x.id === id);
+            if (!h) return;
+            h.isEnabled = !h.isEnabled;
+            saveHabits();
+            render();
+            showToast(h.isEnabled ? 'STRENGTH activity resumed' : 'STRENGTH activity paused');
+        }
+
+        // --- Date & Time Utilities ---
+        function getFormattedDate(offset = 0) {
+            const date = new Date();
+            date.setHours(date.getHours() - 6);
+            date.setDate(date.getDate() - offset);
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function getDaysSinceCreation(habit) {
+            const created = new Date(habit.created);
+            created.setHours(created.getHours() - 6);
+            created.setHours(0,0,0,0);
+            const today = new Date();
+            today.setHours(today.getHours() - 6);
+            today.setHours(0,0,0,0);
+
+            const diff = today - created;
+            return Math.floor(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function getEmotionalDates(habit) {
+            const dates = [];
+            const base = new Date(habit.created);
+            base.setHours(base.getHours() - 6);
+            for (let i = 0; i < 3; i++) {
+                const d = new Date(base);
+                d.setDate(d.getDate() + i);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                dates.push(`${year}-${month}-${day}`);
+            }
+            return dates;
+        }
+
+        function calculateStreak(habit) {
+            if (!habit.isEnabled) return 0;
+            let streak = 0;
+            let dayOffset = 0;
+            const todayStr = getFormattedDate(0);
+            const yesterdayStr = getFormattedDate(1);
+
+            if (!habit.completedDates.includes(todayStr) && !habit.completedDates.includes(yesterdayStr)) {
+                return 0;
+            }
+
+            if (habit.completedDates.includes(todayStr)) {
+                streak++;
+                dayOffset = 1;
+            } else if (habit.completedDates.includes(yesterdayStr)) {
+                streak++;
+                dayOffset = 2;
+            }
+
+            while (true) {
+                const dateStr = getFormattedDate(dayOffset);
+                if (habit.completedDates.includes(dateStr)) {
+                    streak++;
+                    dayOffset++;
+                } else {
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        function updateHeader() {
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            const date = new Date();
+            date.setHours(date.getHours() - 6);
+            dateStrHeader.textContent = date.toLocaleDateString('en-US', options);
+
+            // Supportive dynamic quotes
+            const hr = new Date().getHours();
+            if (hr >= 5 && hr < 12) mindfulGreeting.textContent = "A fresh start. Move at your own pace.";
+            else if (hr >= 12 && hr < 18) mindfulGreeting.textContent = "Take a deep breath. You are doing enough.";
+            else mindfulGreeting.textContent = "Rest is just as productive as action.";
+        }
+
+        function updateClock() {
+            const now = new Date();
+            let hrs = now.getHours();
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const ampm = hrs >= 12 ? 'PM' : 'AM';
+            hrs = hrs % 12 || 12;
+            clockTime.innerHTML = `${hrs}:${mins} <span class="text-lg font-bold text-gray-400 uppercase">${ampm}</span>`;
+        }
+
+        function updateOverallProgress() {
+            const today = getFormattedDate(0);
+            
+            // STRENGTH Progress
+            const activeWork = habits.filter(h => h.category === 'work' && h.isEnabled);
+            const completedWork = activeWork.filter(h => h.completedDates.includes(today)).length;
+            overallProgressText.textContent = `${completedWork} OF ${activeWork.length} STRENGTH COMPLETED`;
+            
+            const pendingWork = activeWork.length - completedWork;
+            const badgeWork = document.getElementById('badgeWork');
+            if (badgeWork) {
+                if (pendingWork > 0) {
+                    badgeWork.textContent = pendingWork;
+                    badgeWork.classList.remove('hidden');
+                } else {
+                    badgeWork.classList.add('hidden');
+                }
+            }
+
+            // Practice Progress
+            const activePractice = habits.filter(h => h.category === 'practice' && h.isEnabled);
+            const completedPractice = activePractice.filter(h => h.completedDates.includes(today)).length;
+            
+            const pendingPractice = activePractice.length - completedPractice;
+            const badgePractice = document.getElementById('badgePractice');
+            if (badgePractice) {
+                if (pendingPractice > 0) {
+                    badgePractice.textContent = pendingPractice;
+                    badgePractice.classList.remove('hidden');
+                } else {
+                    badgePractice.classList.add('hidden');
+                }
+            }
+
+            // Mental STRENGTH Progress
+            const activeMental = habits.filter(h => h.category === 'mental' && h.isEnabled);
+            const completedMental = activeMental.filter(h => h.completedDates.includes(today)).length;
+            
+            const pendingMental = activeMental.length - completedMental;
+            const badgeMental = document.getElementById('badgeMental');
+            if (badgeMental) {
+                if (pendingMental > 0) {
+                    badgeMental.textContent = pendingMental;
+                    badgeMental.classList.remove('hidden');
+                } else {
+                    badgeMental.classList.add('hidden');
+                }
+            }
+
+            // Memorize Progress
+            const activeMemorize = habits.filter(h => h.category === 'memorize' && h.isEnabled);
+            const completedMemorize = activeMemorize.filter(h => h.completedDates.includes(today)).length;
+            
+            const pendingMemorize = activeMemorize.length - completedMemorize;
+            const badgeMemorize = document.getElementById('badgeMemorize');
+            if (badgeMemorize) {
+                if (pendingMemorize > 0) {
+                    badgeMemorize.textContent = pendingMemorize;
+                    badgeMemorize.classList.remove('hidden');
+                } else {
+                    badgeMemorize.classList.add('hidden');
+                }
+            }
+
+            // Exercise Progress
+            const activeExerciseBadge = habits.filter(h => h.category === 'exercise' && h.isEnabled);
+            const completedExerciseBadge = activeExerciseBadge.filter(h => h.completedDates.includes(today)).length;
+            
+            const pendingExercise = activeExerciseBadge.length - completedExerciseBadge;
+            const badgeExercise = document.getElementById('badgeExercise');
+            if (badgeExercise) {
+                if (pendingExercise > 0) {
+                    badgeExercise.textContent = pendingExercise;
+                    badgeExercise.classList.remove('hidden');
+                } else {
+                    badgeExercise.classList.add('hidden');
+                }
+            }
+
+            // Intelligence Progress
+            const activeIntelligenceBadge = habits.filter(h => h.category === 'intelligence' && h.isEnabled);
+            const completedIntelligenceBadge = activeIntelligenceBadge.filter(h => h.completedDates.includes(today)).length;
+            
+            const pendingIntelligence = activeIntelligenceBadge.length - completedIntelligenceBadge;
+            const badgeIntelligence = document.getElementById('badgeIntelligence');
+            if (badgeIntelligence) {
+                if (pendingIntelligence > 0) {
+                    badgeIntelligence.textContent = pendingIntelligence;
+                    badgeIntelligence.classList.remove('hidden');
+                } else {
+                    badgeIntelligence.classList.add('hidden');
+                }
+            }
+
+            // Mental Resilience Progress
+            const activeResilienceBadge = habits.filter(h => h.category === 'resilience' && h.isEnabled);
+            const completedResilienceBadge = activeResilienceBadge.filter(h => h.completedDates.includes(today)).length;
+            
+            const pendingResilience = activeResilienceBadge.length - completedResilienceBadge;
+            const badgeResilience = document.getElementById('badgeResilience');
+            if (badgeResilience) {
+                if (pendingResilience > 0) {
+                    badgeResilience.textContent = pendingResilience;
+                    badgeResilience.classList.remove('hidden');
+                } else {
+                    badgeResilience.classList.add('hidden');
+                }
+            }
+
+            // Learning Progress
+            const activeLearningBadge = habits.filter(h => h.category === 'learning' && h.isEnabled);
+            const completedLearningBadge = activeLearningBadge.filter(h => h.completedDates.includes(today)).length;
+            
+            const pendingLearning = activeLearningBadge.length - completedLearningBadge;
+            const badgeLearning = document.getElementById('badgeLearning');
+            if (badgeLearning) {
+                if (pendingLearning > 0) {
+                    badgeLearning.textContent = pendingLearning;
+                    badgeLearning.classList.remove('hidden');
+                } else {
+                    badgeLearning.classList.add('hidden');
+                }
+            }
+        }
+
+        // --- Global Notes ---
+        function updateNotesLineCount() {
+            const val = document.getElementById('globalNotes').value;
+            const lines = val === '' ? 0 : val.split('\n').length;
+            document.getElementById('notesLineCount').textContent = `${lines} line${lines === 1 ? '' : 's'}`;
+        }
+
+        function loadGlobalNotes() {
+            const saved = localStorage.getItem('habitFlowGlobalNotes');
+            if (saved) document.getElementById('globalNotes').value = saved;
+            
+            const savedScroll = localStorage.getItem('habitFlowGlobalNotesScroll');
+            if (savedScroll) document.getElementById('globalNotes').scrollTop = parseInt(savedScroll, 10);
+            
+            updateNotesLineCount();
+        }
+
+        function saveGlobalNotes() {
+            const textarea = document.getElementById('globalNotes');
+            let val = textarea.value;
+            let linesArr = val.split('\n');
+            
+            if (linesArr.length > 500) {
+                const diff = linesArr.length - 500;
+                const removedText = linesArr.slice(0, diff).join('\n') + '\n';
+                
+                let selStart = textarea.selectionStart;
+                let selEnd = textarea.selectionEnd;
+                
+                val = linesArr.slice(-500).join('\n');
+                textarea.value = val;
+                
+                textarea.setSelectionRange(
+                    Math.max(0, selStart - removedText.length), 
+                    Math.max(0, selEnd - removedText.length)
+                );
+            }
+            
+            localStorage.setItem('habitFlowGlobalNotes', val);
+            updateNotesLineCount();
+        }
+
+        function saveNotesScroll() {
+            localStorage.setItem('habitFlowGlobalNotesScroll', document.getElementById('globalNotes').scrollTop);
+        }
+
+        // --- Edit Modal ---
+        function showEditView(id) {
+            const h = habits.find(x => x.id === id);
+            if (!h) return;
+
+            currentEditHabitId = id;
+            document.getElementById('editHabitName').value = h.name;
+            document.getElementById('editHabitNotes').value = h.notes || '';
+            document.getElementById('editTargetDays').value = h.targetDays || 21;
+            
+            editSelectedCategory = h.category || 'work';
+            setEditCategory(editSelectedCategory);
+            editView.classList.remove('hidden');
+        }
+
+        function closeEditView() {
+            editView.classList.add('hidden');
+            currentEditHabitId = null;
+        }
+
+        function setEditCategory(category) {
+            editSelectedCategory = category;
+            const btnWork = document.getElementById('editCategoryWork');
+            const btnEmo = document.getElementById('editCategoryEmotional');
+            const btnMental = document.getElementById('editCategoryMental');
+            const btnPractice = document.getElementById('editCategoryPractice');
+            const btnMemorize = document.getElementById('editCategoryMemorize');
+            const btnExercise = document.getElementById('editCategoryExercise');
+            const btnIntelligence = document.getElementById('editCategoryIntelligence');
+            const btnResilience = document.getElementById('editCategoryResilience');
+            const btnLearning = document.getElementById('editCategoryLearning');
+            const targetContainer = document.getElementById('editTargetDaysContainer');
+
+            btnWork.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+            btnEmo.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+            btnMental.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+            if(btnPractice) btnPractice.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+            if(btnMemorize) btnMemorize.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+            if(btnExercise) btnExercise.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+            if(btnIntelligence) btnIntelligence.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+            if(btnResilience) btnResilience.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+            if(btnLearning) btnLearning.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+
+            if (category === 'work') {
+                btnWork.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-teal-50 border-teal-500 text-teal-800';
+                targetContainer.classList.remove('hidden');
+            } else if (category === 'mental') {
+                btnMental.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-teal-50 border-teal-500 text-teal-800';
+                targetContainer.classList.remove('hidden');
+            } else if (category === 'memorize') {
+                if(btnMemorize) btnMemorize.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-rose-50 border-rose-500 text-rose-800';
+                targetContainer.classList.remove('hidden');
+            } else if (category === 'practice') {
+                if(btnPractice) btnPractice.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-sky-50 border-sky-500 text-sky-800';
+                targetContainer.classList.remove('hidden');
+            } else if (category === 'exercise') {
+                if(btnExercise) btnExercise.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-orange-50 border-orange-500 text-orange-800';
+                targetContainer.classList.remove('hidden');
+            } else if (category === 'intelligence') {
+                if(btnIntelligence) btnIntelligence.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-blue-50 border-blue-500 text-blue-800';
+                targetContainer.classList.remove('hidden');
+            } else if (category === 'resilience') {
+                if(btnResilience) btnResilience.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-emerald-50 border-emerald-500 text-emerald-800';
+                targetContainer.classList.remove('hidden');
+            } else if (category === 'learning') {
+                if(btnLearning) btnLearning.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-indigo-50 border-indigo-500 text-indigo-800';
+                targetContainer.classList.remove('hidden');
+            } else {
+                btnEmo.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-purple-50 border-purple-500 text-purple-800';
+                targetContainer.classList.add('hidden');
+            }
+        }
+
+        function saveEditChanges() {
+            if (!currentEditHabitId) return;
+            const h = habits.find(x => x.id === currentEditHabitId);
+            if (!h) return;
+
+            const name = document.getElementById('editHabitName').value.trim();
+            if (!name) {
+                showToast('Name cannot be empty', true);
+                return;
+            }
+
+            h.name = name;
+            h.notes = document.getElementById('editHabitNotes').value.trim();
+            h.category = editSelectedCategory;
+            if (editSelectedCategory === 'work' || editSelectedCategory === 'mental' || editSelectedCategory === 'practice' || editSelectedCategory === 'memorize' || editSelectedCategory === 'exercise' || editSelectedCategory === 'intelligence' || editSelectedCategory === 'resilience' || editSelectedCategory === 'learning') {
+                h.targetDays = parseInt(document.getElementById('editTargetDays').value) || 21;
+            }
+
+            saveHabits();
+            render();
+            closeEditView();
+            showToast('Changes applied');
+        }
+
+        function deleteCurrentHabit() {
+            if (!currentEditHabitId) return;
+            habits = habits.filter(x => x.id !== currentEditHabitId);
+            saveHabits();
+            render();
+            closeEditView();
+            showToast('Activity removed');
+        }
+
+        // --- Settings & Data ---
+        function openSettings() {
+            const backupData = {
+                version: 2,
+                habits: habits,
+                notes: localStorage.getItem('habitFlowGlobalNotes') || ''
+            };
+            exportArea.value = JSON.stringify(backupData, null, 2);
+            importArea.value = '';
+
+            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            const patternToggle = document.getElementById('patternToggle');
+            const setPatternBtn = document.getElementById('setPatternBtn');
+            const changePatternBtn = document.getElementById('changePatternBtn');
+
+            patternToggle.checked = patternData.enabled || false;
+
+            if (patternData.pattern) {
+                setPatternBtn.classList.add('hidden');
+                changePatternBtn.classList.remove('hidden');
+            } else {
+                setPatternBtn.classList.remove('hidden');
+                changePatternBtn.classList.add('hidden');
+                patternToggle.checked = false;
+            }
+
+            settingsModal.classList.remove('hidden');
+            settingsModal.classList.add('flex');
+        }
+
+        function closeSettings() {
+            settingsModal.classList.add('hidden');
+            settingsModal.classList.remove('flex');
+        }
+
+        function copyData() {
+            exportArea.select();
+            document.execCommand('copy');
+
+            const origHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Copied!</span>';
+            copyBtn.className = 'absolute top-2 right-2 bg-green-50 hover:bg-green-100 text-green-700 text-[10px] px-2.5 py-1 rounded-md border border-green-200 font-bold transition-all';
+
+            setTimeout(() => {
+                copyBtn.innerHTML = origHtml;
+                copyBtn.className = 'absolute top-2 right-2 bg-white hover:bg-gray-50 text-gray-600 text-[10px] px-2.5 py-1 rounded-md border border-gray-100 font-bold transition-all';
+            }, 2000);
+
+            showToast('JSON Copied');
+        }
+
+        function importData() {
+            const raw = importArea.value.trim();
+            if (!raw) return;
+
+            try {
+                const parsed = JSON.parse(raw);
+                let importedHabits = [];
+                let importedNotes = null;
+
+                if (Array.isArray(parsed)) {
+                    // Legacy habits array format
+                    importedHabits = parsed;
+                } else if (parsed && typeof parsed === 'object') {
+                    // New unified backup format
+                    if (Array.isArray(parsed.habits)) {
+                        importedHabits = parsed.habits;
+                        if (typeof parsed.notes === 'string') {
+                            importedNotes = parsed.notes;
+                        }
+                    } else {
+                        throw new Error();
+                    }
+                } else {
+                    throw new Error();
+                }
+
+                // Verify valid habits
+                const valid = importedHabits.every(x => x.id && x.name && Array.isArray(x.completedDates));
+                if (!valid) throw new Error();
+
+                // Apply imported habits
+                habits = importedHabits;
+                saveHabits();
+
+                // Apply imported notes if present
+                if (importedNotes !== null) {
+                    localStorage.setItem('habitFlowGlobalNotes', importedNotes);
+                    loadGlobalNotes();
+                }
+
+                render();
+                closeSettings();
+                showToast('Import successful');
+            } catch(e) {
+                showToast('Invalid session JSON format', true);
+            }
+        }
+
+        // --- Toasts ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = msg;
+            toastIcon.className = isError ? 'fa-solid fa-triangle-exclamation text-red-400' : 'fa-solid fa-check-circle text-teal-400';
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- Confetti FX ---
+        function triggerConfetti(btn) {
+            const rect = btn.getBoundingClientRect();
+            const center = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+            for (let i = 0; i < 20; i++) {
+                createConfettiParticle(center.x, center.y);
+            }
+        }
+
+        function createConfettiParticle(x, y) {
+            const colors = ['#0d9488', '#0f766e', '#8b5cf6', '#a78bfa', '#f59e0b'];
+            const p = document.createElement('div');
+            p.className = 'confetti rounded-full';
+            document.body.appendChild(p);
+
+            p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            p.style.left = x + 'px';
+            p.style.top = y + 'px';
+
+            const destX = (Math.random() - 0.5) * 120;
+            const destY = (Math.random() - 0.5) * 120 - 40;
+            const rot = Math.random() * 360;
+
+            const anim = p.animate([
+                { transform: 'translate(0, 0) rotate(0deg) scale(1)', opacity: 1 },
+                { transform: `translate(${destX}px, ${destY}px) rotate(${rot}deg) scale(0)`, opacity: 0 }
+            ], {
+                duration: 600 + Math.random() * 400,
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards'
+            });
+            anim.onfinish = () => p.remove();
+        }
+
+        // --- Pattern Lock ---
+        let patternLock = {
+            active: false,
+            points: [],
+            isSetup: false,
+            tempPattern: null,
+            canvas: null,
+            ctx: null,
+            container: null,
+            dots: []
+        };
+
+        function initPatternLock() {
+            patternLock.canvas = document.getElementById('patternCanvas');
+            patternLock.ctx = patternLock.canvas.getContext('2d');
+            patternLock.container = document.getElementById('patternLockContainer');
+            patternLock.dots = Array.from(document.querySelectorAll('.pattern-dot'));
+
+            const resize = () => {
+                const rect = patternLock.container.getBoundingClientRect();
+                patternLock.canvas.width = rect.width;
+                patternLock.canvas.height = rect.height;
+            };
+            window.addEventListener('resize', resize);
+            resize();
+
+            const privacyBlur = () => {
+                const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                if (data.enabled && data.pattern) {
+                    showLockScreen('unlock');
+                }
+            };
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') privacyBlur();
+            });
+            window.addEventListener('blur', privacyBlur);
+
+            const getPos = (e) => {
+                const rect = patternLock.container.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - rect.left, y: clientY - rect.top };
+            };
+
+            const getDotAt = (x, y) => {
+                const threshold = 25;
+                return patternLock.dots.find(dot => {
+                    const dRect = dot.getBoundingClientRect();
+                    const cRect = patternLock.container.getBoundingClientRect();
+                    const cx = (dRect.left - cRect.left) + dRect.width / 2;
+                    const cy = (dRect.top - cRect.top) + dRect.height / 2;
+                    return Math.hypot(x - cx, y - cy) < threshold;
+                })?.dataset.id;
+            };
+
+            const start = (e) => {
+                e.preventDefault();
+                const pos = getPos(e);
+                const dot = getDotAt(pos.x, pos.y);
+                if (dot) {
+                    patternLock.active = true;
+                    addPoint(dot);
+                }
+            };
+
+            const move = (e) => {
+                if (!patternLock.active) return;
+                const pos = getPos(e);
+                const dot = getDotAt(pos.x, pos.y);
+                if (dot && !patternLock.points.includes(dot)) {
+                    addPoint(dot);
+                }
+                draw(pos);
+            };
+
+            const end = () => {
+                if (!patternLock.active) return;
+                patternLock.active = false;
+                handlePatternComplete();
+            };
+
+            patternLock.container.addEventListener('mousedown', start);
+            patternLock.container.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', end);
+
+            patternLock.container.addEventListener('touchstart', start);
+            patternLock.container.addEventListener('touchmove', move);
+            window.addEventListener('touchend', end);
+
+            const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            if (data.enabled && data.pattern) {
+                showLockScreen('unlock');
+            }
+        }
+
+        function addPoint(id) {
+            patternLock.points.push(id);
+            const dot = patternLock.dots.find(x => x.dataset.id === id);
+            dot.classList.add('active');
+        }
+
+        function draw(pos = null) {
+            const ctx = patternLock.ctx;
+            ctx.clearRect(0, 0, patternLock.canvas.width, patternLock.canvas.height);
+            if (patternLock.points.length === 0) return;
+
+            ctx.beginPath();
+            ctx.strokeStyle = currentActiveApp === 'work' ? '#0f766e' : (currentActiveApp === 'emotional' ? '#8b5cf6' : '#4f46e5');
+            ctx.lineWidth = 4;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            patternLock.points.forEach((id, idx) => {
+                const dot = patternLock.dots.find(x => x.dataset.id === id);
+                const dRect = dot.getBoundingClientRect();
+                const cRect = patternLock.container.getBoundingClientRect();
+                const x = (dRect.left - cRect.left) + dRect.width / 2;
+                const y = (dRect.top - cRect.top) + dRect.height / 2;
+
+                if (idx === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            if (pos && patternLock.active) {
+                ctx.lineTo(pos.x, pos.y);
+            }
+            ctx.stroke();
+        }
+
+        function handlePatternComplete() {
+            if (patternLock.points.length < 3) {
+                resetPatternUI('At least 3 dots required');
+                return;
+            }
+
+            const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+
+            if (patternLock.isSetup) {
+                if (!patternLock.tempPattern) {
+                    patternLock.tempPattern = [...patternLock.points];
+                    resetPatternUI('Draw again to confirm');
+                } else {
+                    if (JSON.stringify(patternLock.tempPattern) === JSON.stringify(patternLock.points)) {
+                        data.pattern = patternLock.points;
+                        data.enabled = true;
+                        localStorage.setItem('habitFlowPattern', JSON.stringify(data));
+                        showToast('Lock Pattern saved');
+                        closePatternScreen();
+                        document.getElementById('patternToggle').checked = true;
+                    } else {
+                        patternLock.tempPattern = null;
+                        resetPatternUI('Patterns mismatched. Restart.');
+                    }
+                }
+            } else {
+                if (JSON.stringify(data.pattern) === JSON.stringify(patternLock.points)) {
+                    showToast('Unlocked');
+                    closePatternScreen();
+                } else {
+                    patternLock.dots.forEach(d => d.classList.add('error'));
+                    resetPatternUI('Incorrect pattern');
+                }
+            }
+        }
+
+        function resetPatternUI(msg) {
+            draw();
+            if (msg) document.getElementById('patternMessage').textContent = msg;
+
+            setTimeout(() => {
+                patternLock.points = [];
+                patternLock.dots.forEach(d => d.classList.remove('active', 'error'));
+                patternLock.ctx.clearRect(0, 0, patternLock.canvas.width, patternLock.canvas.height);
+                if (patternLock.isSetup && !patternLock.tempPattern) {
+                    document.getElementById('patternMessage').textContent = 'Define New Pattern';
+                } else if (!patternLock.tempPattern) {
+                    const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                    document.getElementById('patternMessage').textContent = data.enabled ? 'Unlock Pattern' : 'Define New Pattern';
+                }
+            }, 800);
+        }
+
+        function togglePatternLock() {
+            const toggle = document.getElementById('patternToggle');
+            const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+
+            if (toggle.checked) {
+                if (!data.pattern) {
+                    openPatternSetup();
+                    toggle.checked = false;
+                } else {
+                    data.enabled = true;
+                    localStorage.setItem('habitFlowPattern', JSON.stringify(data));
+                    showToast('Lock enabled');
+                }
+            } else {
+                data.enabled = false;
+                localStorage.setItem('habitFlowPattern', JSON.stringify(data));
+                showToast('Lock disabled');
+            }
+        }
+
+        function openPatternSetup() {
+            closeSettings();
+            patternLock.isSetup = true;
+            patternLock.tempPattern = null;
+            showLockScreen('setup');
+        }
+
+        function showLockScreen(mode) {
+            const screen = document.getElementById('lockScreen');
+            const msg = document.getElementById('patternMessage');
+            const subMsg = document.getElementById('patternSubMessage');
+            const cancelBtn = document.getElementById('cancelPatternBtn');
+            const icon = document.getElementById('lockIcon');
+
+            screen.classList.remove('hidden');
+            screen.classList.add('flex');
+
+            if (mode === 'setup') {
+                msg.textContent = 'Set New Pattern';
+                subMsg.textContent = 'Connect 3 or more dots';
+                cancelBtn.classList.remove('hidden');
+                icon.className = 'fa-solid fa-fingerprint';
+                patternLock.isSetup = true;
+            } else {
+                msg.textContent = 'Enter Lock Pattern';
+                subMsg.textContent = 'Draw sequence to unlock session';
+                cancelBtn.classList.add('hidden');
+                icon.className = 'fa-solid fa-lock';
+                patternLock.isSetup = false;
+            }
+
+            setTimeout(() => {
+                const rect = patternLock.container.getBoundingClientRect();
+                patternLock.canvas.width = rect.width;
+                patternLock.canvas.height = rect.height;
+            }, 100);
+        }
+
+        function closePatternScreen() {
+            document.getElementById('lockScreen').classList.add('hidden');
+            document.getElementById('lockScreen').classList.remove('flex');
+            patternLock.points = [];
+            patternLock.tempPattern = null;
+            patternLock.isSetup = false;
+            resetPatternUI('');
+        }
+
+        // --- Helper utils ---
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // =================== EXPENSES APP LOGIC ===================
+        let expensesData = JSON.parse(localStorage.getItem('expensesAppData')) || { transactions: [], allowances: {} };
+        if (!expensesData.allowances) expensesData.allowances = {};
+        let activeTxType = 'expense';
+        let activeExpensesWeek = '';
+        let editingTxId = null;
+        function loadTxWeekAmounts() {
+            const targetWeek = activeExpensesWeek || getISOWeek(new Date());
+
+            const categories = ['Lunch', 'Transport', 'Food', 'Clothes', 'Barber', 'Other'];
+            
+            const wTxs = expensesData.transactions.filter(t => {
+                const tWeek = t.week || (t.date ? getISOWeek(t.date) : '');
+                return tWeek === targetWeek && t.type === 'expense';
+            });
+
+            categories.forEach(cat => {
+                const input = document.getElementById(`txAmount${cat}`);
+                if (input) {
+                    const match = wTxs.find(t => t.category === cat || t.desc === cat);
+                    input.value = match ? match.amount : '';
+                }
+            });
+        }
+        window.loadTxWeekAmounts = loadTxWeekAmounts;
+
+        function getISOWeek(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '';
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+        }
+
+        // Initialize default dates when expenses view opens
+        function initExpensesDates() {
+            if (!activeExpensesWeek) {
+                const todayStr = new Date().toISOString().split('T')[0];
+                activeExpensesWeek = getISOWeek(todayStr);
+            }
+        }
+
+        function changeActiveWeek() {
+            updateExpensesUi();
+        }
+
+        function selectQuickWeek(offset) {
+            const date = new Date();
+            date.setDate(date.getDate() - (offset * 7));
+            activeExpensesWeek = getISOWeek(date.toISOString().split('T')[0]);
+            updateExpensesUi();
+        }
+
+        function getWeeklyAllowance(activeWeek) {
+            if (expensesData.allowances[activeWeek] !== undefined && expensesData.allowances[activeWeek] > 0) {
+                return expensesData.allowances[activeWeek];
+            }
+            let date = new Date();
+            const parts = activeWeek.split('-W');
+            if (parts.length === 2) {
+                const year = parseInt(parts[0], 10);
+                const week = parseInt(parts[1], 10);
+                date = new Date(year, 0, 1 + (week - 1) * 7 + 3);
+            }
+            for (let i = 1; i <= 52; i++) {
+                date.setDate(date.getDate() - 7);
+                const prevWeekStr = getISOWeek(date.toISOString().split('T')[0]);
+                if (expensesData.allowances[prevWeekStr] !== undefined && expensesData.allowances[prevWeekStr] > 0) {
+                    return expensesData.allowances[prevWeekStr];
+                }
+            }
+            return 0;
+        }
+
+        function calculateRollover(activeWeek) {
+            let rollover = 0;
+            const transactions = expensesData.transactions;
+            const weeksSet = new Set();
+            transactions.forEach(t => {
+                const tWeek = t.week || (t.date ? getISOWeek(t.date) : '');
+                if (tWeek) weeksSet.add(tWeek);
+            });
+            Object.keys(expensesData.allowances).forEach(w => weeksSet.add(w));
+            
+            const pastWeeks = Array.from(weeksSet).filter(w => w < activeWeek).sort();
+            pastWeeks.forEach(w => {
+                const wAllowance = getWeeklyAllowance(w);
+                const wTxs = transactions.filter(t => {
+                    const tWeek = t.week || (t.date ? getISOWeek(t.date) : '');
+                    return tWeek === w;
+                });
+                const wIncome = wTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+                const wExpenses = wTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+                rollover += (wAllowance + wIncome - wExpenses);
+            });
+            return rollover;
+        }
+
+
+
+        function addTransaction() {
+            const categories = ['Lunch', 'Transport', 'Food', 'Clothes', 'Barber', 'Other'];
+            
+            const targetWeek = activeExpensesWeek || getISOWeek(new Date());
+
+            let updatedCount = 0;
+            let addedCount = 0;
+            let deletedCount = 0;
+
+            categories.forEach((cat, index) => {
+                const input = document.getElementById(`txAmount${cat}`);
+                if (!input) return;
+
+                const amount = parseFloat(input.value);
+                const hasValidAmount = !isNaN(amount) && amount > 0;
+
+                // Find existing transaction for targetWeek and category
+                const existingIndex = expensesData.transactions.findIndex(t => {
+                    const tWeek = t.week || (t.date ? getISOWeek(t.date) : '');
+                    return tWeek === targetWeek && t.type === 'expense' && (t.category === cat || t.desc === cat);
+                });
+
+                if (hasValidAmount) {
+                    if (existingIndex !== -1) {
+                        expensesData.transactions[existingIndex].amount = amount;
+                        updatedCount++;
+                    } else {
+                        const tx = {
+                            id: Date.now() + index,
+                            type: 'expense',
+                            amount: amount,
+                            category: cat,
+                            desc: cat,
+                            week: targetWeek
+                        };
+                        expensesData.transactions.push(tx);
+                        addedCount++;
+                    }
+                } else {
+                    if (existingIndex !== -1) {
+                        expensesData.transactions.splice(existingIndex, 1);
+                        deletedCount++;
+                    }
+                }
+            });
+
+            if (addedCount === 0 && updatedCount === 0 && deletedCount === 0) {
+                showToast('Please enter an amount to save');
+                return;
+            }
+
+            // Visual feedback loading animation
+            const submitBtn = document.getElementById('txSubmitBtn');
+            const submitIcon = document.getElementById('txSubmitIcon');
+            const submitText = document.getElementById('txSubmitText');
+            
+            if (submitBtn && submitIcon && submitText) {
+                submitBtn.disabled = true;
+                submitIcon.className = 'fa-solid fa-spinner animate-spin';
+                submitText.textContent = 'Saving...';
+            }
+
+            setTimeout(() => {
+                saveExpensesData();
+                showToast('Expenses saved successfully');
+
+                if (submitBtn && submitIcon && submitText) {
+                    submitBtn.disabled = false;
+                    submitIcon.className = 'fa-solid fa-plus';
+                    submitText.textContent = 'Save Transaction';
+                }
+
+                // Reset Form (keeps currently activeExpensesWeek)
+                resetTxForm();
+                updateExpensesUi();
+            }, 600);
+        }
+
+        function editTransaction(id) {
+            const tx = expensesData.transactions.find(t => t.id === id);
+            if (!tx) return;
+
+            editingTxId = id;
+            const categories = ['Lunch', 'Transport', 'Food', 'Clothes', 'Barber', 'Other'];
+            categories.forEach(cat => {
+                const input = document.getElementById(`txAmount${cat}`);
+                if (input) {
+                    input.value = (cat === tx.category) ? tx.amount : '';
+                }
+            });
+
+            const txWeek = tx.week || (tx.date ? getISOWeek(tx.date) : '');
+            if (txWeek) {
+                activeExpensesWeek = txWeek;
+            }
+
+            document.getElementById('txFormTitle').textContent = 'Edit Transaction';
+            document.getElementById('txFormIcon').className = 'fa-solid fa-pen-to-square text-teal-600';
+            document.getElementById('txSubmitText').textContent = 'Update Transaction';
+            document.getElementById('txSubmitIcon').className = 'fa-solid fa-check';
+            document.getElementById('txCancelBtn').classList.remove('hidden');
+        }
+        window.editTransaction = editTransaction;
+
+        function cancelEditTransaction() {
+            editingTxId = null;
+            resetTxForm();
+        }
+        window.cancelEditTransaction = cancelEditTransaction;
+
+        function resetTxForm() {
+            document.getElementById('txFormTitle').textContent = 'Add Transaction';
+            document.getElementById('txFormIcon').className = 'fa-solid fa-plus text-teal-600';
+            document.getElementById('txSubmitText').textContent = 'Save Transaction';
+            document.getElementById('txSubmitIcon').className = 'fa-solid fa-plus';
+            document.getElementById('txCancelBtn').classList.add('hidden');
+            loadTxWeekAmounts();
+        }
+
+        function deleteTransaction(id) {
+            expensesData.transactions = expensesData.transactions.filter(t => t.id !== id);
+            saveExpensesData();
+            updateExpensesUi();
+            showToast('Transaction deleted');
+        }
+
+        // Set weekly allowance for currently active week
+        function saveWeeklyAllowance() {
+            const allowanceInput = document.getElementById('expensesAllowanceInput');
+            const allowance = parseFloat(allowanceInput.value);
+            const activeWeek = activeExpensesWeek || getISOWeek(new Date());
+
+            if (isNaN(allowance) || allowance < 0) {
+                showToast('Please enter a valid allowance');
+                return;
+            }
+
+            expensesData.allowances[activeWeek] = allowance;
+            saveExpensesData();
+            updateExpensesUi();
+            allowanceInput.value = '';
+            showToast('Weekly allowance set!');
+        }
+
+        function clearAllTransactions() {
+            if (confirm('Are you sure you want to clear all transactions?')) {
+                expensesData.transactions = [];
+                saveExpensesData();
+                updateExpensesUi();
+                showToast('Data cleared');
+            }
+        }
+
+        function saveExpensesData() {
+            localStorage.setItem('expensesAppData', JSON.stringify(expensesData));
+        }
+
+        function updateExpensesUi() {
+            initExpensesDates();
+            const activeWeek = activeExpensesWeek || getISOWeek(new Date());
+            loadTxWeekAmounts();
+
+            // Update quick select buttons highlight
+            const today = new Date();
+            const w0 = getISOWeek(today.toISOString().split('T')[0]);
+            today.setDate(today.getDate() - 7);
+            const w1 = getISOWeek(today.toISOString().split('T')[0]);
+            today.setDate(today.getDate() - 7);
+            const w2 = getISOWeek(today.toISOString().split('T')[0]);
+
+            const btn0 = document.getElementById('quickWeek0Btn');
+            const btn1 = document.getElementById('quickWeek1Btn');
+            const btn2 = document.getElementById('quickWeek2Btn');
+
+            if (btn0) btn0.className = activeWeek === w0 ? 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-teal-700 border-teal-700 text-white' : 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-teal-200';
+            if (btn1) btn1.className = activeWeek === w1 ? 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-teal-700 border-teal-700 text-white' : 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-teal-200';
+            if (btn2) btn2.className = activeWeek === w2 ? 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-teal-700 border-teal-700 text-white' : 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-teal-200';
+
+            // Filter transactions by selected week
+            const weeklyTransactions = expensesData.transactions.filter(t => {
+                const tWeek = t.week || (t.date ? getISOWeek(t.date) : '');
+                return tWeek === activeWeek;
+            });
+            
+            // Calculate weekly summaries
+            const totalIncome = weeklyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = weeklyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+            // Fetch allowance and rollover to get total weekly budget
+            let allowance = expensesData.allowances[activeWeek] || 0;
+            let isInherited = false;
+            if (allowance === 0) {
+                const fallback = getWeeklyAllowance(activeWeek);
+                if (fallback > 0) {
+                    allowance = fallback;
+                    isInherited = true;
+                }
+            }
+
+            const rollover = calculateRollover(activeWeek);
+            const totalWeeklyBudget = allowance + rollover;
+            
+            // Calculate Global Lifetime Balance (sum of all weekly allowances + all transaction income - all transaction expenses)
+            const globalWeeks = new Set();
+            globalWeeks.add(activeWeek);
+            expensesData.transactions.forEach(t => {
+                const tWeek = t.week || (t.date ? getISOWeek(t.date) : '');
+                if (tWeek) globalWeeks.add(tWeek);
+            });
+            Object.keys(expensesData.allowances).forEach(w => globalWeeks.add(w));
+
+            let totalGlobalAllowances = 0;
+            globalWeeks.forEach(w => {
+                totalGlobalAllowances += getWeeklyAllowance(w);
+            });
+
+            const totalGlobalIncome = expensesData.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalGlobalExpenses = expensesData.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const globalBalance = totalGlobalAllowances + totalGlobalIncome - totalGlobalExpenses;
+
+            // Update Header Values (Global perspective)
+            const balanceEl = document.getElementById('expensesTotalBalance');
+            balanceEl.textContent = (globalBalance < 0 ? '-' : '') + '₹' + Math.abs(globalBalance).toFixed(2);
+            if (globalBalance < 0) {
+                balanceEl.className = 'text-3xl font-extrabold font-title mt-1 text-red-200';
+            } else {
+                balanceEl.className = 'text-3xl font-extrabold font-title mt-1 text-white';
+            }
+
+
+
+            // Update Weekly Allowance Progress Card
+            const allowanceText = document.getElementById('weeklyAllowanceText');
+            const allowanceBar = document.getElementById('weeklyAllowanceBar');
+            const allowanceStatus = document.getElementById('weeklyAllowanceStatus');
+
+            if (allowanceText && allowanceBar && allowanceStatus) {
+                allowanceText.textContent = `₹${totalExpenses.toFixed(2)} / ₹${allowance.toFixed(2)}`;
+                
+                if (allowance > 0) {
+                    const percent = Math.min((totalExpenses / allowance) * 100, 100);
+                    allowanceBar.style.width = `${percent}%`;
+                    allowanceStatus.classList.remove('hidden');
+
+                    if (totalExpenses > allowance) {
+                        allowanceBar.className = 'bg-red-500 h-full transition-all duration-500';
+                        allowanceStatus.classList.remove('hidden');
+                        allowanceStatus.innerHTML = `<span class="text-red-500 font-extrabold flex items-center gap-1"><i class="fa-solid fa-circle-exclamation"></i> Over allowance by ₹${(totalExpenses - allowance).toFixed(2)}!</span>`;
+                    } else {
+                        if (totalExpenses > allowance * 0.8) {
+                            allowanceBar.className = 'bg-amber-500 h-full transition-all duration-500';
+                        } else {
+                            allowanceBar.className = 'bg-teal-600 h-full transition-all duration-500';
+                        }
+                        allowanceStatus.classList.add('hidden');
+                        allowanceStatus.innerHTML = '';
+                    }
+                } else {
+                    allowanceBar.style.width = '0%';
+                    allowanceStatus.classList.remove('hidden');
+                    allowanceStatus.innerHTML = `<span class="text-gray-400 font-medium italic"><i class="fa-solid fa-lightbulb"></i> Tip: Enter a weekly allowance above to track budget performance.</span>`;
+                }
+            }
+
+        }
+
+    </script>
+</body>
+
+</html>

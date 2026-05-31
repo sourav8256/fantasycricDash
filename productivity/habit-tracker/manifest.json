@@ -1,0 +1,17 @@
+{
+  "name": "HabitFlow Tracker",
+  "short_name": "HabitFlow",
+  "description": "A premium habit tracking application with priority-based grouping.",
+  "start_url": "index%20copy%2028.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1069/1069251.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -197,16 +197,6 @@ Android-style App Drawer containing three custom apps:
             --text-secondary: #0d9488;
         }
 
-        /* Cleaner Theme (Sky & Slate) */
-        body.theme-cleaner {
-            --bg-primary: #f0fdfa;
-            --accent-color: #0284c7;
-            --accent-light: #e0f2fe;
-            --card-bg: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #0ea5e9;
-        }
-
         /* Serene Animations */
         .app-screen {
             transition: opacity var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1), transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
@@ -496,15 +486,6 @@ Android-style App Drawer containing three custom apps:
                         <i class="fa-solid fa-wallet"></i>
                     </div>
                     <span class="text-xs font-bold text-gray-500 group-hover:text-teal-700 transition-colors uppercase tracking-wider text-[10px]">Expenses</span>
-                </button>
-
-                <!-- App 12: Cleaner -->
-                <button onclick="openApp('cleaner')" class="flex flex-col items-center gap-2 group focus:outline-none">
-                    <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-sky-100 group-hover:scale-105 transition-all duration-300 border border-sky-400/10">
-                        <i class="fa-solid fa-broom"></i>
-                        <div id="badgeCleaner" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</div>
-                    </div>
-                    <span class="text-xs font-bold text-gray-500 group-hover:text-sky-700 transition-colors uppercase tracking-wider text-[10px]">Cleaner</span>
                 </button>
             </div>
 
@@ -1012,32 +993,6 @@ Android-style App Drawer containing three custom apps:
 
         </div>
 
-        <!-- =================== APP 12: CLEANER SCREEN =================== -->
-        <div id="viewCleaner" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <!-- Cleaner Header Widget -->
-            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-2">
-                <h3 class="font-bold text-sm text-sky-950 tracking-tight flex items-center gap-2">
-                    <i class="fa-solid fa-broom text-sky-600"></i>
-                    <span>Tidy Up Your Completed Habits</span>
-                </h3>
-                <p class="text-xs text-gray-500">
-                    Habits listed here have achieved their streak goals. You can reset them to start fresh, or extend their targets to push your limits further.
-                </p>
-            </div>
-
-            <!-- Completed Habits List -->
-            <div id="cleanerList" class="space-y-4"></div>
-
-            <!-- Empty completed habits state -->
-            <div id="cleanerEmptyState" class="hidden flex-col items-center justify-center py-12 text-center">
-                <div class="w-16 h-16 bg-gray-100/60 rounded-full flex items-center justify-center mb-4 text-gray-400 text-xl">
-                    <i class="fa-solid fa-circle-check"></i>
-                </div>
-                <h3 class="text-base font-semibold text-gray-700">No completed habits yet</h3>
-                <p class="text-xs text-gray-400 max-w-xs mt-1">Keep checking in daily to complete your active habits!</p>
-            </div>
-        </div>
-
         <!-- Empty State -->
         <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-center">
             <div class="w-16 h-16 bg-gray-100/60 rounded-full flex items-center justify-center mb-4 text-gray-400 text-xl">
@@ -1394,7 +1349,6 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewResilience').classList.add('hidden');
             document.getElementById('viewLearning').classList.add('hidden');
             document.getElementById('viewExpenses').classList.add('hidden');
-            document.getElementById('viewCleaner').classList.add('hidden');
             
             const body = document.body;
 
@@ -1472,12 +1426,6 @@ Android-style App Drawer containing three custom apps:
                 document.getElementById('headerTitle').textContent = 'Expenses & Budget';
                 document.getElementById('headerIcon').className = 'fa-solid fa-wallet text-teal-600';
                 updateExpensesUi();
-            } else if (app === 'cleaner') {
-                body.className = 'theme-cleaner h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewCleaner').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerTitle').textContent = 'Cleaner';
-                document.getElementById('headerIcon').className = 'fa-solid fa-broom text-sky-600';
             }
             
             // Show easy floating home button
@@ -1499,7 +1447,6 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewResilience').classList.add('hidden');
             document.getElementById('viewLearning').classList.add('hidden');
             document.getElementById('viewExpenses').classList.add('hidden');
-            document.getElementById('viewCleaner').classList.add('hidden');
             
             document.body.className = 'theme-home h-screen flex flex-col overflow-hidden antialiased';
             document.getElementById('appDrawer').classList.remove('hidden');
@@ -1916,7 +1863,7 @@ Android-style App Drawer containing three custom apps:
 
             // Empty State
             if (currentActiveApp !== 'home') {
-                const totalActive = (currentActiveApp === 'work') ? activeWorkCount : (currentActiveApp === 'mental' ? activeMentalCount : (currentActiveApp === 'memorize' ? activeMemorizeCount : (currentActiveApp === 'emotional' ? activeEmoCount : (currentActiveApp === 'practice' ? activePracticeCount : (currentActiveApp === 'exercise' ? activeExerciseCount : (currentActiveApp === 'intelligence' ? activeIntelligenceCount : (currentActiveApp === 'resilience' ? activeResilienceCount : (currentActiveApp === 'learning' ? activeLearningCount : (currentActiveApp === 'cleaner' ? 1 : 1)))))))));
+                const totalActive = (currentActiveApp === 'work') ? activeWorkCount : (currentActiveApp === 'mental' ? activeMentalCount : (currentActiveApp === 'memorize' ? activeMemorizeCount : (currentActiveApp === 'emotional' ? activeEmoCount : (currentActiveApp === 'practice' ? activePracticeCount : (currentActiveApp === 'exercise' ? activeExerciseCount : (currentActiveApp === 'intelligence' ? activeIntelligenceCount : (currentActiveApp === 'resilience' ? activeResilienceCount : (currentActiveApp === 'learning' ? activeLearningCount : 1))))))));
                 if (totalActive === 0) {
                     emptyState.classList.remove('hidden');
                     emptyState.classList.add('flex');
@@ -1936,28 +1883,6 @@ Android-style App Drawer containing three custom apps:
             if (d1Count) d1Count.textContent = day1Active;
             if (d2Count) d2Count.textContent = day2Active;
             if (d3Count) d3Count.textContent = day3Active;
-
-            // Update Cleaner badge count
-            const completedCount = habits.filter(h => {
-                if (h.category === 'emotional') return false;
-                const target = h.targetDays || 21;
-                const streak = calculateStreak(h);
-                return streak >= target;
-            }).length;
-
-            const badge = document.getElementById('badgeCleaner');
-            if (badge) {
-                if (completedCount > 0) {
-                    badge.textContent = completedCount;
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
-                }
-            }
-
-            if (currentActiveApp === 'cleaner') {
-                renderCleaner();
-            }
         }
 
         // Work Card
@@ -2175,117 +2100,6 @@ Android-style App Drawer containing three custom apps:
             saveHabits();
             render();
             showToast(h.isEnabled ? 'STRENGTH activity resumed' : 'STRENGTH activity paused');
-        }
-
-        function renderCleaner() {
-            const listContainer = document.getElementById('cleanerList');
-            const emptyState = document.getElementById('cleanerEmptyState');
-            if (!listContainer || !emptyState) return;
-
-            listContainer.innerHTML = '';
-
-            const completedHabits = habits.filter(h => {
-                if (h.category === 'emotional') return false;
-                const target = h.targetDays || 21;
-                const streak = calculateStreak(h);
-                return streak >= target;
-            });
-
-            if (completedHabits.length === 0) {
-                emptyState.classList.remove('hidden');
-                emptyState.classList.add('flex');
-                return;
-            }
-
-            emptyState.classList.add('hidden');
-            emptyState.classList.remove('flex');
-
-            completedHabits.forEach(habit => {
-                const target = habit.targetDays || 21;
-                const streak = calculateStreak(habit);
-                
-                let categoryColorClass = 'bg-sky-50 text-sky-700 border-sky-100';
-                if (habit.category === 'memorize') categoryColorClass = 'bg-rose-50 text-rose-700 border-rose-100';
-                else if (habit.category === 'exercise') categoryColorClass = 'bg-orange-50 text-orange-700 border-orange-100';
-                else if (habit.category === 'work' || habit.category === 'mental') categoryColorClass = 'bg-teal-50 text-teal-700 border-teal-100';
-                else if (habit.category === 'intelligence') categoryColorClass = 'bg-blue-50 text-blue-700 border-blue-100';
-                else if (habit.category === 'resilience') categoryColorClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
-                else if (habit.category === 'learning') categoryColorClass = 'bg-indigo-50 text-indigo-700 border-indigo-100';
-                else if (habit.category === 'practice') categoryColorClass = 'bg-sky-50 text-sky-700 border-sky-100';
-
-                const card = document.createElement('div');
-                card.className = 'habit-card bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3 shadow-sm relative';
-                card.style.borderLeft = '4px solid var(--accent-color)';
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-start gap-3">
-                        <div class="flex-1 min-w-0">
-                            <span class="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${categoryColorClass}">${habit.category}</span>
-                            <h3 class="font-bold text-base text-gray-800 tracking-tight leading-snug break-words mt-1.5">${escapeHtml(habit.name)}</h3>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-semibold text-teal-600 flex items-center gap-0.5">
-                                    <i class="fa-solid fa-circle-check"></i> Goal Achieved!
-                                </span>
-                                <span class="text-[10px] text-gray-300">|</span>
-                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">${streak}/${target} Days</span>
-                            </div>
-                        </div>
-                        <button onclick="deleteHabitDirect(${habit.id})" class="text-gray-300 hover:text-red-500 p-1.5 transition-colors shrink-0" title="Delete Habit">
-                            <i class="fa-solid fa-trash-can text-sm"></i>
-                        </button>
-                    </div>
-                    <div class="flex flex-col gap-2 pt-2 border-t border-gray-50">
-                        <div class="flex gap-2">
-                            <button onclick="resetHabit(${habit.id})" class="flex-1 py-2 px-3 border border-gray-100 hover:bg-gray-50 text-gray-600 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-rotate-left"></i>
-                                <span>Reset Streak</span>
-                            </button>
-                        </div>
-                        <div class="flex gap-1.5">
-                            <button onclick="extendHabit(${habit.id}, 7)" class="flex-1 py-1.5 px-2 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold rounded-lg text-[10px] transition-colors border border-sky-100">
-                                +7 Days
-                            </button>
-                            <button onclick="extendHabit(${habit.id}, 21)" class="flex-1 py-1.5 px-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-[10px] transition-colors">
-                                +21 Days
-                            </button>
-                            <button onclick="extendHabit(${habit.id}, 63)" class="flex-1 py-1.5 px-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-[10px] transition-colors">
-                                +63 Days
-                            </button>
-                        </div>
-                    </div>
-                `;
-                listContainer.appendChild(card);
-            });
-        }
-
-        function resetHabit(id) {
-            const h = habits.find(x => x.id === id);
-            if (!h) return;
-            h.completedDates = [];
-            saveHabits();
-            render();
-            showToast(`"${h.name}" streak reset successfully.`);
-        }
-
-        function extendHabit(id, days) {
-            const h = habits.find(x => x.id === id);
-            if (!h) return;
-            const currentTarget = h.targetDays || 21;
-            h.targetDays = currentTarget + days;
-            saveHabits();
-            render();
-            showToast(`"${h.name}" target extended to ${h.targetDays} days.`);
-        }
-
-        function deleteHabitDirect(id) {
-            const h = habits.find(x => x.id === id);
-            if (!h) return;
-            if (confirm(`Are you sure you want to delete "${h.name}"?`)) {
-                habits = habits.filter(x => x.id !== id);
-                saveHabits();
-                render();
-                showToast(`"${h.name}" has been deleted.`);
-            }
         }
 
         // --- Date & Time Utilities ---

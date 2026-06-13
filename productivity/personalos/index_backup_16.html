@@ -323,16 +323,6 @@ Android-style App Drawer containing three custom apps:
             --text-secondary: #4f46e5;
         }
 
-        /* Life Guide Theme (Teal & Emerald) */
-        body.theme-lifeguide {
-            --bg-primary: #f0fdf4;
-            --accent-color: #0d9488;
-            --accent-light: #ccfbf1;
-            --card-bg: #ffffff;
-            --text-primary: #115e59;
-            --text-secondary: #0d9488;
-        }
-
         /* Serene Animations */
         .app-screen {
             transition: opacity var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1), transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
@@ -981,54 +971,6 @@ Android-style App Drawer containing three custom apps:
                 </div>
                 <div id="lapsList" class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                     <!-- Lap records injected dynamically -->
-                </div>
-            </div>
-        </div>
-
-        <!-- =================== APP: LIFE GUIDE SCREEN =================== -->
-        <div id="viewLifeGuide" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-6">
-                <div class="space-y-1 text-center">
-                    <span class="text-[9px] font-bold text-teal-600 uppercase tracking-widest bg-teal-50 px-2.5 py-1 rounded-md">Mental Blueprint</span>
-                    <h2 class="text-xl font-bold text-gray-800 tracking-tight mt-2">Habit Strategy Guide</h2>
-                    <p class="text-[11px] text-gray-400 font-medium">Core rules for building and breaking habits</p>
-                </div>
-
-                <div class="overflow-hidden border border-gray-100 rounded-2xl">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-100">
-                                <th class="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Objective</th>
-                                <th class="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Strategy</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 bg-white">
-                            <tr class="hover:bg-teal-50/10 transition-colors">
-                                <td class="p-4 text-sm font-semibold text-gray-800 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-teal-500"></span>
-                                    Create habit
-                                </td>
-                                <td class="p-4 text-sm text-gray-600 font-medium">Something every 15 min</td>
-                            </tr>
-                            <tr class="hover:bg-rose-50/10 transition-colors">
-                                <td class="p-4 text-sm font-semibold text-gray-800 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                                    Remove a habit
-                                </td>
-                                <td class="p-4 text-sm text-gray-600 font-medium">incremental endurance</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="bg-teal-50/40 rounded-2xl p-4 border border-teal-100/30 space-y-2">
-                    <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-info text-teal-600"></i>
-                        Quick Insights
-                    </h4>
-                    <p class="text-[11px] text-teal-700/80 leading-relaxed font-medium">
-                        Focus on building habits with immediate, small milestones (every 15 minutes) to create high momentum. When trying to break a negative habit, practice delaying the urge incrementally to build up your willpower endurance.
-                    </p>
                 </div>
             </div>
         </div>
@@ -1986,7 +1928,6 @@ Android-style App Drawer containing three custom apps:
             { id: 'process2', name: 'Process 2.0', icon: 'fa-solid fa-arrows-spin', bg: 'bg-gradient-to-br from-indigo-600 to-purple-800', desc: 'Process emotional states with pinned major issues' },
             { id: 'improvement', name: 'Improvement Areas', icon: 'fa-solid fa-arrows-up-to-line', bg: 'bg-gradient-to-br from-emerald-500 to-teal-700', desc: 'List and track areas for self-improvement' },
             { id: 'timer', name: 'Timer', icon: 'fa-solid fa-stopwatch', bg: 'bg-gradient-to-br from-indigo-500 to-purple-600', desc: 'Stopwatch with total and current lap running times' },
-            { id: 'lifeguide', name: 'Life Guide', icon: 'fa-solid fa-compass', bg: 'bg-gradient-to-br from-teal-500 to-emerald-600', desc: 'Core rules for building and breaking habits' },
             { id: 'appstore', name: 'App Store', icon: 'fa-solid fa-store', bg: 'bg-gradient-to-br from-indigo-600 to-indigo-800', desc: 'Enable or disable apps in your workspace', locked: true }
         ];
         let enabledApps = {};
@@ -2860,7 +2801,6 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewImprovement').classList.add('hidden');
             document.getElementById('viewProcess2').classList.add('hidden');
             document.getElementById('viewTimer').classList.add('hidden');
-            document.getElementById('viewLifeGuide').classList.add('hidden');
             
             const appObj = ALL_APPS.find(a => a.id === app);
             if (appObj) {
@@ -2999,11 +2939,6 @@ Android-style App Drawer containing three custom apps:
                 document.getElementById('viewTimer').classList.remove('hidden');
                 appHeader.classList.remove('hidden');
                 document.getElementById('headerIcon').className = 'fa-solid fa-stopwatch text-indigo-600';
-            } else if (app === 'lifeguide') {
-                body.className = 'theme-lifeguide h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewLifeGuide').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-compass text-teal-600';
             }
             
             // Show easy floating home button
@@ -3060,7 +2995,6 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewImprovement').classList.add('hidden');
             document.getElementById('viewProcess2').classList.add('hidden');
             document.getElementById('viewTimer').classList.add('hidden');
-            document.getElementById('viewLifeGuide').classList.add('hidden');
             
             document.body.className = 'theme-home h-screen flex flex-col overflow-hidden antialiased';
             document.getElementById('appDrawer').classList.remove('hidden');
@@ -6100,21 +6034,14 @@ Android-style App Drawer containing three custom apps:
         function formatTime(ms) {
             if (ms < 0) ms = 0;
             const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
             const centiseconds = Math.floor((ms % 1000) / 10);
+
+            const minStr = String(minutes).padStart(2, '0');
+            const secStr = String(seconds).padStart(2, '0');
             const csStr = String(centiseconds).padStart(2, '0');
 
-            if (minutes >= 60) {
-                const hours = Math.floor(minutes / 60);
-                const displayMinutes = minutes % 60;
-                const hrStr = String(hours).padStart(2, '0');
-                const minStr = String(displayMinutes).padStart(2, '0');
-                return `${hrStr}:${minStr}.${csStr}`;
-            } else {
-                const seconds = Math.floor((ms % 60000) / 1000);
-                const minStr = String(minutes).padStart(2, '0');
-                const secStr = String(seconds).padStart(2, '0');
-                return `${minStr}:${secStr}.${csStr}`;
-            }
+            return `${minStr}:${secStr}.${csStr}`;
         }
 
         function updateTimerDisplays() {

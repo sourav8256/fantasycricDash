@@ -313,26 +313,6 @@ Android-style App Drawer containing three custom apps:
             --text-secondary: #059669;
         }
 
-        /* Timer Theme (Indigo & Violet) */
-        body.theme-timer {
-            --bg-primary: #f5f3ff;
-            --accent-color: #6366f1;
-            --accent-light: #e0e7ff;
-            --card-bg: #ffffff;
-            --text-primary: #1e1b4b;
-            --text-secondary: #4f46e5;
-        }
-
-        /* Life Guide Theme (Teal & Emerald) */
-        body.theme-lifeguide {
-            --bg-primary: #f0fdf4;
-            --accent-color: #0d9488;
-            --accent-light: #ccfbf1;
-            --card-bg: #ffffff;
-            --text-primary: #115e59;
-            --text-secondary: #0d9488;
-        }
-
         /* Serene Animations */
         .app-screen {
             transition: opacity var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1), transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
@@ -931,105 +911,6 @@ Android-style App Drawer containing three custom apps:
                     </summary>
                     <div id="archivedProcess2List" class="p-4 pt-0 space-y-4"></div>
                 </details>
-            </div>
-        </div>
-
-        <!-- =================== APP: TIMER SCREEN =================== -->
-        <div id="viewTimer" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <!-- Main Stopwatch Display Card -->
-            <div class="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm flex flex-col items-center justify-center space-y-6 relative overflow-hidden">
-                <!-- Decorative Glow background -->
-                <div class="absolute -top-12 -left-12 w-32 h-32 bg-indigo-200/20 rounded-full blur-2xl"></div>
-                <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-purple-200/20 rounded-full blur-2xl"></div>
-                
-                <!-- Display Section -->
-                <div class="flex flex-col items-center justify-center space-y-1 relative z-10 text-center">
-                    <!-- Total elapsed time display -->
-                    <h1 id="totalTimeDisplay" class="text-5xl font-extrabold tracking-tight text-gray-800 font-mono">00:00.00</h1>
-                </div>
-
-                <!-- Controls Layout -->
-                <div class="flex items-center justify-center gap-6 relative z-10 w-full max-w-xs">
-                    <!-- Reset Button -->
-                    <button id="timerResetBtn" onclick="resetTimer()" disabled
-                        class="w-12 h-12 rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-655 hover:bg-gray-50 flex items-center justify-center active:scale-95 transition-all shadow-sm disabled:opacity-40 disabled:pointer-events-none" title="Reset">
-                        <i class="fa-solid fa-rotate-left"></i>
-                    </button>
-
-                    <!-- Play/Pause Button -->
-                    <button id="timerPlayBtn" onclick="toggleTimer()"
-                        class="w-16 h-16 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-xl active:scale-95 transition-all shadow-lg shadow-indigo-100/50" title="Start">
-                        <i id="timerPlayIcon" class="fa-solid fa-play translate-x-[1px]"></i>
-                    </button>
-
-                    <!-- Lap Button -->
-                    <button id="timerLapBtn" onclick="lapTimer()" disabled
-                        class="w-12 h-12 rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-655 hover:bg-gray-50 flex items-center justify-center active:scale-95 transition-all shadow-sm disabled:opacity-40 disabled:pointer-events-none" title="Lap Split">
-                        <i class="fa-solid fa-stopwatch-20"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Lap List Container -->
-            <div id="lapsContainer" class="hidden bg-white/40 border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
-                <div class="flex justify-between items-center px-1 border-b border-gray-100/50 pb-3.5">
-                    <div class="flex flex-col">
-                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">Current Lap Time</span>
-                        <span id="lapTimeDisplay" class="text-2xl font-bold text-gray-700 font-mono tracking-tight mt-1">Lap 1: 00:00.00</span>
-                    </div>
-                    <span id="lapCountHeader" class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded-md self-start">0 LAPS</span>
-                </div>
-                <div id="lapsList" class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-                    <!-- Lap records injected dynamically -->
-                </div>
-            </div>
-        </div>
-
-        <!-- =================== APP: LIFE GUIDE SCREEN =================== -->
-        <div id="viewLifeGuide" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-6">
-                <div class="space-y-1 text-center">
-                    <span class="text-[9px] font-bold text-teal-600 uppercase tracking-widest bg-teal-50 px-2.5 py-1 rounded-md">Mental Blueprint</span>
-                    <h2 class="text-xl font-bold text-gray-800 tracking-tight mt-2">Habit Strategy Guide</h2>
-                    <p class="text-[11px] text-gray-400 font-medium">Core rules for building and breaking habits</p>
-                </div>
-
-                <div class="overflow-hidden border border-gray-100 rounded-2xl">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-100">
-                                <th class="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Objective</th>
-                                <th class="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Strategy</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 bg-white">
-                            <tr class="hover:bg-teal-50/10 transition-colors">
-                                <td class="p-4 text-sm font-semibold text-gray-800 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-teal-500"></span>
-                                    Create habit
-                                </td>
-                                <td class="p-4 text-sm text-gray-600 font-medium">Something every 15 min</td>
-                            </tr>
-                            <tr class="hover:bg-rose-50/10 transition-colors">
-                                <td class="p-4 text-sm font-semibold text-gray-800 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                                    Remove a habit
-                                </td>
-                                <td class="p-4 text-sm text-gray-600 font-medium">incremental endurance</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="bg-teal-50/40 rounded-2xl p-4 border border-teal-100/30 space-y-2">
-                    <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-info text-teal-600"></i>
-                        Quick Insights
-                    </h4>
-                    <p class="text-[11px] text-teal-700/80 leading-relaxed font-medium">
-                        Focus on building habits with immediate, small milestones (every 15 minutes) to create high momentum. When trying to break a negative habit, practice delaying the urge incrementally to build up your willpower endurance.
-                    </p>
-                </div>
             </div>
         </div>
 
@@ -1985,8 +1866,6 @@ Android-style App Drawer containing three custom apps:
             { id: 'screentime', name: 'Screen Time', icon: 'fa-solid fa-mobile-screen-button', bg: 'bg-gradient-to-br from-indigo-500 to-purple-750', desc: 'Track daily screen time and limits' },
             { id: 'process2', name: 'Process 2.0', icon: 'fa-solid fa-arrows-spin', bg: 'bg-gradient-to-br from-indigo-600 to-purple-800', desc: 'Process emotional states with pinned major issues' },
             { id: 'improvement', name: 'Improvement Areas', icon: 'fa-solid fa-arrows-up-to-line', bg: 'bg-gradient-to-br from-emerald-500 to-teal-700', desc: 'List and track areas for self-improvement' },
-            { id: 'timer', name: 'Timer', icon: 'fa-solid fa-stopwatch', bg: 'bg-gradient-to-br from-indigo-500 to-purple-600', desc: 'Stopwatch with total and current lap running times' },
-            { id: 'lifeguide', name: 'Life Guide', icon: 'fa-solid fa-compass', bg: 'bg-gradient-to-br from-teal-500 to-emerald-600', desc: 'Core rules for building and breaking habits' },
             { id: 'appstore', name: 'App Store', icon: 'fa-solid fa-store', bg: 'bg-gradient-to-br from-indigo-600 to-indigo-800', desc: 'Enable or disable apps in your workspace', locked: true }
         ];
         let enabledApps = {};
@@ -2690,7 +2569,6 @@ Android-style App Drawer containing three custom apps:
             initPatternLock();
             loadGlobalNotes();
             initCalendarState();
-            loadTimerState();
 
             // Keydown listeners for Enter on laptops and phones
             document.getElementById('workInput').addEventListener('keydown', (e) => {
@@ -2859,8 +2737,6 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewScreentime').classList.add('hidden');
             document.getElementById('viewImprovement').classList.add('hidden');
             document.getElementById('viewProcess2').classList.add('hidden');
-            document.getElementById('viewTimer').classList.add('hidden');
-            document.getElementById('viewLifeGuide').classList.add('hidden');
             
             const appObj = ALL_APPS.find(a => a.id === app);
             if (appObj) {
@@ -2981,7 +2857,7 @@ Android-style App Drawer containing three custom apps:
                 body.className = 'theme-screentime h-screen flex flex-col overflow-hidden antialiased';
                 document.getElementById('viewScreentime').classList.remove('hidden');
                 appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-mobile-screen-button text-indigo-600';
+                document.getElementById('headerIcon').className = 'fa-solid fa-mobile-screen-button text-indigo-650';
                 updateScreentimeUi();
             } else if (app === 'improvement') {
                 body.className = 'theme-improvement h-screen flex flex-col overflow-hidden antialiased';
@@ -2993,17 +2869,7 @@ Android-style App Drawer containing three custom apps:
                 body.className = 'theme-process2 h-screen flex flex-col overflow-hidden antialiased';
                 document.getElementById('viewProcess2').classList.remove('hidden');
                 appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-arrows-spin text-indigo-600';
-            } else if (app === 'timer') {
-                body.className = 'theme-timer h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewTimer').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-stopwatch text-indigo-600';
-            } else if (app === 'lifeguide') {
-                body.className = 'theme-lifeguide h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewLifeGuide').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-compass text-teal-600';
+                document.getElementById('headerIcon').className = 'fa-solid fa-arrows-spin text-indigo-650';
             }
             
             // Show easy floating home button
@@ -3059,8 +2925,6 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewScreentime').classList.add('hidden');
             document.getElementById('viewImprovement').classList.add('hidden');
             document.getElementById('viewProcess2').classList.add('hidden');
-            document.getElementById('viewTimer').classList.add('hidden');
-            document.getElementById('viewLifeGuide').classList.add('hidden');
             
             document.body.className = 'theme-home h-screen flex flex-col overflow-hidden antialiased';
             document.getElementById('appDrawer').classList.remove('hidden');
@@ -3874,7 +3738,7 @@ Android-style App Drawer containing three custom apps:
             }
 
             const pinBtn = isArchived ? '' : `
-                <button onclick="togglePinProcess2(${habit.id})" class="p-1.5 transition-colors shrink-0 ${isPinned ? 'text-indigo-600 hover:text-indigo-800' : 'text-gray-300 hover:text-indigo-600'}" title="${isPinned ? 'Unpin Issue' : 'Pin as Major Issue'}">
+                <button onclick="togglePinProcess2(${habit.id})" class="p-1.5 transition-colors shrink-0 ${isPinned ? 'text-indigo-650 hover:text-indigo-850' : 'text-gray-300 hover:text-indigo-650'}" title="${isPinned ? 'Unpin Issue' : 'Pin as Major Issue'}">
                     <i class="fa-solid fa-thumbtack text-xs"></i>
                 </button>
             `;
@@ -3894,7 +3758,7 @@ Android-style App Drawer containing three custom apps:
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
                         ${pinBtn}
-                        <button onclick="showEditView(${habit.id})" class="text-gray-300 hover:text-indigo-600 p-1.5 transition-colors">
+                        <button onclick="showEditView(${habit.id})" class="text-gray-300 hover:text-indigo-650 p-1.5 transition-colors">
                             <i class="fa-solid fa-ellipsis-h text-sm"></i>
                         </button>
                     </div>
@@ -5975,279 +5839,6 @@ Android-style App Drawer containing three custom apps:
                     }
                 });
             }
-        });
-
-        // --- Timer / Stopwatch Controller ---
-        let timerRunning = false;
-        let totalTimeElapsed = 0;
-        let lapTimeElapsed = 0;
-        let lastTimerUpdate = 0;
-        let timerInterval = null;
-        let laps = [];
-
-        function saveTimerState() {
-            const state = {
-                timerRunning: timerRunning,
-                totalTimeElapsed: totalTimeElapsed,
-                lapTimeElapsed: lapTimeElapsed,
-                lastTimerUpdate: lastTimerUpdate,
-                laps: laps
-            };
-            localStorage.setItem('personalOsTimerState', JSON.stringify(state));
-        }
-        window.saveTimerState = saveTimerState;
-
-        function loadTimerState() {
-            const stored = localStorage.getItem('personalOsTimerState');
-            if (!stored) return;
-
-            try {
-                const state = JSON.parse(stored);
-                timerRunning = !!state.timerRunning;
-                totalTimeElapsed = Number(state.totalTimeElapsed) || 0;
-                lapTimeElapsed = Number(state.lapTimeElapsed) || 0;
-                lastTimerUpdate = Number(state.lastTimerUpdate) || 0;
-                laps = Array.isArray(state.laps) ? state.laps : [];
-
-                if (timerRunning && lastTimerUpdate > 0) {
-                    // Calculate elapsed time during page reload or device sleep
-                    const now = Date.now();
-                    const delta = now - lastTimerUpdate;
-                    
-                    totalTimeElapsed += delta;
-                    lapTimeElapsed += delta;
-                    lastTimerUpdate = now;
-
-                    // Configure control buttons to running states
-                    const playBtn = document.getElementById('timerPlayBtn');
-                    const playIcon = document.getElementById('timerPlayIcon');
-                    const resetBtn = document.getElementById('timerResetBtn');
-                    const lapBtn = document.getElementById('timerLapBtn');
-
-                    if (playBtn) playBtn.className = 'w-16 h-16 rounded-full bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center text-xl active:scale-95 transition-all shadow-lg shadow-amber-100/50';
-                    if (playIcon) playIcon.className = 'fa-solid fa-pause';
-                    if (playBtn) playBtn.title = 'Pause';
-                    if (resetBtn) resetBtn.disabled = true;
-                    if (lapBtn) lapBtn.disabled = false;
-
-                    const lapsContainer = document.getElementById('lapsContainer');
-                    if (lapsContainer) lapsContainer.classList.remove('hidden');
-
-                    timerInterval = setInterval(updateTimerFrame, 10);
-                } else {
-                    const resetBtn = document.getElementById('timerResetBtn');
-                    if (resetBtn) resetBtn.disabled = (totalTimeElapsed === 0);
-                }
-
-                updateTimerDisplays();
-                renderLaps();
-            } catch (e) {
-                console.error("Error loading timer state:", e);
-            }
-        }
-        window.loadTimerState = loadTimerState;
-
-        function toggleTimer() {
-            const playBtn = document.getElementById('timerPlayBtn');
-            const playIcon = document.getElementById('timerPlayIcon');
-            const resetBtn = document.getElementById('timerResetBtn');
-            const lapBtn = document.getElementById('timerLapBtn');
-
-            if (!timerRunning) {
-                // Start
-                timerRunning = true;
-                lastTimerUpdate = Date.now();
-                playBtn.className = 'w-16 h-16 rounded-full bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center text-xl active:scale-95 transition-all shadow-lg shadow-amber-100/50';
-                playIcon.className = 'fa-solid fa-pause';
-                playBtn.title = 'Pause';
-                resetBtn.disabled = true;
-                lapBtn.disabled = false;
-
-                // Show laps container immediately so current running lap timer is visible
-                const lapsContainer = document.getElementById('lapsContainer');
-                if (lapsContainer) lapsContainer.classList.remove('hidden');
-
-                timerInterval = setInterval(updateTimerFrame, 10);
-            } else {
-                // Pause
-                timerRunning = false;
-                playBtn.className = 'w-16 h-16 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-xl active:scale-95 transition-all shadow-lg shadow-indigo-100/50';
-                playIcon.className = 'fa-solid fa-play translate-x-[1px]';
-                playBtn.title = 'Start';
-                resetBtn.disabled = false;
-                lapBtn.disabled = true;
-
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                }
-            }
-            saveTimerState();
-        }
-        window.toggleTimer = toggleTimer;
-
-        function updateTimerFrame() {
-            const now = Date.now();
-            const delta = now - lastTimerUpdate;
-            lastTimerUpdate = now;
-
-            totalTimeElapsed += delta;
-            lapTimeElapsed += delta;
-
-            updateTimerDisplays();
-        }
-
-        function formatTime(ms) {
-            if (ms < 0) ms = 0;
-            const minutes = Math.floor(ms / 60000);
-            const centiseconds = Math.floor((ms % 1000) / 10);
-            const csStr = String(centiseconds).padStart(2, '0');
-
-            if (minutes >= 60) {
-                const hours = Math.floor(minutes / 60);
-                const displayMinutes = minutes % 60;
-                const hrStr = String(hours).padStart(2, '0');
-                const minStr = String(displayMinutes).padStart(2, '0');
-                return `${hrStr}:${minStr}.${csStr}`;
-            } else {
-                const seconds = Math.floor((ms % 60000) / 1000);
-                const minStr = String(minutes).padStart(2, '0');
-                const secStr = String(seconds).padStart(2, '0');
-                return `${minStr}:${secStr}.${csStr}`;
-            }
-        }
-
-        function updateTimerDisplays() {
-            const totalDisplay = document.getElementById('totalTimeDisplay');
-            const lapDisplay = document.getElementById('lapTimeDisplay');
-
-            if (totalDisplay) {
-                totalDisplay.textContent = formatTime(totalTimeElapsed);
-            }
-            if (lapDisplay) {
-                const currentLapNum = laps.length + 1;
-                lapDisplay.textContent = `Lap ${currentLapNum}: ${formatTime(lapTimeElapsed)}`;
-            }
-        }
-
-        function lapTimer() {
-            if (!timerRunning) return;
-            
-            // Add current lap to list
-            const lapNum = laps.length + 1;
-            laps.push({
-                num: lapNum,
-                lapTime: lapTimeElapsed,
-                cumulativeTime: totalTimeElapsed
-            });
-
-            // Reset lap elapsed
-            lapTimeElapsed = 0;
-            
-            // Update display & render list
-            updateTimerDisplays();
-            renderLaps();
-            saveTimerState();
-        }
-        window.lapTimer = lapTimer;
-
-        function resetTimer() {
-            if (timerRunning) return;
-
-            totalTimeElapsed = 0;
-            lapTimeElapsed = 0;
-            laps = [];
-
-            // Reset UI elements
-            updateTimerDisplays();
-            
-            const lapDisplay = document.getElementById('lapTimeDisplay');
-            if (lapDisplay) {
-                lapDisplay.textContent = 'Lap 1: 00:00.00';
-            }
-
-            renderLaps();
-
-            document.getElementById('timerResetBtn').disabled = true;
-            document.getElementById('timerLapBtn').disabled = true;
-            saveTimerState();
-        }
-        window.resetTimer = resetTimer;
-
-        function renderLaps() {
-            const lapsContainer = document.getElementById('lapsContainer');
-            const lapsList = document.getElementById('lapsList');
-            const lapCountHeader = document.getElementById('lapCountHeader');
-
-            if (!lapsList) return;
-
-            if (laps.length === 0) {
-                if (!timerRunning && totalTimeElapsed === 0) {
-                    lapsContainer.classList.add('hidden');
-                }
-                lapsList.innerHTML = '';
-                if (lapCountHeader) lapCountHeader.textContent = '0 LAPS';
-                return;
-            }
-
-            lapsContainer.classList.remove('hidden');
-            if (lapCountHeader) {
-                lapCountHeader.textContent = `${laps.length} ${laps.length === 1 ? 'LAP' : 'LAPS'}`;
-            }
-
-            lapsList.innerHTML = '';
-
-            // Find fastest and longest lap times
-            let minTime = Infinity;
-            let maxTime = -Infinity;
-            
-            if (laps.length > 1) {
-                laps.forEach(l => {
-                    if (l.lapTime < minTime) minTime = l.lapTime;
-                    if (l.lapTime > maxTime) maxTime = l.lapTime;
-                });
-            }
-
-            // Render in reverse order (newest first)
-            [...laps].reverse().forEach(lap => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between py-2 px-3 bg-white border border-gray-50 rounded-xl text-xs transition-all hover:bg-gray-55';
-                
-                let highlightClass = 'text-gray-500 font-medium';
-                let badge = '';
-
-                if (laps.length > 1) {
-                    if (lap.lapTime === minTime) {
-                        highlightClass = 'text-green-650 font-bold';
-                        badge = `<span class="ml-2 bg-green-50 text-green-700 text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border border-green-100 tracking-wider">Fastest</span>`;
-                    } else if (lap.lapTime === maxTime) {
-                        highlightClass = 'text-rose-600 font-bold';
-                        badge = `<span class="ml-2 bg-rose-50 text-rose-700 text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border border-rose-100 tracking-wider">Longest</span>`;
-                    }
-                }
-
-                item.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-gray-400 font-mono">#${String(lap.num).padStart(2, '0')}</span>
-                        <span class="${highlightClass} font-mono text-base ml-1">${formatTime(lap.lapTime)}</span>
-                        ${badge}
-                    </div>
-                `;
-                lapsList.appendChild(item);
-            });
-        }
-        window.renderLaps = renderLaps;
-
-        // Save on exit
-        window.addEventListener('beforeunload', () => {
-            if (timerRunning) {
-                const now = Date.now();
-                const delta = now - lastTimerUpdate;
-                totalTimeElapsed += delta;
-                lapTimeElapsed += delta;
-                lastTimerUpdate = now;
-            }
-            saveTimerState();
         });
 
     </script>

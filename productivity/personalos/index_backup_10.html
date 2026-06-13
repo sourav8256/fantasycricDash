@@ -253,86 +253,6 @@ Android-style App Drawer containing three custom apps:
             --text-secondary: #f43f5e;
         }
 
-        /* Mental De-addiction Theme (Rose & Slate/Charcoal) */
-        body.theme-deaddiction {
-            --bg-primary: #fff1f2;
-            --accent-color: #be123c;
-            --accent-light: #ffe4e6;
-            --card-bg: #ffffff;
-            --text-primary: #4c0519;
-            --text-secondary: #e11d48;
-        }
-
-        /* Productivity Theme (Teal/Emerald & Indigo) */
-        body.theme-productivity {
-            --bg-primary: #f5fcfc;
-            --accent-color: #0f766e;
-            --accent-light: #ccfbf1;
-            --card-bg: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #0d9488;
-        }
-
-        /* Therapy Theme (Violet & Purple) */
-        body.theme-therapy {
-            --bg-primary: #faf5ff;
-            --accent-color: #7c3aed;
-            --accent-light: #f3e8ff;
-            --card-bg: #ffffff;
-            --text-primary: #1e1b4b;
-            --text-secondary: #6d28d9;
-        }
-
-        /* Screen Time Theme (Indigo & Violet) */
-        body.theme-screentime {
-            --bg-primary: #eef2ff;
-            --accent-color: #4f46e5;
-            --accent-light: #e0e7ff;
-            --card-bg: #ffffff;
-            --text-primary: #1e1b4b;
-            --text-secondary: #4f46e5;
-        }
-
-        /* Process 2.0 Theme (Indigo & Purple) */
-        body.theme-process2 {
-            --bg-primary: #faf5ff;
-            --accent-color: #6366f1;
-            --accent-light: #eef2ff;
-            --card-bg: #ffffff;
-            --text-primary: #1e1b4b;
-            --text-secondary: #4f46e5;
-        }
-
-        /* Improvement Areas Theme (Emerald & Teal) */
-        body.theme-improvement {
-            --bg-primary: #ecfdf5;
-            --accent-color: #059669;
-            --accent-light: #d1fae5;
-            --card-bg: #ffffff;
-            --text-primary: #064e3b;
-            --text-secondary: #059669;
-        }
-
-        /* Timer Theme (Indigo & Violet) */
-        body.theme-timer {
-            --bg-primary: #f5f3ff;
-            --accent-color: #6366f1;
-            --accent-light: #e0e7ff;
-            --card-bg: #ffffff;
-            --text-primary: #1e1b4b;
-            --text-secondary: #4f46e5;
-        }
-
-        /* Life Guide Theme (Teal & Emerald) */
-        body.theme-lifeguide {
-            --bg-primary: #f0fdf4;
-            --accent-color: #0d9488;
-            --accent-light: #ccfbf1;
-            --card-bg: #ffffff;
-            --text-primary: #115e59;
-            --text-secondary: #0d9488;
-        }
-
         /* Serene Animations */
         .app-screen {
             transition: opacity var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1), transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
@@ -872,167 +792,6 @@ Android-style App Drawer containing three custom apps:
             </div>
         </div>
 
-        <!-- =================== APP 2.0: PROCESS 2.0 SCREEN =================== -->
-        <div id="viewProcess2" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <!-- Pinned Major Issues Section -->
-            <div id="process2PinnedContainer" class="hidden space-y-3">
-                <div class="flex items-center gap-2 px-1">
-                    <i class="fa-solid fa-thumbtack text-indigo-600"></i>
-                    <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Major Issues</span>
-                </div>
-                <div id="process2PinnedList" class="space-y-4"></div>
-            </div>
-
-            <!-- Quick Entry -->
-            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
-                <div class="flex gap-2.5">
-                    <input type="text" id="process2Input" placeholder="What major issue or process are you focusing on?"
-                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-indigo-950 placeholder-indigo-300 border border-transparent focus:border-indigo-100 focus:bg-white text-sm transition-all"
-                        autocomplete="off">
-                    <button onclick="addProcess2Habit()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-indigo-100">
-                        <i class="fa-solid fa-spa text-xs"></i>
-                        <span>Process</span>
-                    </button>
-                </div>
-                <p class="text-[10px] text-indigo-400 font-medium px-1 flex items-center gap-1.5">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span>Process habits are temporary and expire automatically after 3 days.</span>
-                </p>
-            </div>
-
-            <!-- Process Stats Widget -->
-            <div id="process2Stats" class="flex justify-between items-center gap-2 bg-indigo-50/20 border border-indigo-100/40 px-4 py-2 rounded-xl text-[10px] font-bold text-indigo-950">
-                <div class="flex items-center gap-1.5 flex-1 justify-center">
-                    <span class="text-indigo-400 uppercase tracking-wider text-[9px]">Day 1:</span>
-                    <span id="process2Day1Count" class="font-extrabold text-indigo-900 text-xs">0</span>
-                </div>
-                <div class="h-3 w-[1px] bg-indigo-100"></div>
-                <div class="flex items-center gap-1.5 flex-1 justify-center">
-                    <span class="text-indigo-400 uppercase tracking-wider text-[9px]">Day 2:</span>
-                    <span id="process2Day2Count" class="font-extrabold text-indigo-900 text-xs">0</span>
-                </div>
-                <div class="h-3 w-[1px] bg-indigo-100"></div>
-                <div class="flex items-center gap-1.5 flex-1 justify-center">
-                    <span class="text-indigo-400 uppercase tracking-wider text-[9px]">Day 3:</span>
-                    <span id="process2Day3Count" class="font-extrabold text-indigo-900 text-xs">0</span>
-                </div>
-            </div>
-
-            <!-- Active List -->
-            <div id="process2List" class="space-y-4"></div>
-
-            <!-- Archived Collapsible -->
-            <div id="archivedProcess2Container" class="hidden">
-                <details class="group border border-gray-100 rounded-2xl bg-white/40">
-                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-indigo-400 uppercase tracking-widest select-none">
-                        <span>Completed / Archived Processes</span>
-                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
-                    </summary>
-                    <div id="archivedProcess2List" class="p-4 pt-0 space-y-4"></div>
-                </details>
-            </div>
-        </div>
-
-        <!-- =================== APP: TIMER SCREEN =================== -->
-        <div id="viewTimer" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <!-- Main Stopwatch Display Card -->
-            <div class="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm flex flex-col items-center justify-center space-y-6 relative overflow-hidden">
-                <!-- Decorative Glow background -->
-                <div class="absolute -top-12 -left-12 w-32 h-32 bg-indigo-200/20 rounded-full blur-2xl"></div>
-                <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-purple-200/20 rounded-full blur-2xl"></div>
-                
-                <!-- Display Section -->
-                <div class="flex flex-col items-center justify-center space-y-1 relative z-10 text-center">
-                    <!-- Total elapsed time display -->
-                    <h1 id="totalTimeDisplay" class="text-5xl font-extrabold tracking-tight text-gray-800 font-mono">00:00.00</h1>
-                </div>
-
-                <!-- Controls Layout -->
-                <div class="flex items-center justify-center gap-6 relative z-10 w-full max-w-xs">
-                    <!-- Reset Button -->
-                    <button id="timerResetBtn" onclick="resetTimer()" disabled
-                        class="w-12 h-12 rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-655 hover:bg-gray-50 flex items-center justify-center active:scale-95 transition-all shadow-sm disabled:opacity-40 disabled:pointer-events-none" title="Reset">
-                        <i class="fa-solid fa-rotate-left"></i>
-                    </button>
-
-                    <!-- Play/Pause Button -->
-                    <button id="timerPlayBtn" onclick="toggleTimer()"
-                        class="w-16 h-16 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-xl active:scale-95 transition-all shadow-lg shadow-indigo-100/50" title="Start">
-                        <i id="timerPlayIcon" class="fa-solid fa-play translate-x-[1px]"></i>
-                    </button>
-
-                    <!-- Lap Button -->
-                    <button id="timerLapBtn" onclick="lapTimer()" disabled
-                        class="w-12 h-12 rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-655 hover:bg-gray-50 flex items-center justify-center active:scale-95 transition-all shadow-sm disabled:opacity-40 disabled:pointer-events-none" title="Lap Split">
-                        <i class="fa-solid fa-stopwatch-20"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Lap List Container -->
-            <div id="lapsContainer" class="hidden bg-white/40 border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
-                <div class="flex justify-between items-center px-1 border-b border-gray-100/50 pb-3.5">
-                    <div class="flex flex-col">
-                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">Current Lap Time</span>
-                        <span id="lapTimeDisplay" class="text-2xl font-bold text-gray-700 font-mono tracking-tight mt-1">Lap 1: 00:00.00</span>
-                    </div>
-                    <span id="lapCountHeader" class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded-md self-start">0 LAPS</span>
-                </div>
-                <div id="lapsList" class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-                    <!-- Lap records injected dynamically -->
-                </div>
-            </div>
-        </div>
-
-        <!-- =================== APP: LIFE GUIDE SCREEN =================== -->
-        <div id="viewLifeGuide" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-6">
-                <div class="space-y-1 text-center">
-                    <span class="text-[9px] font-bold text-teal-600 uppercase tracking-widest bg-teal-50 px-2.5 py-1 rounded-md">Mental Blueprint</span>
-                    <h2 class="text-xl font-bold text-gray-800 tracking-tight mt-2">Habit Strategy Guide</h2>
-                    <p class="text-[11px] text-gray-400 font-medium">Core rules for building and breaking habits</p>
-                </div>
-
-                <div class="overflow-hidden border border-gray-100 rounded-2xl">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-100">
-                                <th class="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Objective</th>
-                                <th class="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Strategy</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 bg-white">
-                            <tr class="hover:bg-teal-50/10 transition-colors">
-                                <td class="p-4 text-sm font-semibold text-gray-800 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-teal-500"></span>
-                                    Create habit
-                                </td>
-                                <td class="p-4 text-sm text-gray-600 font-medium">Something every 15 min</td>
-                            </tr>
-                            <tr class="hover:bg-rose-50/10 transition-colors">
-                                <td class="p-4 text-sm font-semibold text-gray-800 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                                    Remove a habit
-                                </td>
-                                <td class="p-4 text-sm text-gray-600 font-medium">incremental endurance</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="bg-teal-50/40 rounded-2xl p-4 border border-teal-100/30 space-y-2">
-                    <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-info text-teal-600"></i>
-                        Quick Insights
-                    </h4>
-                    <p class="text-[11px] text-teal-700/80 leading-relaxed font-medium">
-                        Focus on building habits with immediate, small milestones (every 15 minutes) to create high momentum. When trying to break a negative habit, practice delaying the urge incrementally to build up your willpower endurance.
-                    </p>
-                </div>
-            </div>
-        </div>
-
         <!-- =================== APP 3: NOTES SCREEN =================== -->
         <div id="viewNotes" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
             <!-- Rich notepad -->
@@ -1325,104 +1084,6 @@ Android-style App Drawer containing three custom apps:
             </div>
         </div>
 
-        <!-- =================== APP 17: PRODUCTIVITY SYSTEM SCREEN =================== -->
-        <div id="viewProductivity" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <!-- Tab Navigation -->
-            <div class="flex bg-gray-100/80 p-1 rounded-2xl border border-gray-200/50">
-                <button onclick="switchProductivityTab('enablers')" id="btnProdTabEnablers" class="flex-1 py-3 text-xs font-bold rounded-xl transition-all bg-white text-teal-700 shadow-sm">Enablers</button>
-                <button onclick="switchProductivityTab('blockers')" id="btnProdTabBlockers" class="flex-1 py-3 text-xs font-bold rounded-xl transition-all text-gray-500 hover:text-gray-700">Blockers</button>
-            </div>
-
-            <!-- Tab Contents -->
-            <div id="prodTabContentEnablers" class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
-                <div class="border-b border-gray-50 pb-3 border-dashed">
-                    <h3 class="font-bold text-base text-gray-800 tracking-tight">Enablers</h3>
-                    <p class="text-[10px] text-teal-600 font-bold uppercase tracking-wider">Focus Areas</p>
-                </div>
-                <div class="grid gap-4">
-                    <!-- Habits Item -->
-                    <div class="flex items-center gap-4 p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center text-xl shrink-0">
-                            <i class="fa-solid fa-list-check"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-gray-800">Habits</h4>
-                            <p class="text-[10px] text-gray-400 font-medium">Daily productivity routines</p>
-                        </div>
-                    </div>
-                    <!-- Something every 15 min Item -->
-                    <div class="flex items-center gap-4 p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center text-xl shrink-0">
-                            <i class="fa-solid fa-stopwatch"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-gray-800">Something every 15 min</h4>
-                            <p class="text-[10px] text-gray-400 font-medium">15-minute interval focus checks</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="prodTabContentBlockers" class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4 hidden">
-                <div class="border-b border-gray-50 pb-3 border-dashed">
-                    <h3 class="font-bold text-base text-gray-800 tracking-tight">Blockers</h3>
-                    <p class="text-[10px] text-rose-600 font-bold uppercase tracking-wider">Obstacles</p>
-                </div>
-                <div class="grid gap-4">
-                    <!-- Phone Usage Item -->
-                    <div class="flex items-center gap-4 p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-rose-700 text-white flex items-center justify-center text-xl shrink-0">
-                            <i class="fa-solid fa-mobile-screen-button"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-gray-800">Phone Usage</h4>
-                            <p class="text-[10px] text-gray-400 font-medium">Limit screen time and distractions</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- =================== APP 18: MENTAL DE-ADDICTION SCREEN =================== -->
-        <div id="viewDeaddiction" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <!-- Quick Entry -->
-            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
-                <div class="flex gap-2.5">
-                    <input type="text" id="deaddictionInput" placeholder="Nurture a de-addiction habit (e.g. Limit social media, Avoid sugar)..."
-                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-rose-950 placeholder-rose-300 border border-transparent focus:border-rose-100 focus:bg-white text-sm transition-all"
-                        autocomplete="off">
-                    <button onclick="addDeaddictionHabit()"
-                        class="bg-rose-700 hover:bg-rose-800 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-rose-100">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                        <span>Focus</span>
-                    </button>
-                </div>
-                <!-- Custom Days Target Picker -->
-                <div class="flex items-center justify-between px-1">
-                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
-                    <div class="flex gap-1.5">
-                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
-                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
-                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active List -->
-            <div id="deaddictionList" class="space-y-4"></div>
-
-            <!-- Paused List -->
-            <div id="pausedDeaddictionContainer" class="hidden">
-                <details class="group border border-gray-100 rounded-2xl bg-white/40">
-                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
-                        <span>Paused De-addiction Activities</span>
-                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
-                    </summary>
-                    <div id="pausedDeaddictionList" class="p-4 pt-0 space-y-4"></div>
-                </details>
-            </div>
-        </div>
-
         <!-- =================== APP 16: CALENDAR SCREEN =================== -->
         <div id="viewCalendar" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
             <!-- Header Calendar controls -->
@@ -1525,269 +1186,6 @@ Android-style App Drawer containing three custom apps:
             </div>
         </div>
 
-            <!-- =================== APP: THERAPY SCREEN =================== -->
-            <div id="viewTherapy" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-                
-                <!-- 1. Therapy Session List View -->
-                <div id="therapySessionListView" class="space-y-6">
-                    <!-- Create New Session Form -->
-                    <div class="bg-white border border-gray-100 p-4 rounded-3xl shadow-sm space-y-3">
-                        <div class="flex gap-2.5">
-                            <input type="text" id="therapySessionNameInput" placeholder="Create a therapy topic (e.g. Work Stress, Relationship CBT)..."
-                                class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-purple-950 placeholder-purple-300 border border-transparent focus:border-purple-200 focus:bg-white text-sm transition-all"
-                                autocomplete="off">
-                            <button onclick="addTherapySession()"
-                                class="bg-purple-600 hover:bg-purple-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-purple-100">
-                                <i class="fa-solid fa-plus text-xs"></i>
-                                <span>Create</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- List of Sessions -->
-                    <div id="therapySessionsList" class="space-y-4"></div>
-
-                    <!-- Sessions Empty State -->
-                    <div id="therapySessionsEmptyState" class="hidden flex-col items-center justify-center py-12 text-center">
-                        <div class="w-16 h-16 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center text-2xl mb-3">
-                            <i class="fa-solid fa-couch"></i>
-                        </div>
-                        <h4 class="font-bold text-gray-800 text-sm">No therapy sessions created</h4>
-                        <p class="text-xs text-gray-400 max-w-[220px] mt-1 mx-auto">Create a therapy topic above to begin logging reflections.</p>
-                    </div>
-                </div>
-
-                <!-- 2. Therapy Session Detail View -->
-                <div id="therapySessionDetailView" class="space-y-6 hidden">
-                    <!-- Navigation / Header inside App -->
-                    <div class="flex items-center gap-3">
-                        <button onclick="closeTherapySession()" class="text-purple-600 hover:text-purple-800 p-2 rounded-xl hover:bg-purple-50 border border-transparent transition-all flex items-center gap-1 text-xs font-bold shrink-0">
-                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                            <span>All Sessions</span>
-                        </button>
-                        <h3 id="activeTherapySessionTitle" class="font-bold text-base text-purple-950 tracking-tight">Active Session</h3>
-                    </div>
-
-                    <!-- Entry Form -->
-                    <div class="bg-white border border-gray-100 p-4 rounded-3xl shadow-sm space-y-4">
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold uppercase tracking-wider text-purple-400 block px-1">Therapy Reflection</label>
-                            
-                            <div class="space-y-2">
-                                <input type="text" id="therapyQuestionInput" placeholder="Enter your reflection question here..."
-                                    class="w-full px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-purple-950 placeholder-purple-300 border border-transparent focus:border-purple-200 focus:bg-white text-sm transition-all"
-                                    autocomplete="off">
-                            </div>
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold uppercase tracking-wider text-purple-400 block px-1">Your Answer / Reflection</label>
-                            <textarea id="therapyAnswerInput" placeholder="Write down your honest reflection, feelings, or answer here..."
-                                class="w-full bg-gray-50/50 text-purple-950 border border-transparent rounded-xl p-4 text-sm outline-none focus:border-purple-200 focus:bg-white transition-all h-[150px] placeholder-purple-300/80 resize-none leading-relaxed"></textarea>
-                        </div>
-
-                        <button onclick="addTherapyEntry()"
-                            class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-purple-100">
-                            <i class="fa-solid fa-floppy-disk text-xs"></i>
-                            <span>Save Reflection</span>
-                        </button>
-                    </div>
-
-                    <!-- Saved Entries List -->
-                    <div id="therapyEntriesList" class="space-y-4"></div>
-
-                    <!-- Pagination Controls -->
-                    <div id="therapyPaginationControls" class="hidden justify-between items-center bg-white border border-gray-100 rounded-2xl p-3 shadow-sm select-none">
-                        <button onclick="changeTherapyPage(-1)" id="therapyPrevBtn" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 hover:bg-purple-100 border border-transparent disabled:opacity-40 disabled:pointer-events-none transition-all flex items-center gap-1">
-                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                            <span>Prev</span>
-                        </button>
-                        <span id="therapyPageNumber" class="text-xs font-bold text-gray-500 uppercase tracking-widest">Page 1 of 1</span>
-                        <button onclick="changeTherapyPage(1)" id="therapyNextBtn" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 hover:bg-purple-100 border border-transparent disabled:opacity-40 disabled:pointer-events-none transition-all flex items-center gap-1">
-                            <span>Next</span>
-                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                        </button>
-                    </div>
-
-                    <!-- Empty State -->
-                    <div id="therapyEmptyState" class="hidden flex-col items-center justify-center py-12 text-center">
-                        <div class="w-16 h-16 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center text-2xl mb-3">
-                            <i class="fa-solid fa-couch"></i>
-                        </div>
-                        <h4 class="font-bold text-gray-800 text-sm">No reflections logged yet</h4>
-                        <p class="text-xs text-gray-400 max-w-[200px] mt-1 mx-auto">Type a question above to start logging your first reflection.</p>
-                    </div>
-                </div>
-
-            </div>
-
-        <!-- =================== APP 12: SCREEN TIME SCREEN =================== -->
-        <div id="viewScreentime" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <!-- Screen Time Overview Card -->
-            <div id="screentimeBalanceCard" class="bg-gradient-to-br from-indigo-500 to-purple-750 text-white rounded-3xl p-6 shadow-lg shadow-indigo-100 flex flex-col justify-between mb-2">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-indigo-100 uppercase tracking-widest font-bold">Balance Screen Time</p>
-                        <h2 id="screentimeTotalWeekly" class="text-3xl font-extrabold font-title mt-1">0h 0m</h2>
-                    </div>
-                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Week Selection Card -->
-            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
-                <h3 class="font-bold text-sm text-indigo-950 tracking-tight flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-week text-indigo-600"></i>
-                    <span>Select Week</span>
-                </h3>
-                <div class="flex gap-2">
-                    <button onclick="selectQuickScreentimeWeek(2)" id="quickScreentimeWeek2Btn" class="flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-indigo-200">2 Weeks Ago</button>
-                    <button onclick="selectQuickScreentimeWeek(1)" id="quickScreentimeWeek1Btn" class="flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-indigo-200">Last Week</button>
-                    <button onclick="selectQuickScreentimeWeek(0)" id="quickScreentimeWeek0Btn" class="flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-indigo-705 border-indigo-700 text-white">This Week</button>
-                </div>
-            </div>
-
-            <!-- Weekly Limit Settings Card -->
-            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
-                <h3 class="font-bold text-sm text-indigo-950 tracking-tight flex items-center gap-2">
-                    <i class="fa-solid fa-hourglass-half text-indigo-600"></i>
-                    <span>Weekly Limit & Target</span>
-                </h3>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Weekly Limit (Hours)</label>
-                    <div class="flex gap-2">
-                        <input type="number" id="screentimeLimitInput" placeholder="25" class="w-full px-3 py-2.5 bg-gray-50/50 rounded-xl text-xs border border-transparent focus:border-indigo-100 focus:bg-white outline-none transition-all font-semibold">
-                        <button onclick="saveWeeklyScreentimeLimit()" class="bg-indigo-700 hover:bg-indigo-800 text-white px-5 rounded-xl font-medium text-xs transition-colors shadow-sm shadow-indigo-100 shrink-0">Set Limit</button>
-                    </div>
-                </div>
-                <!-- Remaining Limit Progress Card -->
-                <div id="weeklyScreentimeProgressCard" class="bg-indigo-50/30 border border-indigo-100/50 rounded-2xl p-4 space-y-2">
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Time Spent</span>
-                        <span id="weeklyScreentimeText" class="font-bold text-gray-700">0h 0m / 0h 0m</span>
-                    </div>
-                    <div class="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
-                        <div id="weeklyScreentimeBar" class="bg-indigo-600 h-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                    <div id="weeklyScreentimeStatus" class="text-[10px] font-bold text-indigo-700 hidden"></div>
-                </div>
-            </div>
-
-            <!-- Log Daily Screen Time -->
-            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
-                <h3 class="font-bold text-sm text-indigo-950 tracking-tight flex items-center gap-2">
-                    <i class="fa-solid fa-plus text-indigo-600"></i>
-                    <span>Log Daily Screen Time</span>
-                </h3>
-                <div class="space-y-3">
-                    <div class="space-y-2">
-                        <!-- Monday -->
-                        <div class="flex items-center gap-3">
-                            <label class="w-24 text-xs font-bold text-gray-600">Monday</label>
-                            <div class="flex-1 flex gap-2">
-                                <input type="number" id="screentimeHrsMonday" min="0" max="24" placeholder="Hrs" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                                <input type="number" id="screentimeMinsMonday" min="0" max="59" placeholder="Mins" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                            </div>
-                        </div>
-                        <!-- Tuesday -->
-                        <div class="flex items-center gap-3">
-                            <label class="w-24 text-xs font-bold text-gray-600">Tuesday</label>
-                            <div class="flex-1 flex gap-2">
-                                <input type="number" id="screentimeHrsTuesday" min="0" max="24" placeholder="Hrs" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                                <input type="number" id="screentimeMinsTuesday" min="0" max="59" placeholder="Mins" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                            </div>
-                        </div>
-                        <!-- Wednesday -->
-                        <div class="flex items-center gap-3">
-                            <label class="w-24 text-xs font-bold text-gray-600">Wednesday</label>
-                            <div class="flex-1 flex gap-2">
-                                <input type="number" id="screentimeHrsWednesday" min="0" max="24" placeholder="Hrs" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                                <input type="number" id="screentimeMinsWednesday" min="0" max="59" placeholder="Mins" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                            </div>
-                        </div>
-                        <!-- Thursday -->
-                        <div class="flex items-center gap-3">
-                            <label class="w-24 text-xs font-bold text-gray-600">Thursday</label>
-                            <div class="flex-1 flex gap-2">
-                                <input type="number" id="screentimeHrsThursday" min="0" max="24" placeholder="Hrs" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                                <input type="number" id="screentimeMinsThursday" min="0" max="59" placeholder="Mins" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                            </div>
-                        </div>
-                        <!-- Friday -->
-                        <div class="flex items-center gap-3">
-                            <label class="w-24 text-xs font-bold text-gray-600">Friday</label>
-                            <div class="flex-1 flex gap-2">
-                                <input type="number" id="screentimeHrsFriday" min="0" max="24" placeholder="Hrs" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                                <input type="number" id="screentimeMinsFriday" min="0" max="59" placeholder="Mins" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                            </div>
-                        </div>
-                        <!-- Saturday -->
-                        <div class="flex items-center gap-3">
-                            <label class="w-24 text-xs font-bold text-gray-600">Saturday</label>
-                            <div class="flex-1 flex gap-2">
-                                <input type="number" id="screentimeHrsSaturday" min="0" max="24" placeholder="Hrs" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                                <input type="number" id="screentimeMinsSaturday" min="0" max="59" placeholder="Mins" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                            </div>
-                        </div>
-                        <!-- Sunday -->
-                        <div class="flex items-center gap-3">
-                            <label class="w-24 text-xs font-bold text-gray-600">Sunday</label>
-                            <div class="flex-1 flex gap-2">
-                                <input type="number" id="screentimeHrsSunday" min="0" max="24" placeholder="Hrs" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                                <input type="number" id="screentimeMinsSunday" min="0" max="59" placeholder="Mins" class="flex-1 px-3 py-2 bg-gray-50/50 rounded-xl outline-none text-gray-700 border border-transparent focus:border-indigo-100 focus:bg-white text-xs transition-all font-semibold">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="saveScreentimeLog()" class="flex-1 bg-indigo-700 hover:bg-indigo-800 text-white py-2.5 rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-100">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                            <span>Save Screen Time Log</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- =================== APP 13: IMPROVEMENT AREAS SCREEN =================== -->
-        <div id="viewImprovement" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <!-- Quick Entry Card -->
-            <div class="bg-white border border-gray-100 p-4 rounded-3xl shadow-sm space-y-3">
-                <div class="flex gap-2.5">
-                    <input type="text" id="improvementInput" placeholder="Add an area to improve (e.g. Public Speaking, Sleep cycle)..."
-                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-emerald-950 placeholder-emerald-300 border border-transparent focus:border-emerald-200 focus:bg-white text-sm transition-all"
-                        autocomplete="off">
-                    <button onclick="addImprovementArea()"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-100">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                        <span>Add</span>
-                    </button>
-                </div>
-                <!-- Priority Selector -->
-                <div class="flex items-center justify-between px-1">
-                    <span class="text-xs font-medium text-gray-400">Set Importance / Priority</span>
-                    <select id="improvementPriority" class="px-3 py-1.5 bg-gray-50/50 rounded-xl outline-none text-xs border border-gray-200 text-gray-500 hover:border-emerald-200 focus:bg-white font-semibold transition-all">
-                        <option value="high">High Priority</option>
-                        <option value="medium" selected>Medium Priority</option>
-                        <option value="low">Low Priority</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- List of Improvement Areas -->
-            <div id="improvementList" class="space-y-4"></div>
-
-            <!-- Improvement Empty State -->
-            <div id="improvementEmptyState" class="hidden flex-col items-center justify-center py-12 text-center">
-                <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl mb-3">
-                    <i class="fa-solid fa-arrows-up-to-line"></i>
-                </div>
-                <h4 class="font-bold text-gray-800 text-sm">No improvement areas listed yet</h4>
-                <p class="text-xs text-gray-400 max-w-[220px] mt-1 mx-auto">Add items above that you want to focus on developing.</p>
-            </div>
-        </div>
-
         <!-- Empty State -->
         <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-center">
             <div class="w-16 h-16 bg-gray-100/60 rounded-full flex items-center justify-center mb-4 text-gray-400 text-xl">
@@ -1819,7 +1217,6 @@ Android-style App Drawer containing three custom apps:
                     <div class="flex flex-wrap gap-2">
                         <button onclick="setEditCategory('work')" id="editCategoryWork" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">STRENGTH (Work)</button>
                         <button onclick="setEditCategory('emotional')" id="editCategoryEmotional" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Processing (Emotional)</button>
-                        <button onclick="setEditCategory('process2')" id="editCategoryProcess2" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Process 2.0</button>
                         <button onclick="setEditCategory('mental')" id="editCategoryMental" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Mental STRENGTH</button>
                         <button onclick="setEditCategory('memorize')" id="editCategoryMemorize" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Memorize</button>
                         <button onclick="setEditCategory('practice')" id="editCategoryPractice" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Speeches</button>
@@ -1829,7 +1226,6 @@ Android-style App Drawer containing three custom apps:
                         <button onclick="setEditCategory('learning')" id="editCategoryLearning" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Learning</button>
                         <button onclick="setEditCategory('maturity')" id="editCategoryMaturity" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Maturity</button>
                         <button onclick="setEditCategory('forgetfulness')" id="editCategoryForgetfulness" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Anti-Forget</button>
-                        <button onclick="setEditCategory('deaddiction')" id="editCategoryDeaddiction" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">De-addiction</button>
                     </div>
                 </div>
                 <!-- Target duration (only if work) -->
@@ -1979,14 +1375,6 @@ Android-style App Drawer containing three custom apps:
             { id: 'maturity', name: 'Maturity', icon: 'fa-solid fa-crown', bg: 'bg-gradient-to-br from-amber-600 to-amber-800', badgeId: 'badgeMaturity', desc: 'Habits for wisdom, self-regulation, and maturity' },
             { id: 'forgetfulness', name: 'Anti-Forget', icon: 'fa-solid fa-bell-slash', bg: 'bg-gradient-to-br from-rose-500 to-orange-600', badgeId: 'badgeForgetfulness', desc: 'Habits to avoid forgetfulness and improve memory' },
             { id: 'calendar', name: 'Calendar', icon: 'fa-solid fa-calendar-days', bg: 'bg-gradient-to-br from-indigo-500 to-purple-600', desc: 'Schedule events and set reminders' },
-            { id: 'productivity', name: 'Productivity System', icon: 'fa-solid fa-square-poll-horizontal', bg: 'bg-gradient-to-br from-teal-500 to-indigo-600', badgeId: 'badgeProductivity', desc: 'Productivity Habits and 15-Minute Blocks' },
-            { id: 'deaddiction', name: 'Mental De-addiction', icon: 'fa-solid fa-head-side-virus', bg: 'bg-gradient-to-br from-rose-600 to-rose-950', badgeId: 'badgeDeaddiction', desc: 'Habits to break negative patterns and addiction' },
-            { id: 'therapy', name: 'Therapy', icon: 'fa-solid fa-couch', bg: 'bg-gradient-to-br from-violet-500 to-purple-700', desc: 'Reflect on therapy questions and answers' },
-            { id: 'screentime', name: 'Screen Time', icon: 'fa-solid fa-mobile-screen-button', bg: 'bg-gradient-to-br from-indigo-500 to-purple-750', desc: 'Track daily screen time and limits' },
-            { id: 'process2', name: 'Process 2.0', icon: 'fa-solid fa-arrows-spin', bg: 'bg-gradient-to-br from-indigo-600 to-purple-800', desc: 'Process emotional states with pinned major issues' },
-            { id: 'improvement', name: 'Improvement Areas', icon: 'fa-solid fa-arrows-up-to-line', bg: 'bg-gradient-to-br from-emerald-500 to-teal-700', desc: 'List and track areas for self-improvement' },
-            { id: 'timer', name: 'Timer', icon: 'fa-solid fa-stopwatch', bg: 'bg-gradient-to-br from-indigo-500 to-purple-600', desc: 'Stopwatch with total and current lap running times' },
-            { id: 'lifeguide', name: 'Life Guide', icon: 'fa-solid fa-compass', bg: 'bg-gradient-to-br from-teal-500 to-emerald-600', desc: 'Core rules for building and breaking habits' },
             { id: 'appstore', name: 'App Store', icon: 'fa-solid fa-store', bg: 'bg-gradient-to-br from-indigo-600 to-indigo-800', desc: 'Enable or disable apps in your workspace', locked: true }
         ];
         let enabledApps = {};
@@ -2647,21 +2035,12 @@ Android-style App Drawer containing three custom apps:
         const archivedEmotionalContainer = document.getElementById('archivedEmotionalContainer');
         const archivedEmotionalList = document.getElementById('archivedEmotionalList');
 
-        const process2PinnedContainer = document.getElementById('process2PinnedContainer');
-        const process2PinnedList = document.getElementById('process2PinnedList');
-        const process2List = document.getElementById('process2List');
-        const archivedProcess2Container = document.getElementById('archivedProcess2Container');
-        const archivedProcess2List = document.getElementById('archivedProcess2List');
-
         const maturityList = document.getElementById('maturityList');
         const pausedMaturityContainer = document.getElementById('pausedMaturityContainer');
         const pausedMaturityList = document.getElementById('pausedMaturityList');
         const forgetfulnessList = document.getElementById('forgetfulnessList');
         const pausedForgetfulnessContainer = document.getElementById('pausedForgetfulnessContainer');
         const pausedForgetfulnessList = document.getElementById('pausedForgetfulnessList');
-        const deaddictionList = document.getElementById('deaddictionList');
-        const pausedDeaddictionContainer = document.getElementById('pausedDeaddictionContainer');
-        const pausedDeaddictionList = document.getElementById('pausedDeaddictionList');
 
 
         // Modals & Overlays
@@ -2690,7 +2069,6 @@ Android-style App Drawer containing three custom apps:
             initPatternLock();
             loadGlobalNotes();
             initCalendarState();
-            loadTimerState();
 
             // Keydown listeners for Enter on laptops and phones
             document.getElementById('workInput').addEventListener('keydown', (e) => {
@@ -2729,12 +2107,6 @@ Android-style App Drawer containing three custom apps:
                     addEmotionalHabit();
                 }
             });
-            document.getElementById('process2Input').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addProcess2Habit();
-                }
-            });
             document.getElementById('practiceInput').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -2763,12 +2135,6 @@ Android-style App Drawer containing three custom apps:
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     addForgetfulnessHabit();
-                }
-            });
-            document.getElementById('deaddictionInput').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addDeaddictionHabit();
                 }
             });
         });
@@ -2853,14 +2219,6 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewForgetfulness').classList.add('hidden');
             document.getElementById('viewCalendar').classList.add('hidden');
             document.getElementById('viewCalendarEventForm').classList.add('hidden');
-            document.getElementById('viewProductivity').classList.add('hidden');
-            document.getElementById('viewDeaddiction').classList.add('hidden');
-            document.getElementById('viewTherapy').classList.add('hidden');
-            document.getElementById('viewScreentime').classList.add('hidden');
-            document.getElementById('viewImprovement').classList.add('hidden');
-            document.getElementById('viewProcess2').classList.add('hidden');
-            document.getElementById('viewTimer').classList.add('hidden');
-            document.getElementById('viewLifeGuide').classList.add('hidden');
             
             const appObj = ALL_APPS.find(a => a.id === app);
             if (appObj) {
@@ -2959,75 +2317,11 @@ Android-style App Drawer containing three custom apps:
                 appHeader.classList.remove('hidden');
                 document.getElementById('headerIcon').className = 'fa-solid fa-calendar-days text-indigo-600';
                 initCalendarState();
-            } else if (app === 'productivity') {
-                body.className = 'theme-productivity h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewProductivity').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-square-poll-horizontal text-teal-600';
-                switchProductivityTab('enablers');
-            } else if (app === 'deaddiction') {
-                body.className = 'theme-deaddiction h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewDeaddiction').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-head-side-virus text-rose-700';
-            } else if (app === 'therapy') {
-                body.className = 'theme-therapy h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewTherapy').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-couch text-purple-600';
-                activeTherapySessionId = null;
-                renderTherapy();
-            } else if (app === 'screentime') {
-                body.className = 'theme-screentime h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewScreentime').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-mobile-screen-button text-indigo-600';
-                updateScreentimeUi();
-            } else if (app === 'improvement') {
-                body.className = 'theme-improvement h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewImprovement').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-arrows-up-to-line text-emerald-600';
-                renderImprovementList();
-            } else if (app === 'process2') {
-                body.className = 'theme-process2 h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewProcess2').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-arrows-spin text-indigo-600';
-            } else if (app === 'timer') {
-                body.className = 'theme-timer h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewTimer').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-stopwatch text-indigo-600';
-            } else if (app === 'lifeguide') {
-                body.className = 'theme-lifeguide h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewLifeGuide').classList.remove('hidden');
-                appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-compass text-teal-600';
             }
             
             // Show easy floating home button
             document.getElementById('floatingHomeBtn').classList.remove('hidden');
             render();
-        }
-
-        function switchProductivityTab(tab) {
-            const btnEnablers = document.getElementById('btnProdTabEnablers');
-            const btnBlockers = document.getElementById('btnProdTabBlockers');
-            const contentEnablers = document.getElementById('prodTabContentEnablers');
-            const contentBlockers = document.getElementById('prodTabContentBlockers');
-
-            if (tab === 'enablers') {
-                btnEnablers.className = 'flex-1 py-3 text-xs font-bold rounded-xl transition-all bg-white text-teal-700 shadow-sm';
-                btnBlockers.className = 'flex-1 py-3 text-xs font-bold rounded-xl transition-all text-gray-500 hover:text-gray-700';
-                contentEnablers.classList.remove('hidden');
-                contentBlockers.classList.add('hidden');
-            } else {
-                btnBlockers.className = 'flex-1 py-3 text-xs font-bold rounded-xl transition-all bg-white text-teal-700 shadow-sm';
-                btnEnablers.className = 'flex-1 py-3 text-xs font-bold rounded-xl transition-all text-gray-500 hover:text-gray-700';
-                contentEnablers.classList.add('hidden');
-                contentBlockers.classList.remove('hidden');
-            }
         }
 
         function goHome() {
@@ -3053,14 +2347,6 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewForgetfulness').classList.add('hidden');
             document.getElementById('viewCalendar').classList.add('hidden');
             document.getElementById('viewCalendarEventForm').classList.add('hidden');
-            document.getElementById('viewProductivity').classList.add('hidden');
-            document.getElementById('viewDeaddiction').classList.add('hidden');
-            document.getElementById('viewTherapy').classList.add('hidden');
-            document.getElementById('viewScreentime').classList.add('hidden');
-            document.getElementById('viewImprovement').classList.add('hidden');
-            document.getElementById('viewProcess2').classList.add('hidden');
-            document.getElementById('viewTimer').classList.add('hidden');
-            document.getElementById('viewLifeGuide').classList.add('hidden');
             
             document.body.className = 'theme-home h-screen flex flex-col overflow-hidden antialiased';
             document.getElementById('appDrawer').classList.remove('hidden');
@@ -3245,29 +2531,6 @@ Android-style App Drawer containing three custom apps:
             showToast('Recall activity added');
         }
 
-        function addDeaddictionHabit() {
-            const input = document.getElementById('deaddictionInput');
-            const name = input.value.trim();
-            if (!name) return;
-
-            const h = {
-                id: Date.now(),
-                name: name,
-                created: new Date().toISOString(),
-                isEnabled: true,
-                completedDates: [],
-                notes: '',
-                category: 'deaddiction',
-                targetDays: selectedTargetDays
-            };
-
-            habits.unshift(h);
-            saveHabits();
-            render();
-            input.value = '';
-            showToast('De-addiction activity added');
-        }
-
         function addMemorizeHabit() {
             const input = document.getElementById('memorizeInput');
             const name = input.value.trim();
@@ -3337,30 +2600,6 @@ Android-style App Drawer containing three custom apps:
             showToast('New 3-day emotional process started');
         }
 
-        function addProcess2Habit() {
-            const input = document.getElementById('process2Input');
-            const name = input.value.trim();
-            if (!name) return;
-
-            const h = {
-                id: Date.now(),
-                name: name,
-                created: new Date().toISOString(),
-                isEnabled: true,
-                completedDates: [],
-                notes: '',
-                category: 'process2',
-                targetDays: 3,
-                isPinned: false
-            };
-
-            habits.unshift(h);
-            saveHabits();
-            render();
-            input.value = '';
-            showToast('New 3-day Process 2.0 started');
-        }
-
         function addPracticeItem() {
             const input = document.getElementById('practiceInput');
             const name = input.value.trim();
@@ -3403,29 +2642,9 @@ Android-style App Drawer containing three custom apps:
             if (hasChanged) saveHabits();
         }
 
-        function autoSelectProcess2Days() {
-            let hasChanged = false;
-            habits.forEach(h => {
-                if (h.category === 'process2') {
-                    const currentDayIdx = getDaysSinceCreation(h);
-                    const dates = getEmotionalDates(h);
-                    const limit = Math.min(currentDayIdx, 2);
-                    for (let i = 0; i <= limit; i++) {
-                        const dateStr = dates[i];
-                        if (dateStr && !h.completedDates.includes(dateStr)) {
-                            h.completedDates.push(dateStr);
-                            hasChanged = true;
-                        }
-                    }
-                }
-            });
-            if (hasChanged) saveHabits();
-        }
-
         // --- Rendering Logic ---
         function render() {
             autoSelectEmotionalDays();
-            autoSelectProcess2Days();
 
             // Sort: pending (not completed today) habits surface to top
             const todayStr = getFormattedDate(0);
@@ -3449,9 +2668,6 @@ Android-style App Drawer containing three custom apps:
             pausedResilienceList.innerHTML = '';
             emotionalList.innerHTML = '';
             archivedEmotionalList.innerHTML = '';
-            process2PinnedList.innerHTML = '';
-            process2List.innerHTML = '';
-            archivedProcess2List.innerHTML = '';
             practiceList.innerHTML = '';
             pausedPracticeList.innerHTML = '';
             learningList.innerHTML = '';
@@ -3460,8 +2676,6 @@ Android-style App Drawer containing three custom apps:
             pausedMaturityList.innerHTML = '';
             forgetfulnessList.innerHTML = '';
             pausedForgetfulnessList.innerHTML = '';
-            deaddictionList.innerHTML = '';
-            pausedDeaddictionList.innerHTML = '';
 
             let activeWorkCount = 0;
             let activeMentalCount = 0;
@@ -3485,19 +2699,10 @@ Android-style App Drawer containing three custom apps:
             let pausedMaturityCount = 0;
             let activeForgetfulnessCount = 0;
             let pausedForgetfulnessCount = 0;
-            let activeDeaddictionCount = 0;
-            let pausedDeaddictionCount = 0;
 
             let day1Active = 0;
             let day2Active = 0;
             let day3Active = 0;
-
-            let pinnedProcess2Count = 0;
-            let activeProcess2Count = 0;
-            let archivedProcess2Count = 0;
-            let day1Process2Active = 0;
-            let day2Process2Active = 0;
-            let day3Process2Active = 0;
 
             habits.forEach(habit => {
                 if (habit.category === 'work') {
@@ -3532,28 +2737,6 @@ Android-style App Drawer containing three custom apps:
                     } else {
                         archivedEmoCount++;
                         archivedEmotionalList.appendChild(createEmotionalCard(habit, true));
-                    }
-                } else if (habit.category === 'process2') {
-                    const days = getDaysSinceCreation(habit);
-                    const isPinned = habit.isPinned || false;
-                    if (days < 3) {
-                        activeProcess2Count++;
-                        if (isPinned) {
-                            pinnedProcess2Count++;
-                            process2PinnedList.appendChild(createProcess2Card(habit));
-                        } else {
-                            process2List.appendChild(createProcess2Card(habit));
-                        }
-                        if (days === 0) {
-                            day1Process2Active++;
-                        } else if (days === 1) {
-                            day2Process2Active++;
-                        } else if (days === 2) {
-                            day3Process2Active++;
-                        }
-                    } else {
-                        archivedProcess2Count++;
-                        archivedProcess2List.appendChild(createProcess2Card(habit, true));
                     }
                 } else if (habit.category === 'memorize') {
                     if (habit.isEnabled) {
@@ -3619,14 +2802,6 @@ Android-style App Drawer containing three custom apps:
                         pausedForgetfulnessCount++;
                         pausedForgetfulnessList.appendChild(createWorkCard(habit));
                     }
-                } else if (habit.category === 'deaddiction') {
-                    if (habit.isEnabled) {
-                        activeDeaddictionCount++;
-                        deaddictionList.appendChild(createWorkCard(habit));
-                    } else {
-                        pausedDeaddictionCount++;
-                        pausedDeaddictionList.appendChild(createWorkCard(habit));
-                    }
                 }
             });
 
@@ -3655,12 +2830,6 @@ Android-style App Drawer containing three custom apps:
             if (archivedEmoCount > 0) archivedEmotionalContainer.classList.remove('hidden');
             else archivedEmotionalContainer.classList.add('hidden');
 
-            if (pinnedProcess2Count > 0) process2PinnedContainer.classList.remove('hidden');
-            else process2PinnedContainer.classList.add('hidden');
-
-            if (archivedProcess2Count > 0) archivedProcess2Container.classList.remove('hidden');
-            else archivedProcess2Container.classList.add('hidden');
-
             if (pausedLearningCount > 0) pausedLearningContainer.classList.remove('hidden');
             else pausedLearningContainer.classList.add('hidden');
 
@@ -3670,9 +2839,6 @@ Android-style App Drawer containing three custom apps:
             if (pausedForgetfulnessCount > 0) pausedForgetfulnessContainer.classList.remove('hidden');
             else pausedForgetfulnessContainer.classList.add('hidden');
 
-            if (pausedDeaddictionCount > 0) pausedDeaddictionContainer.classList.remove('hidden');
-            else pausedDeaddictionContainer.classList.add('hidden');
-
             // Empty State
             if (currentActiveApp !== 'home') {
                 let totalActive = 1;
@@ -3680,7 +2846,6 @@ Android-style App Drawer containing three custom apps:
                 else if (currentActiveApp === 'mental') totalActive = activeMentalCount;
                 else if (currentActiveApp === 'memorize') totalActive = activeMemorizeCount;
                 else if (currentActiveApp === 'emotional') totalActive = activeEmoCount;
-                else if (currentActiveApp === 'process2') totalActive = activeProcess2Count;
                 else if (currentActiveApp === 'practice') totalActive = activePracticeCount;
                 else if (currentActiveApp === 'exercise') totalActive = activeExerciseCount;
                 else if (currentActiveApp === 'intelligence') totalActive = activeIntelligenceCount;
@@ -3688,10 +2853,8 @@ Android-style App Drawer containing three custom apps:
                 else if (currentActiveApp === 'learning') totalActive = activeLearningCount;
                 else if (currentActiveApp === 'maturity') totalActive = activeMaturityCount;
                 else if (currentActiveApp === 'forgetfulness') totalActive = activeForgetfulnessCount;
-                else if (currentActiveApp === 'deaddiction') totalActive = activeDeaddictionCount;
                 else if (currentActiveApp === 'appstore') totalActive = 1;
                 else if (currentActiveApp === 'calendar') totalActive = 1;
-                else if (currentActiveApp === 'productivity') totalActive = 1;
                 
                 if (totalActive === 0) {
                     emptyState.classList.remove('hidden');
@@ -3713,16 +2876,23 @@ Android-style App Drawer containing three custom apps:
             if (d2Count) d2Count.textContent = day2Active;
             if (d3Count) d3Count.textContent = day3Active;
 
-            // Update Process 2.0 Stats Elements
-            const p2d1Count = document.getElementById('process2Day1Count');
-            const p2d2Count = document.getElementById('process2Day2Count');
-            const p2d3Count = document.getElementById('process2Day3Count');
+            // Update Cleaner badge count
+            const completedCount = habits.filter(h => {
+                if (h.category === 'emotional') return false;
+                const target = h.targetDays || 21;
+                const streak = calculateStreak(h);
+                return streak >= target;
+            }).length;
 
-            if (p2d1Count) p2d1Count.textContent = day1Process2Active;
-            if (p2d2Count) p2d2Count.textContent = day2Process2Active;
-            if (p2d3Count) p2d3Count.textContent = day3Process2Active;
-
-
+            const badge = document.getElementById('badgeCleaner');
+            if (badge) {
+                if (completedCount > 0) {
+                    badge.textContent = completedCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
 
             if (currentActiveApp === 'cleaner') {
                 renderCleaner();
@@ -3846,84 +3016,6 @@ Android-style App Drawer containing three custom apps:
 
             `;
             return card;
-        }
-
-        // Process 2.0 Card
-        function createProcess2Card(habit, isArchived = false) {
-            const card = document.createElement('div');
-            const isPinned = habit.isPinned || false;
-            card.className = `habit-card bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3.5 shadow-sm relative ${isArchived ? 'opacity-60 bg-gray-50/70' : ''}`;
-            card.style.borderLeft = `4px solid ${isArchived ? '#cbd5e1' : (isPinned ? '#6366f1' : '#818cf8')}`;
-
-            const dates = getEmotionalDates(habit);
-            const currentDayIdx = getDaysSinceCreation(habit);
-            let pillHtml = '';
-            
-            if (!isPinned) {
-                dates.forEach((dateStr, idx) => {
-                    const isComp = habit.completedDates.includes(dateStr);
-                    const isToday = !isArchived && idx === currentDayIdx;
-                    pillHtml += `
-                        <button onclick="toggleEmotionalPill(${habit.id}, '${dateStr}', ${idx})" ${isArchived ? 'disabled' : ''}
-                            class="day-circle-btn flex-1 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center justify-center gap-1.5 ${isComp ? 'bg-indigo-100 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-indigo-50/30 border-indigo-100/60 text-indigo-600 hover:bg-indigo-50'}">
-                            <i class="fa-solid ${isComp ? 'fa-circle-check' : 'fa-circle-notch text-[10px]'}"></i>
-                            <span>Day ${idx + 1}</span>
-                        </button>
-                    `;
-                });
-            }
-
-            const pinBtn = isArchived ? '' : `
-                <button onclick="togglePinProcess2(${habit.id})" class="p-1.5 transition-colors shrink-0 ${isPinned ? 'text-indigo-600 hover:text-indigo-800' : 'text-gray-300 hover:text-indigo-600'}" title="${isPinned ? 'Unpin Issue' : 'Pin as Major Issue'}">
-                    <i class="fa-solid fa-thumbtack text-xs"></i>
-                </button>
-            `;
-
-            const statusText = isPinned 
-                ? '📌 Pinned Major Issue (Timer Paused)' 
-                : (isArchived ? 'Completed 3-Day Journey' : `Active: Day ${Math.min(3, Math.max(1, currentDayIdx + 1))} of 3`);
-
-            card.innerHTML = `
-                <div class="flex justify-between items-start gap-3">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-bold text-base text-indigo-950 tracking-tight break-words">${escapeHtml(habit.name)}</h3>
-                        <p class="text-[10px] text-indigo-400 font-semibold mt-0.5 flex items-center gap-1">
-                            <i class="fa-regular fa-calendar-alt"></i>
-                            <span>${statusText}</span>
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-1 shrink-0">
-                        ${pinBtn}
-                        <button onclick="showEditView(${habit.id})" class="text-gray-300 hover:text-indigo-600 p-1.5 transition-colors">
-                            <i class="fa-solid fa-ellipsis-h text-sm"></i>
-                        </button>
-                    </div>
-                </div>
-
-                ${!isPinned ? `
-                <div class="flex gap-2">
-                    ${pillHtml}
-                </div>
-                ` : ''}
-            `;
-            return card;
-        }
-
-        function togglePinProcess2(id) {
-            const h = habits.find(x => x.id === id);
-            if (!h) return;
-            h.isPinned = !h.isPinned;
-            if (h.isPinned) {
-                h.pinDate = new Date().toISOString();
-            } else {
-                h.created = new Date().toISOString();
-                h.completedDates = [];
-                delete h.pinDate;
-                delete h.pausedDuration;
-            }
-            saveHabits();
-            render();
-            showToast(h.isPinned ? 'Issue pinned to top as major issue' : 'Issue unpinned and timer reset');
         }
 
         // Practice Card
@@ -4147,16 +3239,8 @@ Android-style App Drawer containing three custom apps:
             return `${year}-${month}-${day}`;
         }
 
-        function getAdjustedCreationDate(habit) {
-            let pausedTime = habit.pausedDuration || 0;
-            if (habit.isPinned && habit.pinDate) {
-                pausedTime += (new Date() - new Date(habit.pinDate));
-            }
-            return new Date(new Date(habit.created).getTime() + pausedTime);
-        }
-
         function getDaysSinceCreation(habit) {
-            const created = getAdjustedCreationDate(habit);
+            const created = new Date(habit.created);
             created.setHours(created.getHours() - 6);
             created.setHours(0,0,0,0);
             const today = new Date();
@@ -4169,7 +3253,7 @@ Android-style App Drawer containing three custom apps:
 
         function getEmotionalDates(habit) {
             const dates = [];
-            const base = getAdjustedCreationDate(habit);
+            const base = new Date(habit.created);
             base.setHours(base.getHours() - 6);
             for (let i = 0; i < 3; i++) {
                 const d = new Date(base);
@@ -4388,39 +3472,6 @@ Android-style App Drawer containing three custom apps:
                     badgeForgetfulness.classList.add('hidden');
                 }
             }
-
-            // De-addiction Progress
-            const activeDeaddictionBadge = habits.filter(h => h.category === 'deaddiction' && h.isEnabled);
-            const completedDeaddictionBadge = activeDeaddictionBadge.filter(h => h.completedDates.includes(today)).length;
-            
-            const pendingDeaddiction = activeDeaddictionBadge.length - completedDeaddictionBadge;
-            const badgeDeaddiction = document.getElementById('badgeDeaddiction');
-            if (badgeDeaddiction) {
-                if (pendingDeaddiction > 0) {
-                    badgeDeaddiction.textContent = pendingDeaddiction;
-                    badgeDeaddiction.classList.remove('hidden');
-                } else {
-                    badgeDeaddiction.classList.add('hidden');
-                }
-            }
-
-            // Cleaner Progress
-            const completedCount = habits.filter(h => {
-                if (h.category === 'emotional' || h.category === 'process2') return false;
-                const target = h.targetDays || 21;
-                const streak = calculateStreak(h);
-                return streak >= target;
-            }).length;
-
-            const badgeCleaner = document.getElementById('badgeCleaner');
-            if (badgeCleaner) {
-                if (completedCount > 0) {
-                    badgeCleaner.textContent = completedCount;
-                    badgeCleaner.classList.remove('hidden');
-                } else {
-                    badgeCleaner.classList.add('hidden');
-                }
-            }
         }
 
         // --- Global Notes ---
@@ -4493,7 +3544,6 @@ Android-style App Drawer containing three custom apps:
             editSelectedCategory = category;
             const btnWork = document.getElementById('editCategoryWork');
             const btnEmo = document.getElementById('editCategoryEmotional');
-            const btnProcess2 = document.getElementById('editCategoryProcess2');
             const btnMental = document.getElementById('editCategoryMental');
             const btnPractice = document.getElementById('editCategoryPractice');
             const btnMemorize = document.getElementById('editCategoryMemorize');
@@ -4501,14 +3551,10 @@ Android-style App Drawer containing three custom apps:
             const btnIntelligence = document.getElementById('editCategoryIntelligence');
             const btnResilience = document.getElementById('editCategoryResilience');
             const btnLearning = document.getElementById('editCategoryLearning');
-            const btnMaturity = document.getElementById('editCategoryMaturity');
-            const btnForgetfulness = document.getElementById('editCategoryForgetfulness');
-            const btnDeaddiction = document.getElementById('editCategoryDeaddiction');
             const targetContainer = document.getElementById('editTargetDaysContainer');
 
             btnWork.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
             btnEmo.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
-            if(btnProcess2) btnProcess2.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
             btnMental.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
             if(btnPractice) btnPractice.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
             if(btnMemorize) btnMemorize.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
@@ -4516,9 +3562,6 @@ Android-style App Drawer containing three custom apps:
             if(btnIntelligence) btnIntelligence.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
             if(btnResilience) btnResilience.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
             if(btnLearning) btnLearning.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
-            if(btnMaturity) btnMaturity.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
-            if(btnForgetfulness) btnForgetfulness.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
-            if(btnDeaddiction) btnDeaddiction.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
 
             if (category === 'work') {
                 btnWork.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-teal-50 border-teal-500 text-teal-800';
@@ -4544,18 +3587,6 @@ Android-style App Drawer containing three custom apps:
             } else if (category === 'learning') {
                 if(btnLearning) btnLearning.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-indigo-50 border-indigo-500 text-indigo-800';
                 targetContainer.classList.remove('hidden');
-            } else if (category === 'maturity') {
-                if(btnMaturity) btnMaturity.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-amber-50 border-amber-500 text-amber-800';
-                targetContainer.classList.remove('hidden');
-            } else if (category === 'forgetfulness') {
-                if(btnForgetfulness) btnForgetfulness.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-rose-50 border-rose-500 text-rose-800';
-                targetContainer.classList.remove('hidden');
-            } else if (category === 'deaddiction') {
-                if(btnDeaddiction) btnDeaddiction.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-rose-50 border-rose-500 text-rose-800';
-                targetContainer.classList.remove('hidden');
-            } else if (category === 'process2') {
-                if(btnProcess2) btnProcess2.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-indigo-50 border-indigo-500 text-indigo-800';
-                targetContainer.classList.add('hidden');
             } else {
                 btnEmo.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-purple-50 border-purple-500 text-purple-800';
                 targetContainer.classList.add('hidden');
@@ -4576,10 +3607,8 @@ Android-style App Drawer containing three custom apps:
             h.name = name;
             h.notes = document.getElementById('editHabitNotes').value.trim();
             h.category = editSelectedCategory;
-            if (editSelectedCategory === 'work' || editSelectedCategory === 'mental' || editSelectedCategory === 'practice' || editSelectedCategory === 'memorize' || editSelectedCategory === 'exercise' || editSelectedCategory === 'intelligence' || editSelectedCategory === 'resilience' || editSelectedCategory === 'learning' || editSelectedCategory === 'maturity' || editSelectedCategory === 'forgetfulness' || editSelectedCategory === 'deaddiction') {
+            if (editSelectedCategory === 'work' || editSelectedCategory === 'mental' || editSelectedCategory === 'practice' || editSelectedCategory === 'memorize' || editSelectedCategory === 'exercise' || editSelectedCategory === 'intelligence' || editSelectedCategory === 'resilience' || editSelectedCategory === 'learning') {
                 h.targetDays = parseInt(document.getElementById('editTargetDays').value) || 21;
-            } else if (editSelectedCategory === 'emotional' || editSelectedCategory === 'process2') {
-                h.targetDays = 3;
             }
 
             saveHabits();
@@ -5374,881 +4403,6 @@ Android-style App Drawer containing three custom apps:
             }
 
         }
-
-        // --- Therapy App Controller ---
-        let therapySessions = [];
-        let activeTherapySessionId = null;
-        let therapyCurrentPage = 1;
-        const THERAPY_PAGE_SIZE = 5;
-
-        function loadTherapySessionsData() {
-            const stored = localStorage.getItem('personalOsTherapySessions');
-            if (stored) {
-                try {
-                    therapySessions = JSON.parse(stored);
-                } catch (e) {
-                    therapySessions = [];
-                }
-            } else {
-                therapySessions = [];
-            }
-        }
-
-        function saveTherapySessionsData() {
-            localStorage.setItem('personalOsTherapySessions', JSON.stringify(therapySessions));
-        }
-
-        function addTherapySession() {
-            const input = document.getElementById('therapySessionNameInput');
-            const name = input.value.trim();
-            if (!name) return;
-
-            const newSession = {
-                id: Date.now(),
-                name: name,
-                entries: []
-            };
-
-            therapySessions.unshift(newSession);
-            saveTherapySessionsData();
-            input.value = '';
-            renderTherapy();
-            showToast('Therapy session created');
-        }
-        window.addTherapySession = addTherapySession;
-
-        function deleteTherapySession(id) {
-            if (confirm('Are you sure you want to delete this therapy topic and all its reflections?')) {
-                therapySessions = therapySessions.filter(s => s.id !== id);
-                if (activeTherapySessionId === id) {
-                    activeTherapySessionId = null;
-                }
-                saveTherapySessionsData();
-                renderTherapy();
-                showToast('Therapy session deleted');
-            }
-        }
-        window.deleteTherapySession = deleteTherapySession;
-
-        function openTherapySession(id) {
-            activeTherapySessionId = id;
-            therapyCurrentPage = 1;
-            renderTherapy();
-        }
-        window.openTherapySession = openTherapySession;
-
-        function closeTherapySession() {
-            activeTherapySessionId = null;
-            renderTherapy();
-        }
-        window.closeTherapySession = closeTherapySession;
-
-        function addTherapyEntry() {
-            const session = therapySessions.find(s => s.id === activeTherapySessionId);
-            if (!session) return;
-
-            const questionInput = document.getElementById('therapyQuestionInput');
-            const answerInput = document.getElementById('therapyAnswerInput');
-
-            const question = questionInput.value.trim();
-            const answer = answerInput.value.trim();
-
-            if (!question) {
-                showToast('Please enter a question');
-                return;
-            }
-            if (!answer) {
-                showToast('Please write an answer');
-                return;
-            }
-
-            const newEntry = {
-                id: Date.now(),
-                question: question,
-                answer: answer,
-                date: new Date().toISOString()
-            };
-
-            session.entries = session.entries || [];
-            session.entries.unshift(newEntry);
-            if (session.entries.length > 50) {
-                session.entries = session.entries.slice(0, 50);
-            }
-            therapyCurrentPage = 1;
-            saveTherapySessionsData();
-            
-            // Reset form
-            questionInput.value = '';
-            answerInput.value = '';
-
-            renderTherapy();
-            showToast('Reflection saved successfully');
-        }
-        window.addTherapyEntry = addTherapyEntry;
-
-        function deleteTherapyEntry(id) {
-            const session = therapySessions.find(s => s.id === activeTherapySessionId);
-            if (!session) return;
-
-            if (confirm('Are you sure you want to delete this reflection?')) {
-                session.entries = (session.entries || []).filter(e => e.id !== id);
-                const totalPages = Math.ceil(session.entries.length / THERAPY_PAGE_SIZE) || 1;
-                if (therapyCurrentPage > totalPages) {
-                    therapyCurrentPage = totalPages;
-                }
-                saveTherapySessionsData();
-                renderTherapy();
-                showToast('Reflection deleted');
-            }
-        }
-        window.deleteTherapyEntry = deleteTherapyEntry;
-
-        function changeTherapyPage(direction) {
-            const session = therapySessions.find(s => s.id === activeTherapySessionId);
-            if (!session) return;
-            const entries = session.entries || [];
-            const totalPages = Math.ceil(entries.length / THERAPY_PAGE_SIZE) || 1;
-            therapyCurrentPage += direction;
-            if (therapyCurrentPage < 1) therapyCurrentPage = 1;
-            if (therapyCurrentPage > totalPages) therapyCurrentPage = totalPages;
-            renderTherapy();
-        }
-        window.changeTherapyPage = changeTherapyPage;
-
-        function renderTherapySessionList() {
-            const listContainer = document.getElementById('therapySessionsList');
-            const emptyState = document.getElementById('therapySessionsEmptyState');
-            if (!listContainer) return;
-
-            listContainer.innerHTML = '';
-
-            if (therapySessions.length === 0) {
-                emptyState.classList.remove('hidden');
-                emptyState.classList.add('flex');
-                return;
-            } else {
-                emptyState.classList.add('hidden');
-                emptyState.classList.remove('flex');
-            }
-
-            therapySessions.forEach(session => {
-                const count = session.entries ? session.entries.length : 0;
-                
-                const card = document.createElement('div');
-                card.className = 'bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-center justify-between transition-all hover:shadow-md cursor-pointer';
-                card.onclick = (e) => {
-                    if (e.target.closest('button')) return;
-                    openTherapySession(session.id);
-                };
-
-                card.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0">
-                            <i class="fa-solid fa-couch"></i>
-                        </div>
-                        <div class="space-y-0.5">
-                            <h4 class="text-sm font-bold text-gray-800">${session.name}</h4>
-                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${count} reflections logged</p>
-                        </div>
-                    </div>
-                    <button onclick="deleteTherapySession(${session.id})" class="text-gray-300 hover:text-red-500 p-2 rounded-xl hover:bg-red-50 transition-colors" title="Delete therapy topic">
-                        <i class="fa-solid fa-trash-can text-sm"></i>
-                    </button>
-                `;
-                listContainer.appendChild(card);
-            });
-        }
-
-        function renderTherapySessionDetail() {
-            const session = therapySessions.find(s => s.id === activeTherapySessionId);
-            if (!session) {
-                closeTherapySession();
-                return;
-            }
-
-            document.getElementById('activeTherapySessionTitle').textContent = session.name;
-
-            const listContainer = document.getElementById('therapyEntriesList');
-            const emptyState = document.getElementById('therapyEmptyState');
-            const paginationControls = document.getElementById('therapyPaginationControls');
-
-            if (!listContainer) return;
-            listContainer.innerHTML = '';
-
-            const entries = session.entries || [];
-
-            if (entries.length === 0) {
-                emptyState.classList.remove('hidden');
-                emptyState.classList.add('flex');
-                if (paginationControls) {
-                    paginationControls.classList.add('hidden');
-                    paginationControls.classList.remove('flex');
-                }
-                return;
-            } else {
-                emptyState.classList.add('hidden');
-                emptyState.classList.remove('flex');
-            }
-
-            const totalPages = Math.ceil(entries.length / THERAPY_PAGE_SIZE) || 1;
-            if (therapyCurrentPage > totalPages) therapyCurrentPage = totalPages;
-
-            if (paginationControls) {
-                if (entries.length > THERAPY_PAGE_SIZE) {
-                    paginationControls.classList.remove('hidden');
-                    paginationControls.classList.add('flex');
-                    
-                    document.getElementById('therapyPageNumber').textContent = `Page ${therapyCurrentPage} of ${totalPages}`;
-                    document.getElementById('therapyPrevBtn').disabled = (therapyCurrentPage === 1);
-                    document.getElementById('therapyNextBtn').disabled = (therapyCurrentPage === totalPages);
-                } else {
-                    paginationControls.classList.add('hidden');
-                    paginationControls.classList.remove('flex');
-                }
-            }
-
-            const startIndex = (therapyCurrentPage - 1) * THERAPY_PAGE_SIZE;
-            const paginatedEntries = entries.slice(startIndex, startIndex + THERAPY_PAGE_SIZE);
-
-            paginatedEntries.forEach(entry => {
-                const entryDate = new Date(entry.date);
-                const dateOptions = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-                const formattedDate = entryDate.toLocaleDateString('en-US', dateOptions);
-
-                const card = document.createElement('div');
-                card.className = 'bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-3 relative transition-all duration-300 hover:shadow-md';
-                
-                card.innerHTML = `
-                    <div class="flex justify-between items-start gap-4">
-                        <div class="space-y-1">
-                            <span class="text-[9px] font-bold text-purple-400 uppercase tracking-widest">${formattedDate}</span>
-                            <h4 class="text-sm font-bold text-purple-950 leading-snug">${entry.question}</h4>
-                        </div>
-                        <button onclick="deleteTherapyEntry(${entry.id})" class="text-gray-300 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors shrink-0" title="Delete entry">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    </div>
-                    <div class="bg-purple-50/20 border border-purple-100/30 rounded-xl p-4 text-xs text-purple-900 whitespace-pre-wrap leading-relaxed selectable">
-                        ${entry.answer}
-                    </div>
-                `;
-                listContainer.appendChild(card);
-            });
-        }
-
-        function renderTherapy() {
-            loadTherapySessionsData();
-            const sessionListView = document.getElementById('therapySessionListView');
-            const sessionDetailView = document.getElementById('therapySessionDetailView');
-
-            if (!sessionListView || !sessionDetailView) return;
-
-            if (activeTherapySessionId === null) {
-                sessionListView.classList.remove('hidden');
-                sessionDetailView.classList.add('hidden');
-                renderTherapySessionList();
-            } else {
-                sessionListView.classList.add('hidden');
-                sessionDetailView.classList.remove('hidden');
-                renderTherapySessionDetail();
-            }
-        }
-        window.renderTherapy = renderTherapy;
-
-        // --- Screen Time Controller ---
-        let screentimeData = JSON.parse(localStorage.getItem('screentimeData')) || { logs: {}, limits: {} };
-        let activeScreentimeWeek = '';
-
-        function initScreentimeDates() {
-            if (!activeScreentimeWeek) {
-                const todayStr = new Date().toISOString().split('T')[0];
-                activeScreentimeWeek = getISOWeek(todayStr);
-            }
-        }
-
-        function selectQuickScreentimeWeek(weeksAgo) {
-            const date = new Date();
-            date.setDate(date.getDate() - (weeksAgo * 7));
-            activeScreentimeWeek = getISOWeek(date.toISOString().split('T')[0]);
-            updateScreentimeUi();
-        }
-        window.selectQuickScreentimeWeek = selectQuickScreentimeWeek;
-
-        function saveWeeklyScreentimeLimit() {
-            const limitInput = document.getElementById('screentimeLimitInput');
-            const limit = parseFloat(limitInput.value);
-            const activeWeek = activeScreentimeWeek || getISOWeek(new Date().toISOString().split('T')[0]);
-
-            if (isNaN(limit) || limit < 0) {
-                showToast('Please enter a valid limit');
-                return;
-            }
-
-            screentimeData.limits[activeWeek] = limit;
-            saveScreentimeData();
-            updateScreentimeUi();
-            limitInput.value = '';
-            showToast('Weekly screen time limit set!');
-        }
-        window.saveWeeklyScreentimeLimit = saveWeeklyScreentimeLimit;
-
-        function saveScreentimeLog() {
-            const activeWeek = activeScreentimeWeek || getISOWeek(new Date().toISOString().split('T')[0]);
-            if (!screentimeData.logs[activeWeek]) {
-                screentimeData.logs[activeWeek] = {
-                    Monday: { hrs: 0, mins: 0 },
-                    Tuesday: { hrs: 0, mins: 0 },
-                    Wednesday: { hrs: 0, mins: 0 },
-                    Thursday: { hrs: 0, mins: 0 },
-                    Friday: { hrs: 0, mins: 0 },
-                    Saturday: { hrs: 0, mins: 0 },
-                    Sunday: { hrs: 0, mins: 0 }
-                };
-            }
-
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            days.forEach(day => {
-                const hrsVal = parseInt(document.getElementById(`screentimeHrs${day}`).value) || 0;
-                const minsVal = parseInt(document.getElementById(`screentimeMins${day}`).value) || 0;
-                screentimeData.logs[activeWeek][day] = {
-                    hrs: Math.max(0, Math.min(24, hrsVal)),
-                    mins: Math.max(0, Math.min(59, minsVal))
-                };
-            });
-
-            saveScreentimeData();
-            updateScreentimeUi();
-            showToast('Screen time log saved successfully');
-        }
-        window.saveScreentimeLog = saveScreentimeLog;
-
-        function saveScreentimeData() {
-            localStorage.setItem('screentimeData', JSON.stringify(screentimeData));
-        }
-
-        function loadScreentimeWeekLog() {
-            const activeWeek = activeScreentimeWeek || getISOWeek(new Date().toISOString().split('T')[0]);
-            const weekLog = screentimeData.logs[activeWeek] || {};
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            
-            days.forEach(day => {
-                const dayData = weekLog[day] || { hrs: '', mins: '' };
-                document.getElementById(`screentimeHrs${day}`).value = dayData.hrs !== undefined ? dayData.hrs : '';
-                document.getElementById(`screentimeMins${day}`).value = dayData.mins !== undefined ? dayData.mins : '';
-            });
-        }
-
-        function getWeeklyScreentimeLimit(activeWeek) {
-            if (screentimeData.limits[activeWeek] !== undefined && screentimeData.limits[activeWeek] > 0) {
-                return screentimeData.limits[activeWeek];
-            }
-            // Check previous 4 weeks
-            let currentWeekStr = activeWeek;
-            for (let i = 0; i < 4; i++) {
-                const parts = currentWeekStr.split('-W');
-                if (parts.length < 2) break;
-                const year = parseInt(parts[0]);
-                const week = parseInt(parts[1]);
-                let prevWeek = week - 1;
-                let prevYear = year;
-                if (prevWeek < 1) {
-                    prevYear -= 1;
-                    prevWeek = 52;
-                }
-                const prevWeekStr = `${prevYear}-W${String(prevWeek).padStart(2, '0')}`;
-                if (screentimeData.limits[prevWeekStr] !== undefined && screentimeData.limits[prevWeekStr] > 0) {
-                    return screentimeData.limits[prevWeekStr];
-                }
-                currentWeekStr = prevWeekStr;
-            }
-            return 0; // Default limit
-        }
-
-        function updateScreentimeUi() {
-            initScreentimeDates();
-            const activeWeek = activeScreentimeWeek || getISOWeek(new Date().toISOString().split('T')[0]);
-            loadScreentimeWeekLog();
-
-            // Update quick select buttons highlight
-            const today = new Date();
-            const w0 = getISOWeek(today.toISOString().split('T')[0]);
-            today.setDate(today.getDate() - 7);
-            const w1 = getISOWeek(today.toISOString().split('T')[0]);
-            today.setDate(today.getDate() - 7);
-            const w2 = getISOWeek(today.toISOString().split('T')[0]);
-
-            const btn0 = document.getElementById('quickScreentimeWeek0Btn');
-            const btn1 = document.getElementById('quickScreentimeWeek1Btn');
-            const btn2 = document.getElementById('quickScreentimeWeek2Btn');
-
-            if (btn0) btn0.className = activeWeek === w0 ? 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-indigo-700 border-indigo-700 text-white font-semibold' : 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-indigo-200';
-            if (btn1) btn1.className = activeWeek === w1 ? 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-indigo-700 border-indigo-700 text-white font-semibold' : 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-indigo-200';
-            if (btn2) btn2.className = activeWeek === w2 ? 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-indigo-700 border-indigo-700 text-white font-semibold' : 'flex-1 py-2.5 text-[10px] font-bold uppercase rounded-xl border transition-all text-center bg-white border-gray-200 text-gray-500 hover:border-indigo-200';
-
-            // Calculate total screen time logged for this week
-            const weekLog = screentimeData.logs[activeWeek] || {};
-            let totalMins = 0;
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            days.forEach(day => {
-                const dayData = weekLog[day] || { hrs: 0, mins: 0 };
-                totalMins += (parseInt(dayData.hrs) || 0) * 60 + (parseInt(dayData.mins) || 0);
-            });
-
-            const totalHours = Math.floor(totalMins / 60);
-            const remainingMins = totalMins % 60;
-            const totalWeeklyStr = `${totalHours}h ${remainingMins}m`;
-
-            // Calculate Global Balance (total limits minus total logged screen time across all weeks)
-            const globalWeeks = new Set();
-            Object.keys(screentimeData.logs).forEach(w => globalWeeks.add(w));
-            Object.keys(screentimeData.limits).forEach(w => globalWeeks.add(w));
-            globalWeeks.add(activeWeek);
-
-            let totalGlobalLimitMins = 0;
-            let totalGlobalLoggedMins = 0;
-
-            globalWeeks.forEach(w => {
-                const limitHrs = getWeeklyScreentimeLimit(w);
-                totalGlobalLimitMins += limitHrs * 60;
-
-                const wl = screentimeData.logs[w] || {};
-                days.forEach(day => {
-                    const dayData = wl[day] || { hrs: 0, mins: 0 };
-                    totalGlobalLoggedMins += (parseInt(dayData.hrs) || 0) * 60 + (parseInt(dayData.mins) || 0);
-                });
-            });
-
-            const globalBalanceMins = totalGlobalLimitMins - totalGlobalLoggedMins;
-            const balanceIsNegative = globalBalanceMins < 0;
-            const absBalanceMins = Math.abs(globalBalanceMins);
-            const balanceHours = Math.floor(absBalanceMins / 60);
-            const balanceRemMins = absBalanceMins % 60;
-            const balanceStr = (balanceIsNegative ? '-' : '') + `${balanceHours}h ${balanceRemMins}m`;
-
-            document.getElementById('screentimeTotalWeekly').textContent = balanceStr;
-
-            const balanceCard = document.getElementById('screentimeBalanceCard');
-            if (balanceCard) {
-                if (balanceIsNegative) {
-                    balanceCard.className = 'bg-gradient-to-br from-rose-500 to-red-700 text-white rounded-3xl p-6 shadow-lg shadow-red-100 flex flex-col justify-between mb-2 transition-all';
-                } else {
-                    balanceCard.className = 'bg-gradient-to-br from-indigo-500 to-purple-750 text-white rounded-3xl p-6 shadow-lg shadow-indigo-100 flex flex-col justify-between mb-2 transition-all';
-                }
-            }
-
-            // Get weekly limit
-            const limitHours = getWeeklyScreentimeLimit(activeWeek);
-            const limitMins = limitHours * 60;
-
-            // Update Progress Card
-            const progressText = document.getElementById('weeklyScreentimeText');
-            const progressBar = document.getElementById('weeklyScreentimeBar');
-            const progressStatus = document.getElementById('weeklyScreentimeStatus');
-
-            if (progressText && progressBar && progressStatus) {
-                progressText.textContent = `${totalWeeklyStr} / ${limitHours}h 0m`;
-                
-                if (limitHours > 0) {
-                    const percent = Math.min((totalMins / limitMins) * 100, 100);
-                    progressBar.style.width = `${percent}%`;
-                    progressStatus.classList.remove('hidden');
-
-                    if (totalMins > limitMins) {
-                        progressBar.className = 'bg-red-500 h-full transition-all duration-500';
-                        const overMins = totalMins - limitMins;
-                        const overHrs = Math.floor(overMins / 60);
-                        const overRemMins = overMins % 60;
-                        progressStatus.innerHTML = `<span class="text-red-500 font-extrabold flex items-center gap-1"><i class="fa-solid fa-circle-exclamation"></i> Over limit by ${overHrs}h ${overRemMins}m!</span>`;
-                    } else {
-                        if (totalMins > limitMins * 0.8) {
-                            progressBar.className = 'bg-amber-500 h-full transition-all duration-500';
-                        } else {
-                            progressBar.className = 'bg-indigo-600 h-full transition-all duration-500';
-                        }
-                        progressStatus.classList.add('hidden');
-                        progressStatus.innerHTML = '';
-                    }
-                } else {
-                    progressBar.style.width = '0%';
-                    progressStatus.classList.remove('hidden');
-                    progressStatus.innerHTML = `<span class="text-gray-400 font-medium italic"><i class="fa-solid fa-lightbulb"></i> Tip: Enter a weekly limit above to track screen time target.</span>`;
-                }
-            }
-        }
-        window.updateScreentimeUi = updateScreentimeUi;
-        window.renderScreentime = updateScreentimeUi;
-
-        // --- Improvement Areas Controller ---
-        let improvementData = JSON.parse(localStorage.getItem('personalOsImprovementAreas')) || [];
-
-        function saveImprovementData() {
-            localStorage.setItem('personalOsImprovementAreas', JSON.stringify(improvementData));
-        }
-
-        function addImprovementArea() {
-            const input = document.getElementById('improvementInput');
-            const prioritySelect = document.getElementById('improvementPriority');
-            const name = input.value.trim();
-
-            if (!name) {
-                showToast('Please enter an area name');
-                return;
-            }
-
-            const newArea = {
-                id: Date.now(),
-                name: name,
-                priority: prioritySelect.value,
-                created: new Date().toISOString()
-            };
-
-            improvementData.unshift(newArea);
-            saveImprovementData();
-            input.value = '';
-            renderImprovementList();
-            showToast('Improvement area added');
-        }
-        window.addImprovementArea = addImprovementArea;
-
-        function deleteImprovementArea(id) {
-            improvementData = improvementData.filter(item => item.id !== id);
-            saveImprovementData();
-            renderImprovementList();
-            showToast('Area removed');
-        }
-        window.deleteImprovementArea = deleteImprovementArea;
-
-        function renderImprovementList() {
-            const listContainer = document.getElementById('improvementList');
-            const emptyState = document.getElementById('improvementEmptyState');
-
-            if (!listContainer) return;
-            listContainer.innerHTML = '';
-
-            if (improvementData.length === 0) {
-                emptyState.classList.remove('hidden');
-                emptyState.classList.add('flex');
-                return;
-            } else {
-                emptyState.classList.add('hidden');
-                emptyState.classList.remove('flex');
-            }
-
-            const priorityWeights = { high: 3, medium: 2, low: 1 };
-            const sortedData = [...improvementData].sort((a, b) => (priorityWeights[b.priority] || 2) - (priorityWeights[a.priority] || 2));
-
-            sortedData.forEach(item => {
-                let badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
-                if (item.priority === 'high') {
-                    badgeClass = 'bg-rose-50 text-rose-700 border-rose-100';
-                } else if (item.priority === 'medium') {
-                    badgeClass = 'bg-amber-50 text-amber-700 border-amber-100';
-                }
-
-                const card = document.createElement('div');
-                card.className = 'bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex justify-between items-center transition-all duration-300 hover:shadow-md hover:translate-y-[-1px]';
-                
-                card.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-2.5 h-2.5 rounded-full flex shrink-0 ${item.priority === 'high' ? 'bg-rose-500' : item.priority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'}"></div>
-                        <div class="space-y-0.5">
-                            <h4 class="text-sm font-bold text-gray-800 leading-snug selectable">${item.name}</h4>
-                            <span class="inline-block text-[9px] font-bold uppercase tracking-wider border rounded-md px-1.5 py-0.5 ${badgeClass}">${item.priority} priority</span>
-                        </div>
-                    </div>
-                    <button onclick="deleteImprovementArea(${item.id})" class="text-gray-350 hover:text-red-500 p-2 rounded-xl hover:bg-red-50 transition-colors shrink-0" title="Delete Area">
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                    </button>
-                `;
-                listContainer.appendChild(card);
-            });
-        }
-        window.renderImprovementList = renderImprovementList;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const impInput = document.getElementById('improvementInput');
-            if (impInput) {
-                impInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addImprovementArea();
-                    }
-                });
-            }
-        });
-
-        // --- Timer / Stopwatch Controller ---
-        let timerRunning = false;
-        let totalTimeElapsed = 0;
-        let lapTimeElapsed = 0;
-        let lastTimerUpdate = 0;
-        let timerInterval = null;
-        let laps = [];
-
-        function saveTimerState() {
-            const state = {
-                timerRunning: timerRunning,
-                totalTimeElapsed: totalTimeElapsed,
-                lapTimeElapsed: lapTimeElapsed,
-                lastTimerUpdate: lastTimerUpdate,
-                laps: laps
-            };
-            localStorage.setItem('personalOsTimerState', JSON.stringify(state));
-        }
-        window.saveTimerState = saveTimerState;
-
-        function loadTimerState() {
-            const stored = localStorage.getItem('personalOsTimerState');
-            if (!stored) return;
-
-            try {
-                const state = JSON.parse(stored);
-                timerRunning = !!state.timerRunning;
-                totalTimeElapsed = Number(state.totalTimeElapsed) || 0;
-                lapTimeElapsed = Number(state.lapTimeElapsed) || 0;
-                lastTimerUpdate = Number(state.lastTimerUpdate) || 0;
-                laps = Array.isArray(state.laps) ? state.laps : [];
-
-                if (timerRunning && lastTimerUpdate > 0) {
-                    // Calculate elapsed time during page reload or device sleep
-                    const now = Date.now();
-                    const delta = now - lastTimerUpdate;
-                    
-                    totalTimeElapsed += delta;
-                    lapTimeElapsed += delta;
-                    lastTimerUpdate = now;
-
-                    // Configure control buttons to running states
-                    const playBtn = document.getElementById('timerPlayBtn');
-                    const playIcon = document.getElementById('timerPlayIcon');
-                    const resetBtn = document.getElementById('timerResetBtn');
-                    const lapBtn = document.getElementById('timerLapBtn');
-
-                    if (playBtn) playBtn.className = 'w-16 h-16 rounded-full bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center text-xl active:scale-95 transition-all shadow-lg shadow-amber-100/50';
-                    if (playIcon) playIcon.className = 'fa-solid fa-pause';
-                    if (playBtn) playBtn.title = 'Pause';
-                    if (resetBtn) resetBtn.disabled = true;
-                    if (lapBtn) lapBtn.disabled = false;
-
-                    const lapsContainer = document.getElementById('lapsContainer');
-                    if (lapsContainer) lapsContainer.classList.remove('hidden');
-
-                    timerInterval = setInterval(updateTimerFrame, 10);
-                } else {
-                    const resetBtn = document.getElementById('timerResetBtn');
-                    if (resetBtn) resetBtn.disabled = (totalTimeElapsed === 0);
-                }
-
-                updateTimerDisplays();
-                renderLaps();
-            } catch (e) {
-                console.error("Error loading timer state:", e);
-            }
-        }
-        window.loadTimerState = loadTimerState;
-
-        function toggleTimer() {
-            const playBtn = document.getElementById('timerPlayBtn');
-            const playIcon = document.getElementById('timerPlayIcon');
-            const resetBtn = document.getElementById('timerResetBtn');
-            const lapBtn = document.getElementById('timerLapBtn');
-
-            if (!timerRunning) {
-                // Start
-                timerRunning = true;
-                lastTimerUpdate = Date.now();
-                playBtn.className = 'w-16 h-16 rounded-full bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center text-xl active:scale-95 transition-all shadow-lg shadow-amber-100/50';
-                playIcon.className = 'fa-solid fa-pause';
-                playBtn.title = 'Pause';
-                resetBtn.disabled = true;
-                lapBtn.disabled = false;
-
-                // Show laps container immediately so current running lap timer is visible
-                const lapsContainer = document.getElementById('lapsContainer');
-                if (lapsContainer) lapsContainer.classList.remove('hidden');
-
-                timerInterval = setInterval(updateTimerFrame, 10);
-            } else {
-                // Pause
-                timerRunning = false;
-                playBtn.className = 'w-16 h-16 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-xl active:scale-95 transition-all shadow-lg shadow-indigo-100/50';
-                playIcon.className = 'fa-solid fa-play translate-x-[1px]';
-                playBtn.title = 'Start';
-                resetBtn.disabled = false;
-                lapBtn.disabled = true;
-
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                }
-            }
-            saveTimerState();
-        }
-        window.toggleTimer = toggleTimer;
-
-        function updateTimerFrame() {
-            const now = Date.now();
-            const delta = now - lastTimerUpdate;
-            lastTimerUpdate = now;
-
-            totalTimeElapsed += delta;
-            lapTimeElapsed += delta;
-
-            updateTimerDisplays();
-        }
-
-        function formatTime(ms) {
-            if (ms < 0) ms = 0;
-            const minutes = Math.floor(ms / 60000);
-            const centiseconds = Math.floor((ms % 1000) / 10);
-            const csStr = String(centiseconds).padStart(2, '0');
-
-            if (minutes >= 60) {
-                const hours = Math.floor(minutes / 60);
-                const displayMinutes = minutes % 60;
-                const hrStr = String(hours).padStart(2, '0');
-                const minStr = String(displayMinutes).padStart(2, '0');
-                return `${hrStr}:${minStr}.${csStr}`;
-            } else {
-                const seconds = Math.floor((ms % 60000) / 1000);
-                const minStr = String(minutes).padStart(2, '0');
-                const secStr = String(seconds).padStart(2, '0');
-                return `${minStr}:${secStr}.${csStr}`;
-            }
-        }
-
-        function updateTimerDisplays() {
-            const totalDisplay = document.getElementById('totalTimeDisplay');
-            const lapDisplay = document.getElementById('lapTimeDisplay');
-
-            if (totalDisplay) {
-                totalDisplay.textContent = formatTime(totalTimeElapsed);
-            }
-            if (lapDisplay) {
-                const currentLapNum = laps.length + 1;
-                lapDisplay.textContent = `Lap ${currentLapNum}: ${formatTime(lapTimeElapsed)}`;
-            }
-        }
-
-        function lapTimer() {
-            if (!timerRunning) return;
-            
-            // Add current lap to list
-            const lapNum = laps.length + 1;
-            laps.push({
-                num: lapNum,
-                lapTime: lapTimeElapsed,
-                cumulativeTime: totalTimeElapsed
-            });
-
-            // Reset lap elapsed
-            lapTimeElapsed = 0;
-            
-            // Update display & render list
-            updateTimerDisplays();
-            renderLaps();
-            saveTimerState();
-        }
-        window.lapTimer = lapTimer;
-
-        function resetTimer() {
-            if (timerRunning) return;
-
-            totalTimeElapsed = 0;
-            lapTimeElapsed = 0;
-            laps = [];
-
-            // Reset UI elements
-            updateTimerDisplays();
-            
-            const lapDisplay = document.getElementById('lapTimeDisplay');
-            if (lapDisplay) {
-                lapDisplay.textContent = 'Lap 1: 00:00.00';
-            }
-
-            renderLaps();
-
-            document.getElementById('timerResetBtn').disabled = true;
-            document.getElementById('timerLapBtn').disabled = true;
-            saveTimerState();
-        }
-        window.resetTimer = resetTimer;
-
-        function renderLaps() {
-            const lapsContainer = document.getElementById('lapsContainer');
-            const lapsList = document.getElementById('lapsList');
-            const lapCountHeader = document.getElementById('lapCountHeader');
-
-            if (!lapsList) return;
-
-            if (laps.length === 0) {
-                if (!timerRunning && totalTimeElapsed === 0) {
-                    lapsContainer.classList.add('hidden');
-                }
-                lapsList.innerHTML = '';
-                if (lapCountHeader) lapCountHeader.textContent = '0 LAPS';
-                return;
-            }
-
-            lapsContainer.classList.remove('hidden');
-            if (lapCountHeader) {
-                lapCountHeader.textContent = `${laps.length} ${laps.length === 1 ? 'LAP' : 'LAPS'}`;
-            }
-
-            lapsList.innerHTML = '';
-
-            // Find fastest and longest lap times
-            let minTime = Infinity;
-            let maxTime = -Infinity;
-            
-            if (laps.length > 1) {
-                laps.forEach(l => {
-                    if (l.lapTime < minTime) minTime = l.lapTime;
-                    if (l.lapTime > maxTime) maxTime = l.lapTime;
-                });
-            }
-
-            // Render in reverse order (newest first)
-            [...laps].reverse().forEach(lap => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between py-2 px-3 bg-white border border-gray-50 rounded-xl text-xs transition-all hover:bg-gray-55';
-                
-                let highlightClass = 'text-gray-500 font-medium';
-                let badge = '';
-
-                if (laps.length > 1) {
-                    if (lap.lapTime === minTime) {
-                        highlightClass = 'text-green-650 font-bold';
-                        badge = `<span class="ml-2 bg-green-50 text-green-700 text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border border-green-100 tracking-wider">Fastest</span>`;
-                    } else if (lap.lapTime === maxTime) {
-                        highlightClass = 'text-rose-600 font-bold';
-                        badge = `<span class="ml-2 bg-rose-50 text-rose-700 text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border border-rose-100 tracking-wider">Longest</span>`;
-                    }
-                }
-
-                item.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-gray-400 font-mono">#${String(lap.num).padStart(2, '0')}</span>
-                        <span class="${highlightClass} font-mono text-base ml-1">${formatTime(lap.lapTime)}</span>
-                        ${badge}
-                    </div>
-                `;
-                lapsList.appendChild(item);
-            });
-        }
-        window.renderLaps = renderLaps;
-
-        // Save on exit
-        window.addEventListener('beforeunload', () => {
-            if (timerRunning) {
-                const now = Date.now();
-                const delta = now - lastTimerUpdate;
-                totalTimeElapsed += delta;
-                lapTimeElapsed += delta;
-                lastTimerUpdate = now;
-            }
-            saveTimerState();
-        });
 
     </script>
 </body>

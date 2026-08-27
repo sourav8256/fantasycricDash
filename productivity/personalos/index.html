@@ -203,6 +203,16 @@ Android-style App Drawer containing three custom apps:
             --text-secondary: #0d9488;
         }
 
+        /* Stocks Theme (Emerald & Teal) */
+        body.theme-stocks {
+            --bg-primary: #ecfdf5;
+            --accent-color: #059669;
+            --accent-light: #d1fae5;
+            --card-bg: #ffffff;
+            --text-primary: #064e3b;
+            --text-secondary: #059669;
+        }
+
         /* Cleaner Theme (Sky & Slate) */
         body.theme-cleaner {
             --bg-primary: #f0fdfa;
@@ -233,14 +243,14 @@ Android-style App Drawer containing three custom apps:
             --text-secondary: #4f46e5;
         }
 
-        /* Maturity Theme (Clay & Bronze) */
-        body.theme-maturity {
-            --bg-primary: #fdfaf7;
-            --accent-color: #854d0e;
-            --accent-light: #fef3c7;
+        /* Prompts Theme (Violet & Purple) */
+        body.theme-prompts {
+            --bg-primary: #f5f3ff;
+            --accent-color: #7c3aed;
+            --accent-light: #ede9fe;
             --card-bg: #ffffff;
-            --text-primary: #451a03;
-            --text-secondary: #a16207;
+            --text-primary: #2e1065;
+            --text-secondary: #7c3aed;
         }
 
         /* Forgetfulness Theme (Coral & Alert Orange) */
@@ -621,6 +631,9 @@ Android-style App Drawer containing three custom apps:
 
         <!-- =================== APP 6: MEMORIZE SCREEN =================== -->
         <div id="viewMemorize" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Pinned Memorize List -->
+            <div id="memorizePinnedList" class="flex flex-row flex-wrap gap-2.5"></div>
+
             <!-- Quick Entry -->
             <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
                 <div class="flex gap-2.5">
@@ -1226,6 +1239,104 @@ Android-style App Drawer containing three custom apps:
             </div>
         </div>
 
+        <!-- =================== APP 26: WEEKLY STOCKS SCREEN =================== -->
+        <div id="viewStocks" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Stocks Overview Card -->
+            <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white rounded-3xl p-6 shadow-lg shadow-emerald-100 flex flex-col justify-between mb-2">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-emerald-100 uppercase tracking-widest font-bold">Total Budget</p>
+                        <h2 id="stocksTotalBudget" class="text-3xl font-extrabold font-title mt-1">$0.00</h2>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-emerald-100 uppercase tracking-widest font-bold">Total Spent</p>
+                        <h2 id="stocksTotalSpent" class="text-xl font-bold font-title mt-1">$0.00</h2>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center text-xs font-semibold text-emerald-100">
+                    <span id="stocksWeeklyProgressText">0 of 0 stocks purchased</span>
+                    <span id="stocksWeeklyProgressPercent">0%</span>
+                </div>
+                <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden mt-2">
+                    <div id="stocksWeeklyProgressBar" class="bg-white h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Week Selector / Navigation -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-emerald-950 tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-week text-emerald-600"></i>
+                        <span>Select Week</span>
+                    </h3>
+                    <button onclick="jumpToCurrentStocksWeek()" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-wider">This Week</button>
+                </div>
+                <div class="flex items-center justify-between gap-3 bg-gray-50/50 p-2 rounded-2xl border border-gray-100/50">
+                    <button onclick="navigateStocksWeek(-1)" class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-500 hover:text-emerald-600 active:scale-95 transition-all shadow-sm">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="stocksCurrentWeekRange" class="text-xs font-bold text-gray-700 select-none">Mon Jun 15 - Sun Jun 21</span>
+                    <button onclick="navigateStocksWeek(1)" class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-500 hover:text-emerald-600 active:scale-95 transition-all shadow-sm">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add Stock Plan Form -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
+                <h3 id="stockFormTitle" class="font-bold text-sm text-emerald-950 tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-plus text-emerald-600"></i>
+                    <span>Plan Stock Purchase</span>
+                </h3>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Stock Ticker / Name</label>
+                            <input type="text" id="stockNameInput" placeholder="e.g. AAPL" class="w-full px-3 py-2.5 bg-gray-50/50 rounded-xl text-xs border border-transparent focus:border-emerald-100 focus:bg-white outline-none transition-all font-semibold uppercase">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Target Buy Price ($)</label>
+                            <input type="number" id="stockPriceInput" placeholder="0.00" step="0.01" class="w-full px-3 py-2.5 bg-gray-50/50 rounded-xl text-xs border border-transparent focus:border-emerald-100 focus:bg-white outline-none transition-all font-semibold">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Allocated Budget ($)</label>
+                            <input type="number" id="stockBudgetInput" placeholder="0.00" step="0.01" class="w-full px-3 py-2.5 bg-gray-50/50 rounded-xl text-xs border border-transparent focus:border-emerald-100 focus:bg-white outline-none transition-all font-semibold">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Notes / Strategy</label>
+                            <input type="text" id="stockNoteInput" placeholder="e.g. Buy on breakout" class="w-full px-3 py-2.5 bg-gray-50/50 rounded-xl text-xs border border-transparent focus:border-emerald-100 focus:bg-white outline-none transition-all font-semibold">
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="editingStockId" value="">
+
+                    <div class="flex gap-2">
+                        <button onclick="saveStockItem()" id="stockSubmitBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-100">
+                            <i class="fa-solid fa-plus" id="stockSubmitIcon"></i>
+                            <span id="stockSubmitText">Add Stock</span>
+                        </button>
+                        <button onclick="clearStockForm()" id="stockCancelBtn" class="hidden px-4 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl font-medium text-xs transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stocks List -->
+            <div id="stocksList" class="space-y-4"></div>
+
+            <!-- Empty List State -->
+            <div id="stocksEmptyState" class="hidden flex-col items-center justify-center py-12 text-center">
+                <div class="w-16 h-16 bg-gray-100/60 rounded-full flex items-center justify-center mb-4 text-gray-400 text-xl">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <h3 class="text-base font-semibold text-gray-700">No stock plans for this week</h3>
+                <p class="text-xs text-gray-400 max-w-xs mt-1">Plan your stock buys for this week using the form above.</p>
+            </div>
+        </div>
+
         <!-- =================== APP 13: APP STORE SCREEN =================== -->
         <div id="viewAppStore" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
             <!-- App Store Header Widget -->
@@ -1246,42 +1357,54 @@ Android-style App Drawer containing three custom apps:
         </div>
 
         <!-- =================== APP 14: MATURITY SCREEN =================== -->
-        <div id="viewMaturity" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
-            <!-- Quick Entry -->
-            <div class="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm space-y-3">
-                <div class="flex gap-2.5">
-                    <input type="text" id="maturityInput" placeholder="Nurture a maturity habit (e.g. Listen actively, Pause before reacting)..."
-                        class="flex-1 px-4 py-3 bg-gray-50/50 rounded-xl outline-none text-yellow-950 placeholder-yellow-300 border border-transparent focus:border-yellow-100 focus:bg-white text-sm transition-all"
-                        autocomplete="off">
-                    <button onclick="addMaturityHabit()"
-                        class="bg-amber-700 hover:bg-amber-800 text-white px-5 rounded-xl font-medium text-sm transition-colors flex items-center gap-1.5 shadow-sm shadow-amber-100">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                        <span>Focus</span>
-                    </button>
-                </div>
-                <!-- Custom Days Target Picker -->
-                <div class="flex items-center justify-between px-1">
-                    <span class="text-xs font-medium text-gray-400">Target Duration</span>
-                    <div class="flex gap-1.5">
-                        <button onclick="setTargetDaysSelect(this, 7)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">7 Days</button>
-                        <button onclick="setTargetDaysSelect(this, 21)" class="target-days-btn active px-2.5 py-1 text-[11px] font-bold rounded-lg border border-teal-600 bg-teal-50/50 text-teal-700 transition-all">21 Days</button>
-                        <button onclick="setTargetDaysSelect(this, 30)" class="target-days-btn px-2.5 py-1 text-[11px] font-bold rounded-lg border border-gray-200 bg-white text-gray-500 hover:border-teal-200 transition-all">30 Days</button>
+        <!-- =================== APP 14: PROMPTS SCREEN =================== -->
+        <div id="viewPrompts" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Add Prompt Form -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
+                <h3 id="promptFormTitle" class="font-bold text-sm text-purple-950 tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-plus text-purple-600"></i>
+                    <span>Save New Prompt</span>
+                </h3>
+                <div class="space-y-3">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Prompt Title</label>
+                        <input type="text" id="promptTitleInput" placeholder="e.g. Code Review Helper" class="w-full px-3 py-2.5 bg-gray-50/50 rounded-xl text-xs border border-transparent focus:border-purple-100 focus:bg-white outline-none transition-all font-semibold">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Prompt Text</label>
+                        <textarea id="promptTextInput" rows="4" placeholder="Type your frequently used prompt here..." class="w-full px-3 py-2.5 bg-gray-50/50 rounded-xl text-xs border border-transparent focus:border-purple-100 focus:bg-white outline-none transition-all font-semibold resize-y"></textarea>
+                    </div>
+                    
+                    <input type="hidden" id="editingPromptId" value="">
+
+                    <div class="flex gap-2">
+                        <button onclick="savePromptItem()" id="promptSubmitBtn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-purple-100">
+                            <i class="fa-solid fa-plus" id="promptSubmitIcon"></i>
+                            <span id="promptSubmitText">Save Prompt</span>
+                        </button>
+                        <button onclick="clearPromptForm()" id="promptCancelBtn" class="hidden px-4 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl font-medium text-xs transition-colors">
+                            Cancel
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Active List -->
-            <div id="maturityList" class="space-y-4"></div>
+            <!-- Prompts Search / Filtering -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-4 shadow-sm flex items-center gap-3">
+                <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm pl-1"></i>
+                <input type="text" id="promptSearchInput" oninput="renderPromptsApp()" placeholder="Search saved prompts..." class="flex-1 bg-transparent text-xs outline-none font-semibold text-gray-700">
+            </div>
 
-            <!-- Paused List -->
-            <div id="pausedMaturityContainer" class="hidden">
-                <details class="group border border-gray-100 rounded-2xl bg-white/40">
-                    <summary class="flex justify-between items-center p-4 cursor-pointer list-none font-bold text-[10px] text-gray-400 uppercase tracking-widest select-none">
-                        <span>Paused Maturity Activities</span>
-                        <i class="fa-solid fa-chevron-down transition-transform duration-300 group-open:rotate-180"></i>
-                    </summary>
-                    <div id="pausedMaturityList" class="p-4 pt-0 space-y-4"></div>
-                </details>
+            <!-- Prompts List -->
+            <div id="promptsList" class="space-y-4"></div>
+
+            <!-- Empty Prompts State -->
+            <div id="promptsEmptyState" class="hidden flex-col items-center justify-center py-12 text-center">
+                <div class="w-16 h-16 bg-gray-100/60 rounded-full flex items-center justify-center mb-4 text-gray-400 text-xl">
+                    <i class="fa-solid fa-paste"></i>
+                </div>
+                <h3 class="text-base font-semibold text-gray-700">No prompts saved yet</h3>
+                <p class="text-xs text-gray-400 max-w-xs mt-1">Start saving your frequently used templates for quick copying.</p>
             </div>
         </div>
 
@@ -1422,6 +1545,8 @@ Android-style App Drawer containing three custom apps:
                 </details>
             </div>
         </div>
+
+
 
         <!-- =================== APP 16: CALENDAR SCREEN =================== -->
         <div id="viewCalendar" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
@@ -1796,6 +1921,157 @@ Android-style App Drawer containing three custom apps:
             <h3 class="text-base font-semibold text-gray-700">A clean slate</h3>
             <p class="text-xs text-gray-400 max-w-xs mt-1">Start by adding your first daily action inside this app.</p>
         </div>
+
+        <!-- =================== APP 26: MEMORY GAMES SCREEN =================== -->
+        <div id="viewMemorygames" class="app-screen max-w-xl mx-auto space-y-6 fade-slide-in hidden">
+            <!-- Game List Menu -->
+            <div id="memoryGamesList" class="space-y-4">
+                <button onclick="openMemoryGame('otp')" class="w-full bg-white border border-gray-100 p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-100 transition-all flex items-center justify-between group text-left">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-hashtag"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">OTP Recall</h3>
+                            <p class="text-xs text-gray-500 mt-1">Test your short-term numeric memory.</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-indigo-400 transition-colors"></i>
+                </button>
+                <button onclick="openMemoryGame('math')" class="w-full bg-white border border-gray-100 p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-100 transition-all flex items-center justify-between group text-left">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-calculator"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">Mental Math</h3>
+                            <p class="text-xs text-gray-500 mt-1">Multiply two numbers in your mind.</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-indigo-400 transition-colors"></i>
+                </button>
+            </div>
+
+            <!-- OTP Recall Game Container -->
+            <div id="otpGameContainer" class="hidden space-y-4">
+                <button onclick="closeMemoryGame('otp')" class="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Games
+                </button>
+
+                <div class="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm space-y-4">
+                    <h2 class="text-xl font-bold text-gray-800 tracking-tight font-title">OTP Recall Game</h2>
+                    
+                <div class="flex items-center justify-between">
+                    <label for="otpDigits" class="text-sm font-medium text-gray-600">OTP Digits Length:</label>
+                    <select id="otpDigits" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-400" onchange="setAppStorage('otpDigits', this.value)">
+                        <option value="4">4 Digits</option>
+                        <option value="5">5 Digits</option>
+                        <option value="6" selected>6 Digits</option>
+                        <option value="7">7 Digits</option>
+                        <option value="8">8 Digits</option>
+                    </select>
+                </div>
+
+                <div class="pt-2 border-t border-gray-100"></div>
+
+                <div id="otpGameArea" class="space-y-4 flex flex-col items-center justify-center min-h-[120px]">
+                    <button onclick="startOtpGame()" id="startOtpBtn" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors shadow-sm">
+                        Start Game
+                    </button>
+                    
+                    <div id="otpDisplayArea" class="hidden text-center space-y-4 w-full">
+                        <div class="text-sm text-gray-500 font-medium uppercase tracking-wider">Remember this OTP</div>
+                        <div id="otpDisplayText" class="text-5xl font-extrabold tracking-widest text-indigo-700 font-title py-6 bg-indigo-50/50 rounded-xl">000000</div>
+                        <button onclick="hideOtpAndInput()" class="w-full max-w-xs bg-gray-800 hover:bg-gray-900 text-white px-5 py-3 rounded-xl font-medium text-sm transition-colors shadow-sm">
+                            I Remember It
+                        </button>
+                    </div>
+
+                    <div id="otpInputArea" class="hidden text-center space-y-4 w-full">
+                        <div class="text-sm text-gray-500 font-medium uppercase tracking-wider">Enter the OTP</div>
+                        <input type="number" id="otpInput" class="w-full text-center px-4 py-4 bg-gray-50/50 rounded-xl outline-none text-3xl font-bold tracking-widest text-gray-800 placeholder-gray-300 border border-gray-200 focus:border-indigo-400 transition-all" placeholder="------" autocomplete="off">
+                        <button onclick="verifyOtp()" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-medium text-sm transition-colors shadow-sm">
+                            Verify
+                        </button>
+                    </div>
+
+                    <div id="otpResultArea" class="hidden text-center space-y-4 w-full">
+                        <div id="otpResultIcon" class="text-6xl mx-auto py-2"></div>
+                        <h3 id="otpResultTitle" class="text-2xl font-bold text-gray-800"></h3>
+                        <p id="otpResultMessage" class="text-sm text-gray-500"></p>
+                        <button onclick="resetOtpGame()" class="w-full max-w-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-medium text-sm transition-colors">
+                            Play Again
+                        </button>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- Mental Math Game Container -->
+            <div id="mathGameContainer" class="hidden space-y-4">
+                <button onclick="closeMemoryGame('math')" class="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Games
+                </button>
+
+                <div class="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm space-y-4">
+                    <h2 class="text-xl font-bold text-gray-800 tracking-tight font-title">Mental Multiplication</h2>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex flex-col w-1/2">
+                            <label for="mathDigits1" class="text-xs font-medium text-gray-600 mb-1">Num 1 Digits:</label>
+                            <select id="mathDigits1" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-400" onchange="setAppStorage('mathDigits1', this.value)">
+                                <option value="1">1 Digit</option>
+                                <option value="2" selected>2 Digits</option>
+                                <option value="3">3 Digits</option>
+                                <option value="4">4 Digits</option>
+                                <option value="5">5 Digits</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col w-1/2">
+                            <label for="mathDigits2" class="text-xs font-medium text-gray-600 mb-1">Num 2 Digits:</label>
+                            <select id="mathDigits2" class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-400" onchange="setAppStorage('mathDigits2', this.value)">
+                                <option value="1" selected>1 Digit</option>
+                                <option value="2">2 Digits</option>
+                                <option value="3">3 Digits</option>
+                                <option value="4">4 Digits</option>
+                                <option value="5">5 Digits</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-gray-100"></div>
+
+                    <div id="mathGameArea" class="space-y-4 flex flex-col items-center justify-center min-h-[120px]">
+                        <button onclick="startMathGame()" id="startMathBtn" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors shadow-sm">
+                            Start Game
+                        </button>
+                        
+                        <div id="mathDisplayArea" class="hidden text-center space-y-4 w-full">
+                            <div class="text-sm text-gray-500 font-medium uppercase tracking-wider">Multiply</div>
+                            <div id="mathDisplayText" class="text-4xl md:text-5xl font-extrabold tracking-widest text-indigo-700 font-title py-6 bg-indigo-50/50 rounded-xl px-4 flex justify-center items-center flex-wrap break-all leading-normal whitespace-normal"></div>
+                            
+                            <div id="mathInputArea" class="text-center space-y-4 w-full mt-4">
+                                <div class="text-sm text-gray-500 font-medium uppercase tracking-wider">Your Answer</div>
+                                <input type="number" id="mathInput" class="w-full text-center px-4 py-4 bg-gray-50/50 rounded-xl outline-none text-3xl font-bold tracking-widest text-gray-800 placeholder-gray-300 border border-gray-200 focus:border-indigo-400 transition-all" placeholder="Enter answer" autocomplete="off">
+                                <button onclick="verifyMath()" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-medium text-sm transition-colors shadow-sm">
+                                    Verify
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="mathResultArea" class="hidden text-center space-y-4 w-full">
+                            <div id="mathResultIcon" class="text-6xl mx-auto py-2"></div>
+                            <h3 id="mathResultTitle" class="text-2xl font-bold text-gray-800"></h3>
+                            <p id="mathResultMessage" class="text-sm text-gray-500"></p>
+                            <button onclick="resetMathGame()" class="w-full max-w-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-medium text-sm transition-colors">
+                                Play Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- Edit View overlay (Sleek drawer-style full overlay) -->
@@ -1827,7 +2103,7 @@ Android-style App Drawer containing three custom apps:
                         <button onclick="setEditCategory('intelligence')" id="editCategoryIntelligence" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Intelligence</button>
                         <button onclick="setEditCategory('resilience')" id="editCategoryResilience" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Mental Resilience</button>
                         <button onclick="setEditCategory('learning')" id="editCategoryLearning" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Learning</button>
-                        <button onclick="setEditCategory('maturity')" id="editCategoryMaturity" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Maturity</button>
+
                         <button onclick="setEditCategory('forgetfulness')" id="editCategoryForgetfulness" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">Anti-Forget</button>
                         <button onclick="setEditCategory('deaddiction')" id="editCategoryDeaddiction" class="flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all">De-addiction</button>
                     </div>
@@ -1864,6 +2140,19 @@ Android-style App Drawer containing three custom apps:
             </button>
         </header>
         <main class="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
+            <!-- Profile Selection Removed -->
+
+            <!-- Storage Space -->
+            <div class="space-y-2 mb-6">
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block">Internal Storage</label>
+                    <span id="storageUsageText" class="text-[10px] font-bold text-gray-500">Calculating...</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div id="storageUsageBar" class="bg-indigo-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
             <!-- Export -->
             <div class="space-y-2">
                 <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Backup Data</label>
@@ -1955,7 +2244,16 @@ Android-style App Drawer containing three custom apps:
 
     <!-- ==================== JS CONTROLLERS ==================== -->
     <script>
+
         // State Management
+        
+        function getAppStorage(key) {
+            return localStorage.getItem(key);
+        }
+
+        function setAppStorage(key, val) {
+            localStorage.setItem(key, val);
+        }
         let habits = [];
         let currentActiveApp = 'home'; // 'home', 'work', 'emotional', 'notes'
         let currentEditHabitId = null;
@@ -1965,6 +2263,7 @@ Android-style App Drawer containing three custom apps:
         // App Store State & Constants
         const ALL_APPS = [
             { id: 'work', name: 'STRENGTH', icon: 'fa-solid fa-seedling', bg: 'bg-gradient-to-br from-teal-500 to-teal-700', badgeId: 'badgeWork', desc: 'Track deep work and daily objectives' },
+            { id: 'general', name: 'Habits (General)', icon: 'fa-solid fa-list-check', bg: 'bg-gradient-to-br from-gray-500 to-gray-700', badgeId: 'badgeGeneral', desc: 'Track miscellaneous habits' },
             { id: 'emotional', name: 'Process', icon: 'fa-solid fa-wind', bg: 'bg-gradient-to-br from-purple-500 to-purple-700', desc: 'Reflect on emotional states and grounding' },
             { id: 'notes', name: 'Notes', icon: 'fa-solid fa-book-open', bg: 'bg-gradient-to-br from-amber-500 to-amber-600', desc: 'Keep a daily journal and list objectives' },
             { id: 'practice', name: 'Speeches', icon: 'fa-solid fa-microphone', bg: 'bg-gradient-to-br from-sky-500 to-sky-700', badgeId: 'badgePractice', desc: 'Practice presentations and speeches' },
@@ -1974,9 +2273,10 @@ Android-style App Drawer containing three custom apps:
             { id: 'intelligence', name: 'Intelligence', icon: 'fa-solid fa-lightbulb', bg: 'bg-gradient-to-br from-blue-600 to-blue-900', badgeId: 'badgeIntelligence', desc: 'Brain training and learning goals' },
             { id: 'resilience', name: 'Mental Resilience', icon: 'fa-solid fa-shield-halved', bg: 'bg-gradient-to-br from-emerald-500 to-emerald-700', badgeId: 'badgeResilience', desc: 'Build coping mechanisms and resilience' },
             { id: 'learning', name: 'Learning', icon: 'fa-solid fa-graduation-cap', bg: 'bg-gradient-to-br from-indigo-500 to-violet-700', badgeId: 'badgeLearning', desc: 'Track study topics and skill learning' },
-            { id: 'expenses', name: 'Expenses', icon: 'fa-solid fa-wallet', bg: 'bg-gradient-to-br from-teal-500 to-emerald-700', desc: 'Log daily budget and expenses' },
+            { id: 'expenses', name: 'Expenses', icon: 'fa-solid fa-wallet', bg: 'bg-gradient-to-br from-teal-500 to-teal-700', desc: 'Log daily budget and expenses' },
+            { id: 'stocks', name: 'Stocks', icon: 'fa-solid fa-chart-line', bg: 'bg-gradient-to-br from-emerald-600 to-teal-800', badgeId: 'badgeStocks', desc: 'Note and plan stock purchases for each week' },
             { id: 'cleaner', name: 'Cleaner', icon: 'fa-solid fa-broom', bg: 'bg-gradient-to-br from-sky-500 to-sky-700', badgeId: 'badgeCleaner', desc: 'Organize and archive completed tasks' },
-            { id: 'maturity', name: 'Maturity', icon: 'fa-solid fa-crown', bg: 'bg-gradient-to-br from-amber-600 to-amber-800', badgeId: 'badgeMaturity', desc: 'Habits for wisdom, self-regulation, and maturity' },
+            { id: 'prompts', name: 'Prompts', icon: 'fa-solid fa-paste', bg: 'bg-gradient-to-br from-violet-500 to-purple-750', desc: 'Save frequently used prompts with 1-click copy' },
             { id: 'forgetfulness', name: 'Anti-Forget', icon: 'fa-solid fa-bell-slash', bg: 'bg-gradient-to-br from-rose-500 to-orange-600', badgeId: 'badgeForgetfulness', desc: 'Habits to avoid forgetfulness and improve memory' },
             { id: 'calendar', name: 'Calendar', icon: 'fa-solid fa-calendar-days', bg: 'bg-gradient-to-br from-indigo-500 to-purple-600', desc: 'Schedule events and set reminders' },
             { id: 'productivity', name: 'Productivity System', icon: 'fa-solid fa-square-poll-horizontal', bg: 'bg-gradient-to-br from-teal-500 to-indigo-600', badgeId: 'badgeProductivity', desc: 'Productivity Habits and 15-Minute Blocks' },
@@ -1987,67 +2287,112 @@ Android-style App Drawer containing three custom apps:
             { id: 'improvement', name: 'Improvement Areas', icon: 'fa-solid fa-arrows-up-to-line', bg: 'bg-gradient-to-br from-emerald-500 to-teal-700', desc: 'List and track areas for self-improvement' },
             { id: 'timer', name: 'Timer', icon: 'fa-solid fa-stopwatch', bg: 'bg-gradient-to-br from-indigo-500 to-purple-600', desc: 'Stopwatch with total and current lap running times' },
             { id: 'lifeguide', name: 'Life Guide', icon: 'fa-solid fa-compass', bg: 'bg-gradient-to-br from-teal-500 to-emerald-600', desc: 'Core rules for building and breaking habits' },
+            { id: 'memorygames', name: 'Memory Games', icon: 'fa-solid fa-gamepad', bg: 'bg-gradient-to-br from-indigo-500 to-purple-700', desc: 'Play memory games like OTP Recall' },
             { id: 'appstore', name: 'App Store', icon: 'fa-solid fa-store', bg: 'bg-gradient-to-br from-indigo-600 to-indigo-800', desc: 'Enable or disable apps in your workspace', locked: true }
         ];
         let enabledApps = {};
 
         function loadAppStoreSettings() {
-            const stored = localStorage.getItem('personalOsEnabledApps');
-            if (stored) {
-                try {
-                    enabledApps = JSON.parse(stored);
-                } catch (e) {
-                    enabledApps = {};
-                }
-            }
             ALL_APPS.forEach(app => {
                 if (app.locked) {
                     enabledApps[app.id] = true;
-                } else if (typeof enabledApps[app.id] === 'undefined') {
-                    enabledApps[app.id] = true;
+                } else {
+                    const stored = getAppStorage('app_' + app.id + '_enabled');
+                    if (stored === 'true') {
+                        enabledApps[app.id] = true;
+                    } else if (stored === 'false') {
+                        enabledApps[app.id] = false;
+                    } else {
+                        // Legacy fallback
+                        const legacyObj = localStorage.getItem('personalOsEnabledApps');
+                        if (legacyObj) {
+                            try {
+                                const parsed = JSON.parse(legacyObj);
+                                if (parsed[app.id] === true) {
+                                    enabledApps[app.id] = true;
+                                    setAppStorage('app_' + app.id + '_enabled', 'true');
+                                }
+                            } catch(e) {}
+                        }
+                    }
                 }
             });
         }
 
         function saveAppStoreSettings() {
-            localStorage.setItem('personalOsEnabledApps', JSON.stringify(enabledApps));
+            ALL_APPS.forEach(app => {
+                if (!app.locked) {
+                    setAppStorage('app_' + app.id + '_enabled', enabledApps[app.id] ? 'true' : 'false');
+                }
+            });
         }
 
         function renderAppsGrid() {
             const grid = document.getElementById('appsGrid');
             if (!grid) return;
             grid.innerHTML = '';
+
+            const importantApps = ['expenses', 'appstore'];
+
+            const createAppBtn = (app) => {
+                const btn = document.createElement('button');
+                btn.onclick = () => openApp(app.id);
+                btn.className = 'flex flex-col items-center gap-2 group focus:outline-none';
+                
+                const containerDiv = document.createElement('div');
+                containerDiv.className = `relative w-16 h-16 rounded-2xl ${app.bg} text-white flex items-center justify-center text-2xl shadow-lg shadow-indigo-100/10 hover:scale-105 transition-all duration-300 border border-white/10`;
+                
+                const icon = document.createElement('i');
+                icon.className = app.icon;
+                containerDiv.appendChild(icon);
+                
+                if (app.badgeId) {
+                    const badge = document.createElement('div');
+                    badge.id = app.badgeId;
+                    badge.className = 'absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden';
+                    badge.textContent = '0';
+                    containerDiv.appendChild(badge);
+                }
+                
+                btn.appendChild(containerDiv);
+                
+                const label = document.createElement('span');
+                label.className = 'text-xs font-bold text-gray-500 group-hover:text-indigo-700 transition-colors uppercase tracking-wider text-[10px] text-center';
+                label.textContent = app.name;
+                btn.appendChild(label);
+                
+                return btn;
+            };
+
+            // Render Important Apps
+            let hasImportant = false;
             ALL_APPS.forEach(app => {
-                if (enabledApps[app.id]) {
-                    const btn = document.createElement('button');
-                    btn.onclick = () => openApp(app.id);
-                    btn.className = 'flex flex-col items-center gap-2 group focus:outline-none';
-                    
-                    const containerDiv = document.createElement('div');
-                    containerDiv.className = `relative w-16 h-16 rounded-2xl ${app.bg} text-white flex items-center justify-center text-2xl shadow-lg shadow-indigo-100/10 hover:scale-105 transition-all duration-300 border border-white/10`;
-                    
-                    const icon = document.createElement('i');
-                    icon.className = app.icon;
-                    containerDiv.appendChild(icon);
-                    
-                    if (app.badgeId) {
-                        const badge = document.createElement('div');
-                        badge.id = app.badgeId;
-                        badge.className = 'absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden';
-                        badge.textContent = '0';
-                        containerDiv.appendChild(badge);
-                    }
-                    
-                    btn.appendChild(containerDiv);
-                    
-                    const label = document.createElement('span');
-                    label.className = 'text-xs font-bold text-gray-500 group-hover:text-indigo-700 transition-colors uppercase tracking-wider text-[10px] text-center';
-                    label.textContent = app.name;
-                    btn.appendChild(label);
-                    
-                    grid.appendChild(btn);
+                if (enabledApps[app.id] && importantApps.includes(app.id)) {
+                    hasImportant = true;
+                    grid.appendChild(createAppBtn(app));
                 }
             });
+
+            // Add Divider if needed
+            let hasOtherApps = ALL_APPS.some(app => enabledApps[app.id] && !importantApps.includes(app.id));
+            if (hasImportant && hasOtherApps) {
+                const divider = document.createElement('div');
+                divider.className = 'col-span-3 flex items-center w-full py-2';
+                divider.innerHTML = `
+                    <div class="h-px bg-gray-200 flex-1"></div>
+                    <span class="px-3 text-[10px] text-gray-400 font-bold uppercase tracking-wider shrink-0">Other Apps</span>
+                    <div class="h-px bg-gray-200 flex-1"></div>
+                `;
+                grid.appendChild(divider);
+            }
+
+            // Render Other Apps
+            ALL_APPS.forEach(app => {
+                if (enabledApps[app.id] && !importantApps.includes(app.id)) {
+                    grid.appendChild(createAppBtn(app));
+                }
+            });
+
             updateOverallProgress();
         }
 
@@ -2133,7 +2478,7 @@ Android-style App Drawer containing three custom apps:
         function setCalendarMode(mode, save = true) {
             calendarMode = mode;
             if (save) {
-                localStorage.setItem('personalOsCalendarMode', mode);
+                setAppStorage('personalOsCalendarMode', mode);
             }
 
             const gridContainer = document.getElementById('calendarGridViewContainer');
@@ -2281,7 +2626,7 @@ Android-style App Drawer containing three custom apps:
         }
 
         function initCalendarState() {
-            const storedEvents = localStorage.getItem('personalOsCalendarEvents');
+            const storedEvents = getAppStorage('personalOsCalendarEvents');
             if (storedEvents) {
                 try {
                     calendarEvents = JSON.parse(storedEvents);
@@ -2298,7 +2643,7 @@ Android-style App Drawer containing three custom apps:
                 selectedCalendarDateStr = `${year}-${month}-${day}`;
             }
 
-            const storedMode = localStorage.getItem('personalOsCalendarMode');
+            const storedMode = getAppStorage('personalOsCalendarMode');
             if (storedMode) {
                 calendarMode = storedMode;
             }
@@ -2308,7 +2653,7 @@ Android-style App Drawer containing three custom apps:
         }
 
         function saveCalendarEvents() {
-            localStorage.setItem('personalOsCalendarEvents', JSON.stringify(calendarEvents));
+            setAppStorage('personalOsCalendarEvents', JSON.stringify(calendarEvents));
             updateCalendarBadges();
         }
 
@@ -2653,15 +2998,14 @@ Android-style App Drawer containing three custom apps:
         const archivedProcess2Container = document.getElementById('archivedProcess2Container');
         const archivedProcess2List = document.getElementById('archivedProcess2List');
 
-        const maturityList = document.getElementById('maturityList');
-        const pausedMaturityContainer = document.getElementById('pausedMaturityContainer');
-        const pausedMaturityList = document.getElementById('pausedMaturityList');
+        const promptsList = document.getElementById('promptsList');
         const forgetfulnessList = document.getElementById('forgetfulnessList');
         const pausedForgetfulnessContainer = document.getElementById('pausedForgetfulnessContainer');
         const pausedForgetfulnessList = document.getElementById('pausedForgetfulnessList');
         const deaddictionList = document.getElementById('deaddictionList');
         const pausedDeaddictionContainer = document.getElementById('pausedDeaddictionContainer');
         const pausedDeaddictionList = document.getElementById('pausedDeaddictionList');
+
 
 
         // Modals & Overlays
@@ -2674,6 +3018,39 @@ Android-style App Drawer containing three custom apps:
 
         // Init
         document.addEventListener('DOMContentLoaded', () => {
+            // Auto migrate legacy expenses data to common
+            if (!localStorage.getItem('common_expensesAppData')) {
+                let trapped = localStorage.getItem('pune_bangalore_expensesAppData');
+                if (!trapped) trapped = localStorage.getItem('barjora_nirisa_expensesAppData');
+                if (!trapped) trapped = localStorage.getItem('expensesAppData'); // Legacy global users
+                if (trapped) {
+                    localStorage.setItem('common_expensesAppData', trapped);
+                    localStorage.removeItem('pune_bangalore_expensesAppData');
+                    localStorage.removeItem('barjora_nirisa_expensesAppData');
+                    localStorage.removeItem('expensesAppData');
+                }
+            }
+            
+            // Auto migrate legacy data to pune_bangalore on first run
+            const legacyGlobalKeys = [
+                'personalOsEnabledApps',
+                'habitFlowData',
+                'habitFlowGlobalNotes',
+                'personalOsStocksData',
+                'personalOsPromptsData',
+                'personalOsTherapySessions',
+                'screentimeData',
+                'personalOsImprovementAreas',
+                'personalOsTimerState'
+            ];
+            
+            legacyGlobalKeys.forEach(key => {
+                const legacyData = localStorage.getItem(key);
+                if (legacyData && !localStorage.getItem('pune_bangalore_' + key)) {
+                    localStorage.setItem('pune_bangalore_' + key, legacyData);
+                }
+            });
+            
             loadAppStoreSettings();
             renderAppsGrid();
             loadHabits();
@@ -2691,8 +3068,19 @@ Android-style App Drawer containing three custom apps:
             loadGlobalNotes();
             initCalendarState();
             loadTimerState();
+            loadStocksData();
+            loadPromptsData();
 
             // Keydown listeners for Enter on laptops and phones
+            const stockNameInput = document.getElementById('stockNameInput');
+            if (stockNameInput) {
+                stockNameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveStockItem();
+                    }
+                });
+            }
             document.getElementById('workInput').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -2753,12 +3141,16 @@ Android-style App Drawer containing three custom apps:
                     addLearningHabit();
                 }
             });
-            document.getElementById('maturityInput').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addMaturityHabit();
-                }
-            });
+            // Prompts keydown hook
+            const promptTitleInput = document.getElementById('promptTitleInput');
+            if (promptTitleInput) {
+                promptTitleInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('promptTextInput').focus();
+                    }
+                });
+            }
             document.getElementById('forgetfulnessInput').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -2771,28 +3163,67 @@ Android-style App Drawer containing three custom apps:
                     addDeaddictionHabit();
                 }
             });
+
         });
 
         function loadHabits() {
-            const stored = localStorage.getItem('habitFlowData');
-            if (stored) {
+            habits = [];
+            
+            // Backwards compatibility migration check
+            const legacyStored = getAppStorage('habitFlowData');
+            if (legacyStored) {
                 try {
-                    habits = JSON.parse(stored);
-                    habits.forEach(h => {
-                        if (typeof h.isEnabled === 'undefined') h.isEnabled = true;
-                        if (typeof h.notes === 'undefined') h.notes = '';
-                        if (!h.category) {
-                            const emotionalKeywords = ['meditation', 'journal', 'no contact', 'reflection', 'walk', 'breathe', 'emotion', 'grief', 'anxiety', 'calm', 'grounding'];
-                            const isEmotional = emotionalKeywords.some(keyword => h.name.toLowerCase().includes(keyword));
-                            h.category = isEmotional ? 'emotional' : 'work';
-                        }
-                        if (typeof h.targetDays === 'undefined') h.targetDays = 21;
-                    });
-                } catch (e) {
-                    console.error("Failed to parse habit data", e);
-                    habits = [];
+                    const parsedLegacy = JSON.parse(legacyStored);
+                    if (parsedLegacy.length > 0) {
+                        parsedLegacy.forEach(h => {
+                            if (typeof h.isEnabled === 'undefined') h.isEnabled = true;
+                            if (typeof h.notes === 'undefined') h.notes = '';
+                            if (!h.category) {
+                                const emotionalKeywords = ['meditation', 'journal', 'no contact', 'reflection', 'walk', 'breathe', 'emotion', 'grief', 'anxiety', 'calm', 'grounding'];
+                                const isEmotional = emotionalKeywords.some(keyword => h.name.toLowerCase().includes(keyword));
+                                h.category = isEmotional ? 'emotional' : 'work';
+                            }
+                            if (typeof h.targetDays === 'undefined') h.targetDays = 21;
+                        });
+                        habits = parsedLegacy;
+                        // Delete legacy key to finish migration
+                        localStorage.removeItem('habitFlowData');
+                        saveHabits(); // Distributes to isolated app keys
+                        habits = []; // Clear array so load loop below does not duplicate
+                    }
+                } catch (e) {}
+            }
+
+            // Load from isolated app keys
+            ALL_APPS.forEach(app => {
+                const stored = getAppStorage('app_' + app.id + '_habits');
+                if (stored) {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        parsed.forEach(h => {
+                            if (typeof h.isEnabled === 'undefined') h.isEnabled = true;
+                            if (typeof h.notes === 'undefined') h.notes = '';
+                            if (!h.category) h.category = app.id;
+                            if (typeof h.targetDays === 'undefined') h.targetDays = 21;
+                            habits.push(h);
+                        });
+                    } catch (e) {}
                 }
-            } else {
+            });
+
+            // Aggressive De-duplication to clean up legacy memory bug
+            const uniqueHabits = [];
+            const seenIds = new Set();
+            habits.forEach(h => {
+                if (!seenIds.has(h.id)) {
+                    seenIds.add(h.id);
+                    uniqueHabits.push(h);
+                }
+            });
+            habits = uniqueHabits;
+
+            // Default fallback if entirely empty
+            if (habits.length === 0) {
                 habits = [
                     {
                         id: Date.now() - 100000,
@@ -2821,7 +3252,14 @@ Android-style App Drawer containing three custom apps:
         }
 
         function saveHabits() {
-            localStorage.setItem('habitFlowData', JSON.stringify(habits));
+            ALL_APPS.forEach(app => {
+                const appHabits = habits.filter(h => h.category === app.id);
+                if (appHabits.length > 0) {
+                    setAppStorage('app_' + app.id + '_habits', JSON.stringify(appHabits));
+                } else {
+                    localStorage.removeItem('app_' + app.id + '_habits');
+                }
+            });
             updateOverallProgress();
         }
 
@@ -2848,8 +3286,9 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewLearning').classList.add('hidden');
             document.getElementById('viewExpenses').classList.add('hidden');
             document.getElementById('viewCleaner').classList.add('hidden');
+            document.getElementById('viewMemorygames').classList.add('hidden');
             document.getElementById('viewAppStore').classList.add('hidden');
-            document.getElementById('viewMaturity').classList.add('hidden');
+            document.getElementById('viewPrompts').classList.add('hidden');
             document.getElementById('viewForgetfulness').classList.add('hidden');
             document.getElementById('viewCalendar').classList.add('hidden');
             document.getElementById('viewCalendarEventForm').classList.add('hidden');
@@ -2861,6 +3300,7 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewProcess2').classList.add('hidden');
             document.getElementById('viewTimer').classList.add('hidden');
             document.getElementById('viewLifeGuide').classList.add('hidden');
+            document.getElementById('viewStocks').classList.add('hidden');
             
             const appObj = ALL_APPS.find(a => a.id === app);
             if (appObj) {
@@ -2874,6 +3314,11 @@ Android-style App Drawer containing three custom apps:
                 document.getElementById('viewWork').classList.remove('hidden');
                 appHeader.classList.remove('hidden');
                 document.getElementById('headerIcon').className = 'fa-solid fa-seedling text-teal-600';
+            } else if (app === 'general') {
+                body.className = 'theme-general h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewWork').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerIcon').className = 'fa-solid fa-list-check text-gray-600';
             } else if (app === 'emotional') {
                 body.className = 'theme-emotional h-screen flex flex-col overflow-hidden antialiased';
                 document.getElementById('viewEmotional').classList.remove('hidden');
@@ -2885,7 +3330,7 @@ Android-style App Drawer containing three custom apps:
                 appHeader.classList.remove('hidden');
                 document.getElementById('headerIcon').className = 'fa-solid fa-book-open text-amber-500';
                 
-                const savedScroll = localStorage.getItem('habitFlowGlobalNotesScroll');
+                const savedScroll = getAppStorage('habitFlowGlobalNotesScroll');
                 if (savedScroll) {
                     setTimeout(() => {
                         document.getElementById('globalNotes').scrollTop = parseInt(savedScroll, 10);
@@ -2932,22 +3377,34 @@ Android-style App Drawer containing three custom apps:
                 appHeader.classList.remove('hidden');
                 document.getElementById('headerIcon').className = 'fa-solid fa-wallet text-teal-600';
                 updateExpensesUi();
+            } else if (app === 'stocks') {
+                body.className = 'theme-stocks h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewStocks').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerIcon').className = 'fa-solid fa-chart-line text-emerald-600';
+                renderStocksApp();
             } else if (app === 'cleaner') {
                 body.className = 'theme-cleaner h-screen flex flex-col overflow-hidden antialiased';
                 document.getElementById('viewCleaner').classList.remove('hidden');
                 appHeader.classList.remove('hidden');
                 document.getElementById('headerIcon').className = 'fa-solid fa-broom text-sky-600';
+            } else if (app === 'memorygames') {
+                body.className = 'theme-learning h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewMemorygames').classList.remove('hidden');
+                appHeader.classList.remove('hidden');
+                document.getElementById('headerIcon').className = 'fa-solid fa-gamepad text-indigo-600';
             } else if (app === 'appstore') {
                 body.className = 'theme-appstore h-screen flex flex-col overflow-hidden antialiased';
                 document.getElementById('viewAppStore').classList.remove('hidden');
                 appHeader.classList.remove('hidden');
                 document.getElementById('headerIcon').className = 'fa-solid fa-store text-indigo-600';
                 renderAppStore();
-            } else if (app === 'maturity') {
-                body.className = 'theme-maturity h-screen flex flex-col overflow-hidden antialiased';
-                document.getElementById('viewMaturity').classList.remove('hidden');
+            } else if (app === 'prompts') {
+                body.className = 'theme-prompts h-screen flex flex-col overflow-hidden antialiased';
+                document.getElementById('viewPrompts').classList.remove('hidden');
                 appHeader.classList.remove('hidden');
-                document.getElementById('headerIcon').className = 'fa-solid fa-crown text-amber-700';
+                document.getElementById('headerIcon').className = 'fa-solid fa-paste text-purple-600';
+                renderPromptsApp();
             } else if (app === 'forgetfulness') {
                 body.className = 'theme-forgetfulness h-screen flex flex-col overflow-hidden antialiased';
                 document.getElementById('viewForgetfulness').classList.remove('hidden');
@@ -3049,7 +3506,7 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewExpenses').classList.add('hidden');
             document.getElementById('viewCleaner').classList.add('hidden');
             document.getElementById('viewAppStore').classList.add('hidden');
-            document.getElementById('viewMaturity').classList.add('hidden');
+            document.getElementById('viewPrompts').classList.add('hidden');
             document.getElementById('viewForgetfulness').classList.add('hidden');
             document.getElementById('viewCalendar').classList.add('hidden');
             document.getElementById('viewCalendarEventForm').classList.add('hidden');
@@ -3061,6 +3518,7 @@ Android-style App Drawer containing three custom apps:
             document.getElementById('viewProcess2').classList.add('hidden');
             document.getElementById('viewTimer').classList.add('hidden');
             document.getElementById('viewLifeGuide').classList.add('hidden');
+            document.getElementById('viewStocks').classList.add('hidden');
             
             document.body.className = 'theme-home h-screen flex flex-col overflow-hidden antialiased';
             document.getElementById('appDrawer').classList.remove('hidden');
@@ -3199,28 +3657,7 @@ Android-style App Drawer containing three custom apps:
             showToast('Learning activity added');
         }
 
-        function addMaturityHabit() {
-            const input = document.getElementById('maturityInput');
-            const name = input.value.trim();
-            if (!name) return;
 
-            const h = {
-                id: Date.now(),
-                name: name,
-                created: new Date().toISOString(),
-                isEnabled: true,
-                completedDates: [],
-                notes: '',
-                category: 'maturity',
-                targetDays: selectedTargetDays
-            };
-
-            habits.unshift(h);
-            saveHabits();
-            render();
-            input.value = '';
-            showToast('Maturity activity added');
-        }
 
         function addForgetfulnessHabit() {
             const input = document.getElementById('forgetfulnessInput');
@@ -3267,6 +3704,8 @@ Android-style App Drawer containing three custom apps:
             input.value = '';
             showToast('De-addiction activity added');
         }
+
+
 
         function addMemorizeHabit() {
             const input = document.getElementById('memorizeInput');
@@ -3427,9 +3866,14 @@ Android-style App Drawer containing three custom apps:
             autoSelectEmotionalDays();
             autoSelectProcess2Days();
 
-            // Sort: pending (not completed today) habits surface to top
+            // Sort: Pinned items first, then pending (not completed today) habits surface to top
             const todayStr = getFormattedDate(0);
             habits.sort((a, b) => {
+                const aPinned = a.isPinned ? 1 : 0;
+                const bPinned = b.isPinned ? 1 : 0;
+                if (aPinned !== bPinned) {
+                    return bPinned - aPinned;
+                }
                 const aDone = a.completedDates.includes(todayStr) ? 1 : 0;
                 const bDone = b.completedDates.includes(todayStr) ? 1 : 0;
                 return aDone - bDone;
@@ -3439,6 +3883,8 @@ Android-style App Drawer containing three custom apps:
             pausedWorkList.innerHTML = '';
             mentalList.innerHTML = '';
             pausedMentalList.innerHTML = '';
+            const memorizePinnedList = document.getElementById('memorizePinnedList');
+            if (memorizePinnedList) memorizePinnedList.innerHTML = '';
             memorizeList.innerHTML = '';
             pausedMemorizeList.innerHTML = '';
             exerciseList.innerHTML = '';
@@ -3456,8 +3902,6 @@ Android-style App Drawer containing three custom apps:
             pausedPracticeList.innerHTML = '';
             learningList.innerHTML = '';
             pausedLearningList.innerHTML = '';
-            maturityList.innerHTML = '';
-            pausedMaturityList.innerHTML = '';
             forgetfulnessList.innerHTML = '';
             pausedForgetfulnessList.innerHTML = '';
             deaddictionList.innerHTML = '';
@@ -3481,8 +3925,6 @@ Android-style App Drawer containing three custom apps:
             let pausedResilienceCount = 0;
             let activeLearningCount = 0;
             let pausedLearningCount = 0;
-            let activeMaturityCount = 0;
-            let pausedMaturityCount = 0;
             let activeForgetfulnessCount = 0;
             let pausedForgetfulnessCount = 0;
             let activeDeaddictionCount = 0;
@@ -3558,7 +4000,11 @@ Android-style App Drawer containing three custom apps:
                 } else if (habit.category === 'memorize') {
                     if (habit.isEnabled) {
                         activeMemorizeCount++;
-                        memorizeList.appendChild(createWorkCard(habit));
+                        if (habit.isPinned) {
+                            if (memorizePinnedList) memorizePinnedList.appendChild(createCompactPinnedCard(habit));
+                        } else {
+                            memorizeList.appendChild(createWorkCard(habit));
+                        }
                     } else {
                         pausedMemorizeCount++;
                         pausedMemorizeList.appendChild(createWorkCard(habit));
@@ -3602,14 +4048,6 @@ Android-style App Drawer containing three custom apps:
                     } else {
                         pausedLearningCount++;
                         pausedLearningList.appendChild(createWorkCard(habit));
-                    }
-                } else if (habit.category === 'maturity') {
-                    if (habit.isEnabled) {
-                        activeMaturityCount++;
-                        maturityList.appendChild(createWorkCard(habit));
-                    } else {
-                        pausedMaturityCount++;
-                        pausedMaturityList.appendChild(createWorkCard(habit));
                     }
                 } else if (habit.category === 'forgetfulness') {
                     if (habit.isEnabled) {
@@ -3664,9 +4102,6 @@ Android-style App Drawer containing three custom apps:
             if (pausedLearningCount > 0) pausedLearningContainer.classList.remove('hidden');
             else pausedLearningContainer.classList.add('hidden');
 
-            if (pausedMaturityCount > 0) pausedMaturityContainer.classList.remove('hidden');
-            else pausedMaturityContainer.classList.add('hidden');
-
             if (pausedForgetfulnessCount > 0) pausedForgetfulnessContainer.classList.remove('hidden');
             else pausedForgetfulnessContainer.classList.add('hidden');
 
@@ -3676,7 +4111,9 @@ Android-style App Drawer containing three custom apps:
             // Empty State
             if (currentActiveApp !== 'home') {
                 let totalActive = 1;
-                if (currentActiveApp === 'work') totalActive = activeWorkCount;
+                if (currentActiveApp === 'general') {
+                    totalActive = habits.filter(h => h.category === 'general' && !h.completed && !h.archived).length;
+                } else if (currentActiveApp === 'work') totalActive = activeWorkCount;
                 else if (currentActiveApp === 'mental') totalActive = activeMentalCount;
                 else if (currentActiveApp === 'memorize') totalActive = activeMemorizeCount;
                 else if (currentActiveApp === 'emotional') totalActive = activeEmoCount;
@@ -3686,7 +4123,6 @@ Android-style App Drawer containing three custom apps:
                 else if (currentActiveApp === 'intelligence') totalActive = activeIntelligenceCount;
                 else if (currentActiveApp === 'resilience') totalActive = activeResilienceCount;
                 else if (currentActiveApp === 'learning') totalActive = activeLearningCount;
-                else if (currentActiveApp === 'maturity') totalActive = activeMaturityCount;
                 else if (currentActiveApp === 'forgetfulness') totalActive = activeForgetfulnessCount;
                 else if (currentActiveApp === 'deaddiction') totalActive = activeDeaddictionCount;
                 else if (currentActiveApp === 'appstore') totalActive = 1;
@@ -3735,9 +4171,12 @@ Android-style App Drawer containing three custom apps:
             const isCompletedToday = habit.completedDates.includes(getFormattedDate(0));
             
             const card = document.createElement('div');
+            const isPinned = habit.isPinned || false;
             card.className = `habit-card bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3.5 shadow-sm relative ${!habit.isEnabled ? 'opacity-65 grayscale bg-gray-50' : ''}`;
             if (!habit.isEnabled) {
                 card.style.borderLeft = `4px solid #cbd5e1`;
+            } else if (isPinned) {
+                card.style.borderLeft = `4px solid #f43f5e`; // Distinct rose-pink border for pinned items
             } else if (!isCompletedToday) {
                 card.style.borderLeft = `4px solid #0d9488`;
             }
@@ -3765,32 +4204,47 @@ Android-style App Drawer containing three custom apps:
             const target = habit.targetDays || 21;
             const progress = Math.min(100, Math.round((streak / target) * 100));
 
+            const statusSubHtml = isPinned
+                ? `<span class="text-xs font-semibold text-rose-500 flex items-center gap-0.5"><i class="fa-solid fa-thumbtack text-xs"></i> Pinned for Memorization</span>`
+                : `<span class="text-xs font-semibold ${streak > 0 ? 'text-amber-500' : 'text-gray-400'} flex items-center gap-0.5"><i class="fa-solid fa-fire text-xs"></i> ${streak} day streak</span>`;
+
+            const checkBtnHtml = isPinned ? '' : `
+                <button onclick="toggleWorkToday(${habit.id}, this)" class="day-circle-btn w-10 h-10 rounded-full flex items-center justify-center border transition-all shrink-0 shadow-inner ${isCompletedToday ? 'bg-teal-600 border-teal-600 text-white shadow-teal-100' : 'bg-gray-50 border-gray-100 text-gray-300 hover:border-teal-200'}">
+                    <i class="fa-solid fa-check text-base"></i>
+                </button>
+            `;
+
             card.innerHTML = `
                 <div class="flex justify-between items-start gap-3">
                     <div class="flex-1 min-w-0">
                         <h3 class="font-bold text-base text-gray-800 tracking-tight leading-snug break-words ${!habit.isEnabled ? 'line-through text-gray-400' : ''}">${escapeHtml(habit.name)}</h3>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs font-semibold ${streak > 0 ? 'text-amber-500' : 'text-gray-400'} flex items-center gap-0.5">
-                                <i class="fa-solid fa-fire text-xs"></i> ${streak} day streak
-                            </span>
+                            ${statusSubHtml}
+                            ${!isPinned ? `
                             <span class="text-[10px] text-gray-300">|</span>
                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${streak}/${target} Days</span>
+                            ` : ''}
                         </div>
                     </div>
-                    <button onclick="toggleWorkToday(${habit.id}, this)" class="day-circle-btn w-10 h-10 rounded-full flex items-center justify-center border transition-all shrink-0 shadow-inner ${isCompletedToday ? 'bg-teal-600 border-teal-600 text-white shadow-teal-100' : 'bg-gray-50 border-gray-100 text-gray-300 hover:border-teal-200'}">
-                        <i class="fa-solid fa-check text-base"></i>
-                    </button>
+                    ${checkBtnHtml}
                 </div>
 
+                ${!isPinned ? `
                 <div class="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
                     <div class="h-full bg-teal-600 transition-all duration-1000" style="width: ${progress}%"></div>
                 </div>
+                ` : ''}
 
-                <div class="flex justify-between items-center pt-2 border-t border-gray-50/50">
+                <div class="flex justify-between items-center pt-2 ${!isPinned ? 'border-t border-gray-50/50' : ''}">
                     <div class="flex gap-2.5">
-                        ${historyHtml}
+                        ${!isPinned ? historyHtml : ''}
                     </div>
                     <div class="flex gap-1.5">
+                        ${habit.category === 'memorize' ? `
+                        <button onclick="togglePinWorkHabit(${habit.id})" class="p-1.5 transition-colors shrink-0 ${isPinned ? 'text-rose-500 hover:text-rose-600' : 'text-gray-300 hover:text-rose-500'}" title="${isPinned ? 'Unpin Habit' : 'Pin Habit'}">
+                            <i class="fa-solid fa-thumbtack text-xs"></i>
+                        </button>
+                        ` : ''}
                         <button onclick="toggleHabitState(${habit.id})" class="text-gray-300 hover:text-teal-600 p-1.5 transition-colors" title="${habit.isEnabled ? 'Pause' : 'Resume'}">
                             <i class="fa-solid ${habit.isEnabled ? 'fa-pause' : 'fa-play'} text-xs"></i>
                         </button>
@@ -3800,6 +4254,31 @@ Android-style App Drawer containing three custom apps:
                     </div>
                 </div>
                 ${habit.notes ? `<p class="text-[11px] text-gray-400 bg-gray-50/60 border border-gray-100/20 px-2 py-1.5 rounded-lg whitespace-pre-wrap">${escapeHtml(habit.notes)}</p>` : ''}
+            `;
+            return card;
+        }
+
+        // Compact Pinned Card (for Memorize app row display)
+        function createCompactPinnedCard(habit) {
+            const card = document.createElement('div');
+            card.className = `flex items-center justify-between gap-3 bg-white border border-rose-100 bg-rose-50/10 rounded-2xl px-3.5 py-2.5 shadow-sm relative shrink-0 flex-1 min-w-[150px] max-w-[220px] hover:shadow-md transition-all ${!habit.isEnabled ? 'opacity-65 grayscale' : ''}`;
+            card.style.borderLeft = `3.5px solid #f43f5e`;
+
+            card.innerHTML = `
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-xs text-gray-800 truncate ${!habit.isEnabled ? 'line-through text-gray-400' : ''}" title="${escapeHtml(habit.name)}">${escapeHtml(habit.name)}</h4>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                    <button onclick="togglePinWorkHabit(${habit.id})" class="text-rose-500 hover:text-rose-600 p-1 transition-colors" title="Unpin Habit">
+                        <i class="fa-solid fa-thumbtack text-[10px]"></i>
+                    </button>
+                    <button onclick="toggleHabitState(${habit.id})" class="text-gray-300 hover:text-rose-500 p-1 transition-colors" title="${habit.isEnabled ? 'Pause' : 'Resume'}">
+                        <i class="fa-solid ${habit.isEnabled ? 'fa-pause' : 'fa-play'} text-[9px]"></i>
+                    </button>
+                    <button onclick="showEditView(${habit.id})" class="text-gray-300 hover:text-rose-500 p-1 transition-colors" title="Customize">
+                        <i class="fa-solid fa-ellipsis-h text-[10px]"></i>
+                    </button>
+                </div>
             `;
             return card;
         }
@@ -3926,6 +4405,24 @@ Android-style App Drawer containing three custom apps:
             showToast(h.isPinned ? 'Issue pinned to top as major issue' : 'Issue unpinned and timer reset');
         }
 
+        function togglePinWorkHabit(id) {
+            const h = habits.find(x => x.id === id);
+            if (!h) return;
+            h.isPinned = !h.isPinned;
+            if (h.isPinned) {
+                h.pinDate = new Date().toISOString();
+            } else {
+                h.created = new Date().toISOString();
+                h.completedDates = [];
+                delete h.pinDate;
+                delete h.pausedDuration;
+            }
+            saveHabits();
+            render();
+            showToast(h.isPinned ? 'Habit pinned for memorization' : 'Habit unpinned and streak reset');
+        }
+        window.togglePinWorkHabit = togglePinWorkHabit;
+
         // Practice Card
         function createPracticeCard(habit) {
             const card = document.createElement('div');
@@ -4011,7 +4508,7 @@ Android-style App Drawer containing three custom apps:
             const h = habits.find(x => x.id === id);
             if (h) {
                 h.notes = textarea.value.trim();
-                localStorage.setItem('habitFlowData', JSON.stringify(habits));
+                setAppStorage('habitFlowData', JSON.stringify(habits));
             }
         }
 
@@ -4032,7 +4529,7 @@ Android-style App Drawer containing three custom apps:
             listContainer.innerHTML = '';
 
             const completedHabits = habits.filter(h => {
-                if (h.category === 'emotional') return false;
+                if (h.category === 'emotional' || h.category === 'process2') return false;
                 const target = h.targetDays || 21;
                 const streak = calculateStreak(h);
                 return streak >= target;
@@ -4359,20 +4856,7 @@ Android-style App Drawer containing three custom apps:
                 }
             }
 
-            // Maturity Progress
-            const activeMaturityBadge = habits.filter(h => h.category === 'maturity' && h.isEnabled);
-            const completedMaturityBadge = activeMaturityBadge.filter(h => h.completedDates.includes(today)).length;
-            
-            const pendingMaturity = activeMaturityBadge.length - completedMaturityBadge;
-            const badgeMaturity = document.getElementById('badgeMaturity');
-            if (badgeMaturity) {
-                if (pendingMaturity > 0) {
-                    badgeMaturity.textContent = pendingMaturity;
-                    badgeMaturity.classList.remove('hidden');
-                } else {
-                    badgeMaturity.classList.add('hidden');
-                }
-            }
+
 
             // Forgetfulness Progress
             const activeForgetfulnessBadge = habits.filter(h => h.category === 'forgetfulness' && h.isEnabled);
@@ -4421,6 +4905,18 @@ Android-style App Drawer containing three custom apps:
                     badgeCleaner.classList.add('hidden');
                 }
             }
+
+            // Stocks Progress
+            const pendingStocks = (typeof stocksData !== 'undefined' && currentStocksWeek && stocksData[currentStocksWeek]) ? stocksData[currentStocksWeek].filter(s => !s.bought).length : 0;
+            const badgeStocks = document.getElementById('badgeStocks');
+            if (badgeStocks) {
+                if (pendingStocks > 0) {
+                    badgeStocks.textContent = pendingStocks;
+                    badgeStocks.classList.remove('hidden');
+                } else {
+                    badgeStocks.classList.add('hidden');
+                }
+            }
         }
 
         // --- Global Notes ---
@@ -4431,10 +4927,10 @@ Android-style App Drawer containing three custom apps:
         }
 
         function loadGlobalNotes() {
-            const saved = localStorage.getItem('habitFlowGlobalNotes');
+            const saved = getAppStorage('habitFlowGlobalNotes');
             if (saved) document.getElementById('globalNotes').value = saved;
             
-            const savedScroll = localStorage.getItem('habitFlowGlobalNotesScroll');
+            const savedScroll = getAppStorage('habitFlowGlobalNotesScroll');
             if (savedScroll) document.getElementById('globalNotes').scrollTop = parseInt(savedScroll, 10);
             
             updateNotesLineCount();
@@ -4461,12 +4957,12 @@ Android-style App Drawer containing three custom apps:
                 );
             }
             
-            localStorage.setItem('habitFlowGlobalNotes', val);
+            setAppStorage('habitFlowGlobalNotes', val);
             updateNotesLineCount();
         }
 
         function saveNotesScroll() {
-            localStorage.setItem('habitFlowGlobalNotesScroll', document.getElementById('globalNotes').scrollTop);
+            setAppStorage('habitFlowGlobalNotesScroll', document.getElementById('globalNotes').scrollTop);
         }
 
         // --- Edit Modal ---
@@ -4501,7 +4997,7 @@ Android-style App Drawer containing three custom apps:
             const btnIntelligence = document.getElementById('editCategoryIntelligence');
             const btnResilience = document.getElementById('editCategoryResilience');
             const btnLearning = document.getElementById('editCategoryLearning');
-            const btnMaturity = document.getElementById('editCategoryMaturity');
+
             const btnForgetfulness = document.getElementById('editCategoryForgetfulness');
             const btnDeaddiction = document.getElementById('editCategoryDeaddiction');
             const targetContainer = document.getElementById('editTargetDaysContainer');
@@ -4516,7 +5012,7 @@ Android-style App Drawer containing three custom apps:
             if(btnIntelligence) btnIntelligence.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
             if(btnResilience) btnResilience.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
             if(btnLearning) btnLearning.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
-            if(btnMaturity) btnMaturity.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
+
             if(btnForgetfulness) btnForgetfulness.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
             if(btnDeaddiction) btnDeaddiction.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-gray-50 border-transparent text-gray-500 hover:border-gray-200';
 
@@ -4544,9 +5040,7 @@ Android-style App Drawer containing three custom apps:
             } else if (category === 'learning') {
                 if(btnLearning) btnLearning.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-indigo-50 border-indigo-500 text-indigo-800';
                 targetContainer.classList.remove('hidden');
-            } else if (category === 'maturity') {
-                if(btnMaturity) btnMaturity.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-amber-50 border-amber-500 text-amber-800';
-                targetContainer.classList.remove('hidden');
+
             } else if (category === 'forgetfulness') {
                 if(btnForgetfulness) btnForgetfulness.className = 'flex-1 py-2.5 rounded-xl text-xs font-semibold border text-center transition-all bg-rose-50 border-rose-500 text-rose-800';
                 targetContainer.classList.remove('hidden');
@@ -4576,7 +5070,7 @@ Android-style App Drawer containing three custom apps:
             h.name = name;
             h.notes = document.getElementById('editHabitNotes').value.trim();
             h.category = editSelectedCategory;
-            if (editSelectedCategory === 'work' || editSelectedCategory === 'mental' || editSelectedCategory === 'practice' || editSelectedCategory === 'memorize' || editSelectedCategory === 'exercise' || editSelectedCategory === 'intelligence' || editSelectedCategory === 'resilience' || editSelectedCategory === 'learning' || editSelectedCategory === 'maturity' || editSelectedCategory === 'forgetfulness' || editSelectedCategory === 'deaddiction') {
+            if (editSelectedCategory === 'work' || editSelectedCategory === 'mental' || editSelectedCategory === 'practice' || editSelectedCategory === 'memorize' || editSelectedCategory === 'exercise' || editSelectedCategory === 'intelligence' || editSelectedCategory === 'resilience' || editSelectedCategory === 'learning' || editSelectedCategory === 'forgetfulness' || editSelectedCategory === 'deaddiction') {
                 h.targetDays = parseInt(document.getElementById('editTargetDays').value) || 21;
             } else if (editSelectedCategory === 'emotional' || editSelectedCategory === 'process2') {
                 h.targetDays = 3;
@@ -4598,16 +5092,81 @@ Android-style App Drawer containing three custom apps:
         }
 
         // --- Settings & Data ---
+
+        function calculateStorageUsage() {
+            let totalBytes = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                totalBytes += key.length + localStorage.getItem(key).length;
+            }
+            // 1 char = 2 bytes
+            totalBytes *= 2;
+            const maxBytes = 5 * 1024 * 1024; // 5MB approx limit
+            const mbUsed = (totalBytes / 1024 / 1024).toFixed(2);
+            const percentage = Math.min(100, (totalBytes / maxBytes) * 100).toFixed(1);
+            
+            document.getElementById('storageUsageText').textContent = `${mbUsed}MB / 5.0MB (${percentage}%)`;
+            
+            const bar = document.getElementById('storageUsageBar');
+            bar.style.width = percentage + '%';
+            if (percentage > 90) bar.className = 'bg-rose-500 h-1.5 rounded-full transition-all duration-500';
+            else if (percentage > 70) bar.className = 'bg-amber-500 h-1.5 rounded-full transition-all duration-500';
+            else bar.className = 'bg-teal-500 h-1.5 rounded-full transition-all duration-500';
+        }
+
         function openSettings() {
+            calculateStorageUsage();
+            
+            function buildAppBlock() {
+                const appObj = {};
+                ALL_APPS.forEach(app => {
+                    let hasData = false;
+                    const block = {};
+                    
+                    const h = JSON.parse(localStorage.getItem('app_' + app.id + '_habits') || '[]');
+                    if (h.length > 0) {
+                        block.habits = h;
+                        hasData = true;
+                    }
+                    
+                    if (app.id === 'notes') {
+                        const n = localStorage.getItem('habitFlowGlobalNotes') || '';
+                        if (n) {
+                            block.content = n;
+                            hasData = true;
+                        }
+                    }
+                    if (app.id === 'expenses') {
+                        const ed = localStorage.getItem('expensesAppData');
+                        if (ed) {
+                            try {
+                                block.customData = JSON.parse(ed);
+                                hasData = true;
+                            } catch(e) {}
+                        }
+                    }
+                    
+                    if (!app.locked) {
+                        const en = localStorage.getItem('app_' + app.id + '_enabled');
+                        if (en !== null) {
+                            block.enabled = (en === 'true');
+                            hasData = true;
+                        }
+                    }
+                    
+                    if (hasData) appObj[app.id] = block;
+                });
+                return appObj;
+            }
+
             const backupData = {
-                version: 2,
-                habits: habits,
-                notes: localStorage.getItem('habitFlowGlobalNotes') || ''
+                version: 6,
+                app: buildAppBlock()
             };
             exportArea.value = JSON.stringify(backupData, null, 2);
             importArea.value = '';
 
-            const patternData = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            const patternData = JSON.parse(getAppStorage('habitFlowPattern') || '{}');
             const patternToggle = document.getElementById('patternToggle');
             const setPatternBtn = document.getElementById('setPatternBtn');
             const changePatternBtn = document.getElementById('changePatternBtn');
@@ -4657,6 +5216,75 @@ Android-style App Drawer containing three custom apps:
                 let importedHabits = [];
                 let importedNotes = null;
 
+                if (parsed && parsed.version === 6) {
+                    if (typeof parsed.app === 'object' && parsed.app !== null) {
+                        for (const [appId, appData] of Object.entries(parsed.app)) {
+                            if (typeof appData.enabled === 'boolean') {
+                                localStorage.setItem('app_' + appId + '_enabled', appData.enabled ? 'true' : 'false');
+                            }
+                            if (appId === 'notes' && typeof appData.content === 'string') {
+                                localStorage.setItem('habitFlowGlobalNotes', appData.content);
+                            }
+                            if (appId === 'expenses' && appData.customData) {
+                                localStorage.setItem('expensesAppData', JSON.stringify(appData.customData));
+                            }
+                            if (Array.isArray(appData.habits)) {
+                                localStorage.setItem('app_' + appId + '_habits', JSON.stringify(appData.habits));
+                            }
+                        }
+                    }
+                    location.reload();
+                    return;
+                }
+                
+                if (parsed && parsed.version >= 4 && parsed.version < 6) {
+                    const profilesToProcess = [];
+                    if (parsed.profiles) {
+                        for (const [prof, data] of Object.entries(parsed.profiles)) profilesToProcess.push({ prof, data });
+                    }
+                    if (parsed.common) profilesToProcess.push({ prof: 'common', data: parsed.common });
+
+                    for (const { prof, data } of profilesToProcess) {
+                        if (typeof data.enabledApps === 'object' && data.enabledApps !== null) {
+                            localStorage.setItem('personalOsEnabledApps', JSON.stringify(data.enabledApps));
+                        }
+                        if (typeof data.app === 'object' && data.app !== null) {
+                            for (const [appId, appData] of Object.entries(data.app)) {
+                                if (typeof appData.enabled === 'boolean') {
+                                    localStorage.setItem('app_' + appId + '_enabled', appData.enabled ? 'true' : 'false');
+                                }
+                                if (appId === 'notes' && typeof appData.content === 'string') {
+                                    localStorage.setItem('habitFlowGlobalNotes', appData.content);
+                                }
+                                if (appId === 'expenses' && appData.customData) {
+                                    localStorage.setItem('expensesAppData', JSON.stringify(appData.customData));
+                                }
+                                if (Array.isArray(appData.habits)) {
+                                    localStorage.setItem('app_' + appId + '_habits', JSON.stringify(appData.habits));
+                                }
+                            }
+                        }
+                    }
+                    location.reload();
+                    return;
+                }
+                
+                if (parsed && parsed.version === 3 && parsed.profiles) {
+                    for (const [prof, data] of Object.entries(parsed.profiles)) {
+                        if (Array.isArray(data.habits)) {
+                            localStorage.setItem('habitFlowData', JSON.stringify(data.habits));
+                        }
+                        if (typeof data.notes === 'string') {
+                            localStorage.setItem('habitFlowGlobalNotes', data.notes);
+                        }
+                        if (typeof data.enabledApps === 'object' && data.enabledApps !== null) {
+                            localStorage.setItem('personalOsEnabledApps', JSON.stringify(data.enabledApps));
+                        }
+                    }
+                    location.reload();
+                    return;
+                }
+
                 if (Array.isArray(parsed)) {
                     // Legacy habits array format
                     importedHabits = parsed;
@@ -4684,7 +5312,7 @@ Android-style App Drawer containing three custom apps:
 
                 // Apply imported notes if present
                 if (importedNotes !== null) {
-                    localStorage.setItem('habitFlowGlobalNotes', importedNotes);
+                    setAppStorage('habitFlowGlobalNotes', importedNotes);
                     loadGlobalNotes();
                 }
 
@@ -4776,7 +5404,7 @@ Android-style App Drawer containing three custom apps:
             resize();
 
             const privacyBlur = () => {
-                const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                const data = JSON.parse(getAppStorage('habitFlowPattern') || '{}');
                 if (data.enabled && data.pattern) {
                     showLockScreen('unlock');
                 }
@@ -4838,7 +5466,7 @@ Android-style App Drawer containing three custom apps:
             patternLock.container.addEventListener('touchmove', move);
             window.addEventListener('touchend', end);
 
-            const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            const data = JSON.parse(getAppStorage('habitFlowPattern') || '{}');
             if (data.enabled && data.pattern) {
                 showLockScreen('unlock');
             }
@@ -4884,7 +5512,7 @@ Android-style App Drawer containing three custom apps:
                 return;
             }
 
-            const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            const data = JSON.parse(getAppStorage('habitFlowPattern') || '{}');
 
             if (patternLock.isSetup) {
                 if (!patternLock.tempPattern) {
@@ -4894,7 +5522,7 @@ Android-style App Drawer containing three custom apps:
                     if (JSON.stringify(patternLock.tempPattern) === JSON.stringify(patternLock.points)) {
                         data.pattern = patternLock.points;
                         data.enabled = true;
-                        localStorage.setItem('habitFlowPattern', JSON.stringify(data));
+                        setAppStorage('habitFlowPattern', JSON.stringify(data));
                         showToast('Lock Pattern saved');
                         closePatternScreen();
                         document.getElementById('patternToggle').checked = true;
@@ -4925,7 +5553,7 @@ Android-style App Drawer containing three custom apps:
                 if (patternLock.isSetup && !patternLock.tempPattern) {
                     document.getElementById('patternMessage').textContent = 'Define New Pattern';
                 } else if (!patternLock.tempPattern) {
-                    const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+                    const data = JSON.parse(getAppStorage('habitFlowPattern') || '{}');
                     document.getElementById('patternMessage').textContent = data.enabled ? 'Unlock Pattern' : 'Define New Pattern';
                 }
             }, 800);
@@ -4933,7 +5561,7 @@ Android-style App Drawer containing three custom apps:
 
         function togglePatternLock() {
             const toggle = document.getElementById('patternToggle');
-            const data = JSON.parse(localStorage.getItem('habitFlowPattern') || '{}');
+            const data = JSON.parse(getAppStorage('habitFlowPattern') || '{}');
 
             if (toggle.checked) {
                 if (!data.pattern) {
@@ -4941,12 +5569,12 @@ Android-style App Drawer containing three custom apps:
                     toggle.checked = false;
                 } else {
                     data.enabled = true;
-                    localStorage.setItem('habitFlowPattern', JSON.stringify(data));
+                    setAppStorage('habitFlowPattern', JSON.stringify(data));
                     showToast('Lock enabled');
                 }
             } else {
                 data.enabled = false;
-                localStorage.setItem('habitFlowPattern', JSON.stringify(data));
+                setAppStorage('habitFlowPattern', JSON.stringify(data));
                 showToast('Lock disabled');
             }
         }
@@ -5006,7 +5634,7 @@ Android-style App Drawer containing three custom apps:
         }
 
         // =================== EXPENSES APP LOGIC ===================
-        let expensesData = JSON.parse(localStorage.getItem('expensesAppData')) || { transactions: [], allowances: {} };
+        let expensesData = JSON.parse(getAppStorage('expensesAppData')) || { transactions: [], allowances: {} };
         if (!expensesData.allowances) expensesData.allowances = {};
         let activeTxType = 'expense';
         let activeExpensesWeek = '';
@@ -5263,7 +5891,7 @@ Android-style App Drawer containing three custom apps:
         }
 
         function saveExpensesData() {
-            localStorage.setItem('expensesAppData', JSON.stringify(expensesData));
+            setAppStorage('expensesAppData', JSON.stringify(expensesData));
         }
 
         function updateExpensesUi() {
@@ -5375,6 +6003,479 @@ Android-style App Drawer containing three custom apps:
 
         }
 
+        // --- Stocks App Controller ---
+        let stocksData = {};
+        let currentStocksWeek = '';
+
+        function loadStocksData() {
+            const stored = getAppStorage('personalOsStocksData');
+            if (stored) {
+                try {
+                    stocksData = JSON.parse(stored);
+                } catch (e) {
+                    stocksData = {};
+                }
+            } else {
+                stocksData = {};
+            }
+            if (!currentStocksWeek) {
+                currentStocksWeek = getMondayDateString(new Date());
+            }
+        }
+        window.loadStocksData = loadStocksData;
+
+        function saveStocksData() {
+            setAppStorage('personalOsStocksData', JSON.stringify(stocksData));
+            updateOverallProgress(); // This updates the home drawer badge
+        }
+        window.saveStocksData = saveStocksData;
+
+        function getMondayDateString(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+            const monday = new Date(d.setDate(diff));
+            return monday.toISOString().split('T')[0];
+        }
+        window.getMondayDateString = getMondayDateString;
+
+        function formatStocksWeekRange(mondayStr) {
+            const monday = new Date(mondayStr);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            
+            const options = { month: 'short', day: 'numeric' };
+            const startStr = monday.toLocaleDateString('en-US', options);
+            const endStr = sunday.toLocaleDateString('en-US', options);
+            const year = monday.getFullYear();
+            
+            return `${startStr} - ${endStr}, ${year}`;
+        }
+        window.formatStocksWeekRange = formatStocksWeekRange;
+
+        function jumpToCurrentStocksWeek() {
+            currentStocksWeek = getMondayDateString(new Date());
+            renderStocksApp();
+        }
+        window.jumpToCurrentStocksWeek = jumpToCurrentStocksWeek;
+
+        function navigateStocksWeek(weeksOffset) {
+            const d = new Date(currentStocksWeek);
+            d.setDate(d.getDate() + (weeksOffset * 7));
+            currentStocksWeek = getMondayDateString(d);
+            renderStocksApp();
+        }
+        window.navigateStocksWeek = navigateStocksWeek;
+
+        function renderStocksApp() {
+            loadStocksData();
+            
+            // Render Week Range Header
+            const weekRangeEl = document.getElementById('stocksCurrentWeekRange');
+            if (weekRangeEl) {
+                weekRangeEl.textContent = formatStocksWeekRange(currentStocksWeek);
+            }
+
+            const listContainer = document.getElementById('stocksList');
+            const emptyState = document.getElementById('stocksEmptyState');
+            if (!listContainer) return;
+            
+            listContainer.innerHTML = '';
+
+            const weeklyStocks = stocksData[currentStocksWeek] || [];
+            
+            if (weeklyStocks.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                
+                weeklyStocks.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = `bg-white border ${item.bought ? 'border-emerald-150 bg-emerald-50/10' : 'border-gray-100'} rounded-3xl p-5 shadow-sm flex items-center justify-between transition-all hover:shadow-md`;
+                    
+                    const left = document.createElement('div');
+                    left.className = 'flex items-center gap-4 flex-1 min-w-0';
+                    
+                    // Check button
+                    const checkBtn = document.createElement('button');
+                    checkBtn.onclick = () => toggleStockBought(item.id);
+                    checkBtn.className = `w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
+                        item.bought 
+                        ? 'bg-emerald-500 border-emerald-500 text-white' 
+                        : 'border-gray-200 text-gray-300 hover:border-emerald-300 hover:text-emerald-500'
+                    }`;
+                    checkBtn.innerHTML = '<i class="fa-solid fa-check text-sm"></i>';
+                    left.appendChild(checkBtn);
+                    
+                    const details = document.createElement('div');
+                    details.className = 'flex-1 min-w-0';
+                    
+                    const titleRow = document.createElement('div');
+                    titleRow.className = 'flex items-center gap-2';
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = `font-bold text-sm tracking-tight ${item.bought ? 'text-gray-400 line-through' : 'text-gray-900'} uppercase`;
+                    nameSpan.textContent = item.ticker;
+                    titleRow.appendChild(nameSpan);
+
+                    if (item.bought) {
+                        const boughtBadge = document.createElement('span');
+                        boughtBadge.className = 'bg-emerald-105 text-emerald-800 text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border border-emerald-250';
+                        boughtBadge.textContent = 'Bought';
+                        titleRow.appendChild(boughtBadge);
+                    }
+                    
+                    details.appendChild(titleRow);
+                    
+                    // Price & Budget Details Row
+                    const detailsRow = document.createElement('div');
+                    detailsRow.className = 'flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-[11px] font-medium text-gray-500';
+                    
+                    if (item.price) {
+                        detailsRow.innerHTML += `<span class="flex items-center gap-1"><i class="fa-solid fa-tag text-[9px] text-gray-400"></i> Target: $${Number(item.price).toFixed(2)}</span>`;
+                    }
+                    if (item.budget) {
+                        detailsRow.innerHTML += `<span class="flex items-center gap-1"><i class="fa-solid fa-dollar-sign text-[9px] text-gray-400"></i> Budget: $${Number(item.budget).toFixed(2)}</span>`;
+                    }
+                    details.appendChild(detailsRow);
+                    
+                    if (item.note) {
+                        const noteP = document.createElement('p');
+                        noteP.className = 'text-xs text-gray-400 mt-1 italic truncate';
+                        noteP.textContent = item.note;
+                        details.appendChild(noteP);
+                    }
+                    
+                    left.appendChild(details);
+                    card.appendChild(left);
+                    
+                    // Actions right side
+                    const right = document.createElement('div');
+                    right.className = 'flex items-center gap-1 shrink-0';
+                    
+                    // Edit button
+                    const editBtn = document.createElement('button');
+                    editBtn.onclick = () => startEditStock(item.id);
+                    editBtn.className = 'text-gray-400 hover:text-emerald-600 p-2 rounded-xl hover:bg-gray-50 transition-colors';
+                    editBtn.title = 'Edit Plan';
+                    editBtn.innerHTML = '<i class="fa-solid fa-pen text-xs"></i>';
+                    right.appendChild(editBtn);
+                    
+                    // Delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.onclick = () => deleteStockItem(item.id);
+                    deleteBtn.className = 'text-gray-355 hover:text-rose-600 p-2 rounded-xl hover:bg-rose-50 transition-colors';
+                    deleteBtn.title = 'Delete Plan';
+                    deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can text-xs"></i>';
+                    right.appendChild(deleteBtn);
+                    
+                    card.appendChild(right);
+                    listContainer.appendChild(card);
+                });
+            }
+
+            // Update Summaries Card
+            const totalBudget = weeklyStocks.reduce((sum, s) => sum + (Number(s.budget) || 0), 0);
+            const totalSpent = weeklyStocks.filter(s => s.bought).reduce((sum, s) => sum + (Number(s.budget) || 0), 0);
+            const boughtCount = weeklyStocks.filter(s => s.bought).length;
+            const totalCount = weeklyStocks.length;
+            const progressPercent = totalCount > 0 ? Math.round((boughtCount / totalCount) * 100) : 0;
+
+            document.getElementById('stocksTotalBudget').textContent = `$${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('stocksTotalSpent').textContent = `$${totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            
+            const progressTextEl = document.getElementById('stocksWeeklyProgressText');
+            if (progressTextEl) {
+                progressTextEl.textContent = `${boughtCount} of ${totalCount} stocks purchased`;
+            }
+            const progressPercentEl = document.getElementById('stocksWeeklyProgressPercent');
+            if (progressPercentEl) {
+                progressPercentEl.textContent = `${progressPercent}%`;
+            }
+            const progressBarEl = document.getElementById('stocksWeeklyProgressBar');
+            if (progressBarEl) {
+                progressBarEl.style.width = `${progressPercent}%`;
+            }
+        }
+        window.renderStocksApp = renderStocksApp;
+
+        function toggleStockBought(id) {
+            const weeklyStocks = stocksData[currentStocksWeek] || [];
+            const item = weeklyStocks.find(s => s.id === id);
+            if (item) {
+                item.bought = !item.bought;
+                saveStocksData();
+                renderStocksApp();
+                showToast(item.bought ? 'Stock marked as bought' : 'Purchase status reset');
+            }
+        }
+        window.toggleStockBought = toggleStockBought;
+
+        function startEditStock(id) {
+            const weeklyStocks = stocksData[currentStocksWeek] || [];
+            const item = weeklyStocks.find(s => s.id === id);
+            if (!item) return;
+
+            document.getElementById('stockNameInput').value = item.ticker;
+            document.getElementById('stockPriceInput').value = item.price || '';
+            document.getElementById('stockBudgetInput').value = item.budget || '';
+            document.getElementById('stockNoteInput').value = item.note || '';
+            document.getElementById('editingStockId').value = item.id;
+
+            document.getElementById('stockFormTitle').innerHTML = '<i class="fa-solid fa-pen text-emerald-600"></i><span>Edit Stock Plan</span>';
+            document.getElementById('stockSubmitText').textContent = 'Update Plan';
+            document.getElementById('stockSubmitIcon').className = 'fa-solid fa-check';
+            document.getElementById('stockCancelBtn').classList.remove('hidden');
+
+            document.getElementById('stockNameInput').focus();
+        }
+        window.startEditStock = startEditStock;
+
+        function clearStockForm() {
+            document.getElementById('stockNameInput').value = '';
+            document.getElementById('stockPriceInput').value = '';
+            document.getElementById('stockBudgetInput').value = '';
+            document.getElementById('stockNoteInput').value = '';
+            document.getElementById('editingStockId').value = '';
+
+            document.getElementById('stockFormTitle').innerHTML = '<i class="fa-solid fa-plus text-emerald-600"></i><span>Plan Stock Purchase</span>';
+            document.getElementById('stockSubmitText').textContent = 'Add Stock';
+            document.getElementById('stockSubmitIcon').className = 'fa-solid fa-plus';
+            document.getElementById('stockCancelBtn').classList.add('hidden');
+        }
+        window.clearStockForm = clearStockForm;
+
+        function saveStockItem() {
+            const tickerInput = document.getElementById('stockNameInput');
+            const priceInput = document.getElementById('stockPriceInput');
+            const budgetInput = document.getElementById('stockBudgetInput');
+            const noteInput = document.getElementById('stockNoteInput');
+            const editingIdVal = document.getElementById('editingStockId').value;
+
+            const ticker = tickerInput.value.trim().toUpperCase();
+            if (!ticker) {
+                showToast('Please enter a stock ticker or name', true);
+                return;
+            }
+
+            const price = parseFloat(priceInput.value) || 0;
+            const budget = parseFloat(budgetInput.value) || 0;
+            const note = noteInput.value.trim();
+
+            if (!stocksData[currentStocksWeek]) {
+                stocksData[currentStocksWeek] = [];
+            }
+
+            if (editingIdVal) {
+                // Edit mode
+                const id = parseInt(editingIdVal, 10);
+                const item = stocksData[currentStocksWeek].find(s => s.id === id);
+                if (item) {
+                    item.ticker = ticker;
+                    item.price = price;
+                    item.budget = budget;
+                    item.note = note;
+                    showToast('Stock plan updated');
+                }
+            } else {
+                // Add mode
+                const newItem = {
+                    id: Date.now(),
+                    ticker: ticker,
+                    price: price,
+                    budget: budget,
+                    bought: false,
+                    note: note
+                };
+                stocksData[currentStocksWeek].unshift(newItem);
+                showToast('Stock plan added');
+            }
+
+            saveStocksData();
+            clearStockForm();
+            renderStocksApp();
+        }
+        window.saveStockItem = saveStockItem;
+
+        // --- Prompts App Controller ---
+        let promptsData = [];
+
+        function loadPromptsData() {
+            const stored = getAppStorage('personalOsPromptsData');
+            if (stored) {
+                try {
+                    promptsData = JSON.parse(stored);
+                } catch (e) {
+                    promptsData = [];
+                }
+            } else {
+                promptsData = [];
+            }
+        }
+        window.loadPromptsData = loadPromptsData;
+
+        function savePromptsData() {
+            setAppStorage('personalOsPromptsData', JSON.stringify(promptsData));
+        }
+        window.savePromptsData = savePromptsData;
+
+        function clearPromptForm() {
+            document.getElementById('promptTitleInput').value = '';
+            document.getElementById('promptTextInput').value = '';
+            document.getElementById('editingPromptId').value = '';
+
+            document.getElementById('promptFormTitle').innerHTML = '<i class="fa-solid fa-plus text-purple-600"></i><span>Save New Prompt</span>';
+            document.getElementById('promptSubmitText').textContent = 'Save Prompt';
+            document.getElementById('promptSubmitIcon').className = 'fa-solid fa-plus';
+            document.getElementById('promptCancelBtn').classList.add('hidden');
+        }
+        window.clearPromptForm = clearPromptForm;
+
+        function savePromptItem() {
+            const titleInput = document.getElementById('promptTitleInput');
+            const textInput = document.getElementById('promptTextInput');
+            const editingIdVal = document.getElementById('editingPromptId').value;
+
+            const title = titleInput.value.trim();
+            const text = textInput.value.trim();
+
+            if (!title || !text) {
+                showToast('Please enter both title and prompt content', true);
+                return;
+            }
+
+            if (editingIdVal) {
+                const id = parseInt(editingIdVal, 10);
+                const item = promptsData.find(p => p.id === id);
+                if (item) {
+                    item.title = title;
+                    item.text = text;
+                    showToast('Prompt updated successfully');
+                }
+            } else {
+                const newItem = {
+                    id: Date.now(),
+                    title: title,
+                    text: text
+                };
+                promptsData.unshift(newItem);
+                showToast('Prompt saved successfully');
+            }
+
+            savePromptsData();
+            clearPromptForm();
+            renderPromptsApp();
+        }
+        window.savePromptItem = savePromptItem;
+
+        function startEditPrompt(id) {
+            const item = promptsData.find(p => p.id === id);
+            if (!item) return;
+
+            document.getElementById('promptTitleInput').value = item.title;
+            document.getElementById('promptTextInput').value = item.text;
+            document.getElementById('editingPromptId').value = item.id;
+
+            document.getElementById('promptFormTitle').innerHTML = '<i class="fa-solid fa-pen text-purple-600"></i><span>Edit Prompt</span>';
+            document.getElementById('promptSubmitText').textContent = 'Update Prompt';
+            document.getElementById('promptSubmitIcon').className = 'fa-solid fa-check';
+            document.getElementById('promptCancelBtn').classList.remove('hidden');
+
+            document.getElementById('promptTitleInput').focus();
+        }
+        window.startEditPrompt = startEditPrompt;
+
+        function deletePromptItem(id) {
+            if (confirm('Are you sure you want to delete this prompt?')) {
+                promptsData = promptsData.filter(p => p.id !== id);
+                savePromptsData();
+                renderPromptsApp();
+                showToast('Prompt deleted');
+            }
+        }
+        window.deletePromptItem = deletePromptItem;
+
+        function copyPromptToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Prompt copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Prompt copied to clipboard!');
+                } catch (e) {
+                    showToast('Failed to copy prompt', true);
+                }
+                document.body.removeChild(textarea);
+            });
+        }
+        window.copyPromptToClipboard = copyPromptToClipboard;
+
+        function renderPromptsApp() {
+            loadPromptsData();
+            const listContainer = document.getElementById('promptsList');
+            const emptyState = document.getElementById('promptsEmptyState');
+            const searchQuery = document.getElementById('promptSearchInput').value.toLowerCase().trim();
+
+            if (!listContainer || !emptyState) return;
+
+            listContainer.innerHTML = '';
+
+            let filteredPrompts = promptsData;
+            if (searchQuery) {
+                filteredPrompts = promptsData.filter(p => 
+                    p.title.toLowerCase().includes(searchQuery) || 
+                    p.text.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            if (filteredPrompts.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+
+                filteredPrompts.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white border border-gray-150 rounded-3xl p-5 shadow-sm space-y-3 relative hover:shadow-md transition-all';
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start gap-3">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-sm text-purple-950 tracking-tight truncate" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h4>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button onclick="copyPromptToClipboard(this.getAttribute('data-text'))" data-text="${escapeHtml(item.text)}" class="bg-purple-50 text-purple-700 hover:bg-purple-100 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase transition-all flex items-center gap-1 shadow-sm" title="Copy prompt to clipboard">
+                                    <i class="fa-solid fa-copy"></i>
+                                    <span>Copy</span>
+                                </button>
+                                <button onclick="startEditPrompt(${item.id})" class="text-gray-400 hover:text-purple-600 p-2 rounded-xl hover:bg-gray-50 transition-colors" title="Edit Prompt">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </button>
+                                <button onclick="deletePromptItem(${item.id})" class="text-gray-355 hover:text-rose-600 p-2 rounded-xl hover:bg-rose-50 transition-colors" title="Delete Prompt">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50/70 border border-gray-100/50 rounded-2xl p-3 max-h-36 overflow-y-auto select-all">
+                            <pre class="text-xs text-gray-600 font-mono font-medium whitespace-pre-wrap leading-relaxed">${escapeHtml(item.text)}</pre>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+            }
+        }
+        window.renderPromptsApp = renderPromptsApp;
+
         // --- Therapy App Controller ---
         let therapySessions = [];
         let activeTherapySessionId = null;
@@ -5382,7 +6483,7 @@ Android-style App Drawer containing three custom apps:
         const THERAPY_PAGE_SIZE = 5;
 
         function loadTherapySessionsData() {
-            const stored = localStorage.getItem('personalOsTherapySessions');
+            const stored = getAppStorage('personalOsTherapySessions');
             if (stored) {
                 try {
                     therapySessions = JSON.parse(stored);
@@ -5395,7 +6496,7 @@ Android-style App Drawer containing three custom apps:
         }
 
         function saveTherapySessionsData() {
-            localStorage.setItem('personalOsTherapySessions', JSON.stringify(therapySessions));
+            setAppStorage('personalOsTherapySessions', JSON.stringify(therapySessions));
         }
 
         function addTherapySession() {
@@ -5656,7 +6757,7 @@ Android-style App Drawer containing three custom apps:
         window.renderTherapy = renderTherapy;
 
         // --- Screen Time Controller ---
-        let screentimeData = JSON.parse(localStorage.getItem('screentimeData')) || { logs: {}, limits: {} };
+        let screentimeData = JSON.parse(getAppStorage('screentimeData')) || { logs: {}, limits: {} };
         let activeScreentimeWeek = '';
 
         function initScreentimeDates() {
@@ -5723,7 +6824,7 @@ Android-style App Drawer containing three custom apps:
         window.saveScreentimeLog = saveScreentimeLog;
 
         function saveScreentimeData() {
-            localStorage.setItem('screentimeData', JSON.stringify(screentimeData));
+            setAppStorage('screentimeData', JSON.stringify(screentimeData));
         }
 
         function loadScreentimeWeekLog() {
@@ -5879,10 +6980,10 @@ Android-style App Drawer containing three custom apps:
         window.renderScreentime = updateScreentimeUi;
 
         // --- Improvement Areas Controller ---
-        let improvementData = JSON.parse(localStorage.getItem('personalOsImprovementAreas')) || [];
+        let improvementData = JSON.parse(getAppStorage('personalOsImprovementAreas')) || [];
 
         function saveImprovementData() {
-            localStorage.setItem('personalOsImprovementAreas', JSON.stringify(improvementData));
+            setAppStorage('personalOsImprovementAreas', JSON.stringify(improvementData));
         }
 
         function addImprovementArea() {
@@ -5993,12 +7094,12 @@ Android-style App Drawer containing three custom apps:
                 lastTimerUpdate: lastTimerUpdate,
                 laps: laps
             };
-            localStorage.setItem('personalOsTimerState', JSON.stringify(state));
+            setAppStorage('personalOsTimerState', JSON.stringify(state));
         }
         window.saveTimerState = saveTimerState;
 
         function loadTimerState() {
-            const stored = localStorage.getItem('personalOsTimerState');
+            const stored = getAppStorage('personalOsTimerState');
             if (!stored) return;
 
             try {
@@ -6249,6 +7350,147 @@ Android-style App Drawer containing three custom apps:
             }
             saveTimerState();
         });
+
+
+        // ==================== OTP RECALL GAME LOGIC ====================
+        let currentOtp = '';
+
+        function openMemoryGame(gameId) {
+            document.getElementById('memoryGamesList').classList.add('hidden');
+            if (gameId === 'otp') {
+                document.getElementById('otpGameContainer').classList.remove('hidden');
+                const savedOtp = getAppStorage('otpDigits');
+                if (savedOtp) document.getElementById('otpDigits').value = savedOtp;
+                resetOtpGame();
+            } else if (gameId === 'math') {
+                document.getElementById('mathGameContainer').classList.remove('hidden');
+                const savedMath1 = getAppStorage('mathDigits1');
+                const savedMath2 = getAppStorage('mathDigits2');
+                if (savedMath1) document.getElementById('mathDigits1').value = savedMath1;
+                if (savedMath2) document.getElementById('mathDigits2').value = savedMath2;
+                resetMathGame();
+            }
+        }
+
+        function closeMemoryGame(gameId) {
+            if (gameId === 'otp') {
+                document.getElementById('otpGameContainer').classList.add('hidden');
+            } else if (gameId === 'math') {
+                document.getElementById('mathGameContainer').classList.add('hidden');
+            }
+            document.getElementById('memoryGamesList').classList.remove('hidden');
+        }
+
+        function startOtpGame() {
+            const digits = parseInt(document.getElementById('otpDigits').value, 10);
+            
+            // Generate OTP
+            let min = Math.pow(10, digits - 1);
+            let max = Math.pow(10, digits) - 1;
+            currentOtp = Math.floor(Math.random() * (max - min + 1) + min).toString();
+            
+            // Update UI
+            document.getElementById('otpDisplayText').textContent = currentOtp;
+            document.getElementById('startOtpBtn').classList.add('hidden');
+            document.getElementById('otpResultArea').classList.add('hidden');
+            document.getElementById('otpDisplayArea').classList.remove('hidden');
+        }
+
+        function hideOtpAndInput() {
+            document.getElementById('otpDisplayArea').classList.add('hidden');
+            document.getElementById('otpInputArea').classList.remove('hidden');
+            const input = document.getElementById('otpInput');
+            input.value = '';
+            input.focus();
+        }
+
+        function verifyOtp() {
+            const userInput = document.getElementById('otpInput').value;
+            const icon = document.getElementById('otpResultIcon');
+            const title = document.getElementById('otpResultTitle');
+            const message = document.getElementById('otpResultMessage');
+
+            if (userInput === currentOtp) {
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-green-500"></i>';
+                title.textContent = 'Excellent!';
+                title.className = 'text-2xl font-bold text-green-600';
+                message.textContent = 'Your memory is sharp.';
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+                title.textContent = 'Not quite...';
+                title.className = 'text-2xl font-bold text-red-600';
+                message.textContent = `The correct OTP was ${currentOtp}. You entered ${userInput}.`;
+            }
+
+            document.getElementById('otpInputArea').classList.add('hidden');
+            document.getElementById('otpResultArea').classList.remove('hidden');
+        }
+
+        function resetOtpGame() {
+            document.getElementById('otpResultArea').classList.add('hidden');
+            document.getElementById('startOtpBtn').classList.remove('hidden');
+        }
+
+        // ==================== MENTAL MATH GAME LOGIC ====================
+        let mathProduct = 0;
+        let mathNum1 = 0;
+        let mathNum2 = 0;
+
+        function startMathGame() {
+            const digits1 = parseInt(document.getElementById('mathDigits1').value, 10);
+            const digits2 = parseInt(document.getElementById('mathDigits2').value, 10);
+            
+            // Generate numbers
+            const min1 = digits1 === 1 ? 2 : Math.pow(10, digits1 - 1);
+            const max1 = Math.pow(10, digits1) - 1;
+            const num1 = Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+
+            const min2 = digits2 === 1 ? 2 : Math.pow(10, digits2 - 1);
+            const max2 = Math.pow(10, digits2) - 1;
+            const num2 = Math.floor(Math.random() * (max2 - min2 + 1) + min2);
+
+            mathProduct = num1 * num2;
+            mathNum1 = num1;
+            mathNum2 = num2;
+            
+            // Update UI
+            document.getElementById('mathDisplayText').innerHTML = `${num1} &times; ${num2}`;
+            document.getElementById('startMathBtn').classList.add('hidden');
+            document.getElementById('mathResultArea').classList.add('hidden');
+            document.getElementById('mathDisplayArea').classList.remove('hidden');
+            
+            const input = document.getElementById('mathInput');
+            input.value = '';
+            input.focus();
+        }
+
+        function verifyMath() {
+            const userInput = parseInt(document.getElementById('mathInput').value, 10);
+            const icon = document.getElementById('mathResultIcon');
+            const title = document.getElementById('mathResultTitle');
+            const message = document.getElementById('mathResultMessage');
+
+            if (userInput === mathProduct) {
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-green-500"></i>';
+                title.textContent = 'Excellent!';
+                title.className = 'text-2xl font-bold text-green-600';
+                message.innerHTML = `${mathNum1} &times; ${mathNum2} = <strong>${mathProduct}</strong>. Your mental math is sharp.`;
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+                title.textContent = 'Not quite...';
+                title.className = 'text-2xl font-bold text-red-600';
+                message.innerHTML = `The correct answer for ${mathNum1} &times; ${mathNum2} was <strong>${mathProduct}</strong>. You entered ${userInput || 0}.`;
+            }
+
+            document.getElementById('mathDisplayArea').classList.add('hidden');
+            document.getElementById('mathResultArea').classList.remove('hidden');
+        }
+
+        function resetMathGame() {
+            document.getElementById('mathResultArea').classList.add('hidden');
+            document.getElementById('mathDisplayArea').classList.add('hidden');
+            document.getElementById('startMathBtn').classList.remove('hidden');
+        }
 
     </script>
 </body>
